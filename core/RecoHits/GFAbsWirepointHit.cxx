@@ -19,10 +19,6 @@
 
 #include "GFAbsWirepointHit.h"
 
-#include <assert.h>
-#include <TMath.h>
-#include <GFException.h>
-
 
 GFAbsWirepointHit::GFAbsWirepointHit() :
   GFAbsWireHit(NparHitRep)
