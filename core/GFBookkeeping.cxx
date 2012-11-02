@@ -16,10 +16,11 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include"GFBookkeeping.h"
-#include"GFException.h"
-#include<sstream>
-#include"TString.h"
+
+#include "GFBookkeeping.h"
+#include "GFException.h"
+#include <sstream>
+#include "TString.h"
 
 
 GFBookkeeping::GFBookkeeping(const GFBookkeeping& bk) {

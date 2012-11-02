@@ -29,17 +29,16 @@ set(GENFIT_SRCS
 	GFDaf.cxx 
 	GFDafHit.cxx 
 	GFTrackProximity.cxx
-	RecoHits/GFPlanarHit.cxx 
-	#RecoHits/GFProlateSpacepointHit.cxx
-	#RecoHits/GFSpacepointHit.cxx
-	#RecoHits/GFWireHit.cxx
-	#RecoHits/GFWirepointHit.cxx 
+	#RecoHits/GFAbsProlateSpacepointHit.cxx
+	RecoHits/GFAbsSpacepointHit.cxx
+	#RecoHits/GFAbsWireHit.cxx
+	#RecoHits/GFAbsWirepointHit.cxx 
 )
 
 set(GENFIT_HEADERS  
 	GFAbsRecoHit.h
 	GFAbsTrackRep.h
-	GFBookkeeping.cxx
+	GFBookkeeping.h
 	GFDetPlane.h
 	GFException.h
 	GFKalman.h
@@ -48,18 +47,18 @@ set(GENFIT_HEADERS
 	GFTools.h
 	GFTrackCand.h
 	GFTrack.h
-	GFConstField.h
-	GFFieldManager.cxx
+	GFConstField.h	
+	GFFieldManager.h
 	GFAbsFinitePlane.h
-	GFRectFinitePlane.cxx
+	GFRectFinitePlane.h
 	GFDaf.h
 	GFDafHit.h
-	GFTrackProximity.cxx
-	RecoHits/GFPlanarHit.h
-	#RecoHits/GFProlateSpacepointHit.h
-	#RecoHits/GFSpacepointHit.cxx
-	#RecoHits/GFWireHit.cxx
-	#RecoHits/GFWirepointHit.h
+	GFTrackProximity.h
+	RecoHits/GFAbsPlanarHit.h
+	#RecoHits/GFAbsProlateSpacepointHit.h
+	RecoHits/GFAbsSpacepointHit.h
+	#RecoHits/GFAbsWireHit.h
+	#RecoHits/GFAbsWirepointHit.h
 )
 
 set(GENFIT_LINKDEF  genfitLinkDef.h)

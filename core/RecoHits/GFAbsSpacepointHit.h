@@ -20,17 +20,14 @@
  * @{
  */
 
-#ifndef GFSPACEPOINTHITPOLICY_H
-#define GFSPACEPOINTHITPOLICY_H
+#ifndef GFSPACEPOINTHIT_H
+#define GFSPACEPOINTHIT_H
 
 
 #include "TMatrixT.h"
 #include "TObject.h"
 
-#include "GFDetPlane.h"
-
-class GFAbsRecoHit;
-class GFAbsTrackRep;
+#include "GFAbsRecoHit.h"
 
 /** @brief Policy class implementing a space point hit geometry. 
  *
@@ -38,10 +35,10 @@ class GFAbsTrackRep;
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
  * 
  * RecoHits for detectors measuring 3D space points should inherit 
- * from RecoHitIfc<GFSpacepointHitPolicy>.
+ * from RecoHitIfc<GFAbsSpacepointHit>.
  *
  * For a space point the detector plane has to be defined with respect to
- * a track representation. GFSpacepointHitPolicy implements a scheme where the
+ * a track representation. GFAbsSpacepointHit implements a scheme where the
  * detectorplane is chosen perpendicular to the track.
  * In a track fit only 2 of the three coordinates of a space point are 
  * independent (the track is a one-dimensional object). Therefore the 3D
@@ -49,42 +46,41 @@ class GFAbsTrackRep;
  * hit coordinates are then projected.
  */
 
-class GFSpacepointHitPolicy : public TObject {
+class GFAbsSpacepointHit : public GFAbsRecoHit {
 public:
 
+  // Constructors/Destructors ---------
+  GFAbsSpacepointHit() : GFAbsRecoHit(NparHitRep) {}
 
-  GFSpacepointHitPolicy(){;}
+  virtual ~GFAbsSpacepointHit(){;}
+
   
   // Operations ----------------------
+  virtual void getMeasurement(const GFAbsTrackRep* rep,
+                              const GFDetPlane& pl,
+                              const TMatrixT<double>& statePred,
+                              const TMatrixT<double>& covPred,
+                              TMatrixT<double>& m,
+                              TMatrixT<double>& V);
+
    /** @brief Get detector plane perpendicular to track.
     *
     * The detector plane is contructed from the position of the hit and
     * the track representation. For this the track is extrapolated to the
     * point of closest approach to the hit.
     */
-  const GFDetPlane& detPlane(GFAbsRecoHit*, GFAbsTrackRep*);
+  virtual const GFDetPlane& getDetPlane(GFAbsTrackRep* rep);
 
-  /** @brief Hit coordinates in detector plane.
-   */
-  TMatrixT<double> hitCoord(GFAbsRecoHit*,const GFDetPlane&);
-
-  /** @brief Hit covariances in detector plane.
-   */
-  TMatrixT<double> hitCov(GFAbsRecoHit*,const GFDetPlane&);
-
-  virtual ~GFSpacepointHitPolicy(){;}
-
-  const std::string& getName(){return fPolicyName;}
  private:
-  static const std::string fPolicyName;
 
   // Private Data Members ------------
+  static const int NparHitRep = 3;
   GFDetPlane fPlane;
 
   // Private Methods -----------------
 
  public:
-  ClassDef(GFSpacepointHitPolicy,1);
+  ClassDef(GFAbsSpacepointHit,1);
 };
 
 #endif

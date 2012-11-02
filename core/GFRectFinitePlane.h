@@ -33,7 +33,7 @@
 
 #include "GFAbsFinitePlane.h"
 
-/** @brief Concrete implementation of finitie detector plane for rectangles.
+/** @brief Concrete implementation of finite detector plane for rectangles.
  */
 
 

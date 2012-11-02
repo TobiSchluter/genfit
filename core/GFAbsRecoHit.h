@@ -85,7 +85,7 @@ protected:
   int fNparHit;
 
 public:
-  virtual ~GFAbsRecoHit();
+  virtual ~GFAbsRecoHit() = 0;
 
   /** @brief Constructor specifying dimension of coordinate vector
    *
@@ -129,7 +129,12 @@ public:
   /** @brief get measurement vector and hit covariance
    *
    */
-  virtual void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TMatrixT<double>& statePred,const TMatrixT<double>& covPred,TMatrixT<double>& m, TMatrixT<double>& V) = 0;
+  virtual void getMeasurement(const GFAbsTrackRep* rep,
+                              const GFDetPlane& pl,
+                              const TMatrixT<double>& statePred,
+                              const TMatrixT<double>& covPred,
+                              TMatrixT<double>& m,
+                              TMatrixT<double>& V) = 0;
   
   /** @brief Get raw hit covariances. 
    *
@@ -188,6 +193,6 @@ public:
 };
   
 
-#endif //FITTER_ABSHIT_H
+#endif
 
 /** @} */ 

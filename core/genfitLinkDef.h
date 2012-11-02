@@ -28,10 +28,10 @@
 #pragma link C++ class GFAbsTrackRep+;
 #pragma link C++ class GFDafHit+;
 #pragma link C++ class GFPlanarHit+;
-//#pragma link C++ class GFProlateSpacepointHit+;
-//#pragma link C++ class GFSpacepointHit+;
-//#pragma link C++ class GFWireHit+;
-//#pragma link C++ class GFWirepointHi+;
+//#pragma link C++ class GFAbsProlateSpacepointHit+;
+#pragma link C++ class GFAbsSpacepointHit+;
+//#pragma link C++ class GFAbsWireHit+;
+//#pragma link C++ class GFAbsWirepointHit+;
 #pragma link C++ class GFAbsRecoHit+;
 #pragma link C++ class GFTrackCand+;
 #pragma link C++ class GFTrack+;

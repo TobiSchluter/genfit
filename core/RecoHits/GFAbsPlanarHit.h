@@ -23,8 +23,8 @@
 #ifndef GFPLANARHITPOLICY_H
 #define GFPLANARHITPOLICY_H
 
-#include<iostream>
-#include<string>
+#include <iostream>
+#include <string>
 
 #include "TMatrixT.h"
 #include "TObject.h"
@@ -48,7 +48,10 @@ class GFPlanarHit : public GFAbsRecoHit {
 public:
 
   // Constructors/Destructors ---------
+  virtual ~GFPlanarHit();
   GFPlanarHit(){}
+
+  GFPlanarHit(int dim) : GFAbsRecoHit(dim){;}
   
 
   // Accessors -----------------------
@@ -57,6 +60,20 @@ public:
    */
   const GFDetPlane& getDetPlane(const GFAbsTrackRep*) {return fPhysicalDetPlane;}
   
+  virtual void getMeasurement(const GFAbsTrackRep* rep,
+                              const GFDetPlane& pl,
+                              const TMatrixT<double>& statePred,
+                              const TMatrixT<double>& covPred,
+                              TMatrixT<double>& m,
+                              TMatrixT<double>& V) {
+    static_cast<void>(rep);
+    static_cast<void>(statePred);
+    static_cast<void>(covPred);
+    m.ResizeTo(fHitCoord);
+    V.ResizeTo(fHitCov);
+    m = fHitCoord;
+    V = fHitCov;
+  }
 
   // Modifiers -----------------------
 
@@ -68,19 +85,6 @@ public:
    * any derived RecoHit in order to setup the geometry of this hit.
    */
   void setDetPlane(const GFDetPlane& p){fPhysicalDetPlane=p;}
-
-  virtual void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TMatrixT<double>& statePred,const TMatrixT<double>& covPred,TMatrixT<double>& m, TMatrixT<double>& V){
-    static_cast<void>(rep);
-    static_cast<void>(statePred);
-    static_cast<void>(covPred);
-    m.ResizeTo(getRawHitCoord());
-    V.ResizeTo(getRawHitCov());
-    m = getRawHitCoord();
-    V = getRawHitCov();
-  }
-
-  virtual ~GFPlanarHit(){;}
-
 
 protected:
 
