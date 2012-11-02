@@ -13,7 +13,7 @@ public:
 
   virtual GFAbsRecoHit* clone();
   
-  virtual TMatrixT<double> getHMatrix(const GFAbsTrackRep* stateVector);
+  virtual const TMatrixT<double>& getHMatrix(const GFAbsTrackRep* rep);
 
 private:
   static const int NparHitRep = 2;

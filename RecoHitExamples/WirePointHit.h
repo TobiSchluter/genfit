@@ -15,7 +15,7 @@ class WirePointHit : public GFAbsWirepointHit {
 
   virtual GFAbsRecoHit* clone();
   
-  virtual TMatrixT<double> getHMatrix(const GFAbsTrackRep* stateVector);
+  virtual const TMatrixT<double>& getHMatrix(const GFAbsTrackRep* rep);
 
  public:
   ClassDef(WirePointHit,1)

@@ -49,17 +49,12 @@ WireHit::clone(){
 }
 
 
-TMatrixT<double>
-WireHit::getHMatrix(const GFAbsTrackRep* stateVector)
+const TMatrixT<double>&
+WireHit::getHMatrix(const GFAbsTrackRep* rep)
 {
-  if ((dynamic_cast<const RKTrackRep*>(stateVector) != NULL)) {
-    TMatrixT<double> HMatrix(1,5);
-
-    HMatrix(0,0) = 0.;
-    HMatrix(0,1) = 0.;
-    HMatrix(0,2) = 0.;
-    HMatrix(0,3) = 1.;
-    HMatrix(0,4) = 0.;
+  if ((dynamic_cast<const RKTrackRep*>(rep) != NULL)) {
+    static const double HMatrixContent[5] = {0, 0, 0, 1, 0};
+    static const TMatrixT<double> HMatrix(1,5, HMatrixContent);
 
     return HMatrix;
   }

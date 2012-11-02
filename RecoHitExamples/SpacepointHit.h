@@ -16,7 +16,7 @@ public:
   virtual GFAbsRecoHit* clone();
   
   // Operations ----------------------
-  virtual TMatrixT<double> getHMatrix(const GFAbsTrackRep* stateVector);
+  virtual const TMatrixT<double>& getHMatrix(const GFAbsTrackRep* rep);
 
 public:
   ClassDef(SpacepointHit,1)

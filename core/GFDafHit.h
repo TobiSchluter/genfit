@@ -89,7 +89,7 @@ class GFDafHit: public GFAbsRecoHit {
 		 * Returns the H matrix of the first hit in the GFDafHit. This is valid
 		 * because all hits are on the same plane.
 		 */
-		TMatrixT<double> getHMatrix(const GFAbsTrackRep* rep);
+		const TMatrixT<double>& getHMatrix(const GFAbsTrackRep* rep);
 
 		GFDafHit* clone();
 

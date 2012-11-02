@@ -76,23 +76,13 @@ ProlateSpacepointHit::clone(){
 }
 
 
-TMatrixT<double>
-ProlateSpacepointHit::getHMatrix(const GFAbsTrackRep* stateVector)
+const TMatrixT<double>&
+ProlateSpacepointHit::getHMatrix(const GFAbsTrackRep* rep)
 {
-  if ((dynamic_cast<const RKTrackRep*>(stateVector) != NULL)) {
-    TMatrixT<double> HMatrix(2,5);
-
-    HMatrix(0,0) = 0.;
-    HMatrix(0,1) = 0.;
-    HMatrix(0,2) = 0.;
-    HMatrix(0,3) = 1.;
-    HMatrix(0,4) = 0.;
-
-    HMatrix(1,0) = 0.;
-    HMatrix(1,1) = 0.;
-    HMatrix(1,2) = 0.;
-    HMatrix(1,3) = 0.;
-    HMatrix(1,4) = 1.;
+  if ((dynamic_cast<const RKTrackRep*>(rep) != NULL)) {
+    static const double HMatrixContent[10] = {0, 0, 0, 1, 0,
+                                              0, 0, 0, 0, 1};
+    static const TMatrixT<double> HMatrix(2,5, HMatrixContent);
 
     return HMatrix;
   }
