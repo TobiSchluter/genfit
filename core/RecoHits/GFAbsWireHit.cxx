@@ -28,7 +28,7 @@
 
 
 GFAbsWireHit::GFAbsWireHit() :
-  GFAbsRecoHit(NparHitRep)
+  GFAbsRecoHit(NparHitRep),
   fMaxdistance(1.E50),
   fLeftRight(0)
 {
@@ -36,7 +36,7 @@ GFAbsWireHit::GFAbsWireHit() :
 }
 
 GFAbsWireHit::GFAbsWireHit(int dim) :
-  GFAbsRecoHit(dim)
+  GFAbsRecoHit(dim),
   fMaxdistance(1.E50),
   fLeftRight(0)
 {
@@ -60,21 +60,21 @@ GFAbsWireHit::getMeasurement(const GFAbsTrackRep* rep,
 
   // m
   m.ResizeTo(1,1);
-  m(0,0) = fRawHitCoord(6,0);
+  m(0,0) = fHitCoord(6,0);
 
 
   // V
   V.ResizeTo(1,1);
-  V(0,0) = fRawHitCov(6,6);
+  V(0,0) = fHitCov(6,6);
 }
 
 
 const GFDetPlane&
 GFAbsWireHit::getDetPlane(GFAbsTrackRep* rep)
 {
-  assert(fRawHitCoord.GetNrows()>6);
-  TVector3 wire1(fRawHitCoord(0,0), fRawHitCoord(1,0), fRawHitCoord(2,0));
-  TVector3 wire2(fRawHitCoord(3,0), fRawHitCoord(4,0), fRawHitCoord(5,0));
+  assert(fHitCoord.GetNrows()>6);
+  TVector3 wire1(fHitCoord(0,0), fHitCoord(1,0), fHitCoord(2,0));
+  TVector3 wire2(fHitCoord(3,0), fHitCoord(4,0), fHitCoord(5,0));
 
   //  distance of one (the first) of the wire extremities from the plane
   //Double_t d_from_refplane =  fDetPlane.dist(wire1).Mag();
@@ -127,10 +127,10 @@ GFAbsWireHit::setLeftRightResolution(int lr){
 void
 GFAbsWireHit::checkPlane(const GFDetPlane& plane)
 {
-  assert(fRawHitCoord.GetNrows()>6);
+  assert(fHitCoord.GetNrows()>6);
 
-  TVector3 wire1(fRawHitCoord(0,0), fRawHitCoord(1,0), fRawHitCoord(2,0));
-  TVector3 wire2(fRawHitCoord(3,0), fRawHitCoord(4,0), fRawHitCoord(5,0));
+  TVector3 wire1(fHitCoord(0,0), fHitCoord(1,0), fHitCoord(2,0));
+  TVector3 wire2(fHitCoord(3,0), fHitCoord(4,0), fHitCoord(5,0));
   TVector3 wiredirection = wire1 - wire2;
 
   TVector3 vaxis = plane.getV();

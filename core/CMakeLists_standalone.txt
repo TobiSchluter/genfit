@@ -32,8 +32,8 @@ set(GENFIT_SRCS
 	RecoHits/GFAbsPlanarHit.cxx
 	RecoHits/GFAbsProlateSpacepointHit.cxx
 	RecoHits/GFAbsSpacepointHit.cxx
-	#RecoHits/GFAbsWireHit.cxx
-	#RecoHits/GFAbsWirepointHit.cxx 
+	RecoHits/GFAbsWireHit.cxx
+	RecoHits/GFAbsWirepointHit.cxx 
 )
 
 set(GENFIT_HEADERS  
@@ -58,8 +58,8 @@ set(GENFIT_HEADERS
 	RecoHits/GFAbsPlanarHit.h
 	RecoHits/GFAbsProlateSpacepointHit.h
 	RecoHits/GFAbsSpacepointHit.h
-	#RecoHits/GFAbsWireHit.h
-	#RecoHits/GFAbsWirepointHit.h
+	RecoHits/GFAbsWireHit.h
+	RecoHits/GFAbsWirepointHit.h
 )
 
 set(GENFIT_LINKDEF  genfitLinkDef.h)

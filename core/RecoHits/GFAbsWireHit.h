@@ -45,8 +45,8 @@
  * coordinate in the plane)
  *
  */
-class GFAbsWireHit : public TObject {
-public:
+class GFAbsWireHit : public GFAbsRecoHit {
+ public:
 
   // Constructors/Destructors ---------
   GFAbsWireHit();
@@ -99,7 +99,7 @@ public:
   void checkPlane(const GFDetPlane&);
 
  private:
-  static const int NparHitRep = 3;
+  static const int NparHitRep = 7;
 
  public:
   ClassDef(GFAbsWireHit,1);

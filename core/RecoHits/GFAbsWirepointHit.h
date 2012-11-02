@@ -21,22 +21,20 @@
 
 
 
-#ifndef GFWIREPOINTHIT_H
-#define GFWIREPOINTHIT_H
+#ifndef GFABSWIREPOINTHIT_H
+#define GFABSWIREPOINTHIT_H
 
-#include "TMatrixT.h"
-#include "TObject.h"
+#include "GFAbsWireHit.h"
 
-#include "GFDetPlane.h"
 
-class GFAbsRecoHit;
-class GFAbsTrackRep;
-
-/** @brief  class for hits in wire detectors (STT and DCH)
+/** @brief Abstract hit class for hits in wire detectors (Straw tubes and drift chambers)
  *  which can measure the coordinate along the wire
+ *
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Lia Lavezzi (INFN Pavia, original author)
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
+ *  @author Johannes Rauch  (Technische Universit&auml;t M&uuml;nchen, original author)
+ *
  * This  is not valid for any kind of plane orientation
  * choice: to use it you MUST choose a plane described by u 
  * and v axes with v coincident with the wire (and u orthogonal
@@ -49,32 +47,30 @@ class GFAbsTrackRep;
  * wire (in the plane reference frame, v coordinate).
  *
  */
-class GFWirepointHit : public GFWireHit {
-public:
+class GFAbsWirepointHit : public GFAbsWireHit {
+ public:
 
+  // Constructors/Destructors ---------
+  GFAbsWirepointHit();
 
-  GFWirepointHit();
- 
-  /** @brief Hit coordinates in detector plane.
-   */
-  TMatrixT<double> hitCoord(GFAbsRecoHit*,const GFDetPlane&);
+  /** @brief Constructor for inheriting hits with a higher dimensionality (e.g. position along wire, energy loss) */
+  GFAbsWirepointHit(int dim);
 
-  /** @brief Hit covariances in detector plane.
-   */
-  TMatrixT<double> hitCov(GFAbsRecoHit*,const GFDetPlane&);
+  virtual ~GFAbsWirepointHit(){;}
 
-  /** @brief Check if the detector plane is valid
-   */
-  void checkPlane(GFAbsRecoHit*,const GFDetPlane&);
-
-  virtual ~GFWirepointHit(){;}
+  // Operations ----------------------
+  virtual void getMeasurement(const GFAbsTrackRep* rep,
+                              const GFDetPlane& pl,
+                              const TMatrixT<double>& statePred,
+                              const TMatrixT<double>& covPred,
+                              TMatrixT<double>& m,
+                              TMatrixT<double>& V);
 
  private:
-  // Private Data Members ------------
-  GFDetPlane fDetPlane;
+  static const int NparHitRep = 8;
 
  public:
-  ClassDef(GFWirepointHit,0);
+  ClassDef(GFAbsWirepointHit,1);
 
 };
 
