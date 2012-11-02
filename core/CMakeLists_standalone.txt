@@ -29,7 +29,7 @@ set(GENFIT_SRCS
 	GFDaf.cxx 
 	GFDafHit.cxx 
 	GFTrackProximity.cxx
-	#RecoHits/GFAbsProlateSpacepointHit.cxx
+	RecoHits/GFAbsProlateSpacepointHit.cxx
 	RecoHits/GFAbsSpacepointHit.cxx
 	#RecoHits/GFAbsWireHit.cxx
 	#RecoHits/GFAbsWirepointHit.cxx 
@@ -55,7 +55,7 @@ set(GENFIT_HEADERS
 	GFDafHit.h
 	GFTrackProximity.h
 	RecoHits/GFAbsPlanarHit.h
-	#RecoHits/GFAbsProlateSpacepointHit.h
+	RecoHits/GFAbsProlateSpacepointHit.h
 	RecoHits/GFAbsSpacepointHit.h
 	#RecoHits/GFAbsWireHit.h
 	#RecoHits/GFAbsWirepointHit.h

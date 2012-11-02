@@ -45,7 +45,7 @@
  */
 
 class GFAbsSpacepointHit : public GFAbsRecoHit {
-public:
+ public:
 
   // Constructors/Destructors ---------
   GFAbsSpacepointHit() : GFAbsRecoHit(NparHitRep) {}
@@ -70,9 +70,10 @@ public:
   virtual const GFDetPlane& getDetPlane(GFAbsTrackRep* rep);
 
  private:
-
   // Private Data Members ------------
   static const int NparHitRep = 3;
+
+ protected:
   GFDetPlane fPlane;
 
   // Private Methods -----------------

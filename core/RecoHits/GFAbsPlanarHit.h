@@ -87,7 +87,7 @@ public:
    */
   void setDetPlane(const GFDetPlane& p){fPhysicalDetPlane = p;}
 
-protected:
+ protected:
 
   // Private Data Members ------------
   
