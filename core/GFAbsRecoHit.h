@@ -24,9 +24,10 @@
 #ifndef GFABSRECOHIT_H
 #define GFABSRECOHIT_H
 
-#include<iostream>
+#include <iostream>
 
 #include "TMatrixT.h"
+#include "TMatrixTSym.h"
 #include "TObject.h"
 
 #include "GFAbsTrackRep.h"
@@ -36,14 +37,15 @@
  *
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
+ *  @author Johannes Rauch  (Technische Universit&auml;t M&uuml;nchen, original author)
  * 
  * A hit is defined as a single measurement of a detector. Each detector can 
- * define it's own hit representation (geometry) by inherting from GFAbsRecoHit. 
+ * define it's own hit representation (geometry) by inheriting from GFAbsRecoHit.
  * We call such a child object a "RecoHit" to make clear that
  * it inherits from GFAbsRecoHit.
  * All detector specific information is handled inside the RecoHit objects.
  * The idea behind this is that the fitting algorithms can work on different
- * detectors simultanously. 
+ * detectors simultaneously.
  *
  * GFAbsRecoHit defines the basic interface that is used by all genfit algorithms
  * to access hit-measurement information. It provides:
@@ -52,14 +54,9 @@
  *  - the interface to access a hit's detector plane object
  * 
  * All hits have to inherit from this base class. 
- * Inheritance can be direct or through template class 
- * RecoHitIfc<GeometryPolicy>.
- * These interface classes (defined with a specific policy)
- * provide additional functionality for specific hit geometries, 
- * such as space points, wires, etc. For details look 
- * at the RecoHitIfc documentation.
- * 
- * A simple example is given in VirtSpacePointRecoHit
+ * Inheritance can be direct or from the derived abstract hit classes in RecoHits/.
+ * These classes provide additional functionality for specific hit geometries,
+ * such as space points, wires, etc.
  *
  * Background information: The main feature here is
  * that coordinates and covariances are available as general 
@@ -70,8 +67,8 @@
  * to elegantly combine information from different detectors.
  */
 
-class GFAbsRecoHit : public TObject{
-protected:
+class GFAbsRecoHit : public TObject {
+ protected:
   /// Vector of raw coordinates of hit
   TMatrixT<double> fHitCoord;
 
@@ -84,7 +81,7 @@ protected:
  private:
   int fNparHit;
 
-public:
+ public:
   virtual ~GFAbsRecoHit() = 0;
 
   /** @brief Constructor specifying dimension of coordinate vector
@@ -122,7 +119,6 @@ public:
    * work together. It should be the only point where this explicit 
    * coordination is necessary. 
    *
-   * For example code see implementing classes below:
    */
   virtual const TMatrixT<double>& getHMatrix(const GFAbsTrackRep* stateVector) = 0;
 
@@ -156,10 +152,10 @@ public:
    * a plane that is perpendicular to the current track, since in that case no 
    * other plane is predefined.
    *
-   * There are several implementations for this method in the HitPolicies. 
+   * There are several implementations for this method in the hit classes in RecoHits/.
    * In the most simple case (a planar detector) the method just returns a
    * fixed (detector module specific) plane. This behaviour for example is 
-   * implemented in PlanarHitPolicy.
+   * implemented in GFAbsPlanarHit.
    */
   virtual const GFDetPlane& getDetPlane(GFAbsTrackRep*) = 0; 
    
@@ -175,7 +171,7 @@ public:
   
   /** @brief Get clone of this object.
    *
-   * Virtual abstract method. Has to be implemented by inherting classes.
+   * Virtual abstract method. Has to be implemented by inheriting classes.
    * Creates a deep copy of this object. 
    * Ownership is transferred to the caller!
    */

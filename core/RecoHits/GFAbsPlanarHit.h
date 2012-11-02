@@ -20,8 +20,8 @@
  * @{
  */
 
-#ifndef GFPLANARHITPOLICY_H
-#define GFPLANARHITPOLICY_H
+#ifndef GFABSPLANARHIT_H
+#define GFABSPLANARHIT_H
 
 #include <iostream>
 #include <string>
@@ -35,30 +35,31 @@
  *
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
+ *  @author Johannes Rauch  (Technische Universit&auml;t M&uuml;nchen, original author)
  * 
  * RecoHits for planar detectors should inherit 
- * from RecoHitIfc<GFPlanarHit>.
+ * from GFAbsPlanarHit.
  *
  * The main feature of this type of hit is, that the detector plane
  * is completely defined by the detector hardware. Derived RecoHits need only
  * to supply the physical detector plane from their geometry database.
  */
 
-class GFPlanarHit : public GFAbsRecoHit {
+class GFAbsPlanarHit : public GFAbsRecoHit {
 public:
 
   // Constructors/Destructors ---------
-  virtual ~GFPlanarHit();
-  GFPlanarHit(){}
+  virtual ~GFAbsPlanarHit();
+  GFAbsPlanarHit(){}
 
-  GFPlanarHit(int dim) : GFAbsRecoHit(dim){;}
+  GFAbsPlanarHit(int dim) : GFAbsRecoHit(dim){;}
   
 
   // Accessors -----------------------
   
   /** @brief Returns the physical detector plane.
    */
-  const GFDetPlane& getDetPlane(const GFAbsTrackRep*) {return fPhysicalDetPlane;}
+  const GFDetPlane& getDetPlane(GFAbsTrackRep*) {return fPhysicalDetPlane;}
   
   virtual void getMeasurement(const GFAbsTrackRep* rep,
                               const GFDetPlane& pl,
@@ -84,7 +85,7 @@ public:
    * detector hardware. This method should be called in the constructor of
    * any derived RecoHit in order to setup the geometry of this hit.
    */
-  void setDetPlane(const GFDetPlane& p){fPhysicalDetPlane=p;}
+  void setDetPlane(const GFDetPlane& p){fPhysicalDetPlane = p;}
 
 protected:
 
@@ -97,7 +98,7 @@ protected:
   // Private Methods -----------------
 
  public:
-  ClassDef(GFPlanarHit,1)
+  ClassDef(GFAbsPlanarHit,1)
 
 };
 
