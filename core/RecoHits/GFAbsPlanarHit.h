@@ -44,7 +44,6 @@ class GFAbsPlanarHit : public GFAbsRecoHit {
 public:
 
   // Constructors/Destructors ---------
-  virtual ~GFAbsPlanarHit();
   GFAbsPlanarHit(){}
 
   /** @brief Dimensionality is usually 1 (strip hit) or 2 (pixel hit)
@@ -53,6 +52,7 @@ public:
    *  */
   GFAbsPlanarHit(int dim) : GFAbsRecoHit(dim){;}
   
+  virtual ~GFAbsPlanarHit() {}
 
   // Accessors -----------------------
   

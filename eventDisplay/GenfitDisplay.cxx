@@ -6,6 +6,11 @@
 #include <exception>
 #include <iostream>
 #include <GFAbsRecoHit.h>
+#include <GFAbsPlanarHit.h>
+#include <GFAbsProlateSpacepointHit.h>
+#include <GFAbsSpacepointHit.h>
+#include <GFAbsWireHit.h>
+#include <GFAbsWirepointHit.h>
 #include <GFAbsTrackRep.h>
 #include <GFConstField.h>
 #include <GFDetPlane.h>
@@ -318,8 +323,6 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			TVector3 u = plane.getU();
 			TVector3 v = plane.getV();
 
-			std::string hit_type = hit->getPolicyName();
-
 			bool planar_hit = false;
 			bool planar_pixel_hit = false;
 			bool space_hit = false;
@@ -333,7 +336,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 			int hit_coords_dim = hit_coords.GetNrows();
 
-			if(hit_type == "GFPlanarHitPolicy") {
+			if(dynamic_cast<GFAbsPlanarHit*>(hit) != NULL) {
 				planar_hit = true;
 				if(hit_coords_dim == 1) {
 					hit_u = hit_coords(0,0);
@@ -345,19 +348,16 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					hit_res_u = hit_cov(0,0);
 					hit_res_v = hit_cov(1,1);
 				}
-			} else if (hit_type == "GFSpacepointHitPolicy") {
+			} else if (dynamic_cast<GFAbsSpacepointHit*>(hit) != NULL) {
 				space_hit = true;
 				plane_size = 4;
-			} else if (hit_type == "GFPseudoSpacepointWireHitPolicy") {
-        space_hit = true;
-        plane_size = 4;
-      } else if (hit_type == "GFWireHitPolicy") {
+      } else if (dynamic_cast<GFAbsWireHit*>(hit) != NULL) {
 				wire_hit = true;
 				hit_u = hit_coords(0,0);
 				hit_res_u = hit_cov(0,0);
 				hit_res_v = 4;
 				plane_size = 4;
-			} else if (hit_type == "GFWirepointHitPolicy") {
+			} else if (dynamic_cast<GFAbsWirepointHit*>(hit) != NULL) {
         wire_hit = true;
         wirepoint_hit = true;
         hit_u = hit_coords(0,0);

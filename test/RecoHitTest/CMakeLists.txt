@@ -22,9 +22,10 @@ Execute_process(COMMAND root-config --glibs --cflags --evelibs
 
 INCLUDE_DIRECTORIES(
 	$ENV{ROOTSYS}/include 
-	$ENV{GENFIT}/core 
+	$ENV{GENFIT}/core
+	$ENV{GENFIT}/core/RecoHits 
 	$ENV{GENFIT}/RKTrackRep 
-	$ENV{GENFIT}/tool 
+	$ENV{GENFIT}/RecoHitExamples 
 	$ENV{GENFIT}/eventDisplay
 )
 
@@ -58,6 +59,6 @@ TARGET_LINK_LIBRARIES(main
 	-L$ENV{GENFIT}/lib
 	-lgenfit 
 	-lgenfitRK 
-	-lmytool
+	-lmyRecoHitExamples
 )
 

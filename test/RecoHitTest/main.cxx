@@ -28,8 +28,8 @@
 #include <TString.h>
 
 #include <PixHit.h>
-#include <PointHit.h>
-#include <PseudoSpacePointWireHit.h>
+#include <SpacepointHit.h>
+#include <ProlateSpacepointHit.h>
 #include <StripHit.h>
 #include <WireHit.h>
 #include <WirePointHit.h>
@@ -69,8 +69,8 @@ int main() {
   const bool debug = false;
 
   // 0: PixHit
-  // 1: PointHit
-  // 2: PseudoSpacePointWireHit
+  // 1: SpacepointHit
+  // 2: ProlateSpacepointHit
   // 3: StripHit
   // 4: WireHit
   // 5: WirePointHit
@@ -271,12 +271,12 @@ int main() {
               hit = new PixHit(point, planeNorm, planeNorm.Cross(z), resolution, true);
               break;
 
-            case 1: // 1: PointHit
-              hit = new PointHit(point, resolution, true);
+            case 1: // 1: SpacepointHit
+              hit = new SpacepointHit(point, resolution, true);
               break;
 
-            case 2: // 2: PseudoSpacePointWireHit
-              hit = new PseudoSpacePointWireHit(point, wireDir, resolution, resolutionWire, true);
+            case 2: // 2: ProlateSpacepointHit
+              hit = new ProlateSpacepointHit(point, wireDir, resolution, resolutionWire, true);
               break;
 
             case 3: // 3: StripHit
