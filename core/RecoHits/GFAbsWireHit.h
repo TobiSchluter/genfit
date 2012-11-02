@@ -17,28 +17,24 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @addtogroup genfit
- * @{ */
+ * @{
+ */
+
+#ifndef GFABSWIREHIT_H
+#define GFABSWIREHIT_H
 
 
+#include "GFAbsRecoHit.h"
 
-#ifndef GFWIREHITPOLICY_H
-#define GFWIREHITPOLICY_H
-
-#include "TMatrixT.h"
-#include "TObject.h"
-
-#include "GFDetPlane.h"
-
-class GFAbsRecoHit;
-class GFAbsTrackRep;
-
-/** @brief policy class for hits in wire detectors (STT and DCH) 
- *  which do not measure the coordinate along the wire
+/** @brief Abstract hit class for hits in wire detectors (Straw tubes and drift chambers)
+ *  which do not measure the coordinate along the wire.
+ *
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Lia Lavezzi (INFN Pavia, original author)
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
+ *  @author Johannes Rauch  (Technische Universit&auml;t M&uuml;nchen, original author)
  *
- * This policy is not valid for any kind of plane orientation
+ * This hit class is not valid for any kind of plane orientation
  * choice: to use it you MUST choose a plane described by u 
  * and v axes with v coincident with the wire (and u orthogonal
  * to it, obviously).
@@ -49,13 +45,23 @@ class GFAbsTrackRep;
  * coordinate in the plane)
  *
  */
-class GFWireHitPolicy : public TObject {
+class GFAbsWireHit : public TObject {
 public:
 
+  // Constructors/Destructors ---------
+  GFAbsWireHit();
+  GFAbsWireHit(int dim);
 
-  GFWireHitPolicy();
- 
+  virtual ~GFAbsWireHit(){;}
+
   // Operations ----------------------
+  virtual void getMeasurement(const GFAbsTrackRep* rep,
+                              const GFDetPlane& pl,
+                              const TMatrixT<double>& statePred,
+                              const TMatrixT<double>& covPred,
+                              TMatrixT<double>& m,
+                              TMatrixT<double>& V);
+
    /** @brief Get detector plane 
     * Calls GFAbsTrackRep::extrapolateToLine for POCA.
     * The detector plane will contain the wire as plane vector v.
@@ -64,24 +70,10 @@ public:
     * u = +-1 * (wire direction) x (track direction)
     * The direction of u will be selected according to fLeftRight.
     */
-  const GFDetPlane& detPlane(GFAbsRecoHit*, GFAbsTrackRep*);
-
-  /** @brief Hit coordinates in detector plane.
-   */
-  TMatrixT<double> hitCoord(GFAbsRecoHit*,const GFDetPlane&);
-
-  /** @brief Hit covariances in detector plane.
-   */
-  TMatrixT<double> hitCov(GFAbsRecoHit*,const GFDetPlane&);
-
-  /** @brief Check if the detector plane is valid
-   */
-  void checkPlane(GFAbsRecoHit*,const GFDetPlane&);
-
-  virtual ~GFWireHitPolicy(){;}
+  virtual const GFDetPlane& getDetPlane(GFAbsTrackRep* rep);
 
   double getMaxDistance(){return fMaxdistance;}
-  void setMaxDistance(double d){fMaxdistance=d;}
+  void setMaxDistance(double d){fMaxdistance = d;}
   
   /**
    * select how to resolve the left/right ambiguity:
@@ -92,20 +84,23 @@ public:
   void setLeftRightResolution(int lr);
   int getLeftRightResolution() const {return fLeftRight;}
 
-  const std::string& getName(){return fPolicyName;}
+ protected:
 
- private:
-  static const std::string fPolicyName;
-
-
-  // Private Data Members ------------
-  GFDetPlane fDetPlane;
+  // Protected Data Members ------------
+  GFDetPlane fPlane;
   double fMaxdistance;
   int fLeftRight;
-  // Private Methods -----------------
+
+  // Protected Methods -----------------
+  /** @brief Check if the detector plane is valid
+   */
+  void checkPlane(const GFDetPlane&);
+
+ private:
+  static const int NparHitRep = 3;
 
  public:
-  ClassDef(GFWireHitPolicy,2);
+  ClassDef(GFAbsWireHit,1);
 
 };
 

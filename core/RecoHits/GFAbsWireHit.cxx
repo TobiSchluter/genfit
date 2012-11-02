@@ -17,86 +17,66 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 // ----------------------------------------------------------
-// Please see GFWireHitPolicy.h  before using this class.
+// Please see GFAbsWireHit.h  before using this class.
 // ----------------------------------------------------------
 
-#include "GFWireHitPolicy.h"
+#include "GFAbsWireHit.h"
 
 #include "assert.h"
 #include <cmath>
 
 #include "TMath.h"
-#include "TVector3.h"
-
-#include "GFAbsRecoHit.h"
 #include "GFException.h"
 
-const std::string GFWireHitPolicy::fPolicyName = "GFWireHitPolicy";
 
-GFWireHitPolicy::GFWireHitPolicy() :
-    fMaxdistance(1.E50),
-    fLeftRight(0)
+GFAbsWireHit::GFAbsWireHit() :
+  GFAbsRecoHit(NparHitRep)
+  fMaxdistance(1.E50),
+  fLeftRight(0)
 {
   ;
 }
 
-TMatrixT<double> 
-GFWireHitPolicy::hitCoord(GFAbsRecoHit* hit,const GFDetPlane& plane)
+GFAbsWireHit::GFAbsWireHit(int dim) :
+  GFAbsRecoHit(dim)
+  fMaxdistance(1.E50),
+  fLeftRight(0)
 {
-  TMatrixT<double> returnMat(1,1);
-
-  checkPlane(hit, plane);
-
-  // raw x1, y1, z1, x2, y2, z2, rdrift
-  TMatrixT<double> rC = hit->getRawHitCoord();
-
-  returnMat(0,0) = rC(6,0);
-  return returnMat;
-}
-
-TMatrixT<double> 
-GFWireHitPolicy::hitCov(GFAbsRecoHit* hit,const GFDetPlane& plane)
-{
-  checkPlane(hit, plane);
-
-  TMatrixT<double> returnCov(1,1);
-  TMatrixT<double> rawCov = hit->getRawHitCov();
-
-  returnCov(0,0) = rawCov(6,6);
-
-  return  returnCov;
+  ;
 }
 
 
+void
+GFAbsWireHit::getMeasurement(const GFAbsTrackRep* rep,
+                             const GFDetPlane& pl,
+                             const TMatrixT<double>& statePred,
+                             const TMatrixT<double>& covPred,
+                             TMatrixT<double>& m,
+                             TMatrixT<double>& V) {
 
-void GFWireHitPolicy::checkPlane(GFAbsRecoHit* hit,const GFDetPlane& plane)
-{
-  // raw x1, y1, z1, x2, y2, z2, rdrift, zreco
-  TMatrixT<double> rC = hit->getRawHitCoord();
+  static_cast<void>(rep);
+  static_cast<void>(statePred);
+  static_cast<void>(covPred);
 
-  assert(rC.GetNrows()==7);
-  
-  TVector3 wire1(rC(0,0), rC(1,0), rC(2,0));
-  TVector3 wire2(rC(3,0), rC(4,0), rC(5,0));
-  TVector3 wiredirection = wire1 - wire2;
-  
-  TVector3 vaxis = plane.getV();
-  wiredirection.SetMag(1.);
-  vaxis.SetMag(1.);
+  checkPlane(pl);
 
-  if(fabs(TMath::Abs(wiredirection.Dot(vaxis)) - 1) > 1e-3) {
-    std::cout << "GFWireHitPolicy: plane not valid!!" << std::endl;
-  }
+  // m
+  m.ResizeTo(1,1);
+  m(0,0) = fRawHitCoord(6,0);
+
+
+  // V
+  V.ResizeTo(1,1);
+  V(0,0) = fRawHitCov(6,6);
 }
 
 
-const GFDetPlane& 
-GFWireHitPolicy::detPlane(GFAbsRecoHit* hit, GFAbsTrackRep* rep)
+const GFDetPlane&
+GFAbsWireHit::getDetPlane(GFAbsTrackRep* rep)
 {
-  TMatrixT<double> x = hit->getRawHitCoord();
-  assert(x.GetNrows()==7);
-  TVector3 wire1(x(0,0), x(1,0), x(2,0));
-  TVector3 wire2(x(3,0), x(4,0), x(5,0));
+  assert(fRawHitCoord.GetNrows()>6);
+  TVector3 wire1(fRawHitCoord(0,0), fRawHitCoord(1,0), fRawHitCoord(2,0));
+  TVector3 wire2(fRawHitCoord(3,0), fRawHitCoord(4,0), fRawHitCoord(5,0));
 
   //  distance of one (the first) of the wire extremities from the plane
   //Double_t d_from_refplane =  fDetPlane.dist(wire1).Mag();
@@ -108,7 +88,7 @@ GFWireHitPolicy::detPlane(GFAbsRecoHit* hit, GFAbsTrackRep* rep)
   
   // check distance of poca to wire
   if((poca - poca_onwire).Mag() > fMaxdistance) {
-    GFException exc("GFWireHitPolicy::detPlane(): distance poca-wire > maxdistance", __LINE__,__FILE__);
+    GFException exc("GFAbsWireHit::detPlane(): distance poca-wire > maxdistance", __LINE__,__FILE__);
     throw exc;    
   }
 
@@ -118,7 +98,7 @@ GFWireHitPolicy::detPlane(GFAbsRecoHit* hit, GFAbsTrackRep* rep)
   
   // check if direction is parallel to wire
   if (fabs(wiredirection.Angle(dirInPoca)) < 0.01){
-    GFException exc("GFWireHitPolicy::detPlane(): Cannot construct detector plane, direction is parallel to wire", __LINE__,__FILE__);
+    GFException exc("GFAbsWireHit::detPlane(): Cannot construct detector plane, direction is parallel to wire", __LINE__,__FILE__);
     throw exc;
   }
   
@@ -132,16 +112,38 @@ GFWireHitPolicy::detPlane(GFAbsRecoHit* hit, GFAbsTrackRep* rep)
   }
   else if (fLeftRight < 0) U *= -1.;
 
-  fDetPlane = GFDetPlane(poca_onwire, U, wiredirection);
+  fPlane = GFDetPlane(poca_onwire, U, wiredirection);
   
-  return fDetPlane;
+  return fPlane;
 }
 
+
 void
-GFWireHitPolicy::setLeftRightResolution(int lr){
+GFAbsWireHit::setLeftRightResolution(int lr){
   if (lr==0) fLeftRight = 0;
   else if (lr<0) fLeftRight = -1;
   else fLeftRight = 1;
 }
 
-ClassImp(GFWireHitPolicy)
+
+void
+GFAbsWireHit::checkPlane(const GFDetPlane& plane)
+{
+  assert(fRawHitCoord.GetNrows()>6);
+
+  TVector3 wire1(fRawHitCoord(0,0), fRawHitCoord(1,0), fRawHitCoord(2,0));
+  TVector3 wire2(fRawHitCoord(3,0), fRawHitCoord(4,0), fRawHitCoord(5,0));
+  TVector3 wiredirection = wire1 - wire2;
+
+  TVector3 vaxis = plane.getV();
+  wiredirection.SetMag(1.);
+  vaxis.SetMag(1.);
+
+  if(fabs(TMath::Abs(wiredirection.Dot(vaxis)) - 1) > 1e-3) {
+    GFException exc("GFAbsWireHit: plane not valid!!", __LINE__,__FILE__);
+    throw exc;
+  }
+}
+
+
+ClassImp(GFAbsWireHit)

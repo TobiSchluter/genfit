@@ -29,6 +29,10 @@ GFAbsSpacepointHit::getMeasurement(const GFAbsTrackRep* rep,
                                 TMatrixT<double>& m,
                                 TMatrixT<double>& V) {
 
+  static_cast<void>(rep);
+  static_cast<void>(statePred);
+  static_cast<void>(covPred);
+
   TVector3 o(pl.getO());
   TVector3 u(pl.getU());
   TVector3 v(pl.getV());
