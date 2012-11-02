@@ -14,24 +14,24 @@ StripHit::~StripHit()
 {}
 
 StripHit::StripHit()
-  : PlanarRecoHit(NparHitRep)
+  : GFAbsPlanarHit(NparHitRep)
 {}
 
 StripHit::StripHit(const TVector3& point, const TVector3& norm,
 		               const TVector3& u, double res,
 		               bool smear)
-  : PlanarRecoHit(NparHitRep){
+  : GFAbsPlanarHit(NparHitRep){
 
   fHitCov(0,0) = res*res;
 
   assert(fabs(norm*u)<1.E-5);
   TVector3 v = u.Cross(norm);
-  GFDetPlane d(point,u,v);
+  GFDetPlane plane(point,u,v);
 
   if(smear) fHitCoord(0,0) = gRandom->Gaus(0,res);
   else fHitCoord(0,0) = 0;
 
-  fPolicy.setDetPlane(d);
+  setDetPlane(plane);
 }
 
 

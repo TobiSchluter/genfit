@@ -1,13 +1,11 @@
 #ifndef WIREPOINTHIT_HH
 #define WIREPOINTHIT_HH
 
-#include "GFRecoHitIfc.h"
-#include "GFWirepointHitPolicy.h"
+#include "GFAbsWirepointHit.h"
 
-typedef GFRecoHitIfc<GFWirepointHitPolicy> WirePointRecoHit;
 
-class WirePointHit : public WirePointRecoHit {
-public:
+class WirePointHit : public GFAbsWirepointHit {
+ public:
 
   WirePointHit();
   WirePointHit(const TVector3& wire1, const TVector3& wire2, double rdrift, double z,
@@ -19,18 +17,7 @@ public:
   
   virtual TMatrixT<double> getHMatrix(const GFAbsTrackRep* stateVector);
 
-  void setLeftRightResolution(int lr){
-    fPolicy.setLeftRightResolution(lr);
-  }
-
-  int getLeftRightResolution(){
-    return fPolicy.getLeftRightResolution();
-  }
-
-private:
-  static const int NparHitRep = 8;
-
-public:
+ public:
   ClassDef(WirePointHit,1)
 
 };

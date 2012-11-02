@@ -130,7 +130,7 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
 }
 
 
-const TMatrixT<double>& GFDafHit::getHMatrix(const GFAbsTrackRep* rep) {
+TMatrixT<double> GFDafHit::getHMatrix(const GFAbsTrackRep* rep) {
 
 	return fRawHits.at(0)->getHMatrix(rep);
 

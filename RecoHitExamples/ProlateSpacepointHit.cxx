@@ -1,5 +1,5 @@
 // This Class' Header ------------------
-#include "PseudoSpacePointWireHit.h"
+#include "ProlateSpacepointHit.h"
 
 // C/C++ Headers ----------------------
 
@@ -12,19 +12,19 @@
 
 // Class Member definitions -----------
 
-ClassImp(PseudoSpacePointWireHit)
+ClassImp(ProlateSpacepointHit)
 
 
-PseudoSpacePointWireHit::~PseudoSpacePointWireHit()
+ProlateSpacepointHit::~ProlateSpacepointHit()
 {}
 
-PseudoSpacePointWireHit::PseudoSpacePointWireHit()
-  : PseudoSpacePointWireRecoHit(NparHitRep)
+ProlateSpacepointHit::ProlateSpacepointHit()
+  : GFAbsProlateSpacepointHit()
 {}
 
-PseudoSpacePointWireHit::PseudoSpacePointWireHit(const TVector3& pos, const TVector3& wireDir,
+ProlateSpacepointHit::ProlateSpacepointHit(const TVector3& pos, const TVector3& wireDir,
                                                  double resPerp, double resWire, bool smear)
-  : PseudoSpacePointWireRecoHit(NparHitRep){
+  : GFAbsProlateSpacepointHit(){
 
   fHitCoord(0,0) = pos.X();
   fHitCoord(1,0) = pos.Y();
@@ -49,8 +49,8 @@ PseudoSpacePointWireHit::PseudoSpacePointWireHit(const TVector3& pos, const TVec
 
 
   if (smear) {
-    TMatrixD smearVec(NparHitRep,1);
-    TMatrixD smearVecRot(NparHitRep,1);
+    TMatrixD smearVec(getNparHit(),1);
+    TMatrixD smearVecRot(getNparHit(),1);
     smearVec(0,0) = resPerp;
     smearVec(1,0) = resPerp;
     smearVec(2,0) = resWire;
@@ -61,23 +61,23 @@ PseudoSpacePointWireHit::PseudoSpacePointWireHit(const TVector3& pos, const TVec
   }
 
   // rotate cov
-  TMatrixD hitCovTemp(NparHitRep,NparHitRep);
+  TMatrixD hitCovTemp(getNparHit(),getNparHit());
   hitCovTemp.Mult(rot,fHitCov);
   fHitCov.MultT(hitCovTemp,rot);
 
 
-  this->setWireDirection(wDir);
+  setLargestErrorDirection(wDir);
 }
 
 
 GFAbsRecoHit* 
-PseudoSpacePointWireHit::clone(){
-  return new PseudoSpacePointWireHit(*this);
+ProlateSpacepointHit::clone(){
+  return new ProlateSpacepointHit(*this);
 }
 
 
 TMatrixT<double>
-PseudoSpacePointWireHit::getHMatrix(const GFAbsTrackRep* stateVector)
+ProlateSpacepointHit::getHMatrix(const GFAbsTrackRep* stateVector)
 {
   if ((dynamic_cast<const RKTrackRep*>(stateVector) != NULL)) {
     TMatrixT<double> HMatrix(2,5);
@@ -97,7 +97,7 @@ PseudoSpacePointWireHit::getHMatrix(const GFAbsTrackRep* stateVector)
     return HMatrix;
   }
   else {
-    std::cerr << "PseudoSpacePointWireHit can only handle state vectors of type RKTrackRep -> abort" << std::endl;
+    std::cerr << "ProlateSpacepointHit can only handle state vectors of type RKTrackRep -> abort" << std::endl;
     throw;
   }
  

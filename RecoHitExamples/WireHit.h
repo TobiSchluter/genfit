@@ -1,12 +1,10 @@
 #ifndef WIREHIT_HH
 #define WIREHIT_HH
 
-#include "GFRecoHitIfc.h"
-#include "GFWireHitPolicy.h"
+#include "GFAbsWireHit.h"
 
-typedef GFRecoHitIfc<GFWireHitPolicy> WireRecoHit;
 
-class WireHit : public WireRecoHit {
+class WireHit : public GFAbsWireHit {
 public:
 
   WireHit();
@@ -17,17 +15,6 @@ public:
   virtual GFAbsRecoHit* clone();
   
   virtual TMatrixT<double> getHMatrix(const GFAbsTrackRep* stateVector);
-
-  void setLeftRightResolution(int lr){
-    fPolicy.setLeftRightResolution(lr);
-  }
-
-  int getLeftRightResolution(){
-    return fPolicy.getLeftRightResolution();
-  }
-
-private:
-  static const int NparHitRep = 7;
 
 public:
   ClassDef(WireHit,1)

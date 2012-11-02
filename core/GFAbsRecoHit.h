@@ -120,7 +120,7 @@ class GFAbsRecoHit : public TObject {
    * coordination is necessary. 
    *
    */
-  virtual const TMatrixT<double>& getHMatrix(const GFAbsTrackRep* stateVector) = 0;
+  virtual TMatrixT<double> getHMatrix(const GFAbsTrackRep* stateVector) = 0;
 
   /** @brief get measurement vector and hit covariance
    *

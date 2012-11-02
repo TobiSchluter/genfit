@@ -18,12 +18,12 @@ WirePointHit::~WirePointHit()
 {}
 
 WirePointHit::WirePointHit()
-  : WirePointRecoHit(NparHitRep)
+  : GFAbsWirepointHit()
 {}
 
 WirePointHit::WirePointHit(const TVector3& wire1, const TVector3& wire2, double rdrift, double z,
                            double resDrift, double resZ, bool smear)
-  : WirePointRecoHit(NparHitRep){
+  : GFAbsWirepointHit(){
 
   fHitCov(6,6) = resDrift*resDrift;
   fHitCov(7,7) = resZ*resZ;

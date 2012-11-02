@@ -14,13 +14,13 @@ PixHit::~PixHit()
 {}
 
 PixHit::PixHit()
-  : PlanarRecoHit(NparHitRep)
+  : GFAbsPlanarHit(NparHitRep)
 {}
 
 PixHit::PixHit(const TVector3& point, const TVector3& norm,
 		               const TVector3& u, double res,
 		               bool smear)
-  : PlanarRecoHit(NparHitRep){
+  : GFAbsPlanarHit(NparHitRep){
 
   fHitCov(0,0) = res*res;
   fHitCov(1,1) = res*res;
@@ -38,7 +38,7 @@ PixHit::PixHit(const TVector3& point, const TVector3& norm,
     fHitCoord(1,0) = 0;
   }
 
-  fPolicy.setDetPlane(d);
+  setDetPlane(d);
 }
 
 

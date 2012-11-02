@@ -1,12 +1,9 @@
 #ifndef PIXHIT_HH
 #define PIXHIT_HH
 
-#include "GFRecoHitIfc.h"
-#include "GFPlanarHitPolicy.h"
+#include "GFAbsPlanarHit.h"
 
-typedef GFRecoHitIfc<GFPlanarHitPolicy> PlanarRecoHit;
-
-class PixHit : public PlanarRecoHit {
+class PixHit : public GFAbsPlanarHit {
 public:
 
   PixHit();

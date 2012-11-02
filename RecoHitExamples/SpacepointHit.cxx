@@ -1,5 +1,5 @@
 // This Class' Header ------------------
-#include "PointHit.h"
+#include "SpacepointHit.h"
 
 // C/C++ Headers ----------------------
 
@@ -11,18 +11,18 @@
 
 // Class Member definitions -----------
 
-ClassImp(PointHit)
+ClassImp(SpacepointHit)
 
 
-PointHit::~PointHit()
+SpacepointHit::~SpacepointHit()
 {}
 
-PointHit::PointHit()
-  : SpacepointRecoHit(NparHitRep)
+SpacepointHit::SpacepointHit()
+  : GFAbsSpacepointHit()
 {}
 
-PointHit::PointHit(const TVector3& point, const double& res, bool smear)
-  : SpacepointRecoHit(NparHitRep){
+SpacepointHit::SpacepointHit(const TVector3& point, const double& res, bool smear)
+  : GFAbsSpacepointHit(){
 
   fHitCov(0,0) = res*res;
   fHitCov(1,1) = res*res;
@@ -40,8 +40,8 @@ PointHit::PointHit(const TVector3& point, const double& res, bool smear)
   }
 }
 
-PointHit::PointHit(const TVector3& point, const TVector3& res, bool smear)
-  : SpacepointRecoHit(NparHitRep){
+SpacepointHit::SpacepointHit(const TVector3& point, const TVector3& res, bool smear)
+  : GFAbsSpacepointHit(){
 
   fHitCov(0,0) = res.X()*res.X();
   fHitCov(1,1) = res.Y()*res.Y();
@@ -61,13 +61,13 @@ PointHit::PointHit(const TVector3& point, const TVector3& res, bool smear)
 
 
 GFAbsRecoHit* 
-PointHit::clone(){
-  return new PointHit(*this);
+SpacepointHit::clone(){
+  return new SpacepointHit(*this);
 }
 
 
 TMatrixT<double>
-PointHit::getHMatrix(const GFAbsTrackRep* stateVector)
+SpacepointHit::getHMatrix(const GFAbsTrackRep* stateVector)
 {
   if ((dynamic_cast<const RKTrackRep*>(stateVector) != NULL)) {
    TMatrixT<double> HMatrix(2,5);
@@ -87,7 +87,7 @@ PointHit::getHMatrix(const GFAbsTrackRep* stateVector)
     return HMatrix;
   }
  else {
-   std::cerr << "PointHit can only handle state vectors of type RKTrackRep -> abort" << std::endl;
+   std::cerr << "SpacepointHit can only handle state vectors of type RKTrackRep -> abort" << std::endl;
    throw;
  }
  

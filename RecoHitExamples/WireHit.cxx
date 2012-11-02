@@ -18,11 +18,11 @@ WireHit::~WireHit()
 {}
 
 WireHit::WireHit()
-  : WireRecoHit(NparHitRep)
+  : GFAbsWireHit()
 {}
 
 WireHit::WireHit(const TVector3& wire1, const TVector3& wire2, double rdrift, double res, bool smear)
-  : WireRecoHit(NparHitRep){
+  : GFAbsWireHit(){
 
   fHitCov(6,6) = res*res;
 
