@@ -124,7 +124,7 @@ public:
    *
    * For example code see implementing classes below:
    */
-  virtual TMatrixT<double> getHMatrix(const GFAbsTrackRep* stateVector)=0;
+  virtual const TMatrixT<double>& getHMatrix(const GFAbsTrackRep* stateVector) = 0;
 
   /** @brief get measurement vector and hit covariance
    *
@@ -134,12 +134,12 @@ public:
   /** @brief Get raw hit covariances. 
    *
    */
-  TMatrixT<double> getRawHitCov() const {return fHitCov;}
+  const TMatrixT<double>& getRawHitCov() const {return fHitCov;}
 
   /** @brief Get raw hit coordinates. 
    *
    */
-  TMatrixT<double> getRawHitCoord() const {return fHitCoord;}
+  const TMatrixT<double>& getRawHitCoord() const {return fHitCoord;}
   
   
   /** @brief Get detector plane for a given track representation.
@@ -172,15 +172,13 @@ public:
    *
    * Virtual abstract method. Has to be implemented by inherting classes.
    * Creates a deep copy of this object. 
-   * Ownership is trandsferred to the caller!
+   * Ownership is transferred to the caller!
    */
   virtual GFAbsRecoHit* clone() = 0;
 
   /** @brief Print raw hit coordinates.
    */
   virtual void Print(const Option_t* option = "") const {fHitCoord.Print(option);}
-
-  virtual const std::string& getPolicyName();
 
   int getNparHit() const {return fNparHit;}
 

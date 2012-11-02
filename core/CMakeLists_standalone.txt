@@ -10,21 +10,57 @@ ENDIF(NOT DEFINED ENV{ROOTSYS})
 
 INCLUDE_DIRECTORIES($ENV{ROOTSYS}/include ${GENFIT}/core)
 
-set(GENFIT_SRCS GFAbsRecoHit.cxx GFAbsTrackRep.cxx GFBookkeeping.cxx
-GFDetPlane.cxx GFException.cxx GFKalman.cxx GFPlanarHitPolicy.cxx GFPseudoSpacepointWireHitPolicy.cxx
-GFRecoHitFactory.cxx GFRecoHitProducer.cxx GFSpacepointHitPolicy.cxx
-GFTools.cxx GFTrackCand.cxx GFTrack.cxx GFWireHitPolicy.cxx
-GFWirepointHitPolicy.cxx GFConstField.cxx GFFieldManager.cxx
-GFAbsFinitePlane.cxx GFRectFinitePlane.cxx
-GFDaf.cxx GFDafHit.cxx GFTrackProximity.cxx)
+set(GENFIT_SRCS 
+	GFAbsRecoHit.cxx 
+	GFAbsTrackRep.cxx 
+	GFBookkeeping.cxx
+	GFDetPlane.cxx 
+	GFException.cxx 
+	GFKalman.cxx 
+	GFRecoHitFactory.cxx 
+	GFRecoHitProducer.cxx 
+	GFTools.cxx 
+	GFTrackCand.cxx 
+	GFTrack.cxx 
+	GFConstField.cxx 
+	GFFieldManager.cxx
+	GFAbsFinitePlane.cxx 
+	GFRectFinitePlane.cxx
+	GFDaf.cxx 
+	GFDafHit.cxx 
+	GFTrackProximity.cxx
+	RecoHits/GFPlanarHit.cxx 
+	#RecoHits/GFProlateSpacepointHit.cxx
+	#RecoHits/GFSpacepointHit.cxx
+	#RecoHits/GFWireHit.cxx
+	#RecoHits/GFWirepointHit.cxx 
+)
 
-set(GENFIT_HEADERS  GFAbsBField.h GFAbsRecoHit.h GFAbsTrackRep.h
-GFBookkeeping.h GFDetPlane.h GFException.h GFKalman.h
-GFPlanarHitPolicy.h GFPseudoSpacepointWireHitPolicy.h GFRecoHitFactory.h GFRecoHitIfc.h
-GFRecoHitProducer.h GFSpacepointHitPolicy.h GFTools.h GFTrackCand.h 
-GFTrack.h GFWireHitPolicy.h GFWirepointHitPolicy.h GFConstField.h
-GFFieldManager.h GFAbsFinitePlane.h GFRectFinitePlane.h
-GFDaf.h GFDafHit.h GFTrackProximity.h GFAbsRecoHitComparator.h)
+set(GENFIT_HEADERS  
+	GFAbsRecoHit.h
+	GFAbsTrackRep.h
+	GFBookkeeping.cxx
+	GFDetPlane.h
+	GFException.h
+	GFKalman.h
+	GFRecoHitFactory.h
+	GFRecoHitProducer.h
+	GFTools.h
+	GFTrackCand.h
+	GFTrack.h
+	GFConstField.h
+	GFFieldManager.cxx
+	GFAbsFinitePlane.h
+	GFRectFinitePlane.cxx
+	GFDaf.h
+	GFDafHit.h
+	GFTrackProximity.cxx
+	RecoHits/GFPlanarHit.h
+	#RecoHits/GFProlateSpacepointHit.h
+	#RecoHits/GFSpacepointHit.cxx
+	#RecoHits/GFWireHit.cxx
+	#RecoHits/GFWirepointHit.h
+)
 
 set(GENFIT_LINKDEF  genfitLinkDef.h)
 set(GENFIT_DICTIONARY genfitDict.cxx) 

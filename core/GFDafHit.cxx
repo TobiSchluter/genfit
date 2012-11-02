@@ -130,7 +130,7 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
 }
 
 
-TMatrixT<double> GFDafHit::getHMatrix(const GFAbsTrackRep* rep) {
+const TMatrixT<double>& GFDafHit::getHMatrix(const GFAbsTrackRep* rep) {
 
 	return fRawHits.at(0)->getHMatrix(rep);
 
@@ -144,10 +144,5 @@ GFDafHit* GFDafHit::clone() {
 
 }
 
-const std::string& GFDafHit::getPolicyName(){
-
-	return fRawHits.at(0)->getPolicyName();
-
-}
 
 ClassImp(GFDafHit)

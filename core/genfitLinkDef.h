@@ -27,16 +27,11 @@
 
 #pragma link C++ class GFAbsTrackRep+;
 #pragma link C++ class GFDafHit+;
-#pragma link C++ class GFPlanarHitPolicy+;
-#pragma link C++ class GFPseudoSpacepointWireHitPolicy+;
-#pragma link C++ class GFSpacepointHitPolicy+;
-#pragma link C++ class GFWirepointHitPolicy+;
-#pragma link C++ class GFWireHitPolicy+;
-#pragma link C++ class GFRecoHitIfc<GFPlanarHitPolicy>+;
-#pragma link C++ class GFRecoHitIfc<GFPseudoSpacepointWireHitPolicy>+;
-#pragma link C++ class GFRecoHitIfc<GFSpacepointHitPolicy>+;
-#pragma link C++ class GFRecoHitIfc<GFWirepointHitPolicy>+;
-#pragma link C++ class GFRecoHitIfc<GFWireHitPolicy>+;
+#pragma link C++ class GFPlanarHit+;
+//#pragma link C++ class GFProlateSpacepointHit+;
+//#pragma link C++ class GFSpacepointHit+;
+//#pragma link C++ class GFWireHit+;
+//#pragma link C++ class GFWirepointHi+;
 #pragma link C++ class GFAbsRecoHit+;
 #pragma link C++ class GFTrackCand+;
 #pragma link C++ class GFTrack+;

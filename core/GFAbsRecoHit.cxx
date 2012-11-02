@@ -33,8 +33,3 @@ GFAbsRecoHit::GFAbsRecoHit() : fNparHit(-1) {
 }
 
 GFAbsRecoHit::~GFAbsRecoHit(){;}
-
-const std::string& GFAbsRecoHit::getPolicyName(){
-  std::cerr << "GFAbsRecoHit::getPolicyName() called for a reco hit, which wasn't derived from GFRecoHitIfc -> abort" << std::endl;
-  throw;
-}

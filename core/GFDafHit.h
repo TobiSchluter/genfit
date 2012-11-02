@@ -89,7 +89,7 @@ class GFDafHit: public GFAbsRecoHit {
 		 * Returns the H matrix of the first hit in the GFDafHit. This is valid
 		 * because all hits are on the same plane.
 		 */
-		TMatrixT<double> getHMatrix(const GFAbsTrackRep* rep);
+		const TMatrixT<double>& getHMatrix(const GFAbsTrackRep* rep);
 
 		GFDafHit* clone();
 
@@ -113,13 +113,6 @@ class GFDafHit: public GFAbsRecoHit {
 		/** @brief Get at hit from the GFDafHit.
 		 */
 		GFAbsRecoHit* getHit(unsigned int ihit);
-
-		/** @brief Get the name of the hit policy
-		 *
-		 * Returns the name of the hit policy of the first hit in the GFDafHit. This
-		 * is valid because if there are several hits, they all have to be planar hits.
-		 */
-		const std::string& getPolicyName();
 
 	private:
 		bool fHitUpd;
