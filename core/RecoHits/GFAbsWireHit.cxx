@@ -22,11 +22,9 @@
 
 #include "GFAbsWireHit.h"
 
-#include "assert.h"
-#include <cmath>
-
-#include "TMath.h"
-#include "GFException.h"
+#include <assert.h>
+#include <TMath.h>
+#include <GFException.h>
 
 
 GFAbsWireHit::GFAbsWireHit() :

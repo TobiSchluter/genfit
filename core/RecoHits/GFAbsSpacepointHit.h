@@ -24,7 +24,7 @@
 #define GFABSSPACEPOINTHIT_H
 
 
-#include "GFAbsRecoHit.h"
+#include <GFAbsRecoHit.h>
 
 /** @brief Abstract hit class implementing a space point hit geometry.
  *
@@ -49,6 +49,9 @@ class GFAbsSpacepointHit : public GFAbsRecoHit {
 
   // Constructors/Destructors ---------
   GFAbsSpacepointHit() : GFAbsRecoHit(NparHitRep) {}
+
+  /** @brief Constructor for inheriting hits with a higher dimensionality (e.g. energy loss) */
+  GFAbsSpacepointHit(int dim) : GFAbsRecoHit(dim) {}
 
   virtual ~GFAbsSpacepointHit(){;}
 

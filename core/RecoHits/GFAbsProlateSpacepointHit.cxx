@@ -18,7 +18,7 @@
 */
 
 #include "GFAbsProlateSpacepointHit.h"
-#include "GFException.h"
+#include <GFException.h>
 
 GFAbsProlateSpacepointHit::GFAbsProlateSpacepointHit() :
   GFAbsSpacepointHit(),

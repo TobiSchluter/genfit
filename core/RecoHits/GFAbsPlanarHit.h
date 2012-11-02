@@ -23,13 +23,8 @@
 #ifndef GFABSPLANARHIT_H
 #define GFABSPLANARHIT_H
 
-#include <iostream>
-#include <string>
 
-#include "TMatrixT.h"
-#include "TObject.h"
-
-#include "GFAbsRecoHit.h"
+#include <GFAbsRecoHit.h>
 
 /** @brief Policy class implementing a planar hit geometry. 
  *
@@ -52,6 +47,10 @@ public:
   virtual ~GFAbsPlanarHit();
   GFAbsPlanarHit(){}
 
+  /** @brief Dimensionality is usually 1 (strip hit) or 2 (pixel hit)
+   *  If the dimesionality is higher (e.g. energy loss), getMeasurement() has to be
+   *  adapted in the inheriting hit.
+   *  */
   GFAbsPlanarHit(int dim) : GFAbsRecoHit(dim){;}
   
 
@@ -66,15 +65,7 @@ public:
                               const TMatrixT<double>& statePred,
                               const TMatrixT<double>& covPred,
                               TMatrixT<double>& m,
-                              TMatrixT<double>& V) {
-    static_cast<void>(rep);
-    static_cast<void>(statePred);
-    static_cast<void>(covPred);
-    m.ResizeTo(fHitCoord);
-    V.ResizeTo(fHitCov);
-    m = fHitCoord;
-    V = fHitCov;
-  }
+                              TMatrixT<double>& V);
 
   // Modifiers -----------------------
 

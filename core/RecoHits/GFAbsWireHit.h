@@ -24,7 +24,7 @@
 #define GFABSWIREHIT_H
 
 
-#include "GFAbsRecoHit.h"
+#include <GFAbsRecoHit.h>
 
 /** @brief Abstract hit class for hits in wire detectors (Straw tubes and drift chambers)
  *  which do not measure the coordinate along the wire.
@@ -50,6 +50,8 @@ public:
 
   // Constructors/Destructors ---------
   GFAbsWireHit();
+
+  /** @brief Constructor for inheriting hits with a higher dimensionality (e.g. position along wire, energy loss) */
   GFAbsWireHit(int dim);
 
   virtual ~GFAbsWireHit(){;}
