@@ -38,7 +38,7 @@ GFAbsSpacepointHit::getMeasurement(const GFAbsTrackRep* rep,
   TVector3 v(pl.getV());
 
   // m
-  m.ResizeTo(2,1);
+  m.ResizeTo(2);
 
   TVectorT<double> D(3);
   D(0) = o.X();
