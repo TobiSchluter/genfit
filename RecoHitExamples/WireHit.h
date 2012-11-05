@@ -1,7 +1,7 @@
 #ifndef WIREHIT_HH
 #define WIREHIT_HH
 
-#include "GFAbsWireHit.h"
+#include "RecoHits/GFAbsWireHit.h"
 
 
 class WireHit : public GFAbsWireHit {

@@ -1,7 +1,7 @@
 #ifndef ProlateSpacepointHit_HH
 #define ProlateSpacepointHit_HH
 
-#include "GFAbsProlateSpacepointHit.h"
+#include "RecoHits/GFAbsProlateSpacepointHit.h"
 
 class ProlateSpacepointHit : public GFAbsProlateSpacepointHit {
 public:

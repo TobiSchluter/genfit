@@ -1,7 +1,7 @@
 #ifndef WIREPOINTHIT_HH
 #define WIREPOINTHIT_HH
 
-#include "GFAbsWirepointHit.h"
+#include "RecoHits/GFAbsWirepointHit.h"
 
 
 class WirePointHit : public GFAbsWirepointHit {

@@ -1,7 +1,7 @@
 #ifndef SpacepointHit_HH
 #define SpacepointHit_HH
 
-#include "GFAbsSpacepointHit.h"
+#include "RecoHits/GFAbsSpacepointHit.h"
 
 class SpacepointHit : public GFAbsSpacepointHit {
 public:

@@ -1,7 +1,7 @@
 #ifndef PIXHIT_HH
 #define PIXHIT_HH
 
-#include "GFAbsPlanarHit.h"
+#include "RecoHits/GFAbsPlanarHit.h"
 
 class PixHit : public GFAbsPlanarHit {
 public:

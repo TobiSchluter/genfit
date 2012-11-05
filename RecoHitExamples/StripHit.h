@@ -1,7 +1,7 @@
 #ifndef STRIPHIT_HH
 #define STRIPHIT_HH
 
-#include "GFAbsPlanarHit.h"
+#include "RecoHits/GFAbsPlanarHit.h"
 
 
 class StripHit : public GFAbsPlanarHit {
