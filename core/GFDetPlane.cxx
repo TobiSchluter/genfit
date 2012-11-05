@@ -22,6 +22,8 @@
 #include <iostream>
 #include <cmath>
 #include "TMath.h"
+#include "TPolyMarker3D.h"
+#include "TPolyLine3D.h"
 
 ClassImp(GFDetPlane)
 

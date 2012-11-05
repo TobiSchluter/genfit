@@ -163,7 +163,7 @@ void GFTrackCand::sortHits(){
 }
 
 
-void GFTrackCand::sortHits(std::vector<unsigned int> indices){
+void GFTrackCand::sortHits(const std::vector<unsigned int>& indices){
 
 	const unsigned int nHits(getNHits());
 	if (indices.size() != nHits){

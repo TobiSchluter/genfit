@@ -37,8 +37,9 @@
 #include "TObject.h"
 
 #include "TVector3.h"
-#include "TPolyMarker3D.h"
-#include "TPolyLine3D.h"
+
+class TPolyMarker3D;
+class TPolyLine3D;
 
 /** @brief Detector plane genfit geometry class
  *

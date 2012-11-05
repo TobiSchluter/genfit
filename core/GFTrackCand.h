@@ -201,7 +201,7 @@ public:
    */
   void sortHits();
 
-  void sortHits(std::vector<unsigned int> indices);
+  void sortHits(const std::vector<unsigned int>& indices);
 
   // Operations ----------------------
   void reset();

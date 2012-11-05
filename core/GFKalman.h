@@ -26,13 +26,14 @@
 #include <map>
 #include <iostream>
 
-#include "TMatrixT.h"
-#include "TMatrixTSym.h"
-
+#include "Rtypes.h"
 
 class GFAbsRecoHit;
 class GFAbsTrackRep;
 class GFTrack;
+template <typename T> class TVectorT;
+template <typename T> class TMatrixT;
+template <typename T> class TMatrixTSym;
 
 /** @brief Generic Kalman Filter implementation
  *

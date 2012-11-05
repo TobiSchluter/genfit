@@ -30,7 +30,6 @@
 #include "GFAbsTrackRep.h"
 #include "GFAbsRecoHit.h"
 
-#include "TClonesArray.h"
 #include "TObjArray.h"
 
 #include "GFTrackCand.h"
@@ -140,13 +139,13 @@ public:
 
   /** Get a vector of the track's RecoHits
    */
-  std::vector<GFAbsRecoHit*> getHits() const {return fHits;}
+  const std::vector<GFAbsRecoHit*>& getHits() const {return fHits;}
 
   /** Get a map of the track's RecoHits and their hit IDs.
    * Can be usefull for getting the ID of a certain RecoHit,
    * since the RecoHit pointers are the keys of the map.
    */
-  std::map<GFAbsRecoHit*, unsigned int> getHitMap() const;
+  void getHitMap(std::map<GFAbsRecoHit*, unsigned int>&) const;
 
   const GFTrackCand& getCand() const {return fCand;}
 

@@ -31,11 +31,11 @@
 #include "TVectorT.h"
 #include "TMatrixT.h"
 #include "TMatrixTSym.h"
-#include "TVector3.h"
 #include "TMath.h"
 
 #include "GFDetPlane.h"
 
+class TVector3;
 class GFAbsRecoHit;    
 
 /** @brief Base Class for genfit track representations. 
