@@ -4,7 +4,12 @@ IF(NOT DEFINED ENV{ROOTSYS})
    MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
 ENDIF(NOT DEFINED ENV{ROOTSYS})
 
-SET(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wextra -Wshadow -ftree-vectorize -ffast-math -march=native -ftree-vectorizer-verbose=0")
+Execute_process(COMMAND root-config --glibs --cflags
+    OUTPUT_VARIABLE ROOT_LIBS
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+SET(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wshadow -ftree-vectorize -ffast-math -march=native -ftree-vectorizer-verbose=0 ${ROOT_LIBS}")
+
 
 include(macros.cmake)
 
