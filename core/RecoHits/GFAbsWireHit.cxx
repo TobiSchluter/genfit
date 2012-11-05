@@ -77,8 +77,8 @@ GFAbsWireHit::getDetPlane(GFAbsTrackRep* rep)
   TVector3 wire2(fHitCoord(3), fHitCoord(4), fHitCoord(5));
 
   //  distance of one (the first) of the wire extremities from the plane
-  //Double_t d_from_refplane =  fDetPlane.dist(wire1).Mag();
-  //if(d_from_refplane < 1e-5) return fDetPlane;
+  //Double_t d_from_refDetPlane =  fDetPlane.dist(wire1).Mag();
+  //if(d_from_refDetPlane < 1e-5) return fDetPlane;
   
   // point of closest approach
   TVector3 poca, poca_onwire, dirInPoca;
@@ -110,9 +110,9 @@ GFAbsWireHit::getDetPlane(GFAbsTrackRep* rep)
   }
   else if (fLeftRight < 0) U *= -1.;
 
-  fPlane = GFDetPlane(poca_onwire, U, wiredirection);
+  fDetPlane.setOUV(poca_onwire, U, wiredirection);
   
-  return fPlane;
+  return fDetPlane;
 }
 
 

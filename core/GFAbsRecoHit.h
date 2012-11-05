@@ -78,6 +78,9 @@ class GFAbsRecoHit : public TObject {
   /// Sorting parameter used in GFTrack::sortHits()
   double fRho;
 
+  /// Detector plane. Can be a physical or a virtual detector plane. Virtual detector planes are usually constructed in getDetPlane().
+  GFDetPlane fDetPlane;
+
  private:
   int fNparHit;
 

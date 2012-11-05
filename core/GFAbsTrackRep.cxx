@@ -56,8 +56,8 @@ void GFAbsTrackRep::Abort(std::string method){
 double GFAbsTrackRep::extrapolateToPoint(const TVector3& point,
 				    TVector3& poca,
 				    TVector3& normVec){
-  Abort("extrapolateToPoca()");
-  return 0;
+  Abort("extrapolateToPoint()");
+  return 0.;
 }
 
 double GFAbsTrackRep::extrapolateToLine(const TVector3& point1,
@@ -66,7 +66,7 @@ double GFAbsTrackRep::extrapolateToLine(const TVector3& point1,
 									TVector3& normVec,
 									TVector3& poca_onwire){
   Abort("extrapolateToLine()");
-  return 0;
+  return 0.;
 }
   
 

@@ -89,7 +89,6 @@ class GFAbsWireHit : public GFAbsRecoHit {
  protected:
 
   // Protected Data Members ------------
-  GFDetPlane fPlane;
   double fMaxdistance;
   int fLeftRight;
 

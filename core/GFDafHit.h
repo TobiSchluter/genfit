@@ -116,7 +116,6 @@ class GFDafHit: public GFAbsRecoHit {
 
 	private:
 		bool fHitUpd;
-		GFDetPlane fPl;
 		std::vector<TMatrixTSym<double> > fCovInvs;
 		std::vector<GFAbsRecoHit*> fRawHits;
 		std::vector<double> fWeights;

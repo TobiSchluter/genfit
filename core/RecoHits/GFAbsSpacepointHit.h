@@ -76,12 +76,6 @@ class GFAbsSpacepointHit : public GFAbsRecoHit {
   // Private Data Members ------------
   static const int NparHitRep = 3;
 
-  // Private Methods -----------------
-
- protected:
-  GFDetPlane fPlane;
-
-
  public:
   ClassDef(GFAbsSpacepointHit,1);
 };

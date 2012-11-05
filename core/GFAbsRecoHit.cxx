@@ -25,6 +25,7 @@ GFAbsRecoHit::GFAbsRecoHit(int NparHit) :
   fHitCoord(NparHit),
   fHitCov(NparHit),
   fRho(0.),
+  fDetPlane(),
   fNparHit(NparHit)
 {
 }

@@ -87,8 +87,9 @@ public:
   void setU(double,double,double);
   void setV(const TVector3& v);
   void setV(double,double,double);
-  void setUV(const TVector3& u,const TVector3& v);
-  void setON(const TVector3& o,const TVector3& n);
+  void setUV(const TVector3& u, const TVector3& v);
+  void setON(const TVector3& o, const TVector3& n);
+  void setOUV(const TVector3& o, const TVector3& u, const TVector3& v);
 
   //! Optionally, set the finite plane definition. This is most important for
   //! avoiding fake intersection points in fitting of loopers. This should

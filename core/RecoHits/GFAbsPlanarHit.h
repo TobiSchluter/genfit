@@ -58,7 +58,7 @@ public:
   
   /** @brief Returns the physical detector plane.
    */
-  const GFDetPlane& getDetPlane(GFAbsTrackRep*) {return fPhysicalDetPlane;}
+  const GFDetPlane& getDetPlane(GFAbsTrackRep*) {return fDetPlane;}
   
   virtual void getMeasurement(const GFAbsTrackRep* rep,
                               const GFDetPlane& pl,
@@ -76,17 +76,7 @@ public:
    * detector hardware. This method should be called in the constructor of
    * any derived RecoHit in order to setup the geometry of this hit.
    */
-  void setDetPlane(const GFDetPlane& p){fPhysicalDetPlane = p;}
-
- protected:
-
-  // Private Data Members ------------
-  
-  /** @brief Physical detector plane. Given by detector hardware.
-   */
-  GFDetPlane fPhysicalDetPlane;
-
-  // Private Methods -----------------
+  void setDetPlane(const GFDetPlane& p){fDetPlane = p;}
 
  public:
   ClassDef(GFAbsPlanarHit,1)

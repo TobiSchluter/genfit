@@ -77,10 +77,10 @@ GFAbsSpacepointHit::getDetPlane(GFAbsTrackRep* rep)
   TVector3 poca, dirInPoca;
   rep->extrapolateToPoint(point, poca, dirInPoca);
 
-  fPlane.setO(point);
-  fPlane.setNormal(dirInPoca);
+  fDetPlane.setO(point);
+  fDetPlane.setNormal(dirInPoca);
 
-  return fPlane;
+  return fDetPlane;
 }
 
 

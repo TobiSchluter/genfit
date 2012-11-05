@@ -48,14 +48,14 @@ const GFDetPlane& GFDafHit::getDetPlane(GFAbsTrackRep* rep) {
 void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V) {
 
   /*
-  if(fHitUpd && fPl != pl) {
-    GFException exc("GFDafHit::getMeasurement(): pl!=fPl",__LINE__,__FILE__);
+  if(fHitUpd && fDetPlane != pl) {
+    GFException exc("GFDafHit::getMeasurement(): pl!=fDetPlane",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
   }
   */
 
-  if(fHitUpd && fPl == pl) {
+  if(fHitUpd && fDetPlane == pl) {
     m.ResizeTo(fHitCoord);
     V.ResizeTo(fHitCov);
     m = fHitCoord;
@@ -125,7 +125,7 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
   V.ResizeTo(fHitCov);
   m = fHitCoord;
   V = fHitCov;
-  fPl = pl;
+  fDetPlane = pl;
   fHitUpd = true;
 }
 

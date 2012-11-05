@@ -33,6 +33,8 @@ GFDetPlane::GFDetPlane(const TVector3& o,
 {
   sane();
 }
+
+
 GFDetPlane::GFDetPlane(GFAbsFinitePlane* finite) 
   :fFinitePlane(finite)
 {
@@ -50,9 +52,11 @@ GFDetPlane::GFDetPlane(const TVector3& o,
   setNormal(n);
 }
 
+
 GFDetPlane::~GFDetPlane(){
   if(fFinitePlane!=NULL) delete fFinitePlane;
 }
+
 
 GFDetPlane::GFDetPlane(const GFDetPlane& rhs){
   if(rhs.fFinitePlane != NULL) fFinitePlane = rhs.fFinitePlane->clone();
@@ -61,6 +65,8 @@ GFDetPlane::GFDetPlane(const GFDetPlane& rhs){
   fU = rhs.fU;
   fV = rhs.fV;
 }
+
+
 GFDetPlane& GFDetPlane::operator=(const GFDetPlane& rhs){
   assert(this!=&rhs);
   if(fFinitePlane!=NULL) {
@@ -78,6 +84,7 @@ GFDetPlane& GFDetPlane::operator=(const GFDetPlane& rhs){
   return *this;
 }
 
+
 void 
 GFDetPlane::set(const TVector3& o,
 	      const TVector3& u,
@@ -87,12 +94,14 @@ GFDetPlane::set(const TVector3& o,
   sane();
 }
 
+
 void 
 GFDetPlane::setO(const TVector3& o)
 {
   fO=o;
   sane();
 }
+
 void 
 GFDetPlane::setO(double X,double Y,double Z)
 {
@@ -106,6 +115,7 @@ GFDetPlane::setU(const TVector3& u)
   fU=u;
   sane();
 }
+
 void 
 GFDetPlane::setU(double X,double Y,double Z)
 {
@@ -119,12 +129,14 @@ GFDetPlane::setV(const TVector3& v)
   fV=v;
   sane();
 }
+
 void 
 GFDetPlane::setV(double X,double Y,double Z)
 {
   fV.SetXYZ(X,Y,Z);
   sane();
 }
+
 void 
 GFDetPlane::setUV(const TVector3& u,const TVector3& v)
 {
@@ -132,6 +144,20 @@ GFDetPlane::setUV(const TVector3& u,const TVector3& v)
   fV=v;
   sane();
 }
+
+void GFDetPlane::setON(const TVector3& o,const TVector3& n){
+  fO = o;
+  setNormal(n);
+}
+
+void
+GFDetPlane::setOUV(const TVector3& o, const TVector3& u, const TVector3& v){
+  fO = o;
+  fU = u;
+  fV = v;
+  sane();
+}
+
 
 TVector3
 GFDetPlane::getNormal() const
@@ -141,16 +167,13 @@ GFDetPlane::getNormal() const
   return result;
 }
 
-void GFDetPlane::setON(const TVector3& o,const TVector3& n){
-  fO = o;
-  setNormal(n);
-}
 
 void
 GFDetPlane::setNormal(double X,double Y,double Z){
   TVector3 N(X,Y,Z);
   setNormal(N);
 }
+
 void
 GFDetPlane::setNormal(TVector3 n){
   n.SetMag(1.);
@@ -176,6 +199,7 @@ void GFDetPlane::setNormal(const double& theta, const double& phi){
   setNormal(n);
 }
 
+
 TVector2
 GFDetPlane::project(const TVector3& x)const
 {
@@ -184,12 +208,14 @@ GFDetPlane::project(const TVector3& x)const
   return TVector2(xfU,xfV);
 }
 
+
 TVector2 
 GFDetPlane::LabToPlane(const TVector3& x)const
 {
   TVector3 d=x-fO;
   return project(d);
 }
+
 
 TVector3
 GFDetPlane::toLab(const TVector2& x)const
@@ -201,7 +227,6 @@ GFDetPlane::toLab(const TVector2& x)const
 }
 
 
-
 TVector3 
 GFDetPlane::dist(const TVector3& x)const
 {
@@ -209,7 +234,6 @@ GFDetPlane::dist(const TVector3& x)const
   TVector3 xplane=toLab(p);
   return xplane-x;
 }
-
 
 
 void
@@ -339,6 +363,7 @@ void GFDetPlane::getGraphics(double mesh, double length, TPolyMarker3D **pl,TPol
   }
 }
 
+
 double GFDetPlane::distance(TVector3 v) const{
   v -= fO;
   double s = v*fU;
@@ -346,6 +371,7 @@ double GFDetPlane::distance(TVector3 v) const{
   TVector3 distanceVector = v - (s*fU) - (t*fV);
   return distanceVector.Mag();
 }
+
 double GFDetPlane::distance(double x, double y, double z) const{
   TVector3 v(x,y,z);
   v -= fO;
@@ -354,6 +380,7 @@ double GFDetPlane::distance(double x, double y, double z) const{
   TVector3 distanceVector = v - (s*fU) - (t*fV);
   return distanceVector.Mag();
 }
+
 
 TVector2 GFDetPlane::straightLineToPlane (const TVector3& point,const TVector3& dir) const{
   TVector3 dirNorm(dir);
