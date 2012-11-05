@@ -207,7 +207,7 @@ int main() {
       					      
       // remember original initial plane and state					  
       GFDetPlane referencePlane;
-      TMatrixT<double> referenceState(rephits->getState());
+      TVectorT<double> referenceState(rephits->getState());
       
       // create smeared hits
       std::vector<GFAbsRecoHit*> hits;
@@ -242,11 +242,11 @@ int main() {
             else{
               double AtW = dir*referencePlane.getNormal();
               if (AtW<0) AtW *= -1.;
-              referenceState[0][0] = charge/momentum;
-              referenceState[1][0] = -1.*dir*referencePlane.getU()/AtW;
-              referenceState[2][0] = -1.*dir*referencePlane.getV()/AtW;
-              referenceState[3][0] = (point-referencePlane.getO())*referencePlane.getU();
-              referenceState[4][0] = (point-referencePlane.getO())*referencePlane.getV();
+              referenceState[0] = charge/momentum;
+              referenceState[1] = -1.*dir*referencePlane.getU()/AtW;
+              referenceState[2] = -1.*dir*referencePlane.getV()/AtW;
+              referenceState[3] = (point-referencePlane.getO())*referencePlane.getU();
+              referenceState[4] = (point-referencePlane.getO())*referencePlane.getV();
               //std::cout<<"referenceState[2][0] "<<referenceState[2][0]<<"\n";
             }
           }
@@ -383,27 +383,27 @@ int main() {
 
 
 		  // calculate pulls  
-		  TMatrixT<double> state(rep->getState());
-		  TMatrixT<double> cov(rep->getCov());
+		  TVectorT<double> state(rep->getState());
+		  TMatrixTSym<double> cov(rep->getCov());
 		  
 		  if (debug) {
         state.Print();
         cov.Print();
 		  }
 
-      hmomRes->Fill( (charge/state[0][0]-momentum));
-      hupRes->Fill(  (state[1][0]-referenceState[1][0]));
-      hvpRes->Fill(  (state[2][0]-referenceState[2][0]));
-      huRes->Fill(   (state[3][0]-referenceState[3][0]));
-      hvRes->Fill(   (state[4][0]-referenceState[4][0]));
+      hmomRes->Fill( (charge/state[0]-momentum));
+      hupRes->Fill(  (state[1]-referenceState[1]));
+      hvpRes->Fill(  (state[2]-referenceState[2]));
+      huRes->Fill(   (state[3]-referenceState[3]));
+      hvRes->Fill(   (state[4]-referenceState[4]));
 
 		  if (cov[0][0]>0) {
-		    hqopPu->Fill( (state[0][0]-referenceState[0][0]) / sqrt(cov[0][0]) );
+		    hqopPu->Fill( (state[0]-referenceState[0]) / sqrt(cov[0][0]) );
         pVal->Fill(   rep->getPVal());
-        hupPu->Fill(  (state[1][0]-referenceState[1][0]) / sqrt(cov[1][1]) );
-        hvpPu->Fill(  (state[2][0]-referenceState[2][0]) / sqrt(cov[2][2]) );
-        huPu->Fill(   (state[3][0]-referenceState[3][0]) / sqrt(cov[3][3]) );
-        hvPu->Fill(   (state[4][0]-referenceState[4][0]) / sqrt(cov[4][4]) );
+        hupPu->Fill(  (state[1]-referenceState[1]) / sqrt(cov[1][1]) );
+        hvpPu->Fill(  (state[2]-referenceState[2]) / sqrt(cov[2][2]) );
+        huPu->Fill(   (state[3]-referenceState[3]) / sqrt(cov[3][3]) );
+        hvPu->Fill(   (state[4]-referenceState[4]) / sqrt(cov[4][4]) );
 		  }
 		  
 		  // print covariance
@@ -415,8 +415,8 @@ int main() {
 		  	std::cout << "smoothed positions \n";
 		  	GFDetPlane plane;
 			  for(unsigned int j = 0; j < hitTypes.size(); j++) { // loop over all hits in the track
-					TMatrixT<double> state;
-				  TMatrixT<double> cov;
+					TVectorT<double> state;
+				  TMatrixTSym<double> cov;
 				  TMatrixT<double> auxInfo;
 				  GFTools::getSmoothedData(fitTrack, 0, j, state, cov, plane, auxInfo);
 				  rep->setData(state, plane, &cov, &auxInfo);
