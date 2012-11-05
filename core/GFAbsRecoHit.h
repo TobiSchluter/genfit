@@ -133,7 +133,7 @@ class GFAbsRecoHit : public TObject {
                               const TVectorT<double>& statePred,
                               const TMatrixTSym<double>& covPred,
                               TVectorT<double>& m,
-                              TMatrixTSym<double>& V);
+                              TMatrixTSym<double>& V) = 0;
 
   /** @brief Get raw hit covariances. 
    *
