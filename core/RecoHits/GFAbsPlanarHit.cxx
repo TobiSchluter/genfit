@@ -20,14 +20,17 @@
 #include "GFAbsPlanarHit.h"
 #include <GFException.h>
 
+#include "TVectorT.h"
+#include "TMatrixT.h"
+#include "TMatrixTSym.h"
 
 void
 GFAbsPlanarHit::getMeasurement(const GFAbsTrackRep* rep,
                                 const GFDetPlane& pl,
-                                const TMatrixT<double>& statePred,
-                                const TMatrixT<double>& covPred,
-                                TMatrixT<double>& m,
-                                TMatrixT<double>& V) {
+                                const TVectorT<double>& statePred,
+                                const TMatrixTSym<double>& covPred,
+                                TVectorT<double>& m,
+                                TMatrixTSym<double>& V) {
 
   if (pl != fPhysicalDetPlane){
     GFException exc("GFAbsPlanarHit::getMeasurement(): Trying to get measurement in a plane that does not match the physical detector plane!", __LINE__,__FILE__);

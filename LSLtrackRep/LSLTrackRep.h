@@ -93,7 +93,7 @@ public:
 
   // Modifiers
   void SetBField(GFAbsBField* b);
-  void setData(const TMatrixT<double>& st, const GFDetPlane& pl, const TMatrixT<double>* cov=NULL){
+  void setData(const TMatrixT<double>& st, const GFDetPlane& pl, const TMatrixTSym<double>* cov=NULL){
     GFAbsTrackRep::setData(st,pl,cov);
     s=pl.getO().Z();
   }
@@ -107,7 +107,7 @@ public:
 
   virtual double extrapolate(const GFDetPlane&, 
 			     TMatrixT<double>& statePred,
-			     TMatrixT<double>& covPred);
+			     TMatrixTSym<double>& covPred);
 
 
   virtual double extrapolateToPoint(const TVector3&,
@@ -121,7 +121,7 @@ public:
   virtual TVector3 getMom(const GFDetPlane&) ;
   virtual void getPosMom(const GFDetPlane&,TVector3& pos, TVector3& mom) ;
   virtual TVectorT<double> getGlobal(); // (x,y,z,px,py,pz)
-  virtual TMatrixT<double> getGlobalCov(); // covariances
+  virtual TMatrixTSym<double> getGlobalCov(); // covariances
 
   virtual double getCharge()const {double fact= fInverted ? -1.:1.;
     return fState[4][0]<0 ? -fact : fact;}
@@ -151,7 +151,7 @@ private:
 		TMatrixT<double>& jacResult);
 
  public:
-  ClassDef(LSLTrackRep,1)
+  ClassDef(LSLTrackRep,2)
 
 };
 

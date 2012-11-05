@@ -45,7 +45,7 @@ const GFDetPlane& GFDafHit::getDetPlane(GFAbsTrackRep* rep) {
 
 }
 
-void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TMatrixT<double>& statePred,const TMatrixT<double>& covPred,TMatrixT<double>& m, TMatrixT<double>& V) {
+void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V) {
 
   /*
   if(fHitUpd && fPl != pl) {
@@ -82,12 +82,12 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
     fHitCoord.Zero();
     fHitCov.Zero();
     fCovInvs.clear();
-    TMatrixT<double> CovInv;
-    TMatrixT<double>* coordTemp;
-    TMatrixT<double> covTemp;
-    std::vector<TMatrixT<double>* > coords;
+    TMatrixTSym<double> CovInv;
+    TVectorT<double>* coordTemp;
+    TMatrixTSym<double> covTemp;
+    std::vector<TVectorT<double>* > coords;
     for(unsigned int i=0;i<fRawHits.size();i++) {
-      coordTemp = new TMatrixT<double>;
+      coordTemp = new TVectorT<double>;
       try{
 	fRawHits.at(i)->getMeasurement(rep,pl,statePred,covPred,*coordTemp,covTemp);
 	coords.push_back(coordTemp);
@@ -101,7 +101,7 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
       fCovInvs.push_back(CovInv);
       fHitCov += fWeights.at(i) * CovInv;
     }
-    TMatrixT<double> HitCovTemp(fHitCov);
+    TMatrixTSym<double> HitCovTemp(fHitCov);
 
     try{
       GFTools::invertMatrix(HitCovTemp, fHitCov);

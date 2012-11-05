@@ -26,19 +26,19 @@ WireHit::WireHit(const TVector3& wire1, const TVector3& wire2, double rdrift, do
 
   fHitCov(6,6) = res*res;
 
-  fHitCoord(0,0) = wire1.X();
-  fHitCoord(1,0) = wire1.Y();
-  fHitCoord(2,0) = wire1.Z();
+  fHitCoord(0) = wire1.X();
+  fHitCoord(1) = wire1.Y();
+  fHitCoord(2) = wire1.Z();
 
-  fHitCoord(3,0) = wire2.X();
-  fHitCoord(4,0) = wire2.Y();
-  fHitCoord(5,0) = wire2.Z();
+  fHitCoord(3) = wire2.X();
+  fHitCoord(4) = wire2.Y();
+  fHitCoord(5) = wire2.Z();
 
   if (smear){
-    fHitCoord(6,0) = gRandom->Gaus(rdrift,res);
+    fHitCoord(6) = gRandom->Gaus(rdrift,res);
   }
   else {
-    fHitCoord(6,0) = rdrift;
+    fHitCoord(6) = rdrift;
   }
 }
 

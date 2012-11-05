@@ -31,7 +31,7 @@ GFAbsProlateSpacepointHit::GFAbsProlateSpacepointHit() :
 const GFDetPlane&
 GFAbsProlateSpacepointHit::getDetPlane(GFAbsTrackRep* rep) {
 
-  TVector3 wire1(fHitCoord(0,0), fHitCoord(1,0), fHitCoord(2,0));
+  TVector3 wire1(fHitCoord(0), fHitCoord(1), fHitCoord(2));
   TVector3 wire2(wire1);
   wire2 += fLargestErrorDirection;
 

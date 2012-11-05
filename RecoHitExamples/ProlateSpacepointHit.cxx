@@ -26,9 +26,9 @@ ProlateSpacepointHit::ProlateSpacepointHit(const TVector3& pos, const TVector3& 
                                                  double resPerp, double resWire, bool smear)
   : GFAbsProlateSpacepointHit(){
 
-  fHitCoord(0,0) = pos.X();
-  fHitCoord(1,0) = pos.Y();
-  fHitCoord(2,0) = pos.Z();
+  fHitCoord(0) = pos.X();
+  fHitCoord(1) = pos.Y();
+  fHitCoord(2) = pos.Z();
 
   fHitCov(0,0) = resPerp*resPerp;
   fHitCov(1,1) = resPerp*resPerp;
@@ -49,22 +49,18 @@ ProlateSpacepointHit::ProlateSpacepointHit(const TVector3& pos, const TVector3& 
 
 
   if (smear) {
-    TMatrixD smearVec(getNparHit(),1);
-    TMatrixD smearVecRot(getNparHit(),1);
-    smearVec(0,0) = resPerp;
-    smearVec(1,0) = resPerp;
-    smearVec(2,0) = resWire;
-    smearVecRot.Mult(rot,smearVec);
-    fHitCoord(0,0) += gRandom->Gaus(0, smearVec(0,0));
-    fHitCoord(1,0) += gRandom->Gaus(0, smearVec(1,0));
-    fHitCoord(2,0) += gRandom->Gaus(0, smearVec(2,0));
+    TVectorD smearVec(getNparHit());
+    smearVec(0) = resPerp;
+    smearVec(1) = resPerp;
+    smearVec(2) = resWire;
+    smearVec *= rot;
+    fHitCoord(0) += gRandom->Gaus(0, smearVec(0));
+    fHitCoord(1) += gRandom->Gaus(0, smearVec(1));
+    fHitCoord(2) += gRandom->Gaus(0, smearVec(2));
   }
 
   // rotate cov
-  TMatrixD hitCovTemp(getNparHit(),getNparHit());
-  hitCovTemp.Mult(rot,fHitCov);
-  fHitCov.MultT(hitCovTemp,rot);
-
+  fHitCov.Similarity(rot);
 
   setLargestErrorDirection(wDir);
 }

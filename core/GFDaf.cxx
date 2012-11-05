@@ -101,8 +101,9 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 
 		std::vector<double> weights;
 
-		TMatrixT<double> x_smoo(GFTools::getBiasedSmoothedPos(trk, 0, i));
-		TMatrixT<double> smoothedState,smoothedCov;
+		TVectorT<double> x_smoo(GFTools::getBiasedSmoothedPos(trk, 0, i));
+		TVectorT<double> smoothedState;
+		TMatrixTSym<double> smoothedCov;
 		GFTools::getBiasedSmoothedData(trk, 0, i, smoothedState,smoothedCov);
 		if(x_smoo.GetNrows() == 0) {
 			weights.assign(eff_hit->getNumHits(),0.5);
@@ -114,7 +115,8 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 		for(unsigned int j=0; j<eff_hit->getNumHits(); j++) {
 			GFAbsRecoHit* real_hit = eff_hit->getHit(j);
 			GFDetPlane pl;
-			TMatrixT<double> m,Vorig;
+			TVectorT<double> m;
+			TMatrixTSym<double> Vorig;
 			try{
 				pl = real_hit->getDetPlane(trk->getTrackRep(0));
 				real_hit->getMeasurement(trk->getTrackRep(0),pl,smoothedState,smoothedCov,m,Vorig);
@@ -124,15 +126,13 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 				continue; //m and Vorig do not contain sensible values, skip hit
 			}
 
-			TMatrixT<double> V( beta * Vorig);
-			TMatrixT<double> resid(m - x_smoo);
-			TMatrixT<double> resid_T(resid);
-			resid_T.T();
+			TMatrixTSym<double> V( beta * Vorig);
+			TVectorT<double> resid(m - x_smoo);
 			double detV = V.Determinant();
-			TMatrixT<double> Vinv;
+			TMatrixTSym<double> Vinv;
 			GFTools::invertMatrix(V,Vinv);
 
-			phi.push_back((1./(pow(2.*TMath::Pi(),V.GetNrows()/2.)*sqrt(detV)))*exp(-0.5*(resid_T * Vinv * resid)[0][0]));
+			phi.push_back((1./(pow(2.*TMath::Pi(),V.GetNrows()/2.)*sqrt(detV)))*exp(-0.5*Vinv.Similarity(resid)));
 			phi_sum += phi.at(j);
 
 			double cutVal = fchi2Cuts[V.GetNrows()];
@@ -256,17 +256,19 @@ void GFDaf::copySmoothing(GFTrack* source, GFTrack* target, int target_irep) {
 
 	for(unsigned int i=0; i<target->getNumReps(); i++) {
 
-		std::vector<std::string> mat_keys = target->getBK(i)->getMatrixKeys();
-		bool already_there = false;
-		for(unsigned int j=0; j<mat_keys.size(); j++) {
-			if(mat_keys.at(j) == "fUpSt") already_there = true;
-		}
-
+                std::vector<std::string> vec_keys = target->getBK(i)->getVectorKeys();
+                bool already_there = false;
+                for(unsigned int j=0; j<vec_keys.size(); j++) {
+                        if(vec_keys.at(j) == "fUpSt") {
+                 	        already_there = true;
+                	        break;
+	                }
+                }
 		if(!already_there) {
 			target->getBK(i)->bookMatrices("fUpSt");
-			target->getBK(i)->bookMatrices("fUpCov");
+			target->getBK(i)->bookSymMatrices("fUpCov");
 			target->getBK(i)->bookMatrices("bUpSt");
-			target->getBK(i)->bookMatrices("bUpCov");
+			target->getBK(i)->bookSymMatrices("bUpCov");
 			target->getBK(i)->bookGFDetPlanes("fPl");
 			target->getBK(i)->bookGFDetPlanes("bPl");
 			if(target->getTrackRep(i)->hasAuxInfo()) {
@@ -284,14 +286,15 @@ void GFDaf::copySmoothing(GFTrack* source, GFTrack* target, int target_irep) {
 
 		for(unsigned int hit_i=0; hit_i<eff_hit->getNumHits(); hit_i++) {
 
-			TMatrixT<double> fUpSt, fUpCov, bUpSt, bUpCov, fAuxInfo, bAuxInfo;
+			TMatrixT<double> fUpSt, bUpSt, fAuxInfo, bAuxInfo;
+			TMatrixTSym<double> fUpCov, bUpCov;
 			GFDetPlane fPl, bPl;
 
 			source->getBK(0)->getMatrix("fUpSt",pl_i,fUpSt);
-			source->getBK(0)->getMatrix("fUpCov",pl_i,fUpCov);
+			source->getBK(0)->getSymMatrix("fUpCov",pl_i,fUpCov);
 			source->getBK(0)->getDetPlane("fPl",pl_i,fPl);
 			source->getBK(0)->getMatrix("bUpSt",pl_i,bUpSt);
-			source->getBK(0)->getMatrix("bUpCov",pl_i,bUpCov);
+			source->getBK(0)->getSymMatrix("bUpCov",pl_i,bUpCov);
 			source->getBK(0)->getDetPlane("bPl",pl_i,bPl);
 
 			if(source->getTrackRep(0)->hasAuxInfo()) {
@@ -302,10 +305,10 @@ void GFDaf::copySmoothing(GFTrack* source, GFTrack* target, int target_irep) {
 			}
 
 			target->getBK(target_irep)->setMatrix("fUpSt",hit_count,fUpSt);
-			target->getBK(target_irep)->setMatrix("fUpCov",hit_count,fUpCov);
+			target->getBK(target_irep)->setSymMatrix("fUpCov",hit_count,fUpCov);
 			target->getBK(target_irep)->setDetPlane("fPl",hit_count,fPl);
 			target->getBK(target_irep)->setMatrix("bUpSt",hit_count,bUpSt);
-			target->getBK(target_irep)->setMatrix("bUpCov",hit_count,bUpCov);
+			target->getBK(target_irep)->setSymMatrix("bUpCov",hit_count,bUpCov);
 			target->getBK(target_irep)->setDetPlane("bPl",hit_count,bPl);
 
 			hit_count++;

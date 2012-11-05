@@ -36,10 +36,10 @@ GFAbsWirepointHit::GFAbsWirepointHit(int dim) :
 void
 GFAbsWirepointHit::getMeasurement(const GFAbsTrackRep* rep,
                                   const GFDetPlane& pl,
-                                  const TMatrixT<double>& statePred,
-                                  const TMatrixT<double>& covPred,
-                                  TMatrixT<double>& m,
-                                  TMatrixT<double>& V) {
+                                  const TVectorT<double>& statePred,
+                                  const TMatrixTSym<double>& covPred,
+                                  TVectorT<double>& m,
+                                  TMatrixTSym<double>& V) {
 
   static_cast<void>(rep);
   static_cast<void>(statePred);
@@ -48,9 +48,9 @@ GFAbsWirepointHit::getMeasurement(const GFAbsTrackRep* rep,
   checkPlane(pl);
 
   // m
-  m.ResizeTo(2,1);
-  m(0,0) = fHitCoord(6,0);
-  m(0,0) = fHitCoord(7,0);
+  m.ResizeTo(2);
+  m(0) = fHitCoord(6);
+  m(0) = fHitCoord(7);
 
   
   // V

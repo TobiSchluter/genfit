@@ -49,29 +49,33 @@ void GFKalman::processTrack(GFTrack* trk){
   for(int i=0; i<nreps; i++) {
     trk->getBK(i)->setNhits(trk->getNumHits());
     if(fSmooth) {
-      std::vector<std::string> mat_keys = trk->getBK(i)->getMatrixKeys();
+      std::vector<std::string> vec_keys = trk->getBK(i)->getVectorKeys();
       bool already_there = false;
-      for(unsigned int j=0; j<mat_keys.size(); j++) {
-        if(mat_keys.at(j) == "fUpSt") already_there = true;
+      for(unsigned int j=0; j<vec_keys.size(); j++) {
+        if(vec_keys.at(j) == "fUpSt") {
+	  already_there = true;
+	  break;
+	}
       }
-      if(already_there) continue;
-      trk->getBK(i)->bookNumbers("fExtLen"); // extrapolated length from last hit in forward direction
-      trk->getBK(i)->bookMatrices("fUpSt");
-      trk->getBK(i)->bookMatrices("fUpCov");
-      trk->getBK(i)->bookNumbers("bExtLen"); // extrapolated length from last hit in backward direction
-      trk->getBK(i)->bookMatrices("bUpSt");
-      trk->getBK(i)->bookMatrices("bUpCov");
-      if(fSmoothFast) {
-          trk->getBK(i)->bookMatrices("fSt");
-          trk->getBK(i)->bookMatrices("fCov");
-          trk->getBK(i)->bookMatrices("bSt");
-          trk->getBK(i)->bookMatrices("bCov");
-      }
-      trk->getBK(i)->bookGFDetPlanes("fPl");
-      trk->getBK(i)->bookGFDetPlanes("bPl");
-      if(trk->getTrackRep(i)->hasAuxInfo()) {
-        trk->getBK(i)->bookMatrices("fAuxInfo");
-        trk->getBK(i)->bookMatrices("bAuxInfo");
+      if(!already_there) {
+	trk->getBK(i)->bookNumbers("fExtLen"); // extrapolated length from last hit in forward direction
+	trk->getBK(i)->bookVectors("fUpSt");
+	trk->getBK(i)->bookSymMatrices("fUpCov");
+	trk->getBK(i)->bookNumbers("bExtLen"); // extrapolated length from last hit in backward direction
+	trk->getBK(i)->bookVectors("bUpSt");
+	trk->getBK(i)->bookSymMatrices("bUpCov");
+	if(fSmoothFast) {
+	  trk->getBK(i)->bookVectors("fSt");
+	  trk->getBK(i)->bookSymMatrices("fCov");
+	  trk->getBK(i)->bookVectors("bSt");
+	  trk->getBK(i)->bookSymMatrices("bCov");
+	}
+	trk->getBK(i)->bookGFDetPlanes("fPl");
+	trk->getBK(i)->bookGFDetPlanes("bPl");
+	if(trk->getTrackRep(i)->hasAuxInfo()) {
+	  trk->getBK(i)->bookMatrices("fAuxInfo");
+	  trk->getBK(i)->bookMatrices("bAuxInfo");
+	}
       }
     }
   }
@@ -105,22 +109,18 @@ void GFKalman::processTrack(GFTrack* trk){
     //save first and last plane,state&cov after the fitting pass
     if(direction==1){//forward at last hit
       for(int i=0; i<nreps; ++i){
-        trk->getTrackRep(i)->
-          setLastPlane( trk->getTrackRep(i)->getReferencePlane() );
-        trk->getTrackRep(i)->
-          setLastState( trk->getTrackRep(i)->getState() );
-        trk->getTrackRep(i)->
-          setLastCov( trk->getTrackRep(i)->getCov() );
+	GFAbsTrackRep* rep = trk->getTrackRep(i);
+        rep->setLastPlane( rep->getReferencePlane() );
+        rep->setLastState( rep->getState() );
+        rep->setLastCov( rep->getCov() );
       }
     }
     else{//backward at first hit
       for(int i=0; i<nreps; ++i){
-        trk->getTrackRep(i)->
-          setFirstPlane( trk->getTrackRep(i)->getReferencePlane() );
-        trk->getTrackRep(i)->
-          setFirstState( trk->getTrackRep(i)->getState() );
-        trk->getTrackRep(i)->
-          setFirstCov( trk->getTrackRep(i)->getCov() );
+	GFAbsTrackRep* rep = trk->getTrackRep(i);
+        rep->setFirstPlane( rep->getReferencePlane() );
+        rep->setFirstState( rep->getState() );
+        rep->setFirstCov( rep->getCov() );
       }
     }
 
@@ -200,39 +200,35 @@ GFKalman::fittingPass(GFTrack* trk, int direction){
   //trk->printGFBookkeeping();
 }
 
-double GFKalman::chi2Increment(const TMatrixT<double>& r,const TMatrixT<double>& H,
-           const TMatrixT<double>& cov,const TMatrixT<double>& V){
+double GFKalman::chi2Increment(const TVectorT<double>& r,const TMatrixT<double>& H,
+           const TMatrixTSym<double>& cov,const TMatrixTSym<double>& V){
 
   // residuals covariances:R=(V - HCH^T)
-  TMatrixT<double> R(V);
-  TMatrixT<double> covsum1(cov,TMatrixT<double>::kMultTranspose,H);
-  TMatrixT<double> covsum(H,TMatrixT<double>::kMult,covsum1);
+  TMatrixTSym<double> HcovHt(cov);
+  HcovHt.Similarity(H);
 
-  R-=covsum;
+  // instead of
+  //  TMatrixTSym<double> Rinv = TMatrixTSym(V, kMinus, HcovHt)
+  // because kMinus constructor doesn't work in root up to at least 5.34.
+  // Bug report: <https://savannah.cern.ch/bugs/index.php?98605>
 
   // chisq= r^TR^(-1)r
-  TMatrixT<double> Rinv;
-  GFTools::invertMatrix(R,Rinv);
-  
-  
-  TMatrixT<double> residTranspose(r);
-  residTranspose.T();
-  TMatrixT<double> chisq=residTranspose*(Rinv*r);
-  assert(chisq.GetNoElements()==1);
+  TMatrixTSym<double> Rinv(V - HcovHt);
+  GFTools::invertMatrix(Rinv);
+  double chisq = Rinv.Similarity(r);
 
-  if(TMath::IsNaN(chisq[0][0])){
+  if(TMath::IsNaN(chisq)){
     GFException exc("chi2 is nan",__LINE__,__FILE__);
     exc.setFatal();
     std::vector< TMatrixT<double> > matrices;
-    matrices.push_back(r);
     matrices.push_back(V);
-    matrices.push_back(R);
+    matrices.push_back(Rinv);
     matrices.push_back(cov);
-    exc.setMatrices("r, V, R, cov",matrices);
+    exc.setMatrices("V, R, cov",matrices);
     throw exc;
   }
 
-  return chisq[0][0];
+  return chisq;
 }
 
 
@@ -241,17 +237,18 @@ GFKalman::getChi2Hit(GFAbsRecoHit* hit, GFAbsTrackRep* rep)
 {
   // get prototypes for matrices
   int repDim=rep->getDim();
-  TMatrixT<double> state(repDim,1);
-  TMatrixT<double> cov(repDim,repDim);;
+  TVectorT<double> state(repDim);
+  TMatrixTSym<double> cov(repDim);;
   GFDetPlane pl=hit->getDetPlane(rep);
   rep->extrapolate(pl,state,cov);
 
 
-  TMatrixT<double> H = hit->getHMatrix(rep);
-  TMatrixT<double> m,V;
+  const TMatrixT<double>& H = hit->getHMatrix(rep);
+  TVectorT<double> m;
+  TMatrixTSym<double> V;
   hit->getMeasurement(rep,pl,state,cov,m,V);
 
-  TMatrixT<double> res = m-(H*state);
+  TVectorT<double> res = m-(H*state);
   assert(res.GetNrows()>0);
 
   //this is where chi2 is calculated
@@ -268,9 +265,9 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
 
   // get prototypes for matrices
   int repDim = rep->getDim();
-  TMatrixT<double> state(repDim,1);
-  TMatrixT<double> cov(repDim,repDim);;
-  GFDetPlane pl;
+  TVectorT<double> state(repDim);
+  TMatrixTSym<double> cov(repDim);
+  const GFDetPlane* ppl;
 
   double extLen(0.);
 
@@ -280,17 +277,18 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
    */
   if(ihit!=tr->getRepAtHit(irep)){
     // get the (virtual) detector plane
-    pl=hit->getDetPlane(rep);
+    ppl=&hit->getDetPlane(rep);
     //do the extrapolation
-    extLen = rep->extrapolate(pl,state,cov);
+    extLen = rep->extrapolate(*ppl,state,cov);
   }
   else{
-    pl = rep->getReferencePlane();
+    ppl = &rep->getReferencePlane();
     state = rep->getState();
     cov = rep->getCov();
     extLen = 0.;
   }
-  
+  const GFDetPlane& pl = *ppl;
+
   if(cov[0][0]<1.E-50){ // diagonal elements must be >=0
     GFException exc(COVEXC,__LINE__,__FILE__);
     throw exc;
@@ -298,13 +296,13 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
 
   if(fSmooth && fSmoothFast) {
     if(direction == 1) {
-	    tr->getBK(irep)->setMatrix("fSt",ihit,state);
-	    tr->getBK(irep)->setMatrix("fCov",ihit,cov);
+	    tr->getBK(irep)->setVector("fSt",ihit,state);
+	    tr->getBK(irep)->setSymMatrix("fCov",ihit,cov);
 	    if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
 	    tr->getBK(irep)->setDetPlane("fPl",ihit,pl);
 	  } else {
-	    tr->getBK(irep)->setMatrix("bSt",ihit,state);
-	    tr->getBK(irep)->setMatrix("bCov",ihit,cov);
+	    tr->getBK(irep)->setVector("bSt",ihit,state);
+	    tr->getBK(irep)->setSymMatrix("bCov",ihit,cov);
 	    if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
 	    tr->getBK(irep)->setDetPlane("bPl",ihit,pl);
 	  }
@@ -316,37 +314,50 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   cov.Print();
 #endif
 
-  TMatrixT<double> H(hit->getHMatrix(rep));
-  TMatrixT<double> m, V;
+  const TMatrixT<double>& H(hit->getHMatrix(rep));
+  TVectorT<double> m;
+  TMatrixTSym<double> V;
   hit->getMeasurement(rep,pl,state,cov,m,V);
-  TMatrixT<double> res = m-(H*state);
+  TVectorT<double> res = m-(H*state);
 
   // calculate kalman gain ------------------------------
-  TMatrixT<double> Gain(calcGain(cov,V,H));
+  // calculate covsum (V + HCH^T)
+  TMatrixTSym<double> HcovHt(cov);
+  HcovHt.Similarity(H);
+  
+  // invert
+  //TMatrixTSym<double> covSum(V + HcovHt);
+  // instead of:
+  //  TMatrixTSym<double> covSum(V, TMatrixTSym<double>::kPlus, HcovHt);
+  // because kPlus constructor doesn't work in root up to at least 5.34.
+  // Bug report: <https://savannah.cern.ch/bugs/index.php?98605>
+  TMatrixTSym<double> covSumInv(V + HcovHt);
+  GFTools::invertMatrix(covSumInv);
 
-  // calculate update -----------------------------------
-  TMatrixT<double> update=Gain*res;
-
+  TMatrixT<double> CHt(cov, TMatrixT<double>::kMultTranspose, H);
+  TVectorT<double> update = TMatrixT<double>(CHt, TMatrixT<double>::kMult, covSumInv) * res;
 #ifdef DEBUG
-  std::cout<<"Gain"; Gain.Print();
   std::cout<<"residual vector"; res.Print();
   std::cout<<"update = Gain*res"; update.Print();
 #endif
 
   state+=update; // prediction overwritten!
-  cov-=Gain*(H*cov);
+
+  // And the new covariance matrix:
+  covSumInv.Similarity(CHt);
+  cov-=covSumInv;  // Cnew = C - C Ht (V + H C Ht)^-1 H C
 
   if(fSmooth) {
     if(direction == 1) {
       tr->getBK(irep)->setNumber("fExtLen",ihit,extLen);
-      tr->getBK(irep)->setMatrix("fUpSt",ihit,state);
-      tr->getBK(irep)->setMatrix("fUpCov",ihit,cov);
+      tr->getBK(irep)->setVector("fUpSt",ihit,state);
+      tr->getBK(irep)->setSymMatrix("fUpCov",ihit,cov);
       if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
       tr->getBK(irep)->setDetPlane("fPl",ihit,pl);
     } else {
 	    tr->getBK(irep)->setNumber("bExtLen",ihit,extLen);
-      tr->getBK(irep)->setMatrix("bUpSt",ihit,state);
-      tr->getBK(irep)->setMatrix("bUpCov",ihit,cov);
+      tr->getBK(irep)->setVector("bUpSt",ihit,state);
+      tr->getBK(irep)->setSymMatrix("bUpCov",ihit,cov);
       if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
       tr->getBK(irep)->setDetPlane("bPl",ihit,pl);
     }
@@ -387,29 +398,6 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
    rep->getState().Print();
    rep->getCov().Print();
 #endif
-}
-
-
-TMatrixT<double>
-GFKalman::calcGain(const TMatrixT<double>& cov, 
-           const TMatrixT<double>& HitCov,
-           const TMatrixT<double>& H){
-
-  // calculate covsum (V + HCH^T)
-  TMatrixT<double> covsum1(cov,TMatrixT<double>::kMultTranspose,H);
-  TMatrixT<double> covsum(H,TMatrixT<double>::kMult,covsum1);
-
-  covsum+=HitCov;
-  
-  // invert
-  TMatrixT<double> covsumInv;
-  GFTools::invertMatrix(covsum,covsumInv);
-  
-  // calculate gain
-  TMatrixT<double> gain1(H,TMatrixT<double>::kTransposeMult,covsumInv);
-  TMatrixT<double> gain(cov,TMatrixT<double>::kMult,gain1);
-
-  return gain;
 }
 
 

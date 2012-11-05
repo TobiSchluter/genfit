@@ -30,12 +30,12 @@ PixHit::PixHit(const TVector3& point, const TVector3& norm,
   GFDetPlane d(point,u,v);
 
   if(smear) {
-    fHitCoord(0,0) = gRandom->Gaus(0,res);
-    fHitCoord(1,0) = gRandom->Gaus(0,res);
+    fHitCoord(0) = gRandom->Gaus(0,res);
+    fHitCoord(1) = gRandom->Gaus(0,res);
   }
   else {
-    fHitCoord(0,0) = 0;
-    fHitCoord(1,0) = 0;
+    fHitCoord(0) = 0;
+    fHitCoord(1) = 0;
   }
 
   setDetPlane(d);

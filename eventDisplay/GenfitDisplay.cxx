@@ -34,6 +34,7 @@
 #include <TGeoTube.h>
 #include <TMath.h>
 #include <TMatrixT.h>
+#include <TMatrixTSym.h>
 #include <TMatrixDEigen.h>
 #include <TROOT.h>
 #include <TVector2.h>
@@ -274,8 +275,8 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 		// saving the initial state of the representation -----------------------------------------
 		GFDetPlane initial_plane = rep->getReferencePlane();
-		TMatrixT<double> initial_state(rep->getState());
-		TMatrixT<double> initial_cov(rep->getCov());
+		TVectorT<double> initial_state(rep->getState());
+		TMatrixTSym<double> initial_cov(rep->getCov());
 		TMatrixT<double> initial_auxInfo;
 		if (rep->hasAuxInfo()) {
 		  initial_auxInfo.ResizeTo(*(rep->getAuxInfo(initial_plane)));
@@ -290,8 +291,8 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 			// get the hit infos ------------------------------------------------------------------
 			if(smoothing) {
-				TMatrixT<double> state;
-				TMatrixT<double> cov;
+				TVectorT<double> state;
+				TMatrixTSym<double> cov;
 				TMatrixT<double> auxInfo;
 				GFTools::getSmoothedData(track, irep, j, state, cov, plane, auxInfo);
 				rep->setData(state, plane, &cov, &auxInfo);
@@ -312,8 +313,8 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			
 			track_pos = rep->getPos(plane);
 			plane_pos = plane.getO();
-			TMatrixT<double> hit_coords;
-			TMatrixT<double> hit_cov;
+			TVectorT<double> hit_coords;
+			TMatrixTSym<double> hit_cov;
 			hit->getMeasurement(rep,plane,rep->getState(),rep->getCov(),hit_coords,hit_cov);
 
 			// finished getting the hit infos -----------------------------------------------------
@@ -339,12 +340,12 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			if(dynamic_cast<GFAbsPlanarHit*>(hit) != NULL) {
 				planar_hit = true;
 				if(hit_coords_dim == 1) {
-					hit_u = hit_coords(0,0);
+					hit_u = hit_coords(0);
 					hit_res_u = hit_cov(0,0);
 				} else if(hit_coords_dim == 2) {
 					planar_pixel_hit = true;
-					hit_u = hit_coords(0,0);
-					hit_v = hit_coords(1,0);
+					hit_u = hit_coords(0);
+					hit_v = hit_coords(1);
 					hit_res_u = hit_cov(0,0);
 					hit_res_v = hit_cov(1,1);
 				}
@@ -353,15 +354,15 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 				plane_size = 4;
       } else if (dynamic_cast<GFAbsWireHit*>(hit) != NULL) {
 				wire_hit = true;
-				hit_u = hit_coords(0,0);
+				hit_u = hit_coords(0);
 				hit_res_u = hit_cov(0,0);
 				hit_res_v = 4;
 				plane_size = 4;
 			} else if (dynamic_cast<GFAbsWirepointHit*>(hit) != NULL) {
         wire_hit = true;
         wirepoint_hit = true;
-        hit_u = hit_coords(0,0);
-        hit_v = hit_coords(1,0);
+        hit_u = hit_coords(0);
+        hit_v = hit_coords(1);
         hit_res_u = hit_cov(0,0);
         hit_res_v = hit_cov(1,1);
         plane_size = 4;

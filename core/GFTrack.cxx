@@ -248,8 +248,8 @@ GFTrack::getResiduals(unsigned int detId, // which detector?
       GFAbsRecoHit* hit=getHit(ih);
       // extrapolate trackrep there
       int repDim=rep->getDim();
-      TMatrixT<double> state(repDim,1);
-      TMatrixT<double> cov(repDim,repDim);
+      TVectorT<double> state(repDim);
+      TMatrixTSym<double> cov(repDim);
       GFDetPlane pl=hit->getDetPlane(rep);
       
       rep->extrapolate(pl,state,cov);
@@ -257,9 +257,10 @@ GFTrack::getResiduals(unsigned int detId, // which detector?
       //rep->setReferencePlane(pl);
 
       TMatrixT<double> H = hit->getHMatrix(rep);
-      TMatrixT<double> m,V;
+      TVectorT<double> m;
+      TMatrixTSym<double> V;
       hit->getMeasurement(rep,pl,state,cov,m,V);
-      double res=(m-(H*state))[dim][0];;
+      double res=(m-(H*state))[dim];
 
       //std::cout<<res<<std::endl;
 
@@ -342,7 +343,7 @@ GFTrack::blowUpCovs(double blowUpFactor){
 
     //dont do it for already compromsied reps, since they wont be fitted anyway
     if(arep->getStatusFlag()==0) {
-      TMatrixT<double> cov = arep->getCov();
+      TMatrixTSym<double> cov = arep->getCov();
       for(int i=0;i<cov.GetNrows();++i){
         for(int j=0;j<cov.GetNcols();++j){
           //if(i!=j){//off diagonal

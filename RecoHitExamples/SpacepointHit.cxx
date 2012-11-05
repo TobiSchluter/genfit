@@ -29,14 +29,14 @@ SpacepointHit::SpacepointHit(const TVector3& point, const double& res, bool smea
   fHitCov(2,2) = res*res;
 
   if (smear){
-    fHitCoord(0,0) = gRandom->Gaus(point.X(),res);
-    fHitCoord(1,0) = gRandom->Gaus(point.Y(),res);
-    fHitCoord(2,0) = gRandom->Gaus(point.Z(),res);
+    fHitCoord(0) = gRandom->Gaus(point.X(),res);
+    fHitCoord(1) = gRandom->Gaus(point.Y(),res);
+    fHitCoord(2) = gRandom->Gaus(point.Z(),res);
   }
   else {
-    fHitCoord(0,0) = point.X();
-    fHitCoord(1,0) = point.Y();
-    fHitCoord(2,0) = point.Z();
+    fHitCoord(0) = point.X();
+    fHitCoord(1) = point.Y();
+    fHitCoord(2) = point.Z();
   }
 }
 
@@ -48,14 +48,14 @@ SpacepointHit::SpacepointHit(const TVector3& point, const TVector3& res, bool sm
   fHitCov(2,2) = res.Z()*res.Z();
 
   if (smear){
-    fHitCoord(0,0) = gRandom->Gaus(point.X(),res.X());
-    fHitCoord(1,0) = gRandom->Gaus(point.Y(),res.Y());
-    fHitCoord(2,0) = gRandom->Gaus(point.Z(),res.Z());
+    fHitCoord(0) = gRandom->Gaus(point.X(),res.X());
+    fHitCoord(1) = gRandom->Gaus(point.Y(),res.Y());
+    fHitCoord(2) = gRandom->Gaus(point.Z(),res.Z());
   }
   else {
-    fHitCoord(0,0) = point.X();
-    fHitCoord(1,0) = point.Y();
-    fHitCoord(2,0) = point.Z();
+    fHitCoord(0) = point.X();
+    fHitCoord(1) = point.Y();
+    fHitCoord(2) = point.Z();
   }
 }
 

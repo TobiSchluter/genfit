@@ -35,6 +35,7 @@
 #include "GFPointPath.h"
 #include "RKTools.h"
 #include <TMatrixD.h>
+#include <TMatrixDSym.h>
 
 /** @brief Track Representation module based on a Runge-Kutta algorithm including a full material model
  *
@@ -141,12 +142,12 @@ class RKTrackRep : public GFAbsTrackRep {
     * \f}
     */
   double extrapolate(const GFDetPlane&, 
-         TMatrixD& statePred,
-         TMatrixD& covPred);
+         TVectorD& statePred,
+         TMatrixDSym& covPred);
 
   //! returns the tracklength spanned in this extrapolation
   double extrapolate(const GFDetPlane&, 
-         TMatrixD& statePred);
+         TVectorD& statePred);
 
   //! This method is to extrapolate the track to point of closest approach to a point in space
   double extrapolateToPoint(const TVector3& pos,
@@ -186,7 +187,7 @@ class RKTrackRep : public GFAbsTrackRep {
 
   void getPosMomCov(const GFDetPlane& pl,
                     TVector3& pos, TVector3& mom,
-                    TMatrixD& cov);
+                    TMatrixDSym& cov);
 
   //! Returns charge
   double getCharge()const {return fCharge;}
@@ -207,9 +208,9 @@ class RKTrackRep : public GFAbsTrackRep {
     * the plane #pl is the same as the plane of the last extrapolation (i.e. #fCachePlane), where #fCacheSpu was calculated.
     * Hence, if the argument #pl is not equal to #fCachePlane, an error message is shown an an exception is thrown.
     */
-  void setData(const TMatrixD& st,
+  void setData(const TVectorD& st,
                const GFDetPlane& pl,
-               const TMatrixD* cov=NULL,
+               const TMatrixDSym* cov=NULL,
                const TMatrixD* aux=NULL);
 
   //! Sets state, plane and covariance from position, momentum and 6x6 covariance
@@ -217,7 +218,7 @@ class RKTrackRep : public GFAbsTrackRep {
     */
   void setPosMomCov(const TVector3& pos,
                     const TVector3& mom,
-                    const TMatrixD& cov);
+                    const TMatrixDSym& cov);
 
   void disableMaterialEffects(bool opt = true){fNoMaterial = opt;}
 
@@ -240,31 +241,31 @@ class RKTrackRep : public GFAbsTrackRep {
                  const TVector3& mom);
 
   void getState7(M1x7& state7);
-  void getState7(M1x7& state7, const TMatrixD& state5, const GFDetPlane& pl, const double& spu);
-  TMatrixD getState5(const M1x7& state7, const GFDetPlane& pl, double& spu);
+  void getState7(M1x7& state7, const TVectorD& state5, const GFDetPlane& pl, const double& spu);
+  TVectorD getState5(const M1x7& state7, const GFDetPlane& pl, double& spu);
 
   void transformPM7(const TMatrixD& in5x5,
                     M7x7& out7x7,
                     const GFDetPlane& pl,
-                    const TMatrixD& state5,
+                    const TVectorD& state5,
                     const double& spu,
                     TMatrixD* Jac = NULL);
 
-  void transformPM6(const TMatrixD& in5x5,
+  void transformPM6(const TMatrixDSym& in5x5,
                     M6x6& out6x6,
                     const GFDetPlane& pl,
-                    const TMatrixD& state5,
+                    const TVectorD& state5,
                     const double& spu,
                     TMatrixD* Jac = NULL);
 
   void transformM7P(const M7x7& in7x7,
-                    TMatrixD& out5x5,
+                    TMatrixDSym& out5x5,
                     const GFDetPlane& pl,
                     const M1x7& state7,
                     TMatrixD* Jac = NULL);
 
   void transformM6P(const M6x6& in6x6,
-                    TMatrixD& out5x5,
+                    TMatrixDSym& out5x5,
                     const GFDetPlane& pl,
                     const M1x7& state7,
                     TMatrixD* Jac = NULL);
@@ -363,7 +364,7 @@ class RKTrackRep : public GFAbsTrackRep {
   M6x5 fJ_Mp_6x5; //!
 
  public:
-  ClassDef(RKTrackRep, 7)
+  ClassDef(RKTrackRep, 8)
 
 };
 

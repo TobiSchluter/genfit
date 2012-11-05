@@ -70,10 +70,10 @@
 class GFAbsRecoHit : public TObject {
  protected:
   /// Vector of raw coordinates of hit
-  TMatrixT<double> fHitCoord;
+  TVectorT<double> fHitCoord;
 
   /// Covariance of raw hit coordinates
-  TMatrixT<double> fHitCov;
+  TMatrixTSym<double> fHitCov;
 
   /// Sorting parameter used in GFTrack::sortHits()
   double fRho;
@@ -127,20 +127,19 @@ class GFAbsRecoHit : public TObject {
    */
   virtual void getMeasurement(const GFAbsTrackRep* rep,
                               const GFDetPlane& pl,
-                              const TMatrixT<double>& statePred,
+                              const TVectorT<double>& statePred,
                               const TMatrixT<double>& covPred,
-                              TMatrixT<double>& m,
-                              TMatrixT<double>& V) = 0;
-  
+                              TVectorT<double>& m,
+			      TMatrixTSym<double>& V);
   /** @brief Get raw hit covariances. 
    *
    */
-  const TMatrixT<double>& getRawHitCov() const {return fHitCov;}
+  const TMatrixTSym<double>& getRawHitCov() const {return fHitCov;}
 
   /** @brief Get raw hit coordinates. 
    *
    */
-  const TMatrixT<double>& getRawHitCoord() const {return fHitCoord;}
+  const TVectorT<double>& getRawHitCoord() const {return fHitCoord;}
   
   
   /** @brief Get detector plane for a given track representation.
@@ -184,11 +183,11 @@ class GFAbsRecoHit : public TObject {
   int getNparHit() const {return fNparHit;}
 
  public:
-  ClassDef(GFAbsRecoHit,4)
+  ClassDef(GFAbsRecoHit,5)
 
 };
   
 
-#endif
+#endif //FITTER_ABSHIT_H
 
 /** @} */ 

@@ -183,7 +183,7 @@ void LSLTrackRep::extrapolate(const GFDetPlane& pl,
 double
 LSLTrackRep::extrapolate(const GFDetPlane& pl, 
 			 TMatrixT<double>& statePred,
-			 TMatrixT<double>& covPred)
+			 TMatrixTSym<double>& covPred)
 {
   statePred.ResizeTo(fDimension,1);
   covPred.ResizeTo(fDimension,fDimension);
@@ -193,8 +193,8 @@ LSLTrackRep::extrapolate(const GFDetPlane& pl,
   // covPred=JCovJ^T with J being Jacobian
   jacobian.ResizeTo(5,5);
   Jacobian(pl,statePred,jacobian);
-  TMatrixT<double> dummy(fCov,TMatrixT<double>::kMultTranspose,jacobian);
-  covPred=jacobian*dummy;
+  covPred=fCov;
+  covPred.Similarity(jacobian);
   return l;
 }
 
@@ -205,7 +205,7 @@ LSLTrackRep::extrapolateToPoint(const TVector3& p,
   GFDetPlane plane;
   int dim = getDim();
   TMatrixT<double> statePred(dim,1);
-  TMatrixT<double> covPred(dim,dim);
+  TMatrixTSym<double> covPred(dim);
   plane.setO(p);
   plane.setU(TVector3(1,0,0));
   plane.setV(TVector3(0,1,0));
@@ -304,7 +304,7 @@ LSLTrackRep::getGlobal() {// (x,y,z,px,py,pz)
 }
 
 
-TMatrixT<double> 
+TMatrixTSym<double> 
 LSLTrackRep::getGlobalCov(){ // covariances
   TMatrixT<double> L(6,5);
   double xp=fState[2][0];
@@ -327,9 +327,8 @@ LSLTrackRep::getGlobalCov(){ // covariances
   L[5][4]=-p/(2.*fState[4][0])/sq;
   
   // calculate new cov;
-  TMatrixT<double> LT(TMatrixD::kTransposed,L);
-  TMatrixT<double> dum(fCov,TMatrixD::kMult,LT);
-  TMatrixT<double> result(L,TMatrixD::kMult,dum);
+  TMatrixTSym<double> result(fCov);
+  result.Similarity(L);
 
   // set sigma_z by hand: 
   result[2][2]=0.01;

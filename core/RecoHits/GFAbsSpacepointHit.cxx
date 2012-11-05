@@ -24,10 +24,10 @@
 void
 GFAbsSpacepointHit::getMeasurement(const GFAbsTrackRep* rep,
                                 const GFDetPlane& pl,
-                                const TMatrixT<double>& statePred,
-                                const TMatrixT<double>& covPred,
-                                TMatrixT<double>& m,
-                                TMatrixT<double>& V) {
+                                const TVectorT<double>& statePred,
+                                const TMatrixTSym<double>& covPred,
+                                TVectorT<double>& m,
+                                TMatrixTSym<double>& V) {
 
   static_cast<void>(rep);
   static_cast<void>(statePred);
@@ -40,21 +40,17 @@ GFAbsSpacepointHit::getMeasurement(const GFAbsTrackRep* rep,
   // m
   m.ResizeTo(2,1);
 
-  TMatrixT<double> D(3,1);
-  D(0,0) = o.X();
-  D(1,0) = o.Y();
-  D(2,0) = o.Z();
+  TVectorT<double> D(3);
+  D(0) = o.X();
+  D(1) = o.Y();
+  D(2) = o.Z();
 
   D *= -1.;
   D += fHitCoord;
   //now the vector D points from the origin of the plane to the hit point
 
-  m(0,0) = D(0,0) * u.X() + D(1,0) * u.Y() + D(2,0) * u.Z();
-  m(1,0) = D(0,0) * v.X() + D(1,0) * v.Y() + D(2,0) * v.Z();
-
-
-  // V
-  V.ResizeTo(2,2);
+  m(0) = D(0) * u.X() + D(1) * u.Y() + D(2) * u.Z();
+  m(1) = D(0) * v.X() + D(1) * v.Y() + D(2) * v.Z();
 
   TMatrixT<double> jac(3,2);
   
@@ -66,18 +62,17 @@ GFAbsSpacepointHit::getMeasurement(const GFAbsTrackRep* rep,
   jac(1,1) = v.Y();
   jac(2,1) = v.Z();
 
-  TMatrixT<double> jac_orig = jac;
-  TMatrixT<double> jac_t = jac.T();
-
-  V = jac_t * (fHitCov * jac_orig); // TODO use similarity
-
+  // V
+  V.ResizeTo(fHitCov);
+  V = fHitCov;
+  V.SimilarityT(jac);
 }
 
 
 const GFDetPlane&
 GFAbsSpacepointHit::getDetPlane(GFAbsTrackRep* rep)
 {
-  TVector3 point(fHitCoord(0,0), fHitCoord(1,0), fHitCoord(2,0));
+  TVector3 point(fHitCoord(0), fHitCoord(1), fHitCoord(2));
 
   TVector3 poca, dirInPoca;
   rep->extrapolateToPoint(point, poca, dirInPoca);

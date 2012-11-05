@@ -82,7 +82,7 @@ class GFDafHit: public GFAbsRecoHit {
 		 * As before, these calculations are only done if the plane is different
 		 * from the one getHitCov was last called.
 		 */
-		void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TMatrixT<double>& statePred,const TMatrixT<double>& covPred,TMatrixT<double>& m, TMatrixT<double>& V);
+		void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V);
 
 		/** @brief Get the H matrix.
 		 *
@@ -117,12 +117,12 @@ class GFDafHit: public GFAbsRecoHit {
 	private:
 		bool fHitUpd;
 		GFDetPlane fPl;
-		std::vector<TMatrixT<double> > fCovInvs;
+		std::vector<TMatrixTSym<double> > fCovInvs;
 		std::vector<GFAbsRecoHit*> fRawHits;
 		std::vector<double> fWeights;
 
 	public:
-		ClassDef(GFDafHit,2)
+		ClassDef(GFDafHit,3)
 
 };
 #endif

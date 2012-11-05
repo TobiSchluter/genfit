@@ -23,7 +23,9 @@
 #define GFBOOKKEEPING_H
 
 #include "TObject.h"
+#include"TVectorT.h"
 #include "TMatrixT.h"
+#include"TMatrixTSym.h"
 #include <vector>
 #include <cassert>
 #include <iostream>
@@ -36,7 +38,9 @@ class GFBookkeeping : public TObject {
 
   //the string keys will in general be different, so this cant
   //be unified to one container
+  std::map<std::string, TVectorT<double>* > fVectors;
   std::map<std::string, TMatrixT<double>* > fMatrices;
+  std::map<std::string, TMatrixTSym<double>* > fSymMatrices;
   std::map<std::string, GFDetPlane* > fPlanes;
   /* this is a work-around: we want to save doubles, but ROOT has problems
    * with TObjects that contain map<string,double*>. We take a 1x1 matrix
@@ -49,19 +53,26 @@ class GFBookkeeping : public TObject {
   void reset();
   void setNhits(int n){fNhits=n; reset();}
 
+  void bookVectors(std::string key);
   void bookMatrices(std::string key);
+  void bookSymMatrices(std::string key);
   void bookGFDetPlanes(std::string key);
   void bookNumbers(std::string key,double val=0.);
 
-  void setMatrix(std::string key,unsigned int index,const TMatrixT<double>& mat);
+   void setVector(std::string key,unsigned int index,const TVectorT<double>& mat); void setMatrix(std::string key,unsigned int index,const TMatrixT<double>& mat);
+  void setSymMatrix(std::string key,unsigned int index,const TMatrixTSym<double>& mat);
   void setDetPlane(std::string key,unsigned int index,const GFDetPlane& pl);
   void setNumber(std::string key,unsigned int index, const double& num);
 
+  bool getVector(std::string key, unsigned int index, TVectorT<double>& mat) const;
   bool getMatrix(std::string key, unsigned int index, TMatrixT<double>& mat) const;
+  bool getSymMatrix(std::string key, unsigned int index, TMatrixTSym<double>& mat) const;
   bool getDetPlane(std::string key, unsigned int index, GFDetPlane& pl)  const;
   bool getNumber(std::string key, unsigned int index, double& num) const;
 
+  std::vector< std::string > getVectorKeys() const;
   std::vector< std::string > getMatrixKeys() const;
+  std::vector< std::string > getSymMatrixKeys() const;
   std::vector< std::string > getGFDetPlaneKeys() const;
   std::vector< std::string > getNumberKeys() const;
 
@@ -85,7 +96,7 @@ class GFBookkeeping : public TObject {
   }
 
  public:
-  ClassDef(GFBookkeeping,2)
+  ClassDef(GFBookkeeping,3)
 
 };
 

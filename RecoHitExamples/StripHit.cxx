@@ -28,8 +28,8 @@ StripHit::StripHit(const TVector3& point, const TVector3& norm,
   TVector3 v = u.Cross(norm);
   GFDetPlane plane(point,u,v);
 
-  if(smear) fHitCoord(0,0) = gRandom->Gaus(0,res);
-  else fHitCoord(0,0) = 0;
+  if(smear) fHitCoord(0) = gRandom->Gaus(0,res);
+  else fHitCoord(0) = 0;
 
   setDetPlane(plane);
 }

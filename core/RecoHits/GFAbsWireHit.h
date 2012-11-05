@@ -59,10 +59,10 @@ class GFAbsWireHit : public GFAbsRecoHit {
   // Operations ----------------------
   virtual void getMeasurement(const GFAbsTrackRep* rep,
                               const GFDetPlane& pl,
-                              const TMatrixT<double>& statePred,
-                              const TMatrixT<double>& covPred,
-                              TMatrixT<double>& m,
-                              TMatrixT<double>& V);
+                              const TVectorT<double>& statePred,
+                              const TMatrixTSym<double>& covPred,
+                              TVectorT<double>& m,
+                              TMatrixTSym<double>& V);
 
    /** @brief Get detector plane 
     * Calls GFAbsTrackRep::extrapolateToLine for POCA.

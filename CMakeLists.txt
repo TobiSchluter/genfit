@@ -5,8 +5,8 @@ IF(NOT DEFINED ENV{ROOTSYS})
 ENDIF(NOT DEFINED ENV{ROOTSYS})
 
 Execute_process(COMMAND root-config --glibs --cflags
-    OUTPUT_VARIABLE ROOT_LIBS
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
+	OUTPUT_VARIABLE ROOT_LIBS
+    	OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 SET(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wshadow -ftree-vectorize -ffast-math -march=native -ftree-vectorizer-verbose=0 ${ROOT_LIBS}")
 
@@ -16,7 +16,8 @@ include(macros.cmake)
 #SET(CMAKE_VERBOSE_MAKEFILE ON)
 
 
-
+get_filename_component(GENFIT $ENV{GENFIT} REALPATH)
+get_filename_component(VMC $ENV{VMC} REALPATH)
 SET(GENFIT $ENV{GENFIT})
 SET(VMC $ENV{VMC})
 
@@ -28,6 +29,7 @@ SET(LIBRARY_OUTPUT_PATH ${GENFITLIBDIR})
 add_subdirectory(core)
 add_subdirectory(GeaneTrackRep2)
 add_subdirectory(RKTrackRep)
+#add_subdirectory(GFFastKalman)
 #add_subdirectory(RKTrackRepXY)
 #add_subdirectory(LSLtrackRep)
 #add_subdirectory(SlTrackRep)

@@ -27,6 +27,7 @@
 #include <iostream>
 
 #include "TMatrixT.h"
+#include "TMatrixTSym.h"
 
 
 class GFAbsRecoHit;
@@ -136,16 +137,10 @@ private:
    */
   void switchDirection(GFTrack* trk); // switches the direction of propagation for all reps
 
-  /** @brief Calculate Kalman Gain
-   */
-  TMatrixT<double> calcGain(const TMatrixT<double>& cov, 
-						const TMatrixT<double>& HitCov,
-						const TMatrixT<double>& H);
-
   /** @brief this returns the reduced chi2 increment for a hit
    */
-  double chi2Increment(const TMatrixT<double>& r,const TMatrixT<double>& H,
-		       const TMatrixT<double>& cov,const TMatrixT<double>& V);
+  double chi2Increment(const TVectorT<double>& r,const TMatrixT<double>& H,
+		       const TMatrixTSym<double>& cov,const TMatrixTSym<double>& V);
 
 
 

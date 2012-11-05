@@ -20,27 +20,27 @@
 #include <iostream>
 #include <assert.h>
 
-GFAbsTrackRep::GFAbsTrackRep() : fDimension(5),fState(5,1), fCov(5,5), fChiSqu(0), fNdf(0), fStatusFlag(0), fInverted(false), fFirstState(5,1), fFirstCov(5,5), fLastState(5,1), fLastCov(5,5), fXX0(-1.)
+GFAbsTrackRep::GFAbsTrackRep() : fDimension(5),fState(5), fCov(5), fChiSqu(0), fNdf(0), fStatusFlag(0), fInverted(false), fFirstState(5), fFirstCov(5), fLastState(5), fLastCov(5), fXX0(-1.)
 {
 }
 
-GFAbsTrackRep::GFAbsTrackRep(int dim) : fDimension(dim), fState(dim,1), fCov(dim,dim), fChiSqu(0), fNdf(0), fStatusFlag(0), fInverted(false), fFirstState(dim,1), fFirstCov(dim,dim), fLastState(dim,1), fLastCov(dim,dim), fXX0(-1.)
+GFAbsTrackRep::GFAbsTrackRep(int dim) : fDimension(dim), fState(dim), fCov(dim), fChiSqu(0), fNdf(0), fStatusFlag(0), fInverted(false), fFirstState(dim), fFirstCov(dim), fLastState(dim), fLastCov(dim), fXX0(-1.)
 {
 }
 
 GFAbsTrackRep::~GFAbsTrackRep() {}
 
 double GFAbsTrackRep::extrapolate(const GFDetPlane& plane){
-  TMatrixT<double> statePred(fDimension,1);
-  TMatrixT<double> covPred(fDimension,fDimension);
+  TVectorT<double> statePred(fDimension);
+  TMatrixTSym<double> covPred(fDimension);
   double retVal = extrapolate(plane,statePred,covPred);
   setData(statePred,plane,&covPred);
   return retVal;
 }
 
 //default implentation might be overwritten, please see the doxy docu
-double GFAbsTrackRep::extrapolate(const GFDetPlane& plane, TMatrixT<double>& statePred){
-  TMatrixT<double> cov(fDimension,fDimension);
+double GFAbsTrackRep::extrapolate(const GFDetPlane& plane, TVectorT<double>& statePred){
+  TMatrixTSym<double> cov(fDimension);
   return extrapolate(plane,statePred,cov);
 }
 
@@ -88,7 +88,7 @@ void GFAbsTrackRep::getPosMomCov(const GFDetPlane& pl,TVector3& pos,TVector3& mo
   Abort("getPosMomCov()");
 }
 
-void GFAbsTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixT<double>& cov){
+void GFAbsTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixTSym<double>& cov){
   Abort("setPosMomCov()");
 }
 

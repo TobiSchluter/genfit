@@ -109,7 +109,7 @@ RKTrackRep::RKTrackRep(const GFTrackCand* const aGFTrackCandPtr, int pdgCode) :
 
   initArrays();
 
-  TMatrixD cov6D = aGFTrackCandPtr->getCovSeed();
+  TMatrixDSym cov6D = aGFTrackCandPtr->getCovSeed();
   setPosMomCov(aGFTrackCandPtr->getPosSeed(),
                aGFTrackCandPtr->getMomSeed(),
                cov6D);
@@ -138,7 +138,7 @@ void RKTrackRep::initArrays(){
 }
 
 
-void RKTrackRep::setData(const TMatrixD& st, const GFDetPlane& pl, const TMatrixD* cov, const TMatrixD* aux){
+void RKTrackRep::setData(const TVectorD& st, const GFDetPlane& pl, const TMatrixDSym* cov, const TMatrixD* aux){
   if(aux != NULL) {
     fCacheSpu = (*aux)(0,0);
     fDirection = (*aux)(0,1);
@@ -150,7 +150,7 @@ void RKTrackRep::setData(const TMatrixD& st, const GFDetPlane& pl, const TMatrix
     }
   }
   GFAbsTrackRep::setData(st,pl,cov);
-  if (fCharge*fState(0,0) < 0) fCharge *= -1; // set charge accordingly! (fState[0][0] = q/p)
+  if (fCharge*fState(0) < 0) fCharge *= -1; // set charge accordingly! (fState[0] = q/p)
   fSpu = fCacheSpu;
 }
 
@@ -226,15 +226,15 @@ void RKTrackRep::calcState(const TVector3& pos,
   fRefPlane.setON(pos, mom);
   fSpu=1.;
 
-  fState(0,0) = fCharge/mom.Mag();
+  fState(0) = fCharge/mom.Mag();
 
   //u' and v'
-  fState(1,0) = 0.;
-  fState(2,0) = 0.;
+  fState(1) = 0.;
+  fState(2) = 0.;
 
   //u and v
-  fState(3,0) = 0.;
-  fState(4,0) = 0.;
+  fState(3) = 0.;
+  fState(4) = 0.;
 }
 
 
@@ -244,30 +244,30 @@ void RKTrackRep::getState7(M1x7& state7) {
 }
 
 
-void RKTrackRep::getState7(M1x7& state7, const TMatrixD& state5, const GFDetPlane& pl, const double& spu) {
+void RKTrackRep::getState7(M1x7& state7, const TVectorD& state5, const GFDetPlane& pl, const double& spu) {
 
   fU = pl.getU();
   fV = pl.getV();
   fO = pl.getO();
   fW = pl.getNormal();
 
-  state7[0] = fO.X() + state5(3,0)*fU.X() + state5(4,0)*fV.X(); // x
-  state7[1] = fO.Y() + state5(3,0)*fU.Y() + state5(4,0)*fV.Y(); // y
-  state7[2] = fO.Z() + state5(3,0)*fU.Z() + state5(4,0)*fV.Z(); // z
+  state7[0] = fO.X() + state5(3)*fU.X() + state5(4)*fV.X(); // x
+  state7[1] = fO.Y() + state5(3)*fU.Y() + state5(4)*fV.Y(); // y
+  state7[2] = fO.Z() + state5(3)*fU.Z() + state5(4)*fV.Z(); // z
 
-  state7[3] = spu * (fW.X() + state5(1,0)*fU.X() + state5(2,0)*fV.X()); // a_x
-  state7[4] = spu * (fW.Y() + state5(1,0)*fU.Y() + state5(2,0)*fV.Y()); // a_y
-  state7[5] = spu * (fW.Z() + state5(1,0)*fU.Z() + state5(2,0)*fV.Z()); // a_z
+  state7[3] = spu * (fW.X() + state5(1)*fU.X() + state5(2)*fV.X()); // a_x
+  state7[4] = spu * (fW.Y() + state5(1)*fU.Y() + state5(2)*fV.Y()); // a_y
+  state7[5] = spu * (fW.Z() + state5(1)*fU.Z() + state5(2)*fV.Z()); // a_z
 
   // normalize dir
   double norm = 1. / sqrt(state7[3]*state7[3] + state7[4]*state7[4] + state7[5]*state7[5]);
   for (unsigned int i=3; i<6; ++i) state7[i] *= norm;
 
-  state7[6] = state5(0,0); // q/p
+  state7[6] = state5(0); // q/p
 }
 
 
-TMatrixD RKTrackRep::getState5(const M1x7& state7, const GFDetPlane& pl, double& spu) {
+TVectorD RKTrackRep::getState5(const M1x7& state7, const GFDetPlane& pl, double& spu) {
 
   fU = pl.getU();
   fV = pl.getV();
@@ -286,12 +286,12 @@ TMatrixD RKTrackRep::getState5(const M1x7& state7, const GFDetPlane& pl, double&
     spu = -1.;
   }
 
-  TMatrixD state5(5,1);
-  state5(0,0) = state7[6];
-  state5(1,0) = fDir*fU / AtW;
-  state5(2,0) = fDir*fV / AtW;
-  state5(3,0) = fPos*fU;
-  state5(4,0) = fPos*fV;
+  TVectorD state5(5);
+  state5(0) = state7[6];
+  state5(1) = fDir*fU / AtW;
+  state5(2) = fDir*fV / AtW;
+  state5(3) = fPos*fU;
+  state5(4) = fPos*fV;
 
   return state5;
 }
@@ -299,7 +299,7 @@ TMatrixD RKTrackRep::getState5(const M1x7& state7, const GFDetPlane& pl, double&
 
 
 void RKTrackRep::transformPM7(const TMatrixD& in5x5, M7x7& out7x7,
-                              const GFDetPlane& pl, const TMatrixD& state5, const double&  spu,
+                              const GFDetPlane& pl, const TVectorD& state5, const double&  spu,
                               TMatrixD* Jac) {
 
   // get vectors and aux variables
@@ -307,9 +307,9 @@ void RKTrackRep::transformPM7(const TMatrixD& in5x5, M7x7& out7x7,
   fV = pl.getV();
   fW = pl.getNormal();
 
-  fpTilde.SetXYZ(spu * (fW.X() + state5(1,0)*fU.X() + state5(2,0)*fV.X()), // a_x
-                 spu * (fW.Y() + state5(1,0)*fU.Y() + state5(2,0)*fV.Y()), // a_y
-                 spu * (fW.Z() + state5(1,0)*fU.Z() + state5(2,0)*fV.Z()));// a_z
+  fpTilde.SetXYZ(spu * (fW.X() + state5(1)*fU.X() + state5(2)*fV.X()), // a_x
+                 spu * (fW.Y() + state5(1)*fU.Y() + state5(2)*fV.Y()), // a_y
+                 spu * (fW.Z() + state5(1)*fU.Z() + state5(2)*fV.Z()));// a_z
 
 
   const double pTildeMag = fpTilde.Mag();
@@ -354,17 +354,17 @@ void RKTrackRep::transformPM7(const TMatrixD& in5x5, M7x7& out7x7,
 }
 
 
-void RKTrackRep::transformPM6(const TMatrixD& in5x5, M6x6& out6x6,
-                              const GFDetPlane& pl, const TMatrixD& state5, const double&  spu,
+void RKTrackRep::transformPM6(const TMatrixDSym& in5x5, M6x6& out6x6,
+                              const GFDetPlane& pl, const TVectorD& state5, const double&  spu,
                               TMatrixD* Jac) {
 
   // get vectors and aux variables
   fU = pl.getU();
   fV = pl.getV();
 
-  fpTilde.SetXYZ(spu * (fW.X() + state5(1,0)*fU.X() + state5(2,0)*fV.X()), // a_x
-                 spu * (fW.Y() + state5(1,0)*fU.Y() + state5(2,0)*fV.Y()), // a_y
-                 spu * (fW.Z() + state5(1,0)*fU.Z() + state5(2,0)*fV.Z()));// a_z
+  fpTilde.SetXYZ(spu * (fW.X() + state5(1)*fU.X() + state5(2)*fV.X()), // a_x
+                 spu * (fW.Y() + state5(1)*fU.Y() + state5(2)*fV.Y()), // a_y
+                 spu * (fW.Z() + state5(1)*fU.Z() + state5(2)*fV.Z()));// a_z
 
   const double pTildeMag = fpTilde.Mag();
   const double pTildeMag2 = pTildeMag*pTildeMag;
@@ -374,7 +374,7 @@ void RKTrackRep::transformPM6(const TMatrixD& in5x5, M6x6& out6x6,
 
   //J_pM matrix is d(x,y,z,px,py,pz) / d(q/p,u',v',u,v)       (out is 6x6)
 
-  const double qop = state5(0,0);
+  const double qop = state5(0);
   const double p = fCharge/qop; // momentum
 
   // d(px,py,pz)/d(q/p)
@@ -413,7 +413,7 @@ void RKTrackRep::transformPM6(const TMatrixD& in5x5, M6x6& out6x6,
 }
 
 
-void RKTrackRep::transformM7P(const M7x7& in7x7, TMatrixD& out5x5,
+void RKTrackRep::transformM7P(const M7x7& in7x7, TMatrixDSym& out5x5,
                               const GFDetPlane& pl, const M1x7& state7,
                               TMatrixD* Jac) {
 
@@ -466,7 +466,7 @@ void RKTrackRep::transformM7P(const M7x7& in7x7, TMatrixD& out5x5,
 }
 
 
-void RKTrackRep::transformM6P(const M6x6& in6x6, TMatrixD& out5x5,
+void RKTrackRep::transformM6P(const M6x6& in6x6, TMatrixDSym& out5x5,
                               const GFDetPlane& pl, const M1x7& state7,
                               TMatrixD* Jac) {
 
@@ -563,9 +563,9 @@ void RKTrackRep::getPosMom(const GFDetPlane& pl,TVector3& pos, TVector3& mom){
 }
 
 
-void RKTrackRep::getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixD& cov6x6){
-  TMatrixD statePred(fState);
-  TMatrixD covPred(fCov);
+void RKTrackRep::getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixDSym& cov6x6){
+  TVectorD statePred(fState);
+  TMatrixDSym covPred(fCov);
   double spu(fSpu);
 
   if(pl != fRefPlane) {
@@ -587,7 +587,7 @@ void RKTrackRep::getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom
 }
 
 
-void RKTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixD& cov6x6){
+void RKTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6){
 
   if (cov6x6.GetNcols()!=6 || cov6x6.GetNrows()!=6){
     GFException exc("RKTrackRep::setPosMomCov ==> cov has to be 6x6 (x, y, z, px, py, pz)",__LINE__,__FILE__);
@@ -743,8 +743,8 @@ double RKTrackRep::extrapolateToLine(const TVector3& point1,
 
 
 double RKTrackRep::extrapolate(const GFDetPlane& pl, 
-                               TMatrixD& statePred,
-                               TMatrixD& covPred){
+                               TVectorD& statePred,
+                               TMatrixDSym& covPred){
   
 #ifdef DEBUG
   std::cout << "RKTrackRep::extrapolate(pl, statePred, covPred)\n";
@@ -758,11 +758,11 @@ double RKTrackRep::extrapolate(const GFDetPlane& pl,
 
   double coveredDistance = Extrap(pl, state7, &cov7x7);
   
-  statePred.ResizeTo(5,1);
+  statePred.ResizeTo(5);
   statePred = getState5(state7, pl, fCacheSpu);
   fCachePlane = pl;
 
-  covPred.ResizeTo(5,5);
+  covPred.ResizeTo(5, 5);
   transformM7P(cov7x7, covPred, pl, state7);
 
   return coveredDistance;
@@ -770,7 +770,7 @@ double RKTrackRep::extrapolate(const GFDetPlane& pl,
 
 
 double RKTrackRep::extrapolate(const GFDetPlane& pl, 
-                               TMatrixD& statePred){
+                               TVectorD& statePred){
 
 #ifdef DEBUG
   std::cout << "RKTrackRep::extrapolate(pl, statePred)\n";
@@ -780,7 +780,7 @@ double RKTrackRep::extrapolate(const GFDetPlane& pl,
   getState7(state7);
   double coveredDistance = Extrap(pl, state7);
   double spu;
-  statePred.ResizeTo(5,1);
+  statePred.ResizeTo(5);
   statePred = getState5(state7, pl, spu);
 
   return coveredDistance;
