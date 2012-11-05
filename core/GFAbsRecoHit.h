@@ -131,9 +131,10 @@ class GFAbsRecoHit : public TObject {
   virtual void getMeasurement(const GFAbsTrackRep* rep,
                               const GFDetPlane& pl,
                               const TVectorT<double>& statePred,
-                              const TMatrixT<double>& covPred,
+                              const TMatrixTSym<double>& covPred,
                               TVectorT<double>& m,
-			      TMatrixTSym<double>& V);
+                              TMatrixTSym<double>& V);
+
   /** @brief Get raw hit covariances. 
    *
    */
