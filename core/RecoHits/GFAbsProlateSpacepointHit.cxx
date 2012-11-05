@@ -53,7 +53,7 @@ GFAbsProlateSpacepointHit::getDetPlane(GFAbsTrackRep* rep) {
   TVector3 U = wiredirection.Cross(dirInPoca);
   U.SetMag(1.);
 
-  fDetPlane.setOUV(poca_onwire, U, wiredirection);
+  fDetPlane.set(poca_onwire, U, wiredirection);
 
   return fDetPlane;
 }
