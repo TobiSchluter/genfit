@@ -68,7 +68,7 @@ int main() {
   kalman.setNumIterations(3);
   //kalman.setBlowUpFactor(50.);
 
-  // init mersenne twister with TUUID
+  // init mersenne twister
 	TRandom3 rand(10);
 
 #ifndef VALGRIND

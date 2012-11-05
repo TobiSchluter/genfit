@@ -24,8 +24,8 @@
 #ifndef GFFIELDMANAGER_H
 #define GFFIELDMANAGER_H
 
-#include"GFAbsBField.h"
-#include<iostream>
+#include "GFAbsBField.h"
+#include <iostream>
 
 /** @brief Singleton which provides access to magnetic field for track representations
  *

@@ -105,7 +105,6 @@ public:
 
   unsigned int getNHits() const {return fDetId.size();}
 
-  //bool inverted() const {return fInv;} //nobody seems to use it so I commented it out
   std::vector<unsigned int> getHitIDs(int detId = -1) const;
   std::vector<unsigned int> GetHitIDs(int detId = -1) const;
   std::vector<unsigned int> getDetIDs() const {return fDetId;}

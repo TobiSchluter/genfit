@@ -32,7 +32,7 @@
 #ifndef GFDETPLANE_H
 #define GFDETPLANE_H
 
-#include"GFAbsFinitePlane.h"
+#include "GFAbsFinitePlane.h"
 
 #include "TObject.h"
 

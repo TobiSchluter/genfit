@@ -17,9 +17,9 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include<iostream>
-#include<cassert>
-#include"GFRectFinitePlane.h"
+#include <iostream>
+#include <cassert>
+#include "GFRectFinitePlane.h"
 
 GFRectFinitePlane::GFRectFinitePlane(const double& umin,const double& umax,
 				     const double& vmin,const double& vmax)

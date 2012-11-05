@@ -28,8 +28,8 @@
 #ifndef GFRECOHITFACTORY_H
 #define GFRECOHITFACTORY_H
 
-#include<vector>
-#include<map>
+#include <vector>
+#include <map>
 
 #include "GFRecoHitProducer.h"
 #include "GFTrackCand.h"

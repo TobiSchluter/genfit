@@ -23,7 +23,7 @@
 #ifndef GFCONSTFIELD_H
 #define GFCONSTFIELD_H
 
-#include"GFAbsBField.h"
+#include "GFAbsBField.h"
 
 /** @brief Constant Magnetic field
  *

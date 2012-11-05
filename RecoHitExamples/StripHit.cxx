@@ -5,7 +5,7 @@
 #include "TRandom.h"
 #include "TMath.h"
 
-#include"math.h"
+#include "math.h"
 
 ClassImp(StripHit)
 
