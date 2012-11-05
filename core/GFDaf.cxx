@@ -40,7 +40,7 @@ void GFDaf::processTrack(GFTrack* trk) {
 
 	GFTrack* mini_trk = new GFTrack();
 
-	for(unsigned int j=0; j<eff_hits.size(); j++) mini_trk->addHit(eff_hits.at(j));
+	for(unsigned int j=0; j<eff_hits.size(); j++) mini_trk->addHit(eff_hits.at(j), 0, j); // using dummy det and hit id, they are never used anyway
 
 	mini_trk->setSmoothing();
 

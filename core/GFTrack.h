@@ -24,8 +24,8 @@
 #ifndef GFTRACK_H 
 #define GFTRACK_H
 
-#include"assert.h"
-#include<map>
+#include "assert.h"
+#include <map>
 
 #include "GFAbsTrackRep.h"
 #include "GFAbsRecoHit.h"
@@ -307,12 +307,6 @@ public:
   void addFailedHit(unsigned int irep,unsigned int id){
     assert(irep<fBookkeeping.size());
     fBookkeeping.at(irep)->addFailedHit(id);
-  }
-
-  /** @brief deprecated!
-   */
-  inline void addHit(GFAbsRecoHit* theHit) { 
-    fHits.push_back(theHit);
   }
   
   /** @brief Add single hit. Updates the GFTrackCand

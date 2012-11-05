@@ -58,23 +58,6 @@ class GFDaf: GFKalman {
 		 */
 		void processTrack(GFTrack* trk);
 
-		/** @brief Return the weights present after the track was processed.
-		 *
-		 * WARNING: This function is deprecated! Use the bookkeeping instead.
-		 *		
-		 * The DAF uses special effective hits defined in the class GFDafHit. A
-		 * GFDafHit is a wrapper class and contains all the real hits from one plane.
-		 * The structure of the return vector of getWeights allows to reconstruct in
-		 * what way the hits were grouped: the outermost vector represents the track
-		 * representation, there is one entry per track representation. The middle
-		 * vector represents the effective hits, and the innermost vector contains
-		 * the real hits contained in the corresponding effective hit.
-		 */
-		const std::vector<std::vector<std::vector<double> > > getWeights() { 
-			std::cout<<"Warning: Using deprecated GFDaf::getWeights()! The weights of the hits are accessible in the bookkeeping of the track which was fitted, the key is \"dafWeight\""<<std::endl;
-			return fWeights; 
-		};
-
 		/** @brief Set the probabilty cut for the weight calculation for the hits. 
 		 *
 		 * Currently supported are the values 0.01 0.005, and 0.001. The 

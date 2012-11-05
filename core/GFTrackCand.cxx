@@ -26,7 +26,6 @@
 ClassImp(GFTrackCand)
 
 GFTrackCand::GFTrackCand() : 
-  fCurv(0), fDip(0), 
   fMcTrackId(-1), fPdg(0), 
   fState6D(TMatrixD(TMatrixD::kZero,TMatrixD(6,1))),
   fCov6D(-1.0*TMatrixDSym(TMatrixDSym::kUnit,TMatrixDSym(6))),
@@ -61,26 +60,12 @@ GFTrackCand::getHitIDs(int detId) const {
 	}
 }
 
-std::vector<unsigned int>
-GFTrackCand::GetHitIDs(int detId) const {
-	std::cerr << "the method GFTrackCand::GetHitIDs is deprecated. Use GFTrackCand::getHitIDs instead\n";
-	if(detId<0){ // return hits from all detectors
-		return fHitId;
-	}
-	else {
-		std::vector<unsigned int> result;
-		unsigned int n=fHitId.size();
-		for(unsigned int i=0;i<n;++i){
-			if(fDetId[i]==(unsigned int)detId)result.push_back(fHitId[i]);
-		}
-		return result;
-	}
-}
 
 void
 GFTrackCand::reset()
 {
-	fDetId.clear();fHitId.clear();
+	fDetId.clear();
+	fHitId.clear();
 }
 
 bool GFTrackCand::hitInTrack(unsigned int detId, unsigned int hitId) const
@@ -124,23 +109,6 @@ void GFTrackCand::append(const GFTrackCand& rhs){
 		rhs.getHit(i,detId,hitId,rho);
 		addHit(detId,hitId,rho);
 	}
-}
-
-void GFTrackCand::setComplTrackSeed(const TVector3& pos, const TVector3& mom, const int pdgCode, TVector3 posError, TVector3 momError){
-	std::cerr << "the method GFTrackCand::setComplTrackSeed is deprecated. Use GFTrackCand::set6DSeed() or  instead\n";
-	setPdgCode(pdgCode); //also sets charge
-	fState6D(0,0) = pos[0];
-	fState6D(1,0) = pos[1];
-	fState6D(2,0) = pos[2];
-	fState6D(3,0) = mom[0];
-	fState6D(4,0) = mom[1];
-	fState6D(5,0) = mom[2];
-	fCov6D(0,0) = posError[0]*posError[0];
-	fCov6D(1,1) = posError[1]*posError[1];
-	fCov6D(2,2) = posError[2]*posError[2];
-	fCov6D(3,3) = momError[0]*momError[0];
-	fCov6D(4,4) = momError[1]*momError[1];
-	fCov6D(5,5) = momError[2]*momError[2];
 }
 
 

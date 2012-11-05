@@ -100,8 +100,6 @@ class GFAbsTrackRep : public TObject{
 
   //! status of track representation: 0 means everything's OK
   int fStatusFlag; 
-  //! specifies the direction of flight of the particle
-  bool fInverted;   
 
   //!state, cov and plane for first and last point in fit
   TVectorT<double> fFirstState; 
@@ -355,9 +353,6 @@ class GFAbsTrackRep : public TObject{
   
   virtual void switchDirection() = 0;
 
-  //! Deprecated. Should be removed soon.
-  bool setInverted(bool f=true){fInverted=f; return true;}
-  
   inline bool getStatusFlag() {
     return fStatusFlag;
   }

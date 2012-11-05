@@ -104,22 +104,12 @@ public:
   }
 
   unsigned int getNHits() const {return fDetId.size();}
-  double getCurv() const {
-	  std::cerr << "the method GFTrackCand::getCurv() is deprecated. Use the setter/getter for the 6D state or pos,mom instead instead\n";
-	  return fCurv;}
-  double getDip() const {
-	  std::cerr << "the method GFTrackCand::getDip() is deprecated. Use the setter/getter for the 6D state or pos,mom instead instead\n";
-	  return fDip;}
+
   //bool inverted() const {return fInv;} //nobody seems to use it so I commented it out
   std::vector<unsigned int> getHitIDs(int detId = -1) const;
   std::vector<unsigned int> GetHitIDs(int detId = -1) const;
   std::vector<unsigned int> getDetIDs() const {return fDetId;}
-  std::vector<unsigned int> GetDetIDs() const { std::cerr << "the method GFTrackCand::GetDetIDs() is deprecated. Use GFTrackCand::getDetIDs() instead\n"; return fDetId;}
   std::vector<double>       getRhos() const {return fRho;}
-  std::vector<double>       GetRhos() const {
-    std::cerr << "the method GFTrackCand::GetRhos() is deprecated. Use GFTrackCand::getRhos() instead\n";
-    return fRho;
-  }
   std::set<unsigned int> getUniqueDetIDs() const {
     std::set<unsigned int> retVal;
     for (unsigned int i = 0; i < fDetId.size(); ++i) {
@@ -140,19 +130,6 @@ public:
     TVector3 momSeed(fState6D(3,0), fState6D(4,0), fState6D(5,0));
     return momSeed;
   }
-  /** @brief get the seed value for track: direction */
-  TVector3 getDirSeed() const {
-    std::cerr << "the method GFTrackCand::getDirSeed() is deprecated. Use GFTrackCand::getStateSeed() or GFTrackCand::getMomSeed() instead\n";
-    double p = std::sqrt(fState6D(3,0) * fState6D(3,0) + fState6D(4,0) * fState6D(4,0) + fState6D(5,0) * fState6D(5,0));
-    TVector3 dirSeed(fState6D(3,0)/p, fState6D(4,0)/p, fState6D(5,0)/p);
-    return dirSeed;
-  }
-  /** @brief get the seed value for track: qoverp */
-  double getQoverPseed() const {
-    std::cerr << "the method GFTrackCand::getQoverPseed() is deprecated. Use GFTrackCand::getStateSeed() or GFTrackCand::getMomSeed()  and/or getChargeSeed() instead\n";
-    double p = std::sqrt(fState6D(3,0) * fState6D(3,0) + fState6D(4,0) * fState6D(4,0) + fState6D(5,0) * fState6D(5,0));
-    return fQ / p;
-  }
   /** returns the 6D seed state; should be in global coordinates */
   TMatrixD getStateSeed() const {
     return fState6D;
@@ -168,15 +145,7 @@ public:
   int getPdgCode() const {return fPdg;}
   // Modifiers -----------------------
   void addHit(unsigned int detId, unsigned int hitId, double rho = 0., unsigned int planeId = 0);
-  void setCurv(double c) {
-    std::cerr << "the method GFTrackCand::setCurv is deprecated. Use GFTrackCand::set6DSeed instead\n";
-    fCurv = c;
-  }
-  void setDip(double d) {
-    std::cerr << "the method GFTrackCand::setDip is deprecated. Use GFTrackCand::set6DSeed instead\n";
-    fDip = d;
-  }
-  //void setInverted(bool f=true) {fInv=f;} //nobody seems to use it so I commented it out
+
   /** @brief set the MCT track id, for MC simulations
    */
   void setMcTrackId(int i) {fMcTrackId = i;}
@@ -184,9 +153,6 @@ public:
    */
   bool hitInTrack(unsigned int detId, unsigned int hitId) const;
 
-  /** @brief set the seed values for track: pos, momentum, pdgCode, pos error, momentum error (errors are optional and will be set to 1,1,1 if not given)
-   */
-  void setComplTrackSeed(const TVector3& pos, const TVector3& mom, const int pdgCode, TVector3 posError = TVector3(1.0, 1.0, 1.0), TVector3 dirError = TVector3(1.0, 1.0, 1.0));
   /** @brief set a particle hypothesis in form of a PDG code. This will also set the charge attribute
    */
   void setPdgCode(int pdgCode) {
@@ -210,7 +176,7 @@ public:
   void Print(const Option_t* = "") const ;
   /** @brief sets the state to seed the track fitting. State has to be a TMatrixD(6,1). First 3 elements are the staring postion second 3 elements the starting momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
-   * ATTENTION: If you set the cov6D covariance matrix of the state remember that there ar VARIANCES not STANDARD DEVIATIONS on the diagonal
+   * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not STANDARD DEVIATIONS on the diagonal
    */
   void set6DSeed(const TMatrixD& state6D, const double charge, const TMatrixDSym& cov6D) {
     fQ = charge;
@@ -290,9 +256,6 @@ private:
   std::vector<unsigned int> fPlaneId;
   std::vector<double>       fRho;
 
-  double fCurv; // curvature from pattern reco. Deprecated! Will be deleted soon.
-  double fDip;  // dip angle from pattern reco. Deprecated! Will be deleted soon.
-
   int fMcTrackId; /**< if MC simulation, store the mct track id here */
   int fPdg; /**< particle data groupe's id for a particle*/
 
@@ -304,7 +267,7 @@ private:
   // Private Methods -----------------
 
 public:
-  ClassDef(GFTrackCand, 10)
+  ClassDef(GFTrackCand, 11)
 };
 
 #endif
