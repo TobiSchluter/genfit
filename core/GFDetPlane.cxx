@@ -22,7 +22,6 @@
 #include <iostream>
 #include <cmath>
 #include "TMath.h"
-#include "TRandom3.h"
 
 ClassImp(GFDetPlane)
 
@@ -37,10 +36,10 @@ GFDetPlane::GFDetPlane(const TVector3& o,
 GFDetPlane::GFDetPlane(GFAbsFinitePlane* finite) 
   :fFinitePlane(finite)
 {
-  static TRandom3 r(0);
+  // default constructor
   fO.SetXYZ(0.,0.,0.);
-  fU.SetXYZ(r.Uniform(),r.Uniform(),0.);
-  fV.SetXYZ(r.Uniform(),r.Uniform(),0.);
+  fU.SetXYZ(1.,0.,0.);
+  fV.SetXYZ(0.,1.,0.);
   sane();
 }
 
