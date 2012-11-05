@@ -149,12 +149,12 @@ class RKTrackRep : public GFAbsTrackRep {
          TMatrixD& statePred);
 
   //! This method is to extrapolate the track to point of closest approach to a point in space
-  void extrapolateToPoint(const TVector3& pos,
+  double extrapolateToPoint(const TVector3& pos,
          TVector3& poca,
          TVector3& dirInPoca);
 
   //! This method extrapolates to the point of closest approach to a line
-  void extrapolateToLine(const TVector3& point1,
+  double extrapolateToLine(const TVector3& point1,
          const TVector3& point2,
          TVector3& poca,
          TVector3& dirInPoca,

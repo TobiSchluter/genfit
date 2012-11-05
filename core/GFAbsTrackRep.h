@@ -150,7 +150,7 @@ class GFAbsTrackRep : public TObject{
       with complicated hit topology.
       This method does NOT alter the state of the object!
    */
-  virtual void extrapolateToPoint(const TVector3& point,
+  virtual double extrapolateToPoint(const TVector3& point,
          TVector3& poca,
          TVector3& normVec);
 
@@ -163,7 +163,7 @@ class GFAbsTrackRep : public TObject{
    * execution if it is ever called.
    * This method does NOT alter the state of the object!
    */
-  virtual void extrapolateToLine(const TVector3& point1, 
+  virtual double extrapolateToLine(const TVector3& point1,
          const TVector3& point2,
          TVector3& poca,
          TVector3& normVec,

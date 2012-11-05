@@ -610,7 +610,7 @@ void RKTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TM
 
 
 
-void RKTrackRep::extrapolateToPoint(const TVector3& pos,
+double RKTrackRep::extrapolateToPoint(const TVector3& pos,
                                     TVector3& poca,
                                     TVector3& dirInPoca){
 
@@ -624,7 +624,7 @@ void RKTrackRep::extrapolateToPoint(const TVector3& pos,
   getState7(state7);
   fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
-  double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0);
+  double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
   TVector3 lastDir(0,0,0);
 
   GFDetPlane pl;
@@ -636,6 +636,7 @@ void RKTrackRep::extrapolateToPoint(const TVector3& pos,
 
     pl.setON(pos, fDir);
     step =  this->Extrap(pl, state7, NULL, true, maxStep);
+    tracklength += step;
     fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
     // check break conditions
@@ -661,6 +662,8 @@ void RKTrackRep::extrapolateToPoint(const TVector3& pos,
 #ifdef DEBUG
   std::cout << "RKTrackRep::extrapolateToPoint(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (pos-poca).Mag() << " cm. Angle deviation: " << dirInPoca.Angle((pos-poca))-TMath::PiOver2() << " rad \n";
 #endif
+
+  return tracklength;
 }
 
 
@@ -677,7 +680,7 @@ TVector3 RKTrackRep::poca2Line(const TVector3& extr1,const TVector3& extr2,const
 }
 
 
-void RKTrackRep::extrapolateToLine(const TVector3& point1,
+double RKTrackRep::extrapolateToLine(const TVector3& point1,
                                    const TVector3& point2,
                                    TVector3& poca,
                                    TVector3& dirInPoca,
@@ -693,7 +696,7 @@ void RKTrackRep::extrapolateToLine(const TVector3& point1,
   getState7(state7);
   fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
-  double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0);
+  double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
   TVector3 lastDir(0,0,0);
 
   GFDetPlane pl;
@@ -707,6 +710,7 @@ void RKTrackRep::extrapolateToLine(const TVector3& point1,
     pl.setU(fDir.Cross(point2-point1));
     pl.setV(point2-point1);
     step = this->Extrap(pl, state7, NULL, true, maxStep);
+    tracklength += step;
     fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
     // check break conditions
@@ -733,6 +737,8 @@ void RKTrackRep::extrapolateToLine(const TVector3& point1,
 #ifdef DEBUG
   std::cout << "RKTrackRep::extrapolateToLine(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (poca_onwire-poca).Mag() << " cm. Angle deviation: " << dirInPoca.Angle((poca_onwire-poca))-TMath::PiOver2() << " rad \n";
 #endif
+
+  return tracklength;
 }
 
 

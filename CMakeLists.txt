@@ -21,7 +21,7 @@ SET(LIBRARY_OUTPUT_PATH ${GENFITLIBDIR})
 
 
 add_subdirectory(core)
-#add_subdirectory(GeaneTrackRep2)
+add_subdirectory(GeaneTrackRep2)
 add_subdirectory(RKTrackRep)
 #add_subdirectory(RKTrackRepXY)
 #add_subdirectory(LSLtrackRep)

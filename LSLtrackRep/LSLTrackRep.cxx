@@ -198,7 +198,7 @@ LSLTrackRep::extrapolate(const GFDetPlane& pl,
   return l;
 }
 
-void
+double
 LSLTrackRep::extrapolateToPoint(const TVector3& p,
 			       TVector3& poca,
 			       TVector3& normVec){
@@ -209,9 +209,10 @@ LSLTrackRep::extrapolateToPoint(const TVector3& p,
   plane.setO(p);
   plane.setU(TVector3(1,0,0));
   plane.setV(TVector3(0,1,0));
-  extrapolate(plane,statePred,covPred);
+  double length = extrapolate(plane,statePred,covPred);
   poca.SetXYZ(statePred[0][0],statePred[1][0],plane.getO().Z());
   normVec.SetXYZ(statePred[2][0],statePred[3][0],plane.getO().Z());
+  return length;
 }
 
 

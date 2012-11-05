@@ -26,11 +26,11 @@ VirtSpacePointRecoHit::~VirtSpacePointRecoHit()
 {}
 
 VirtSpacePointRecoHit::VirtSpacePointRecoHit()
-: SpacepointRecoHit(NparHitRep)
+: GFAbsSpacepointHit(NparHitRep)
 {}
 
 VirtSpacePointRecoHit::VirtSpacePointRecoHit(double x, double y, double z)
-  : SpacepointRecoHit(NparHitRep)
+  : GFAbsSpacepointHit(NparHitRep)
 {
   fHitCoord[0][0] = x;
   fHitCoord[1][0] = y;
@@ -39,7 +39,7 @@ VirtSpacePointRecoHit::VirtSpacePointRecoHit(double x, double y, double z)
 }
 
 VirtSpacePointRecoHit::VirtSpacePointRecoHit(const TVector3& pos)
-  : SpacepointRecoHit(NparHitRep)
+  : GFAbsSpacepointHit(NparHitRep)
 {
   fHitCoord[0][0] = pos.X();
   fHitCoord[1][0] = pos.Y();
@@ -54,11 +54,11 @@ VirtSpacePointRecoHit::clone()
 }
 
 
-TMatrixT<double>
+const TMatrixT<double>&
 VirtSpacePointRecoHit::getHMatrix(const GFAbsTrackRep* stateVector)
 {
   if (dynamic_cast<const LSLTrackRep*>(stateVector) != NULL) {
-    TMatrixT<double> HMatrix (NparHitRep,5);
+    static TMatrixT<double> HMatrix (NparHitRep,5);
 
     HMatrix[0][0] = 1.;
     HMatrix[0][1] = 0.;

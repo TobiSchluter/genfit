@@ -266,7 +266,7 @@ GeaneTrackRep2::extrapolate(const GFDetPlane& pl,
   return trklength;
 }
 
-void
+double
 GeaneTrackRep2::extrapolateToPoint(const TVector3& pos,
 				 TVector3& poca,
 				 TVector3& normVec){
@@ -450,10 +450,11 @@ GeaneTrackRep2::extrapolateToPoint(const TVector3& pos,
   poca.SetXYZ(result.GetX(),result.GetY(),result.GetZ());
   normVec = result.GetJVer().Cross( result.GetKVer() );
   */
+  return gMC3->TrackLength();
 }
 
 
-void 
+double
 GeaneTrackRep2::extrapolateToLine(const TVector3& point1,
 				 const TVector3& point2,
 				 TVector3& poca,
@@ -568,7 +569,7 @@ GeaneTrackRep2::extrapolateToLine(const TVector3& point1,
   }
   normVec.SetMag(1.);
 
-
+  return gMC3->TrackLength();
 }
 
 void GeaneTrackRep2::poca2Line(const TVector3& extr1,const TVector3& extr2,const TVector3& point,TVector3& result){

@@ -70,11 +70,11 @@ public:
 			   TMatrixT<double>& covPred);
 
   //these two are overriding GFAbsTrackRep methods
-  void extrapolateToPoint(const TVector3& pos,
+  double extrapolateToPoint(const TVector3& pos,
 			 TVector3& poca,
 			 TVector3& normVec);
 
-  void extrapolateToLine(const TVector3& point1,
+  double extrapolateToLine(const TVector3& point1,
 	 		 const TVector3& point2,
 			 TVector3& poca,
 			 TVector3& normVec,

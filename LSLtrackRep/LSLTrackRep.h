@@ -110,7 +110,7 @@ public:
 			     TMatrixT<double>& covPred);
 
 
-  virtual void extrapolateToPoint(const TVector3&,
+  virtual double extrapolateToPoint(const TVector3&,
 				 TVector3& poca,
 				 TVector3& normVec);
 
