@@ -6,11 +6,11 @@
 #include <exception>
 #include <iostream>
 #include <GFAbsRecoHit.h>
-#include <GFAbsPlanarHit.h>
-#include <GFAbsProlateSpacepointHit.h>
-#include <GFAbsSpacepointHit.h>
-#include <GFAbsWireHit.h>
-#include <GFAbsWirepointHit.h>
+#include <RecoHits/GFAbsPlanarHit.h>
+#include <RecoHits/GFAbsProlateSpacepointHit.h>
+#include <RecoHits/GFAbsSpacepointHit.h>
+#include <RecoHits/GFAbsWireHit.h>
+#include <RecoHits/GFAbsWirepointHit.h>
 #include <GFAbsTrackRep.h>
 #include <GFConstField.h>
 #include <GFDetPlane.h>
