@@ -25,32 +25,22 @@ TVectorT<double> GFTools::getSmoothedPos(const GFTrack* trk, unsigned int irep, 
 
 TVector3 GFTools::getSmoothedPosXYZ(const GFTrack* trk, unsigned int irep, unsigned int ihit){
 
+  std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
+
   TVectorT<double> smoothed_state;
   TMatrixTSym<double> smoothed_cov;
-  TVectorT<double> pos;
-  GFDetPlane plane;
+  TMatrixT<double> auxInfo;
+  GFDetPlane smoothing_plane;
 
-  if(GFTools::getSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, plane)) {
+  getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
 
-    TMatrixT<double> H = trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep));
-    TVectorT<double> pos_tmp(H * smoothed_state);
-    pos.ResizeTo(pos_tmp);
-    pos = pos_tmp;
-
+  if(rep->hasAuxInfo()) {
+    rep->setData(smoothed_state, smoothing_plane, &smoothed_cov, &auxInfo);
+  } else {
+    rep->setData(smoothed_state, smoothing_plane, &smoothed_cov);
   }
 
-  // check dimension
-  if (pos.GetNrows() != 2){
-    GFException exc("GFTools::getSmoothedPosXYZ ==> dimension of hit in plane is not 2, cannot calculate (x,y,z) hit position",__LINE__,__FILE__);
-    throw exc;
-  }
-
-  // calc 3D position
-  TVector3 pos3D(plane.getO());
-  pos3D += pos(0) * plane.getU();
-  pos3D += pos(1) * plane.getV();
-
-  return pos3D;
+  return rep->getPos(smoothing_plane);
 }
 
 
