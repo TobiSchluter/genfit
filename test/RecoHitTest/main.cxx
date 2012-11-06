@@ -38,7 +38,7 @@
 int main() {
   std::cerr<<"main"<<std::endl;
 
-  const unsigned int nEvents = 100;
+  const unsigned int nEvents = 500;
   const double BField = 15.;       // kGauss
   const double momentum = 0.5;     // GeV
   const double theta = 110;         // degree
@@ -49,7 +49,7 @@ int main() {
   const double resolution = 0.02;   // cm; resolution of generated hits
 
   const double resolutionWire = 5*resolution;   // cm; resolution of generated hits
-  const TVector3 wireDir(0,0,1);
+  const TVector3 wireDir(0.5,1,2);
   const double minDrift = 0;
   const double maxDrift = 2;
   const bool idealLRResolution = true; // resolve the l/r ambiguities of the wire hits
@@ -303,6 +303,7 @@ int main() {
           }
           hits.push_back(hit);
 
+          if (debug) {std::cout << "(smeared) hit coordinates"; hit->getRawHitCoord().Print();}
 
           if (!HelixTest) {
             // stepalong (approximately)
