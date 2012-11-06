@@ -111,6 +111,14 @@ namespace GFTools {
 	 */
 	TVectorT<double> getBiasedSmoothedPos(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
+  /** @brief Get biased smoothed track position in global coordinates
+     */
+  TVector3 getBiasedSmoothedPosXYZ(const GFTrack* trk, unsigned int irep, unsigned int ihit);
+
+  /** @brief Get biased smoothed momentum in global coordinates
+     */
+  TVector3 getBiasedSmoothedMomXYZ(const GFTrack* trk, unsigned int irep, unsigned int ihit);
+
 	/** @brief Get biased smoothed track covariance in plane coordinates
 	 */
 	TMatrixTSym<double> getBiasedSmoothedCov(const GFTrack* trk, unsigned int irep, unsigned int ihit);
