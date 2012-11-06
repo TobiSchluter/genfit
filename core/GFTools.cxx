@@ -1,8 +1,12 @@
 
-#include <memory>
 #include "GFTools.h"
+
+#include <cmath>
+#include <memory>
 #include <typeinfo>
+
 #include <TDecompChol.h>
+#include <TMath.h>
 
 TVectorT<double> GFTools::getSmoothedPos(const GFTrack* trk, unsigned int irep, unsigned int ihit) {
 

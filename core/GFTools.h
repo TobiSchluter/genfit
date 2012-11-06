@@ -22,12 +22,12 @@
 #ifndef GFTOOLS_H
 #define GFTOOLS_H
 
-#include <cmath>
+
 #include "GFAbsTrackRep.h"
 #include "GFDetPlane.h"
 #include "GFException.h"
 #include "GFTrack.h"
-#include <TMath.h>
+
 #include <TMatrixT.h>
 
 /*! \namespace GFTools

@@ -23,7 +23,6 @@
 #include "GFAbsWireHit.h"
 
 #include <assert.h>
-#include <TMath.h>
 #include <GFException.h>
 
 

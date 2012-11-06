@@ -19,7 +19,6 @@
 
 #include "GFBookkeeping.h"
 #include "GFException.h"
-#include <sstream>
 #include <TString.h>
 
 

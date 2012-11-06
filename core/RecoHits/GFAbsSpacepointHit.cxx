@@ -18,7 +18,6 @@
 */
 
 #include "GFAbsSpacepointHit.h"
-#include <TMath.h>
 
 
 void

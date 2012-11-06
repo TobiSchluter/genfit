@@ -17,7 +17,12 @@ You should have received a copy of the GNU Lesser General Public License
 along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include "GFDafHit.h"
+#include "GFTools.h"
+#include "GFException.h"
+#include <cmath>
+
 
 GFDafHit::GFDafHit(std::vector<GFAbsRecoHit*> HitsInPlane) {
 
@@ -89,14 +94,14 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
     for(unsigned int i=0;i<fRawHits.size();i++) {
       coordTemp = new TVectorT<double>;
       try{
-	fRawHits.at(i)->getMeasurement(rep,pl,statePred,covPred,*coordTemp,covTemp);
-	coords.push_back(coordTemp);
-	GFTools::invertMatrix(covTemp, CovInv);
+        fRawHits.at(i)->getMeasurement(rep,pl,statePred,covPred,*coordTemp,covTemp);
+        coords.push_back(coordTemp);
+        GFTools::invertMatrix(covTemp, CovInv);
       }
       catch(GFException& e){
-	for(unsigned int j=0;j<coords.size();++j) delete coords[j];
-	delete coordTemp;
-	throw e;
+        for(unsigned int j=0;j<coords.size();++j) delete coords[j];
+        delete coordTemp;
+        throw e;
       }
       fCovInvs.push_back(CovInv);
       fHitCov += fWeights.at(i) * CovInv;
@@ -120,6 +125,7 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
     for(unsigned int j=0;j<coords.size();++j) delete coords[j];
     fHitCoord = fHitCov * fHitCoord;
   }
+
   //return by refernce
   m.ResizeTo(fHitCoord);
   V.ResizeTo(fHitCov);

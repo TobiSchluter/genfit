@@ -24,7 +24,10 @@
 GFRectFinitePlane::GFRectFinitePlane(const double& umin,const double& umax,
 				     const double& vmin,const double& vmax)
   : fUmin(umin),fUmax(umax),fVmin(vmin),fVmax(vmax)
-{assert(umin<umax);assert(vmin<vmax);}
+{
+  assert(umin<umax);
+  assert(vmin<vmax);
+}
 
 GFRectFinitePlane::GFRectFinitePlane()
   : fUmin(1.),fUmax(-1.),fVmin(1.),fVmax(-1.)//for this default ctor inActive always false

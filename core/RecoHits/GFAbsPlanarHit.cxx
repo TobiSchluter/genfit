@@ -20,10 +20,6 @@
 #include "GFAbsPlanarHit.h"
 #include <GFException.h>
 
-#include "TVectorT.h"
-#include "TMatrixT.h"
-#include "TMatrixTSym.h"
-
 void
 GFAbsPlanarHit::getMeasurement(const GFAbsTrackRep* rep,
                                 const GFDetPlane& pl,

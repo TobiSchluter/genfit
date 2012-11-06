@@ -34,7 +34,7 @@
 #include <assert.h>
 #include <iostream>
 
-#include "TClonesArray.h"
+#include <TClonesArray.h>
 
 #include "GFException.h"
 

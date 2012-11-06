@@ -35,7 +35,6 @@
 #include "GFAbsFinitePlane.h"
 
 #include "TObject.h"
-
 #include "TVector3.h"
 
 class TPolyMarker3D;
