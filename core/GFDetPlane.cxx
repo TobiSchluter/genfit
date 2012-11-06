@@ -244,16 +244,8 @@ GFDetPlane::sane(){
   if (fabs(fU.Angle(fV))-TMath::PiOver2() < 1.E-5) return;
 
   // ensure orthogonal system
-  // fV should be reached by 
-  // rotating fU around _n in a counterclockwise direction
   TVector3 n(getNormal());
   fV = n.Cross(fU);
-  
-  TVector3 v(fU);
-  v.Rotate(TMath::Pi()*0.5,n);
-  TVector3 null = v-fV;
-  assert(null.Mag()<1E-6);
- 
 }
 
 
@@ -312,31 +304,30 @@ void GFDetPlane::getGraphics(double mesh, double length, TPolyMarker3D **pl,TPol
   *plLine = new TPolyLine3D(5);
 
   {
-	TVector3 linevec;
-	int i,j;
-	i=-1*nI;j=-1*nJ;
-	linevec=(fO+(mesh*i)*fU+(mesh*j)*fV);
-	(*plLine)->SetPoint(0,linevec.X(),linevec.Y(),linevec.Z());
-	i=-1*nI;j=1*nJ;
-	linevec=(fO+(mesh*i)*fU+(mesh*j)*fV);
-	(*plLine)->SetPoint(0,linevec.X(),linevec.Y(),linevec.Z());
-	i=1*nI;j=-1*nJ;
-	linevec=(fO+(mesh*i)*fU+(mesh*j)*fV);
-	(*plLine)->SetPoint(2,linevec.X(),linevec.Y(),linevec.Z());
-	i=1*nI;j=1*nJ;
-	linevec=(fO+(mesh*i)*fU+(mesh*j)*fV);
-	(*plLine)->SetPoint(1,linevec.X(),linevec.Y(),linevec.Z());
-	i=-1*nI;j=-1*nJ;
-	linevec=(fO+(mesh*i)*fU+(mesh*j)*fV);
-	(*plLine)->SetPoint(4,linevec.X(),linevec.Y(),linevec.Z());
-
+    TVector3 linevec;
+    int i,j;
+    i=-1*nI;j=-1*nJ;
+    linevec=(fO+(mesh*i)*fU+(mesh*j)*fV);
+    (*plLine)->SetPoint(0,linevec.X(),linevec.Y(),linevec.Z());
+    i=-1*nI;j=1*nJ;
+    linevec=(fO+(mesh*i)*fU+(mesh*j)*fV);
+    (*plLine)->SetPoint(0,linevec.X(),linevec.Y(),linevec.Z());
+    i=1*nI;j=-1*nJ;
+    linevec=(fO+(mesh*i)*fU+(mesh*j)*fV);
+    (*plLine)->SetPoint(2,linevec.X(),linevec.Y(),linevec.Z());
+    i=1*nI;j=1*nJ;
+    linevec=(fO+(mesh*i)*fU+(mesh*j)*fV);
+    (*plLine)->SetPoint(1,linevec.X(),linevec.Y(),linevec.Z());
+    i=-1*nI;j=-1*nJ;
+    linevec=(fO+(mesh*i)*fU+(mesh*j)*fV);
+    (*plLine)->SetPoint(4,linevec.X(),linevec.Y(),linevec.Z());
   }
   for (int i=-1*nI;i<=nI;++i){
-	for (int j=-1*nJ;j<=nJ;++j){
-	  TVector3 vec(fO+(mesh*i)*fU+(mesh*j)*fV);
-	  int id=(i+10)*21+j+10;
-	  (*pl)->SetPoint(id,vec.X(),vec.Y(),vec.Z());
-	}
+    for (int j=-1*nJ;j<=nJ;++j){
+      TVector3 vec(fO+(mesh*i)*fU+(mesh*j)*fV);
+      int id=(i+10)*21+j+10;
+      (*pl)->SetPoint(id,vec.X(),vec.Y(),vec.Z());
+    }
   }
 
 
