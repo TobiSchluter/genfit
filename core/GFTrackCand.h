@@ -106,10 +106,9 @@ public:
   unsigned int getNHits() const {return fDetId.size();}
 
   std::vector<unsigned int> getHitIDs(int detId = -1) const;
-  std::vector<unsigned int> GetHitIDs(int detId = -1) const;
   std::vector<unsigned int> getDetIDs() const {return fDetId;}
   std::vector<double>       getRhos() const {return fRho;}
-  std::set<unsigned int> getUniqueDetIDs() const {
+  std::set<unsigned int>    getUniqueDetIDs() const {
     std::set<unsigned int> retVal;
     for (unsigned int i = 0; i < fDetId.size(); ++i) {
       retVal.insert(fDetId.at(i));
