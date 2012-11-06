@@ -103,14 +103,12 @@ void
 GFDetPlane::setO(const TVector3& o)
 {
   fO = o;
-  sane();
 }
 
 void 
 GFDetPlane::setO(double X,double Y,double Z)
 {
   fO.SetXYZ(X,Y,Z);
-  sane();
 }
 
 void 
@@ -159,9 +157,7 @@ GFDetPlane::setON(const TVector3& o,const TVector3& n){
 TVector3
 GFDetPlane::getNormal() const
 {
-  TVector3 result = fU.Cross(fV);
-  result.SetMag(1.);
-  return result;
+  return fU.Cross(fV);
 }
 
 void
@@ -171,22 +167,9 @@ GFDetPlane::setNormal(double X,double Y,double Z){
 }
 
 void
-GFDetPlane::setNormal(TVector3 n){
-  n.SetMag(1.);
-  if( fabs(n.X()) > 0.1 ){
-	fU.SetXYZ(1./n.X()*(-1.*n.Y()-1.*n.Z()),1.,1.);
-	fU.SetMag(1.);
-  }
-  else {
-	if(fabs(n.Y()) > 0.1){
-	  fU.SetXYZ(1.,1./n.Y()*(-1.*n.X()-1.*n.Z()),1.);
-      fU.SetMag(1.);
-    }
-    else{
-	  fU.SetXYZ(1.,1.,1./n.Z()*(-1.*n.X()-1.*n.Y()));
-      fU.SetMag(1.);
-    }
-  }
+GFDetPlane::setNormal(const TVector3& ni){
+  TVector3 n = ni.Unit();
+  fU = n.Orthogonal().Unit();
   fV = n.Cross(fU);
 }
 
@@ -241,7 +224,7 @@ GFDetPlane::sane(){
   fV.SetMag(1.);
 
   // check if already orthogonal
-  if (fabs(fU.Angle(fV))-TMath::PiOver2() < 1.E-5) return;
+  if (fU.Dot(fV) < 1.E-5) return;
 
   // ensure orthogonal system
   TVector3 n(getNormal());

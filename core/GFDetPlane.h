@@ -102,7 +102,7 @@ public:
 
   // Operations ----------------------
   TVector3 getNormal() const;
-  void setNormal(TVector3 n);
+  void setNormal(const TVector3& n);
   void setNormal(double, double, double);
   void setNormal(const double& theta, const double& phi);
 
