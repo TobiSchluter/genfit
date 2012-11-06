@@ -44,7 +44,7 @@ template <typename T> class TMatrixTSym;
  * of the Kalman Filter algebra that uses the genfit interface classes 
  * GFAbsRecoHit and GFAbsTrackRep in order to be independent from the specific
  * detector geometry and the details of the track parameterization /
- * track extraoplation engine.
+ * track extrapolation engine.
  *
  * The Kalman Filter can use hits from several detectors in a single fit 
  * to estimate the parameters of several track representations in parallel.
@@ -75,15 +75,6 @@ public:
 
   // Operations ----------------------
 
-  /** @brief Switch lazy error handling.
-   *
-   * This is a historically left-over method and shall be deleted some time
-   */
-  void setLazy(Int_t flag){
-    static_cast<void>(flag);
-    std::cerr<<"Using outdates setLazy method of class GFKalman:"<<std::endl;
-  }
-
   /** @brief Set number of iterations for Kalman Filter
    *
    * One iteration is one forward pass plus one backward pass
@@ -106,8 +97,8 @@ public:
    */
   double getChi2Hit(GFAbsRecoHit*, GFAbsTrackRep*);
 
-  /** @brief Sets the inital direction of the track fit (1 for inner to outer,
-   * or -1 for outer to inner). The standard is 1 and is set in the ctor
+  /** @brief Sets the initial direction of the track fit (1 for inner to outer,
+   * or -1 for outer to inner). The standard is 1 and is set in the c'tor
    */
   void setInitialDirection(int d){fInitialDirection=d;}
 
@@ -144,15 +135,11 @@ private:
 		       const TMatrixTSym<double>& cov,const TMatrixTSym<double>& V);
 
 
-
   int fInitialDirection;
   Int_t fNumIt;
   double fBlowUpFactor;
   bool fSmooth;
   bool fSmoothFast;
-
-
-
 
 };
 

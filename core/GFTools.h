@@ -102,7 +102,7 @@ namespace GFTools {
 	/** @brief Get biased smoothed state vector, state covariance and smoothing plane.
 	 *
 	 * The smoothed data returned by this function includes the detector plane in 
-	 * which the data is calculated as well as the auxillary information for this
+	 * which the data is calculated as well as the auxiliary information for this
 	 * plane.
 	 */
 	bool getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorT<double>& smoothed_state, TMatrixTSym<double>& smoothed_cov, GFDetPlane& smoothing_plane, TMatrixT<double>& auxInfo);
@@ -123,8 +123,8 @@ namespace GFTools {
 	 */
 	TMatrixTSym<double> getBiasedSmoothedCov(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
-	/** @bried Get signed tracklength between two hits
-	 * If no arguments are given, the tracklength between first and last hit will be returned.
+	/** @bried Get signed track-length between two hits
+	 * If no arguments are given, the track-length between first and last hit will be returned.
 	 * The lengths are calculated as mean value between forward and backward extrapolation steps.
 	 */
 	double getTrackLength(const GFTrack* trk, unsigned int irep, unsigned int startHit=0, unsigned int endHit=0);

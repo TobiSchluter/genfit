@@ -55,7 +55,7 @@
  * The starting values (seeds) for the fit are stored as a 6D state (x,y,z,px,py,pz) and its
  * corresponding 6x6 covariance matrix. All seed getter and setter manipulate these two members
  * but the user can chose using TVector3 or TMatrixD to get/set the seed state.
- * However this information is not automatically used in Genfit.
+ * However this information is not automatically used in genfit.
  * But a pointer to a GFTrackCand can be passed to the a RKTrackRep constructor
  * to make use of this information without manually extracting it from the GFTRackCand object.
  *
@@ -117,7 +117,7 @@ public:
     return retVal;
   }
 
-  /** @brief get the MCT track id, for MC simulations - def. value -1
+  /** @brief get the MCT track id, for MC simulations - default value -1
    */
   int getMcTrackId() const {return fMcTrackId;}
 
@@ -212,7 +212,7 @@ public:
   }
   /** @brief sets the state to seed the track fitting. State has to be a TVector3 for position and a TVector3 for momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
-   * ATTENTION: If you set the cov6D covariance matrix of the state remember that there ar VARIANCES not STANDARD DEVIATIONS on the diagonal
+   * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not STANDARD DEVIATIONS on the diagonal
    */
   void setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge, const TMatrixTSym<double>& cov6D) {
     fQ = charge;
@@ -249,7 +249,7 @@ private:
   std::vector<unsigned int> fPlaneId;
   std::vector<double>       fRho;
 
-  int fMcTrackId; /**< if MC simulation, store the mct track id here */
+  int fMcTrackId; /**< if MC simulation, store the mc track id here */
   int fPdg; /**< particle data groupe's id for a particle*/
 
   TVectorT<double> fState6D; /**< global 6D position plus momentum state */

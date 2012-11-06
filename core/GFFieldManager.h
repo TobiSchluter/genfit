@@ -43,7 +43,7 @@ class GFFieldManager{
  public:
   GFAbsBField* getField(){
     if(fField==NULL){
-      std::cerr << "Appareantly GFFieldManager hasnt been initialized with a correct GFAbsBField pointer -> abort" << std::endl;
+      std::cerr << "Apparently GFFieldManager hasn't been initialized with a correct GFAbsBField pointer -> abort" << std::endl;
       throw;
     }
     return fField;
@@ -51,11 +51,11 @@ class GFFieldManager{
 
   static TVector3 getFieldVal(const TVector3& x){
     if(fInstance==NULL){
-      std::cerr << "Appareantly GFFieldManager hasnt been instantiated yet, call getInstance() and init() before getFieldVal() -> abort" << std::endl;
+      std::cerr << "Apparently GFFieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal() -> abort" << std::endl;
       throw;
     }
     if(fField==NULL){
-      std::cerr << "Appareantly GFFieldManager hasnt been initialized with a correct GFAbsBField pointer -> abort" << std::endl;
+      std::cerr << "Apparently GFFieldManager hasn't been initialized with a correct GFAbsBField pointer -> abort" << std::endl;
       throw;
     }
     return fField->get(x);

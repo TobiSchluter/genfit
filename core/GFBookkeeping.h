@@ -36,7 +36,7 @@
 class GFBookkeeping : public TObject {
  private:
 
-  //the string keys will in general be different, so this cant
+  //the string keys will in general be different, so this can't
   //be unified to one container
   std::map<std::string, TVectorT<double>* > fVectors;
   std::map<std::string, TMatrixT<double>* > fMatrices;

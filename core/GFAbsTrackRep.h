@@ -58,7 +58,7 @@ class GFAbsRecoHit;
  * possible to perform several fits in parallel, for example to compare 
  * different parameterizations or to fit different particle hypotheses.
  *
- * All track tepresentations must inherit GFAbsTrackRep to be available 
+ * All track representations must inherit GFAbsTrackRep to be available
  * in genfit. Algorithms in genfit use this class as interface to 
  * access track parameters
  *
@@ -121,9 +121,9 @@ class GFAbsTrackRep : public TObject{
 
   virtual GFAbsTrackRep* prototype() const = 0;
   
-  //! returns the tracklength spanned in this extrapolation
+  //! returns the track-length spanned in this extrapolation
   /*! There is a default implementation in GFAbsTrackRep.cxx which just drops
-     the predicted covaraiance. If your trackrep has a way to extrapolate
+     the predicted covariance. If your trackrep has a way to extrapolate
      without giving a correct cov (that would be faster probably), please
      overwrite it.
      This method does NOT alter the state of the object!
@@ -180,7 +180,7 @@ class GFAbsTrackRep : public TObject{
            TVector3& point,
            TVector3& dir);
 
-  //! Extrapolates the track to the given detectorplane
+  //! Extrapolates the track to the given detector-plane
   /*! Results are put into statePred and covPred
       This method does NOT alter the state of the object!
    */ 
@@ -285,7 +285,7 @@ class GFAbsTrackRep : public TObject{
    * This is used to update the track representation after the update of the 
    * Kalman filter was calculated.\n
    * \n
-   * IMPORTANT: One should be able to set the track representation to arbitraty
+   * IMPORTANT: One should be able to set the track representation to arbitrary
    * values using this method. If the track representation needs additional 
    * information beside the state vector, the plane and the covariance, it has
    * to be handed over via the "aux" Matrix. GFAbsTrackRep::getAuxInfo() should
@@ -358,18 +358,18 @@ class GFAbsTrackRep : public TObject{
 
   virtual void reset();
 
-  /** @brief See if the track representation has auxillary information stored.
+  /** @brief See if the track representation has auxiliary information stored.
    * 
-   * See if auxillary information is stored in the track representation. See the
+   * See if auxiliary information is stored in the track representation. See the
    * documentation of GFAbsTrackRep::getAuxInfo() for details.
    */
   virtual bool hasAuxInfo() {
     return false;
   }
 
-  /** @brief Get auxillary information from the track representation.
+  /** @brief Get auxiliary information from the track representation.
    *
-   * AuxInfo is a mechanism which allows creators of track repersentations to
+   * AuxInfo is a mechanism which allows creators of track representations to
    * hand out any information they like (as long as it is compatible with a
    * TMatrixT<double>). It should be used if setData requires additional 
    * information to update the representation, but it can also be used for

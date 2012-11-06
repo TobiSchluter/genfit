@@ -148,7 +148,7 @@ class GFAbsRecoHit : public TObject {
   
   /** @brief Get detector plane for a given track representation.
    *
-   * Virtual abstract method has to be implemented by inherting classes.
+   * Virtual abstract method has to be implemented by inheriting classes.
    *
    * In general the detector plane can depend both on the detector/hit geometry
    * as well as the track geometry. E.g. for a space point one usually chooses 
@@ -157,7 +157,7 @@ class GFAbsRecoHit : public TObject {
    *
    * There are several implementations for this method in the hit classes in RecoHits/.
    * In the most simple case (a planar detector) the method just returns a
-   * fixed (detector module specific) plane. This behaviour for example is 
+   * fixed (detector module specific) plane. This behavior for example is
    * implemented in GFAbsPlanarHit.
    */
   virtual const GFDetPlane& getDetPlane(GFAbsTrackRep*) = 0; 

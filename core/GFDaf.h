@@ -58,12 +58,12 @@ class GFDaf: GFKalman {
 		 */
 		void processTrack(GFTrack* trk);
 
-		/** @brief Set the probabilty cut for the weight calculation for the hits. 
+		/** @brief Set the probability cut for the weight calculation for the hits.
 		 *
 		 * Currently supported are the values 0.01 0.005, and 0.001. The 
-		 * corresponding chi2 cuts for different hits dimensionalities are hardcoded 
+		 * corresponding chi2 cuts for different hits dimensionalities are hard-coded
 		 * in the implementation because I did not yet figure out how to calculate 
-		 * them. Please feel very welcome to change the implementtion if you know how
+		 * them. Please feel very welcome to change the implementation if you know how
 		 * to do it.
 		 */
 		void setProbCut(double prob_cut);
@@ -71,7 +71,7 @@ class GFDaf: GFKalman {
 		/** @brief Configure the annealing scheme.
 		 *
 		 * In the current implementation you need to provide at least one temperatures
-		 * and not more then ten tempertatures.
+		 * and not more then ten temperatures.
 		 */
 		void setBetas(double b1,double b2=-1,double b3=-1.,double b4=-1.,double b5=-1.,double b6=-1.,double b7=-1.,double b8=-1.,double b9=-1.,double b10=-1.);
 

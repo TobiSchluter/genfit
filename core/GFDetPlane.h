@@ -46,9 +46,9 @@ class TPolyLine3D;
  * A detector plane is the principle object to define coordinate systems for
  * track fitting in genfit. Since a particle trajectory is a 
  * one-dimensional object (regardless of any specific parameterization)
- * positions with repect to the track are always meassured in a plane.
+ * positions with respect to the track are always measured in a plane.
  *
- * Which plane is choosen depends on the type of detector. Fixed plane 
+ * Which plane is chosen depends on the type of detector. Fixed plane
  * detectors have their detector plane defined by their mechanical setup. While
  * wire chambers or time projection chambers might want to define a detector 
  * plane more flexibly.
@@ -97,7 +97,7 @@ public:
   void setON(const TVector3& o, const TVector3& n);
 
   //! Optionally, set the finite plane definition. This is most important for
-  //! avoiding fake intersection points in fitting of loopers. This should
+  //! avoiding fake intersection points in fitting of curlers. This should
   //! be implemented for silicon detectors most importantly.
   void setFinitePlane(GFAbsFinitePlane* finite){fFinitePlane=finite;}
 
@@ -166,7 +166,7 @@ private:
   GFAbsFinitePlane* fFinitePlane;
 
   // Private Methods -----------------
-  void sane(); // ensures orthnormal coordinates
+  void sane(); // ensures orthonormal coordinates
 
 public:
   ClassDef(GFDetPlane,2)

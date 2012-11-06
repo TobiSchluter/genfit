@@ -38,24 +38,27 @@
 
 
 class GFRectFinitePlane : public GFAbsFinitePlane {
-public:
+ public:
   //override inActive & Print methods
-  bool inActive(const double& u,const double& v) const;
+  bool inActive(const double& u, const double& v) const;
   void Print(const Option_t* = "") const;
 
   //! give dimensions of finite rectangle: u1,u2,v1,v2
-  GFRectFinitePlane(const double&,const double&,const double&,const double&);
+  GFRectFinitePlane(const double&, const double&, const double&, const double&);
   GFRectFinitePlane();
 
   virtual ~GFRectFinitePlane();
 
   GFAbsFinitePlane* clone() const {
-      return new GFRectFinitePlane(*this);
+    return new GFRectFinitePlane(*this);
   }
+
  private:
   double fUmin,fUmax,fVmin,fVmax;
+
  public:
   ClassDef(GFRectFinitePlane,1)
+
 };
 
 #endif

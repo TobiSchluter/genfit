@@ -107,7 +107,7 @@ public:
   /** @brief Copy constructor */
   GFTrack(const GFTrack&); 
 
-  /** @brief assignement operator */
+  /** @brief assignment operator */
   GFTrack& operator=(const GFTrack&);
 
   /** @brief Initializing constructor
@@ -142,7 +142,7 @@ public:
   const std::vector<GFAbsRecoHit*>& getHits() const {return fHits;}
 
   /** Get a map of the track's RecoHits and their hit IDs.
-   * Can be usefull for getting the ID of a certain RecoHit,
+   * Can be useful for getting the ID of a certain RecoHit,
    * since the RecoHit pointers are the keys of the map.
    */
   void getHitMap(std::map<GFAbsRecoHit*, unsigned int>&) const;
@@ -183,7 +183,7 @@ public:
 
   /** @brief Clear TrackRep vector. Note that the Reps will not be deleted!
    * 
-   * Be carefull not to create memory leaks here. 
+   * Be careful not to create memory leaks here.
    */
   void releaseTrackReps(){ fTrackReps->SetOwner(kFALSE); fTrackReps->Clear();} 
 
@@ -201,7 +201,7 @@ public:
     return reinterpret_cast<GFAbsTrackRep*>(fTrackReps->At(id));
   }
 
-  /** @brief Get number of track represenatations
+  /** @brief Get number of track representations
    */
   unsigned int getNumReps() const {
     return fTrackReps->GetEntriesFast();
@@ -211,7 +211,7 @@ public:
    *
    * The user has to choose which track rep should be considered the
    * best one after the fit. Usually the track representation giving the 
-   * smallest chi2 is choosen. By default the first in the list is returned.
+   * smallest chi2 is chosen. By default the first in the list is returned.
    */
   GFAbsTrackRep* getCardinalRep() const {return ((GFAbsTrackRep*)fTrackReps->At(fCardinal_rep));}
   
@@ -328,7 +328,7 @@ public:
     fHits = hits;
   }
 
-  /** @brief Add track represenation
+  /** @brief Add track representation
    *
    * The given track representation has to contain starting values for fit!
    */
@@ -349,7 +349,7 @@ public:
   //! set track candidate
   void setCandidate(const GFTrackCand& cand, bool doreset=false);
   
-  /** @brief Choose cardinal track represenatation
+  /** @brief Choose cardinal track representation
    *
    * @sa getCardinalRep
    */
@@ -435,8 +435,9 @@ public:
   void blowUpCovs(double blowUpFactor);
 
 
-public:
+ public:
   ClassDef(GFTrack,3)
+
 };
 
 #endif 

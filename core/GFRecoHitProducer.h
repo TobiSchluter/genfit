@@ -63,7 +63,7 @@ public:
  * clustering some sort of cluster class which stores all information that
  * corresponds to a measured hit in that detector. The RecoHit producer 
  * converts this information into a class that can be handled by genfit.
- * This class is realized as a RecoHit (a class inherting from GFAbsRecoHit).
+ * This class is realized as a RecoHit (a class inheriting from GFAbsRecoHit).
  *
  * In order to use the GFRecoHitProducer facility a
  * RecoHit has to implement a constructor which takes as an argument 
