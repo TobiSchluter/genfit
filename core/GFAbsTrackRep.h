@@ -291,11 +291,9 @@ class GFAbsTrackRep : public TObject{
    * return the appropriate information. This is mandatory if smoothing is used.
    */
   virtual void setData(const TVectorT<double>& st, const GFDetPlane& pl, const TMatrixTSym<double>* cov=NULL, const TMatrixT<double>* aux=NULL){
-    fState=st;
-    // Copy reference plane only if it changed.
-    if (&fRefPlane != &pl)
-      fRefPlane=pl;
-    if(cov!=NULL) fCov=*cov;
+    fState = st;
+    if (&fRefPlane != &pl) fRefPlane = pl; // Copy reference plane only if it changed.
+    if(cov!=NULL) fCov = *cov;
     static_cast<void>(aux);
   }
   inline void setCov(const TMatrixTSym<double>& aCov) {

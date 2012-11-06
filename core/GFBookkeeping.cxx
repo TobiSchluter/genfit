@@ -20,7 +20,7 @@
 #include "GFBookkeeping.h"
 #include "GFException.h"
 #include <sstream>
-#include "TString.h"
+#include <TString.h>
 
 
 GFBookkeeping::GFBookkeeping(const GFBookkeeping& bk) {
@@ -116,8 +116,6 @@ GFBookkeeping::GFBookkeeping(const GFBookkeeping& bk) {
 
 void GFBookkeeping::Streamer(TBuffer &R__b)
 {
-  
-  
    // Stream an object of class GFBookkeeping.
    if (R__b.IsReading()) {
 
@@ -139,61 +137,61 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
      {//reading vectors
        R__b >> nkeys;
        for(unsigned int i=0;i<nkeys;++i){
-	 s.Streamer(R__b);
-	 key = s.Data();
-	 bookVectors(key);
-	 for(int j=0;j<fNhits;++j){
-	   vec.Streamer(R__b);
-	   setVector(key,j,vec);
-	 }
+         s.Streamer(R__b);
+         key = s.Data();
+         bookVectors(key);
+         for(int j=0;j<fNhits;++j){
+           vec.Streamer(R__b);
+           setVector(key,j,vec);
+         }
        }
      }//done reading vectors
      {//reading matrices
        R__b >> nkeys;
        for(unsigned int i=0;i<nkeys;++i){
-	 s.Streamer(R__b);
-	 key = s.Data();
-	 bookMatrices(key);
-	 for(int j=0;j<fNhits;++j){
-	   mat.Streamer(R__b);
-	   setMatrix(key,j,mat);
-	 }
+         s.Streamer(R__b);
+         key = s.Data();
+         bookMatrices(key);
+         for(int j=0;j<fNhits;++j){
+           mat.Streamer(R__b);
+           setMatrix(key,j,mat);
+         }
        }
      }//done reading matrices
      {//reading symmetric matrices
        R__b >> nkeys;
        for(unsigned int i=0;i<nkeys;++i){
-	 s.Streamer(R__b);
-	 key = s.Data();
-	 bookSymMatrices(key);
-	 for(int j=0;j<fNhits;++j){
-	   symmat.Streamer(R__b);
-	   setSymMatrix(key,j,symmat);
-	 }
+         s.Streamer(R__b);
+         key = s.Data();
+         bookSymMatrices(key);
+         for(int j=0;j<fNhits;++j){
+           symmat.Streamer(R__b);
+           setSymMatrix(key,j,symmat);
+         }
        }
      }//done reading matrices
      {//reading planes
        R__b >> nkeys;
        for(unsigned int i=0;i<nkeys;++i){
-	 s.Streamer(R__b);
-	 key = s.Data();
-	 bookGFDetPlanes(key);
-	 for(int j=0;j<fNhits;++j){
-	   pl.Streamer(R__b);
-	   setDetPlane(key,j,pl);
-	 }
+         s.Streamer(R__b);
+         key = s.Data();
+         bookGFDetPlanes(key);
+         for(int j=0;j<fNhits;++j){
+           pl.Streamer(R__b);
+           setDetPlane(key,j,pl);
+         }
        }
      }//done reading planes
      {//reading numbers
        R__b >> nkeys;
        for(unsigned int i=0;i<nkeys;++i){
-	 s.Streamer(R__b);
-	 key = s.Data();
-	 bookNumbers(key);
-	 for(int j=0;j<fNhits;++j){
-	   mat.Streamer(R__b);
-	   setNumber(key,j,mat[0][0]);
-	 }
+         s.Streamer(R__b);
+         key = s.Data();
+         bookNumbers(key);
+         for(int j=0;j<fNhits;++j){
+           mat.Streamer(R__b);
+           setNumber(key,j,mat[0][0]);
+         }
        }
      }//done reading numbers
      {//read failed hits
@@ -202,8 +200,8 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
        R__b >> nFailedHits;
        unsigned int aFailedHit;
        for(unsigned int i=0;i<nFailedHits;++i){
-	 R__b >> aFailedHit;
-	 fFailedHits.push_back(aFailedHit);
+         R__b >> aFailedHit;
+         fFailedHits.push_back(aFailedHit);
        }
      }//done reading failed hits
    } else {
@@ -218,33 +216,33 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
        keys = getVectorKeys();
        R__b << (unsigned int)(keys.size());
        for(unsigned int i=0;i<keys.size();++i){
-	 TString s(keys.at(i));
-	 s.Streamer(R__b);
-	 for(int j=0;j<fNhits;++j){
-	   ((fVectors[keys.at(i)])[j]).Streamer(R__b);
-	 }
+         TString s(keys.at(i));
+         s.Streamer(R__b);
+         for(int j=0;j<fNhits;++j){
+           ((fVectors[keys.at(i)])[j]).Streamer(R__b);
+         }
        }
      }
      {//save matrices
        keys = getMatrixKeys();
        R__b << (unsigned int)(keys.size());
        for(unsigned int i=0;i<keys.size();++i){
-	 TString s(keys.at(i));
-	 s.Streamer(R__b);
-	 for(int j=0;j<fNhits;++j){
-	   ((fMatrices[keys.at(i)])[j]).Streamer(R__b);
-	 }
+         TString s(keys.at(i));
+         s.Streamer(R__b);
+         for(int j=0;j<fNhits;++j){
+           ((fMatrices[keys.at(i)])[j]).Streamer(R__b);
+         }
        }
      }
      {//save symmetric matrices
        keys = getSymMatrixKeys();
        R__b << (unsigned int)(keys.size());
        for(unsigned int i=0;i<keys.size();++i){
-	 TString s(keys.at(i));
-	 s.Streamer(R__b);
-	 for(int j=0;j<fNhits;++j){
-	   ((fSymMatrices[keys.at(i)])[j]).Streamer(R__b);
-	 }
+         TString s(keys.at(i));
+         s.Streamer(R__b);
+         for(int j=0;j<fNhits;++j){
+           ((fSymMatrices[keys.at(i)])[j]).Streamer(R__b);
+         }
        }
      }
      keys.clear();
@@ -252,11 +250,11 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
        keys = getGFDetPlaneKeys();
        R__b << (unsigned int)(keys.size());
        for(unsigned int i=0;i<keys.size();++i){
-	 TString s(keys.at(i));
-	 s.Streamer(R__b);
-	 for(int j=0;j<fNhits;++j){
-	   ((fPlanes[keys.at(i)])[j]).Streamer(R__b);
-	 }
+         TString s(keys.at(i));
+         s.Streamer(R__b);
+         for(int j=0;j<fNhits;++j){
+           ((fPlanes[keys.at(i)])[j]).Streamer(R__b);
+         }
        }
      }//done saving GFDetPlanes
      keys.clear();
@@ -264,17 +262,17 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
        keys = getNumberKeys();
        R__b << (unsigned int)(keys.size());
        for(unsigned int i=0;i<keys.size();++i){
-	 TString s(keys.at(i));
-	 s.Streamer(R__b);
-	 for(int j=0;j<fNhits;++j){
-	   ((fNumbers[keys.at(i)])[j]).Streamer(R__b);
-	 }
+         TString s(keys.at(i));
+         s.Streamer(R__b);
+         for(int j=0;j<fNhits;++j){
+           ((fNumbers[keys.at(i)])[j]).Streamer(R__b);
+         }
        }
      }//done saving numbers 
      {//save failedHits
        R__b << ((unsigned int) fFailedHits.size());
        for(unsigned int i=0;i<fFailedHits.size();++i){
-	 R__b << fFailedHits.at(i);
+         R__b << fFailedHits.at(i);
        }
      }//done saving failed Hits    
    }
@@ -544,6 +542,7 @@ bool GFBookkeeping::getDetPlane(std::string key,
   pl = ((*it).second)[index];
   return true;
 }
+
 bool GFBookkeeping::getNumber(std::string key,
 			    unsigned int index,
 			    double& num) const {
@@ -576,7 +575,7 @@ unsigned int GFBookkeeping::getNumFailed(){
 
 unsigned int GFBookkeeping::hitFailed(unsigned int id){
   unsigned int retVal = 0;
-  for(unsigned int i=0;i<fFailedHits.size();++i){
+  for(unsigned int i=0; i<fFailedHits.size(); ++i){
     if(fFailedHits.at(i) == id){
       ++retVal;
     }
