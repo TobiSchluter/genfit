@@ -100,9 +100,9 @@ GFRaveVertexFactory::findVertices ( std::vector <  GFRaveVertex* > * GFvertices,
 
 
 void
-GFRaveVertexFactory::setBeamspot(const TVector3 & pos, const TMatrixT<double> & cov){
+GFRaveVertexFactory::setBeamspot(const TVector3 & pos, const TMatrixTSym<double> & cov){
   fFactory->setBeamSpot(rave::Ellipsoid3D(GFRave::TVector3ToPoint3D(pos),
-                        GFRave::TMatrixTToCovariance3D(cov)));
+                        GFRave::TMatrixTSymToCovariance3D(cov)));
 }
 
 
