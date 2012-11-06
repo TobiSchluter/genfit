@@ -17,6 +17,8 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <math.h>
+
 #include "GFAbsProlateSpacepointHit.h"
 #include <GFException.h>
 

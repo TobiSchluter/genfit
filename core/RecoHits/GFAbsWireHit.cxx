@@ -20,6 +20,8 @@
 // Please see GFAbsWireHit.h  before using this class.
 // ----------------------------------------------------------
 
+#include <math.h>
+
 #include "GFAbsWireHit.h"
 
 #include <assert.h>
