@@ -16,9 +16,9 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include "GFAbsTrackRep.h"
 #include <iostream>
-#include <assert.h>
 
 GFAbsTrackRep::GFAbsTrackRep() : fDimension(5),fState(5), fCov(5), fChiSqu(0), fNdf(0), fStatusFlag(0), fFirstState(5), fFirstCov(5), fLastState(5), fLastCov(5), fXX0(-1.)
 {

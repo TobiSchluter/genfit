@@ -24,19 +24,11 @@
 */
 
 #include "RKTrackRep.h"
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <assert.h>
-#include "stdlib.h"
-#include <math.h>
-#include "TMath.h"
 #include "TGeoManager.h"
 #include "TDatabasePDG.h"
 #include "GFException.h"
 #include "GFFieldManager.h"
 #include "GFMaterialEffects.h"
-#include "GFPointPath.h"
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
 //#define DEBUG

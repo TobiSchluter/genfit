@@ -27,7 +27,6 @@
 #include "TMatrixT.h"
 #include "TMatrixTSym.h"
 #include <vector>
-#include <cassert>
 #include <iostream>
 #include <utility>
 #include <map>

@@ -18,15 +18,12 @@
 */
 #include "GFKalman.h"
 
-#include "assert.h"
-#include <iostream>
+#include <assert.h>
 #include <sstream>
 
-#include "TMath.h"
+#include <TMath.h>
 
 #include "GFTrack.h"
-#include "GFAbsRecoHit.h"
-#include "GFAbsTrackRep.h"
 #include "GFBookkeeping.h"
 #include "GFException.h"
 #include "GFTools.h"
