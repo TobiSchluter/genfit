@@ -344,16 +344,7 @@ GFTrack::blowUpCovs(double blowUpFactor){
     //dont do it for already compromsied reps, since they wont be fitted anyway
     if(arep->getStatusFlag()==0) {
       TMatrixTSym<double> cov = arep->getCov();
-      for(int i=0;i<cov.GetNrows();++i){
-        for(int j=0;j<cov.GetNcols();++j){
-          //if(i!=j){//off diagonal
-          //  cov[i][j]=0.;
-          //}
-          //else{//diagonal
-          cov[i][j] = cov[i][j] * blowUpFactor;
-          //}
-        }
-      }
+      cov *= blowUpFactor;
       arep->setCov(cov);
     }
   }

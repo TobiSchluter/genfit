@@ -27,6 +27,7 @@
 #include "GFTrack.h"
 #include "GFAbsRecoHit.h"
 #include "GFAbsTrackRep.h"
+#include "GFBookkeeping.h"
 #include "GFException.h"
 #include "GFTools.h"
 
@@ -47,35 +48,36 @@ void GFKalman::processTrack(GFTrack* trk){
 
   int nreps = trk->getNumReps();
   for(int i=0; i<nreps; i++) {
-    trk->getBK(i)->setNhits(trk->getNumHits());
+    GFBookkeeping* bk = trk->getBK(i);
+    bk->setNhits(trk->getNumHits());
     if(fSmooth) {
-      std::vector<std::string> vec_keys = trk->getBK(i)->getVectorKeys();
+      std::vector<std::string> vec_keys = bk->getVectorKeys();
       bool already_there = false;
       for(unsigned int j=0; j<vec_keys.size(); j++) {
         if(vec_keys.at(j) == "fUpSt") {
-	  already_there = true;
-	  break;
-	}
+          already_there = true;
+          break;
+        }
       }
       if(!already_there) {
-	trk->getBK(i)->bookNumbers("fExtLen"); // extrapolated length from last hit in forward direction
-	trk->getBK(i)->bookVectors("fUpSt");
-	trk->getBK(i)->bookSymMatrices("fUpCov");
-	trk->getBK(i)->bookNumbers("bExtLen"); // extrapolated length from last hit in backward direction
-	trk->getBK(i)->bookVectors("bUpSt");
-	trk->getBK(i)->bookSymMatrices("bUpCov");
-	if(fSmoothFast) {
-	  trk->getBK(i)->bookVectors("fSt");
-	  trk->getBK(i)->bookSymMatrices("fCov");
-	  trk->getBK(i)->bookVectors("bSt");
-	  trk->getBK(i)->bookSymMatrices("bCov");
-	}
-	trk->getBK(i)->bookGFDetPlanes("fPl");
-	trk->getBK(i)->bookGFDetPlanes("bPl");
-	if(trk->getTrackRep(i)->hasAuxInfo()) {
-	  trk->getBK(i)->bookMatrices("fAuxInfo");
-	  trk->getBK(i)->bookMatrices("bAuxInfo");
-	}
+        bk->bookNumbers("fExtLen"); // extrapolated length from last hit in forward direction
+        bk->bookVectors("fUpSt");
+        bk->bookSymMatrices("fUpCov");
+        bk->bookNumbers("bExtLen"); // extrapolated length from last hit in backward direction
+        bk->bookVectors("bUpSt");
+        bk->bookSymMatrices("bUpCov");
+        if(fSmoothFast) {
+          bk->bookVectors("fSt");
+          bk->bookSymMatrices("fCov");
+          bk->bookVectors("bSt");
+          bk->bookSymMatrices("bCov");
+        }
+        bk->bookGFDetPlanes("fPl");
+        bk->bookGFDetPlanes("bPl");
+        if(trk->getTrackRep(i)->hasAuxInfo()) {
+          bk->bookMatrices("fAuxInfo");
+          bk->bookMatrices("bAuxInfo");
+        }
       }
     }
   }
@@ -109,7 +111,7 @@ void GFKalman::processTrack(GFTrack* trk){
     //save first and last plane,state&cov after the fitting pass
     if(direction==1){//forward at last hit
       for(int i=0; i<nreps; ++i){
-	GFAbsTrackRep* rep = trk->getTrackRep(i);
+        GFAbsTrackRep* rep = trk->getTrackRep(i);
         rep->setLastPlane( rep->getReferencePlane() );
         rep->setLastState( rep->getState() );
         rep->setLastCov( rep->getCov() );
@@ -117,7 +119,7 @@ void GFKalman::processTrack(GFTrack* trk){
     }
     else{//backward at first hit
       for(int i=0; i<nreps; ++i){
-	GFAbsTrackRep* rep = trk->getTrackRep(i);
+        GFAbsTrackRep* rep = trk->getTrackRep(i);
         rep->setFirstPlane( rep->getReferencePlane() );
         rep->setFirstState( rep->getState() );
         rep->setFirstCov( rep->getCov() );
@@ -289,22 +291,23 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   }
   const GFDetPlane& pl = *ppl;
 
-  if(cov[0][0]<1.E-50){ // diagonal elements must be >=0
+  if(cov(0,0)<1.E-50){ // diagonal elements must be >=0
     GFException exc(COVEXC,__LINE__,__FILE__);
     throw exc;
   }
 
+  GFBookkeeping* bk = tr->getBK(irep);
   if(fSmooth && fSmoothFast) {
     if(direction == 1) {
-	    tr->getBK(irep)->setVector("fSt",ihit,state);
-	    tr->getBK(irep)->setSymMatrix("fCov",ihit,cov);
-	    if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
-	    tr->getBK(irep)->setDetPlane("fPl",ihit,pl);
+	    bk->setVector("fSt",ihit,state);
+	    bk->setSymMatrix("fCov",ihit,cov);
+	    if(rep->hasAuxInfo()) bk->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
+	    bk->setDetPlane("fPl",ihit,pl);
 	  } else {
-	    tr->getBK(irep)->setVector("bSt",ihit,state);
-	    tr->getBK(irep)->setSymMatrix("bCov",ihit,cov);
-	    if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
-	    tr->getBK(irep)->setDetPlane("bPl",ihit,pl);
+	    bk->setVector("bSt",ihit,state);
+	    bk->setSymMatrix("bCov",ihit,cov);
+	    if(rep->hasAuxInfo()) bk->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
+	    bk->setDetPlane("bPl",ihit,pl);
 	  }
   }
   
@@ -349,17 +352,17 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
 
   if(fSmooth) {
     if(direction == 1) {
-      tr->getBK(irep)->setNumber("fExtLen",ihit,extLen);
-      tr->getBK(irep)->setVector("fUpSt",ihit,state);
-      tr->getBK(irep)->setSymMatrix("fUpCov",ihit,cov);
-      if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
-      tr->getBK(irep)->setDetPlane("fPl",ihit,pl);
+      bk->setNumber("fExtLen",ihit,extLen);
+      bk->setVector("fUpSt",ihit,state);
+      bk->setSymMatrix("fUpCov",ihit,cov);
+      if(rep->hasAuxInfo()) bk->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
+      bk->setDetPlane("fPl",ihit,pl);
     } else {
-	    tr->getBK(irep)->setNumber("bExtLen",ihit,extLen);
-      tr->getBK(irep)->setVector("bUpSt",ihit,state);
-      tr->getBK(irep)->setSymMatrix("bUpCov",ihit,cov);
-      if(rep->hasAuxInfo()) tr->getBK(irep)->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
-      tr->getBK(irep)->setDetPlane("bPl",ihit,pl);
+	    bk->setNumber("bExtLen",ihit,extLen);
+      bk->setVector("bUpSt",ihit,state);
+      bk->setSymMatrix("bUpCov",ihit,cov);
+      if(rep->hasAuxInfo()) bk->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
+      bk->setDetPlane("bPl",ihit,pl);
     }
   }
 
@@ -378,10 +381,10 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
 
   /*
   if(direction==1){
-    tr->getBK(irep)->setNumber("fChi2",ihit,chi2/ndf);
+    bk->setNumber("fChi2",ihit,chi2/ndf);
   }
   else{
-    tr->getBK(irep)->setNumber("bChi2",ihit,chi2/ndf);
+    bk->setNumber("bChi2",ihit,chi2/ndf);
   }
   */
 

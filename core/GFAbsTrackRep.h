@@ -220,7 +220,7 @@ class GFAbsTrackRep : public TObject{
    * default implementation in cxx file, if a ConcreteTrackRep can 
    * not implement this functionality
    */
-  virtual void getPosMomCov(const GFDetPlane& pl,TVector3& pos,TVector3& mom,TMatrixT<double>& cov);
+  virtual void getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixTSym<double>& cov);
 
   virtual double getCharge()const =0;
 
@@ -232,7 +232,8 @@ class GFAbsTrackRep : public TObject{
 
   TVector3 getPos() {return getPos(fRefPlane);}
   TVector3 getMom() {return getMom(fRefPlane);}
-  void getPosMomCov(TVector3& pos,TVector3& mom,TMatrixT<double>& c){
+
+  void getPosMomCov(TVector3& pos, TVector3& mom, TMatrixTSym<double>& c){
     getPosMomCov(fRefPlane,pos,mom,c);
   }
 

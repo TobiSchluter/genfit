@@ -29,8 +29,9 @@
 
 #include <TObject.h>
 #include <TVector3.h>
-#include <TMatrixD.h>
-#include <TMatrixDSym.h>
+#include <TVectorT.h>
+#include <TMatrixT.h>
+#include <TMatrixTSym.h>
 #include <TDatabasePDG.h>
 
 #include <cmath>
@@ -115,32 +116,40 @@ public:
     }
     return retVal;
   }
+
   /** @brief get the MCT track id, for MC simulations - def. value -1
    */
   int getMcTrackId() const {return fMcTrackId;}
+
   /** @brief get the seed value for track: pos. Identical to the first 3 components of getStateSeed*/
   TVector3 getPosSeed() const {
-    TVector3 posSeed(fState6D(0,0), fState6D(1,0), fState6D(2,0));
+    TVector3 posSeed(fState6D(0), fState6D(1), fState6D(2));
     return posSeed;
   }
+
   /** @brief get the seed value for track: mom. Identical to the last 3 components of getStateSeed*/
   TVector3 getMomSeed() const {
-    TVector3 momSeed(fState6D(3,0), fState6D(4,0), fState6D(5,0));
+    TVector3 momSeed(fState6D(3), fState6D(4), fState6D(5));
     return momSeed;
   }
+
   /** returns the 6D seed state; should be in global coordinates */
-  TMatrixD getStateSeed() const {
+  TVectorT<double> getStateSeed() const {
     return fState6D;
   }
+
   /** returns the 6D covariance matrix of the seed state; should be in global coordinates */
-  TMatrixDSym getCovSeed() const {
+  TMatrixTSym<double> getCovSeed() const {
     return fCov6D;
   }
+
   double getChargeSeed()const {
     return fQ;
   }
+
   /** @brief get the PDG code*/
   int getPdgCode() const {return fPdg;}
+
   // Modifiers -----------------------
   void addHit(unsigned int detId, unsigned int hitId, double rho = 0., unsigned int planeId = 0);
 
@@ -169,82 +178,68 @@ public:
 
   // Operations ----------------------
   void reset();
+
   /** @brief write the content of all private attributes to the terminal
    */
   void Print(const Option_t* = "") const ;
-  /** @brief sets the state to seed the track fitting. State has to be a TMatrixD(6,1). First 3 elements are the staring postion second 3 elements the starting momentum. Everything in global coordinates
+
+  /** @brief sets the state to seed the track fitting. State has to be a TVectorT<double>(6). First 3 elements are the staring postion second 3 elements the starting momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
    * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not STANDARD DEVIATIONS on the diagonal
    */
-  void set6DSeed(const TMatrixD& state6D, const double charge, const TMatrixDSym& cov6D) {
+  void set6DSeed(const TVectorT<double>& state6D, const double charge, const TMatrixTSym<double>& cov6D) {
     fQ = charge;
     fState6D = state6D;
     fCov6D = cov6D;
   }
-  void set6DSeed(const TMatrixD& state6D, const double charge) {
+  void set6DSeed(const TVectorT<double>& state6D, const double charge) {
     fQ = charge;
     fState6D = state6D;
-    fCov6D =  -1.0 * TMatrixDSym(TMatrixDSym::kUnit, TMatrixDSym(6));
+    fCov6D =  -1.0 * TMatrixTSym<double>(TMatrixTSym<double>::kUnit, TMatrixTSym<double>(6));
   }
   /** @brief This function works the same as set6DSeed but instead of a charge hypothesis you can set a pdg code which will set the charge automatically
    * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not standard deviations on the diagonal
    */
-  void set6DSeedAndPdgCode(const TMatrixD& state6D, const int pdgCode, const TMatrixDSym& cov6D) {
+  void set6DSeedAndPdgCode(const TVectorT<double>& state6D, const int pdgCode, const TMatrixTSym<double>& cov6D) {
     setPdgCode(pdgCode);
     fState6D = state6D;
     fCov6D = cov6D;
   }
-  void set6DSeedAndPdgCode(const TMatrixD& state6D, const int pdgCode) {
+  void set6DSeedAndPdgCode(const TVectorT<double>& state6D, const int pdgCode) {
     setPdgCode(pdgCode);
     fState6D = state6D;
-    fCov6D =  -1.0 * TMatrixDSym(TMatrixDSym::kUnit, TMatrixDSym(6));
+    fCov6D =  -1.0 * TMatrixTSym<double>(TMatrixTSym<double>::kUnit, TMatrixTSym<double>(6));
   }
   /** @brief sets the state to seed the track fitting. State has to be a TVector3 for position and a TVector3 for momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
    * ATTENTION: If you set the cov6D covariance matrix of the state remember that there ar VARIANCES not STANDARD DEVIATIONS on the diagonal
    */
-  void setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge, const TMatrixDSym& cov6D) {
+  void setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge, const TMatrixTSym<double>& cov6D) {
     fQ = charge;
-    fState6D(0,0) = pos[0];
-    fState6D(1,0) = pos[1];
-    fState6D(2,0) = pos[2];
-    fState6D(3,0) = mom[0];
-    fState6D(4,0) = mom[1];
-    fState6D(5,0) = mom[2];
+    fState6D[0] = pos[0];  fState6D[1] = pos[1];  fState6D[2] = pos[2];
+    fState6D[3] = mom[0];  fState6D[4] = mom[1];  fState6D[5] = mom[2];
     fCov6D = cov6D;
   }
   void setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge) {
     fQ = charge;
-    fState6D(0,0) = pos[0];
-    fState6D(1,0) = pos[1];
-    fState6D(2,0) = pos[2];
-    fState6D(3,0) = mom[0];
-    fState6D(4,0) = mom[1];
-    fState6D(5,0) = mom[2];
-    fCov6D =  -1.0 * TMatrixDSym(TMatrixDSym::kUnit, TMatrixDSym(6));
+    fState6D[0] = pos[0];  fState6D[1] = pos[1];  fState6D[2] = pos[2];
+    fState6D[3] = mom[0];  fState6D[4] = mom[1];  fState6D[5] = mom[2];
+    fCov6D =  -1.0 * TMatrixTSym<double>(TMatrixTSym<double>::kUnit, TMatrixTSym<double>(6));
   }
   /** @brief This function works the same as setPosMomSeed but instead of a charge hypothesis you can set a pdg code which will set the charge automatically
    * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not standard deviations on the diagonal
    */
-  void setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode, const TMatrixDSym& cov6D) {
+  void setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode, const TMatrixTSym<double>& cov6D) {
     setPdgCode(pdgCode);
-    fState6D(0,0) = pos[0];
-    fState6D(1,0) = pos[1];
-    fState6D(2,0) = pos[2];
-    fState6D(3,0) = mom[0];
-    fState6D(4,0) = mom[1];
-    fState6D(5,0) = mom[2];
+    fState6D[0] = pos[0];  fState6D[1] = pos[1];  fState6D[2] = pos[2];
+    fState6D[3] = mom[0];  fState6D[4] = mom[1];  fState6D[5] = mom[2];
     fCov6D = cov6D;
   }
   void setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode) {
     setPdgCode(pdgCode);
-    fState6D(0,0) = pos[0];
-    fState6D(1,0) = pos[1];
-    fState6D(2,0) = pos[2];
-    fState6D(3,0) = mom[0];
-    fState6D(4,0) = mom[1];
-    fState6D(5,0) = mom[2];
-    fCov6D = -1.0 * TMatrixDSym(TMatrixDSym::kUnit, TMatrixDSym(6));
+    fState6D[0] = pos[0];  fState6D[1] = pos[1];  fState6D[2] = pos[2];
+    fState6D[3] = mom[0];  fState6D[4] = mom[1];  fState6D[5] = mom[2];
+    fCov6D = -1.0 * TMatrixTSym<double>(TMatrixTSym<double>::kUnit, TMatrixTSym<double>(6));
   }
 private:
 
@@ -257,8 +252,8 @@ private:
   int fMcTrackId; /**< if MC simulation, store the mct track id here */
   int fPdg; /**< particle data groupe's id for a particle*/
 
-  TMatrixD fState6D; /**< global 6D position plus momentum state */
-  TMatrixDSym fCov6D; /**< global 6D position plus momentum covariance matrix */
+  TVectorT<double> fState6D; /**< global 6D position plus momentum state */
+  TMatrixTSym<double> fCov6D; /**< global 6D position plus momentum covariance matrix */
   double fQ; /**< the charge of the particle in units of elementary charge */
 
 

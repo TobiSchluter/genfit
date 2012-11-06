@@ -190,7 +190,7 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
          bookNumbers(key);
          for(int j=0;j<fNhits;++j){
            mat.Streamer(R__b);
-           setNumber(key,j,mat[0][0]);
+           setNumber(key,j,mat(0,0));
          }
        }
      }//done reading numbers
@@ -355,7 +355,7 @@ void GFBookkeeping::bookNumbers(std::string key,double val){
   fNumbers[key]  = new TMatrixT<double>[fNhits];
   for(int i=0;i<fNhits;++i){
     ((fNumbers[key])[i]).ResizeTo(1,1);
-    ((fNumbers[key])[i])[0][0] = val;
+    ((fNumbers[key])[i])(0,0) = val;
   }
   
 }
@@ -449,7 +449,7 @@ void GFBookkeeping::setNumber(std::string key, unsigned int index,
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;    
   }
-  ((fNumbers[key])[index])[0][0] = num;
+  ((fNumbers[key])[index])(0,0) = num;
 }
 
 bool GFBookkeeping::getVector(std::string key,

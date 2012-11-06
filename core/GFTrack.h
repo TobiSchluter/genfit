@@ -249,7 +249,7 @@ public:
    *
    * Cardinal representation is used.
    */
-  void getPosMomCov(TVector3& pos,TVector3& mom,TMatrixT<double>& cov){
+  void getPosMomCov(TVector3& pos, TVector3& mom, TMatrixTSym<double>& cov){
     getCardinalRep()->getPosMomCov(pos,mom,cov);
   }
 
@@ -258,7 +258,7 @@ public:
    * The track will be extrapolated to GFDetPlane to get everything there.
    * The track will not be modified. Cardinal representation is used.
    */
-  void getPosMomCov(const GFDetPlane& pl,TVector3& pos,TVector3& mom,TMatrixT<double>& cov){
+  void getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixTSym<double>& cov){
     getCardinalRep()->getPosMomCov(pl,pos,mom,cov);
   }
 

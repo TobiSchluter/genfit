@@ -84,7 +84,7 @@ int GFAbsTrackRep::getPDG(){
 }
 
 
-void GFAbsTrackRep::getPosMomCov(const GFDetPlane& pl,TVector3& pos,TVector3& mom,TMatrixT<double>& cov){
+void GFAbsTrackRep::getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixTSym<double>& cov){
   Abort("getPosMomCov()");
 }
 
