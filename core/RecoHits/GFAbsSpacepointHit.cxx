@@ -51,6 +51,8 @@ GFAbsSpacepointHit::getMeasurement(const GFAbsTrackRep* rep,
   m(0) = D(0) * u.X() + D(1) * u.Y() + D(2) * u.Z();
   m(1) = D(0) * v.X() + D(1) * v.Y() + D(2) * v.Z();
 
+
+  // V
   TMatrixT<double> jac(3,2);
   
   // jac = dF_i/dx_j = s_unitvec * t_untivec, with s=u,v and t=x,y,z
@@ -61,7 +63,6 @@ GFAbsSpacepointHit::getMeasurement(const GFAbsTrackRep* rep,
   jac(1,1) = v.Y();
   jac(2,1) = v.Z();
 
-  // V
   V.ResizeTo(fHitCov);
   V = fHitCov;
   V.SimilarityT(jac);

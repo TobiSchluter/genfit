@@ -39,7 +39,9 @@ ProlateSpacepointHit::ProlateSpacepointHit(const TVector3& pos, const TVector3& 
   wDir.SetMag(1);
 
   TVector3 xp = wDir.Orthogonal();
+  xp.SetMag(1);
   TVector3 yp = wDir.Cross(xp);
+  yp.SetMag(1);
 
   TMatrixD rot(3,3);
 

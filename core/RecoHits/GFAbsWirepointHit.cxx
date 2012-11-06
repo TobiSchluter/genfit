@@ -50,7 +50,7 @@ GFAbsWirepointHit::getMeasurement(const GFAbsTrackRep* rep,
   // m
   m.ResizeTo(2);
   m(0) = fHitCoord(6);
-  m(0) = fHitCoord(7);
+  m(1) = fHitCoord(7);
 
   
   // V

@@ -45,7 +45,7 @@ GFAbsProlateSpacepointHit::getDetPlane(GFAbsTrackRep* rep) {
 
   // check if direction is parallel to wire
   if (fabs(wiredirection.Angle(dirInPoca)) < 0.01){
-    GFException exc("GFAbsProlateSpacepointHit::getDetPlane(): Cannot construct detector plane, direction is parallel to wire", __LINE__,__FILE__);
+    GFException exc("GFAbsProlateSpacepointHit::getDetPlane(): Cannot construct detector plane, track direction is parallel to largest error direction", __LINE__,__FILE__);
     throw exc;
   }
 
