@@ -66,10 +66,9 @@ int main() {
   // init fitter
   GFKalman kalman;
   kalman.setNumIterations(3);
-  //kalman.setBlowUpFactor(50.);
 
   // init mersenne twister
-	TRandom3 rand(10);
+	gRandom->SetSeed(10);
 
 #ifndef VALGRIND
   // init event display
@@ -134,8 +133,8 @@ int main() {
       // true start values
       TVector3 pos(0, 0, 0);
       TVector3 mom(1.,0,0);
-      mom.SetPhi(rand.Uniform(0.,2*TMath::Pi()));
-      //mom.SetTheta(rand.Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
+      mom.SetPhi(gRandom->Uniform(0.,2*TMath::Pi()));
+      //mom.SetTheta(gRandom->Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
       mom.SetTheta(theta*TMath::Pi()/180);
       mom.SetMag(momentum);
 
@@ -160,13 +159,13 @@ int main() {
       TVector3 posM(pos);
       TVector3 momM(mom);
       if (smearPosMom) {
-        posM.SetX(rand.Gaus(posM.X(),posSmear));
-        posM.SetY(rand.Gaus(posM.Y(),posSmear));
-        posM.SetZ(rand.Gaus(posM.Z(),posSmear));
+        posM.SetX(gRandom->Gaus(posM.X(),posSmear));
+        posM.SetY(gRandom->Gaus(posM.Y(),posSmear));
+        posM.SetZ(gRandom->Gaus(posM.Z(),posSmear));
 
-        momM.SetX(rand.Gaus(momM.X(),momSmear));
-        momM.SetY(rand.Gaus(momM.Y(),momSmear));
-        momM.SetZ(rand.Gaus(momM.Z(),momSmear)); 
+        momM.SetX(gRandom->Gaus(momM.X(),momSmear));
+        momM.SetY(gRandom->Gaus(momM.Y(),momSmear));
+        momM.SetZ(gRandom->Gaus(momM.Z(),momSmear));
       }
 
         
