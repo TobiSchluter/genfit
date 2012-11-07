@@ -34,6 +34,7 @@
 #pragma link C++ class GFAbsWirepointHit+;
 #pragma link C++ class GFAbsRecoHit+;
 #pragma link C++ class GFTrackCand+;
+#pragma link C++ class GFTrackCandHit+;
 #pragma link C++ class GFTrack+;
 #pragma link C++ class GFDetPlane+;
 #pragma link C++ class GFBookkeeping-;

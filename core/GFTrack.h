@@ -314,8 +314,8 @@ public:
   void addHit(GFAbsRecoHit* theHit, 
 	      unsigned int detId,
 	      unsigned int hitId,
-	      double rho=0.,
-	      unsigned int planeId=0){
+	      double rho = 0.,
+	      int planeId = -1){
     fHits.push_back(theHit);
     fCand.addHit(detId,hitId,rho,planeId);
   }
@@ -409,7 +409,10 @@ public:
     }
   }
 
-  /** @brief Use planeId information of GFTrackCand and return (by reference) groups of hit ids which are in the same planes.
+  /** @brief Use planeId information of GFTrackCand and return (by reference)
+   * groups of hit indices (ranging from 0 to getNumHits()) which are in the same planes and in the same detector.
+   * Only hits which are subsequent in the GFTrackCand can be grouped together.
+   * Hits with default planeId -1 will not be grouped together!
    */
   bool getHitsByPlane(std::vector<std::vector<int>*>& retVal);
 

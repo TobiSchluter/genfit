@@ -28,6 +28,7 @@ set(GENFIT_SRCS
 	GFRecoHitProducer.cxx 
 	GFTools.cxx 
 	GFTrackCand.cxx 
+	GFTrackCandHit.cxx  
 	GFTrack.cxx 
 	GFConstField.cxx 
 	GFFieldManager.cxx

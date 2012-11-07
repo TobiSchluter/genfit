@@ -35,7 +35,9 @@
 
 #include <cmath>
 
-/** @brief Track candidate -- a list of cluster indices
+#include "GFTrackCandHit.h"
+
+/** @brief Track candidate -- seed values and indices
  *
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
@@ -68,18 +70,28 @@ public:
   GFTrackCand();
   ~GFTrackCand();
 
-  /* @brief == operator does not check for rho */
+  /* @brief == operator checks equality of TrackCandHits. Does not check for rho. */
   friend bool operator== (const GFTrackCand& lhs, const GFTrackCand& rhs);
+  friend bool operator!= (const GFTrackCand& lhs, const GFTrackCand& rhs) {
+    return !(lhs == rhs);
+  }
 
   // Accessors -----------------------
+  GFTrackCandHit* getHit(unsigned int i) const {
+    assert(i < getNHits());
+    return fHits[i];
+  }
+
   /** @brief Get detector ID and cluster index (hitId) for hit number i
    */
   void getHit(unsigned int i,
               unsigned int& detId,
               unsigned int& hitId) const {
     assert(i < getNHits());
-    detId = fDetId.at(i); hitId = fHitId.at(i);
+    detId = fHits[i]->getDetId();
+    hitId = fHits[i]->getHitId();
   }
+
   /** @brief Get detector ID and cluster index (hitId) for
    * hit number i with ordering parameter rho
    */
@@ -88,33 +100,30 @@ public:
               unsigned int& hitId,
               double& rho) const {
     assert(i < getNHits());
-    detId = fDetId.at(i); hitId = fHitId.at(i);
-    rho = fRho.at(i);
+    detId = fHits[i]->getDetId();
+    hitId = fHits[i]->getHitId();
+    rho = fHits[i]->getRho();
   }
+
   /** @brief Get detector ID and cluster index (hitId) for
    * hit number i with plane id
    */
   void getHitWithPlane(unsigned int i,
                        unsigned int& detId,
                        unsigned int& hitId,
-                       unsigned int& planeId) const {
+                       int& planeId) const {
     assert(i < getNHits());
-    detId = fDetId.at(i); hitId = fHitId.at(i);
-    planeId = fPlaneId.at(i);
+    detId = fHits[i]->getDetId();
+    hitId = fHits[i]->getHitId();
+    planeId = fHits[i]->getPlaneId();
   }
 
-  unsigned int getNHits() const {return fDetId.size();}
+  unsigned int getNHits() const {return fHits.size();}
 
   std::vector<unsigned int> getHitIDs(int detId = -1) const;
-  std::vector<unsigned int> getDetIDs() const {return fDetId;}
-  std::vector<double>       getRhos() const {return fRho;}
-  std::set<unsigned int>    getUniqueDetIDs() const {
-    std::set<unsigned int> retVal;
-    for (unsigned int i = 0; i < fDetId.size(); ++i) {
-      retVal.insert(fDetId.at(i));
-    }
-    return retVal;
-  }
+  std::vector<unsigned int> getDetIDs() const;
+  std::vector<double>       getRhos() const;
+  std::set<unsigned int>    getUniqueDetIDs() const;
 
   /** @brief get the MCT track id, for MC simulations - default value -1
    */
@@ -149,15 +158,22 @@ public:
   /** @brief get the PDG code*/
   int getPdgCode() const {return fPdg;}
 
+  bool hitInTrack(unsigned int detId, unsigned int hitId) const;
+
   // Modifiers -----------------------
-  void addHit(unsigned int detId, unsigned int hitId, double rho = 0., unsigned int planeId = 0);
+  void addHit(unsigned int detId,
+              unsigned int hitId,
+              int planeId = -1,
+              double rho = 0);
+
+  void addHit(GFTrackCandHit* hit) {fHits.push_back(hit);}
 
   /** @brief set the MCT track id, for MC simulations
    */
   void setMcTrackId(int i) {fMcTrackId = i;}
+
   /** @brief Test if hit already is part of this track candidate
    */
-  bool hitInTrack(unsigned int detId, unsigned int hitId) const;
 
   /** @brief set a particle hypothesis in form of a PDG code. This will also set the charge attribute
    */
@@ -166,16 +182,19 @@ public:
     TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(fPdg);
     fQ = part->Charge() / (3.);
   }
+
   void append(const GFTrackCand&);
 
   /** @brief sort the hits that were already added to the trackCand using the rho parameter.
-   * After this function was called rho will determine the order of propagation not the order of the original addHit calls
+   * After this function was called, rho will determine the order of propagation, not the order of the original addHit calls.
    */
   void sortHits();
 
   void sortHits(const std::vector<unsigned int>& indices);
 
   // Operations ----------------------
+  /** @brief delete and clear the GFTrackCandHits
+   */
   void reset();
 
   /** @brief write the content of all private attributes to the terminal
@@ -191,11 +210,13 @@ public:
     fState6D = state6D;
     fCov6D = cov6D;
   }
+
   void set6DSeed(const TVectorT<double>& state6D, const double charge) {
     fQ = charge;
     fState6D = state6D;
     fCov6D =  -1.0 * TMatrixTSym<double>(TMatrixTSym<double>::kUnit, TMatrixTSym<double>(6));
   }
+
   /** @brief This function works the same as set6DSeed but instead of a charge hypothesis you can set a pdg code which will set the charge automatically
    * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not standard deviations on the diagonal
    */
@@ -204,11 +225,13 @@ public:
     fState6D = state6D;
     fCov6D = cov6D;
   }
+
   void set6DSeedAndPdgCode(const TVectorT<double>& state6D, const int pdgCode) {
     setPdgCode(pdgCode);
     fState6D = state6D;
     fCov6D =  -1.0 * TMatrixTSym<double>(TMatrixTSym<double>::kUnit, TMatrixTSym<double>(6));
   }
+
   /** @brief sets the state to seed the track fitting. State has to be a TVector3 for position and a TVector3 for momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
    * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not STANDARD DEVIATIONS on the diagonal
@@ -219,12 +242,14 @@ public:
     fState6D[3] = mom[0];  fState6D[4] = mom[1];  fState6D[5] = mom[2];
     fCov6D = cov6D;
   }
+
   void setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge) {
     fQ = charge;
     fState6D[0] = pos[0];  fState6D[1] = pos[1];  fState6D[2] = pos[2];
     fState6D[3] = mom[0];  fState6D[4] = mom[1];  fState6D[5] = mom[2];
     fCov6D =  -1.0 * TMatrixTSym<double>(TMatrixTSym<double>::kUnit, TMatrixTSym<double>(6));
   }
+
   /** @brief This function works the same as setPosMomSeed but instead of a charge hypothesis you can set a pdg code which will set the charge automatically
    * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not standard deviations on the diagonal
    */
@@ -234,19 +259,18 @@ public:
     fState6D[3] = mom[0];  fState6D[4] = mom[1];  fState6D[5] = mom[2];
     fCov6D = cov6D;
   }
+
   void setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode) {
     setPdgCode(pdgCode);
     fState6D[0] = pos[0];  fState6D[1] = pos[1];  fState6D[2] = pos[2];
     fState6D[3] = mom[0];  fState6D[4] = mom[1];  fState6D[5] = mom[2];
     fCov6D = -1.0 * TMatrixTSym<double>(TMatrixTSym<double>::kUnit, TMatrixTSym<double>(6));
   }
+
 private:
 
   // Private Data Members ------------
-  std::vector<unsigned int> fDetId;
-  std::vector<unsigned int> fHitId;
-  std::vector<unsigned int> fPlaneId;
-  std::vector<double>       fRho;
+  std::vector<GFTrackCandHit*> fHits; //->
 
   int fMcTrackId; /**< if MC simulation, store the mc track id here */
   int fPdg; /**< particle data groupe's id for a particle*/
