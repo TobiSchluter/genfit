@@ -242,7 +242,7 @@ std::vector<GFDafHit*> GFDaf::initHitsWeights(GFTrack* trk) {
 
 		GFDafHit* eff_hit;
 		if (hits.size()==1 && dynamic_cast<GFAbsWireHit*>(hits[0]) != NULL){
-		  eff_hit = new GFDafWireHit(hits);
+		  eff_hit = new GFDafWireHit(dynamic_cast<GFAbsWireHit*>(hits[0]));
 		}
 		else eff_hit = new GFDafHit(hits);
 		eff_hits.push_back(eff_hit);

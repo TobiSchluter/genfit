@@ -39,7 +39,7 @@ class GFDafWireHit: public GFDafHit {
 
 	/** @brief Constructor taking a vector of ONE wire hit.
 	 */
-  GFDafWireHit(std::vector<GFAbsWireHit*> Hit);
+  GFDafWireHit(GFAbsWireHit* hit);
 
   ~GFDafWireHit();
 

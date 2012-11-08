@@ -24,13 +24,11 @@ along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 
 
-GFDafWireHit::GFDafWireHit(std::vector<GFAbsWireHit*> Hit)
+GFDafWireHit::GFDafWireHit(GFAbsWireHit* hit)
   : GFDafHit()
 {
 
-  assert(Hit.size() == 1);
-
-  fRawHit = Hit[0];
+  fRawHit = hit;
   fWeights.assign(2,1.);
   fHitUpd = false;
 
