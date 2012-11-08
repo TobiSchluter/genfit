@@ -28,7 +28,7 @@
 #include <map>
 
 #include "GFAbsTrackRep.h"
-#include "GFAbsRecoHit.h"
+#include "RecoHits/GFAbsRecoHit.h"
 
 #include "TObjArray.h"
 

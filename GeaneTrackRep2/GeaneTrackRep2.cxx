@@ -26,7 +26,7 @@
 #include <cassert>
 
 // Collaborating Class Headers --------
-#include "GFAbsRecoHit.h"
+#include "RecoHits/GFAbsRecoHit.h"
 #include "GFException.h"
 #include "TGeant3.h"
 #include "TDatabasePDG.h"

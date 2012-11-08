@@ -24,8 +24,8 @@
 #define GFDAFHIT_H
 
 #include "GFAbsRecoHit.h"
-#include "GFAbsTrackRep.h"
-#include "GFDetPlane.h"
+#include <GFAbsTrackRep.h>
+#include <GFDetPlane.h>
 #include <stdlib.h>
 #include <vector>
 
@@ -35,6 +35,7 @@
  * capable of handling multiple hits in one plane, but GFKalman cannot handle
  * this, the GFDafHit combines all hits in one plane.
  */
+
 class GFDafHit: public GFAbsRecoHit {
 	public:
 
@@ -80,7 +81,7 @@ class GFDafHit: public GFAbsRecoHit {
 		 * As before, these calculations are only done if the plane is different
 		 * from the one getHitCov was last called.
 		 */
-		void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V);
+		virtual void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V);
 
 		/** @brief Get the H matrix.
 		 *
@@ -112,14 +113,13 @@ class GFDafHit: public GFAbsRecoHit {
 		 */
 		GFAbsRecoHit* getHit(unsigned int ihit);
 
-	private:
+	protected:
 		bool fHitUpd;
-		std::vector<TMatrixTSym<double> > fCovInvs;
 		std::vector<GFAbsRecoHit*> fRawHits;
 		std::vector<double> fWeights;
 
 	public:
-		ClassDef(GFDafHit,3)
+		ClassDef(GFDafHit,5)
 
 };
 #endif

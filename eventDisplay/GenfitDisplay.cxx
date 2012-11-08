@@ -5,7 +5,7 @@
 #include <cmath>
 #include <exception>
 #include <iostream>
-#include <GFAbsRecoHit.h>
+#include <RecoHits/GFAbsRecoHit.h>
 #include <RecoHits/GFAbsPlanarHit.h>
 #include <RecoHits/GFAbsProlateSpacepointHit.h>
 #include <RecoHits/GFAbsSpacepointHit.h>

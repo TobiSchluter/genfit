@@ -18,7 +18,6 @@ ${ROOT_LIBRARY_DIR}
 link_directories( ${LINK_DIRECTORIES})
 
 set(GENFIT_SRCS 
-	GFAbsRecoHit.cxx 
 	GFAbsTrackRep.cxx 
 	GFBookkeeping.cxx
 	GFDetPlane.cxx 
@@ -35,13 +34,15 @@ set(GENFIT_SRCS
 	GFAbsFinitePlane.cxx 
 	GFRectFinitePlane.cxx
 	GFDaf.cxx 
-	GFDafHit.cxx 
 	GFTrackProximity.cxx
 	RecoHits/GFAbsPlanarHit.cxx 
 	RecoHits/GFAbsProlateSpacepointHit.cxx
+	RecoHits/GFAbsRecoHit.cxx
 	RecoHits/GFAbsSpacepointHit.cxx
 	RecoHits/GFAbsWireHit.cxx
 	RecoHits/GFAbsWirepointHit.cxx 
+	RecoHits/GFDafHit.cxx
+	RecoHits/GFDafWireHit.cxx
 )
 
 if(RULE_CHECKER_FOUND)

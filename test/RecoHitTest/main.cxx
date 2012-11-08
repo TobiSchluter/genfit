@@ -259,8 +259,8 @@ int main() {
           TVector3 z(0,0,1);
 
           int lr = 1;
-          TVector3 wirePerp = wireDir.Cross(dir);
-          if (gRandom->Uniform(-1,1) < 0) {
+          TVector3 wirePerp = dir.Cross(wireDir);
+          if (gRandom->Uniform(-1,1) > 0) {
             wirePerp *= -1.;
             lr = -1;
           }

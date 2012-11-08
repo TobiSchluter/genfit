@@ -31,7 +31,7 @@
 #include <TMatrixT.h>
 #include <TMatrixTSym.h>
 
-#include "GFAbsRecoHit.h"
+#include "RecoHits/GFAbsRecoHit.h"
 #include "GFAbsTrackRep.h"
 #include "GFTrack.h"
 

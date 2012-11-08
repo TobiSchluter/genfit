@@ -11,7 +11,6 @@ ENDIF(NOT DEFINED ENV{ROOTSYS})
 INCLUDE_DIRECTORIES($ENV{ROOTSYS}/include ${GENFIT}/core)
 
 set(GENFIT_SRCS 
-	GFAbsRecoHit.cxx 
 	GFAbsTrackRep.cxx 
 	GFBookkeeping.cxx
 	GFDetPlane.cxx 
@@ -20,7 +19,7 @@ set(GENFIT_SRCS
 	GFRecoHitFactory.cxx 
 	GFRecoHitProducer.cxx 
 	GFTools.cxx 
-	GFTrackCand.cxx
+	GFTrackCand.cxx 
 	GFTrackCandHit.cxx  
 	GFTrack.cxx 
 	GFConstField.cxx 
@@ -28,40 +27,43 @@ set(GENFIT_SRCS
 	GFAbsFinitePlane.cxx 
 	GFRectFinitePlane.cxx
 	GFDaf.cxx 
-	GFDafHit.cxx 
 	GFTrackProximity.cxx
-	RecoHits/GFAbsPlanarHit.cxx
+	RecoHits/GFAbsPlanarHit.cxx 
 	RecoHits/GFAbsProlateSpacepointHit.cxx
+	RecoHits/GFAbsRecoHit.cxx
 	RecoHits/GFAbsSpacepointHit.cxx
 	RecoHits/GFAbsWireHit.cxx
 	RecoHits/GFAbsWirepointHit.cxx 
+	RecoHits/GFDafHit.cxx
+	RecoHits/GFDafWireHit.cxx
 )
 
 set(GENFIT_HEADERS  
-	GFAbsRecoHit.h
-	GFAbsTrackRep.h
+	GFAbsTrackRep.h 
 	GFBookkeeping.h
-	GFDetPlane.h
-	GFException.h
-	GFKalman.h
-	GFRecoHitFactory.h
-	GFRecoHitProducer.h
-	GFTools.h
-	GFTrackCand.h
-	GFTrackCandHit.h
-	GFTrack.h
-	GFConstField.h	
+	GFDetPlane.h 
+	GFException.h 
+	GFKalman.h 
+	GFRecoHitFactory.h 
+	GFRecoHitProducer.h 
+	GFTools.h 
+	GFTrackCand.h 
+	GFTrackCandHit.h  
+	GFTrack.h 
+	GFConstField.h 
 	GFFieldManager.h
-	GFAbsFinitePlane.h
+	GFAbsFinitePlane.h 
 	GFRectFinitePlane.h
-	GFDaf.h
-	GFDafHit.h
+	GFDaf.h 
 	GFTrackProximity.h
-	RecoHits/GFAbsPlanarHit.h
+	RecoHits/GFAbsPlanarHit.h 
 	RecoHits/GFAbsProlateSpacepointHit.h
+	RecoHits/GFAbsRecoHit.h
 	RecoHits/GFAbsSpacepointHit.h
 	RecoHits/GFAbsWireHit.h
-	RecoHits/GFAbsWirepointHit.h
+	RecoHits/GFAbsWirepointHit.h 
+	RecoHits/GFDafHit.h
+	RecoHits/GFDafWireHit.h
 )
 
 set(GENFIT_LINKDEF  genfitLinkDef.h)

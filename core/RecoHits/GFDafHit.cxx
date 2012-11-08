@@ -19,9 +19,10 @@ along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "GFDafHit.h"
-#include "GFTools.h"
-#include "GFException.h"
+#include <GFTools.h>
+#include <GFException.h>
 #include <cmath>
+#include <memory>
 
 
 GFDafHit::GFDafHit(std::vector<GFAbsRecoHit*> HitsInPlane) {
@@ -46,19 +47,11 @@ void GFDafHit::setWeights(std::vector<double> weights) {
 
 const GFDetPlane& GFDafHit::getDetPlane(GFAbsTrackRep* rep) {
 
-	return fRawHits.at(0)->getDetPlane(rep);
+	return fRawHits[0]->getDetPlane(rep);
 
 }
 
 void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V) {
-
-  /*
-  if(fHitUpd && fDetPlane != pl) {
-    GFException exc("GFDafHit::getMeasurement(): pl!=fDetPlane",__LINE__,__FILE__);
-    exc.setFatal();
-    throw exc;
-  }
-  */
 
   if(fHitUpd && fDetPlane == pl) {
     m.ResizeTo(fHitCoord);
@@ -69,60 +62,47 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
   }
 
   if(fRawHits.size() == 1) {
-    fRawHits.at(0)->getMeasurement(rep,pl,statePred,covPred,fHitCoord,fHitCov);
+    fRawHits[0]->getMeasurement(rep, pl, statePred, covPred, fHitCoord, fHitCov);
     static const double maxCovSize = 1.e10;
-    if( 1.0/fWeights.at(0)  < maxCovSize) {
-      fHitCov = (1.0 / fWeights.at(0)) * fHitCov;
+    if( 1./fWeights[0]  < maxCovSize) {
+      fHitCov = (1. / fWeights[0]) * fHitCov;
     }
     else {
       fHitCov = maxCovSize * fHitCov;
     }
   } 
-
-  else {
-    //set the weighted-mean cov
-    // this might seem like kind of a waste, but we need to make sure that fHitCov has the right dimensionality
-    // and we dont know it from elsewhere
-    fRawHits.at(0)->getMeasurement(rep,pl,statePred,covPred,fHitCoord,fHitCov);
-    fHitCoord.Zero();
-    fHitCov.Zero();
-    fCovInvs.clear();
-    TMatrixTSym<double> CovInv;
-    TVectorT<double>* coordTemp;
+  else { // more than one hit
+    TMatrixTSym<double> covInv;
+    TVectorT<double> coordTemp;
     TMatrixTSym<double> covTemp;
-    std::vector<TVectorT<double>* > coords;
-    for(unsigned int i=0;i<fRawHits.size();i++) {
-      coordTemp = new TVectorT<double>;
-      try{
-        fRawHits.at(i)->getMeasurement(rep,pl,statePred,covPred,*coordTemp,covTemp);
-        coords.push_back(coordTemp);
-        GFTools::invertMatrix(covTemp, CovInv);
-      }
-      catch(GFException& e){
-        for(unsigned int j=0;j<coords.size();++j) delete coords[j];
-        delete coordTemp;
-        throw e;
-      }
-      fCovInvs.push_back(CovInv);
-      fHitCov += fWeights.at(i) * CovInv;
-    }
-    TMatrixTSym<double> HitCovTemp(fHitCov);
+    std::vector< TVectorT<double> > coords;
+    std::vector< TMatrixTSym<double> > covInvs;
 
-    try{
-      GFTools::invertMatrix(HitCovTemp, fHitCov);
+    for(unsigned int i=0; i<fRawHits.size(); ++i) {
+      fRawHits[i]->getMeasurement(rep, pl, statePred, covPred, coordTemp, covTemp);
+
+      // make sure fHitCoord and fHitCov have right dimensionality and set them to 0
+      if (i==0){
+        fHitCoord.ResizeTo(coordTemp);
+        fHitCoord.Zero();
+        fHitCov.ResizeTo(covTemp);
+        fHitCov.Zero();
+      }
+
+      coords.push_back(coordTemp);
+      GFTools::invertMatrix(covTemp, covInv);
+      covInvs.push_back(covInv);
+      fHitCov += fWeights[i] * covInv;
     }
-    catch(GFException& e){
-      for(unsigned int j=0;j<coords.size();++j) delete coords[j];
-      throw e;
-    }
-    
+
+    // invert fHitCov
+    TMatrixTSym<double> HitCovTemp(fHitCov);
+    GFTools::invertMatrix(HitCovTemp, fHitCov);
 
     //set the weighted-mean coord
-    //fRawHits.size()==coords.size() is a certainty here
-    for(unsigned int i=0;i<fRawHits.size();i++) {
-      fHitCoord += fWeights.at(i) * fCovInvs.at(i) * (*(coords.at(i)));
+    for(unsigned int i=0; i<coords.size(); ++i) {
+      fHitCoord += fWeights[i] * covInvs[i] * coords[i];
     }
-    for(unsigned int j=0;j<coords.size();++j) delete coords[j];
     fHitCoord = fHitCov * fHitCoord;
   }
 
@@ -138,7 +118,7 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
 
 const TMatrixT<double>& GFDafHit::getHMatrix(const GFAbsTrackRep* rep) {
 
-	return fRawHits.at(0)->getHMatrix(rep);
+	return fRawHits[0]->getHMatrix(rep);
 
 }
 

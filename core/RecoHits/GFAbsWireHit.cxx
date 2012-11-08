@@ -63,7 +63,6 @@ GFAbsWireHit::getMeasurement(const GFAbsTrackRep* rep,
   m.ResizeTo(1);
   m(0) = fHitCoord(6);
 
-
   // V
   V.ResizeTo(1,1);
   V(0,0) = fHitCov(6,6);
@@ -102,7 +101,7 @@ GFAbsWireHit::getDetPlane(GFAbsTrackRep* rep)
   }
   
   // construct orthogonal vector
-  TVector3 U = wiredirection.Cross(dirInPoca);
+  TVector3 U = dirInPoca.Cross(wiredirection);
   U.SetMag(1.);
 
   // check left/right ambiguity

@@ -24,7 +24,7 @@
 #define GFABSWIREHIT_H
 
 
-#include <GFAbsRecoHit.h>
+#include "GFAbsRecoHit.h"
 
 /** @brief Abstract hit class for hits in wire detectors (Straw tubes and drift chambers)
  *  which do not measure the coordinate along the wire.
@@ -69,7 +69,7 @@ class GFAbsWireHit : public GFAbsRecoHit {
     * The detector plane will contain the wire as plane vector v.
     * The origin of the plane lies on the wire.
     * The plane vector u will be perpendicular to the track direction at the POCA.
-    * u = +-1 * (wire direction) x (track direction)
+    * u = +-1 * (track direction) x (wire direction)
     * The direction of u will be selected according to fLeftRight.
     */
   virtual const GFDetPlane& getDetPlane(GFAbsTrackRep* rep);
@@ -79,9 +79,9 @@ class GFAbsWireHit : public GFAbsRecoHit {
   
   /**
    * select how to resolve the left/right ambiguity:
-   * -1: negative (left) side on vector (wire direction) x (track direction)
+   * -1: negative (left) side on vector (track direction) x (wire direction)
    * 0: auto select (take side with smallest distance to track)
-   * 1: positive (right) side on vector (wire direction) x (track direction)
+   * 1: positive (right) side on vector (track direction) x (wire direction)
    */
   void setLeftRightResolution(int lr);
   int getLeftRightResolution() const {return fLeftRight;}

@@ -23,8 +23,8 @@ along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef GFDAF_H
 #define GFDAF_H
 
-#include "GFAbsRecoHit.h"
-#include "GFDafHit.h"
+#include "RecoHits/GFAbsRecoHit.h"
+#include "RecoHits/GFDafHit.h"
 #include "GFKalman.h"
 #include "GFTrack.h"
 #include <vector>

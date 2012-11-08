@@ -24,7 +24,7 @@
 #define GFABSSPACEPOINTHIT_H
 
 
-#include <GFAbsRecoHit.h>
+#include "GFAbsRecoHit.h"
 
 /** @brief Abstract hit class implementing a space point hit geometry.
  *

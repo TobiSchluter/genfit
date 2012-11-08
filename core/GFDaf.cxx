@@ -20,6 +20,8 @@
 #include "GFDaf.h"
 #include "GFTools.h"
 #include "GFException.h"
+#include "RecoHits/GFDafWireHit.h"
+#include "RecoHits/GFAbsWireHit.h"
 #include <assert.h>
 #include <cmath>
 
@@ -238,7 +240,11 @@ std::vector<GFDafHit*> GFDaf::initHitsWeights(GFTrack* trk) {
 			hits.push_back(trk->getHit(planes.at(i)->at(j)) );
 		}
 
-		GFDafHit* eff_hit = new GFDafHit(hits);
+		GFDafHit* eff_hit;
+		if (hits.size()==1 && dynamic_cast<GFAbsWireHit*>(hits[0]) != NULL){
+		  eff_hit = new GFDafWireHit(hits);
+		}
+		else eff_hit = new GFDafHit(hits);
 		eff_hits.push_back(eff_hit);
 
 	}

@@ -24,7 +24,7 @@
 #define GFABSPLANARHIT_H
 
 
-#include <GFAbsRecoHit.h>
+#include "GFAbsRecoHit.h"
 
 /** @brief Policy class implementing a planar hit geometry. 
  *

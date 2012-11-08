@@ -186,7 +186,6 @@ public:
   void append(const GFTrackCand&);
 
   /** @brief sort the hits that were already added to the trackCand using the rho parameter.
-   * After this function was called, rho will determine the order of propagation, not the order of the original addHit calls.
    */
   void sortHits();
 
