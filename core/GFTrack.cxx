@@ -77,6 +77,8 @@ GFTrack::GFTrack(const GFTrack& _tr) {
 }
 
 GFTrack& GFTrack::operator=(const GFTrack& _tr) {
+  if (this == &_tr)
+    return *this;
   if(fTrackReps!=NULL){
     for(unsigned int i=0;i<getNumReps();i++) {
       delete fTrackReps->At(i);
