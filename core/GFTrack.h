@@ -314,10 +314,10 @@ public:
   void addHit(GFAbsRecoHit* theHit, 
 	      unsigned int detId,
 	      unsigned int hitId,
-	      double rho = 0.,
-	      int planeId = -1){
+	      int planeId = -1,
+	      double rho = 0.){
     fHits.push_back(theHit);
-    fCand.addHit(detId,hitId,rho,planeId);
+    fCand.addHit(detId,hitId,planeId,rho);
   }
 
   /** @brief Add collection of hits
