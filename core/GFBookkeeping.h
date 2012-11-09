@@ -57,7 +57,8 @@ class GFBookkeeping : public TObject {
   void bookGFDetPlanes(std::string key);
   void bookNumbers(std::string key,double val=0.);
 
-  void setVector(std::string key,unsigned int index,const TVectorT<double>& mat); void setMatrix(std::string key,unsigned int index,const TMatrixT<double>& mat);
+  void setVector(std::string key,unsigned int index,const TVectorT<double>& mat);
+  void setMatrix(std::string key,unsigned int index,const TMatrixT<double>& mat);
   void setSymMatrix(std::string key,unsigned int index,const TMatrixTSym<double>& mat);
   void setDetPlane(std::string key,unsigned int index,const GFDetPlane& pl);
   void setNumber(std::string key,unsigned int index, const double& num);
