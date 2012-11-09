@@ -223,8 +223,8 @@ GFTrack::fillGeoTrack(TVirtualGeoTrack* geotrk,unsigned int repid) const
   unsigned int n=fCand.getNHits();
   rep->getState().Print();
   for(unsigned int i=0; i<n; ++i){// loop over hits
-    GFDetPlane pl=fHits[i]->getDetPlane(rep);
-    TVector3 pos=rep->getPos(pl);
+    const GFDetPlane& pl( fHits[i]->getDetPlane(rep) );
+    TVector3 pos = rep->getPos(pl);
     std::cout<<pos.X()<<","<<pos.Y()<<","<<pos.Z()<<std::endl;
     geotrk->AddPoint(pos.X(),pos.Y(),pos.Z(),0);
   }// end loop over hits
@@ -252,19 +252,15 @@ GFTrack::getResiduals(unsigned int detId, // which detector?
       int repDim=rep->getDim();
       TVectorT<double> state(repDim);
       TMatrixTSym<double> cov(repDim);
-      GFDetPlane pl=hit->getDetPlane(rep);
+      const GFDetPlane& pl( hit->getDetPlane(rep) );
       
       rep->extrapolate(pl,state,cov);
-      //rep->setState(state);
-      //rep->setReferencePlane(pl);
 
-      TMatrixT<double> H = hit->getHMatrix(rep);
+      const TMatrixT<double>& H( hit->getHMatrix(rep) );
       TVectorT<double> m;
       TMatrixTSym<double> V;
       hit->getMeasurement(rep,pl,state,cov,m,V);
       double res=(m-(H*state))[dim];
-
-      //std::cout<<res<<std::endl;
 
       result.push_back(res);
     } 

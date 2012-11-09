@@ -121,11 +121,10 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 
 		for(unsigned int j=0; j<eff_hit->getNumHits(); j++) {
 			GFAbsRecoHit* real_hit = eff_hit->getHit(j);
-			GFDetPlane pl;
 			TVectorT<double> m;
 			TMatrixTSym<double> Vorig;
 			try{
-				pl = real_hit->getDetPlane(trk->getTrackRep(0));
+				const GFDetPlane& pl( real_hit->getDetPlane(trk->getTrackRep(0)) );
 				real_hit->getMeasurement(trk->getTrackRep(0),pl,smoothedState,smoothedCov,m,Vorig);
 			} catch(GFException& e) {
 				std::cerr<<e.what();
@@ -267,14 +266,14 @@ void GFDaf::copySmoothing(GFTrack* source, GFTrack* target, int target_irep) {
 
 	for(unsigned int i=0; i<target->getNumReps(); i++) {
 
-                const std::vector<std::string>& vec_keys = target->getBK(i)->getVectorKeys();
-                bool already_there = false;
-                for(unsigned int j=0; j<vec_keys.size(); j++) {
-                        if(vec_keys.at(j) == "fUpSt") {
-                 	        already_there = true;
-                	        break;
-	                }
-                }
+	  const std::vector<std::string>& vec_keys = target->getBK(i)->getVectorKeys();
+    bool already_there = false;
+    for(unsigned int j=0; j<vec_keys.size(); j++) {
+      if(vec_keys.at(j) == "fUpSt") {
+        already_there = true;
+        break;
+	    }
+    }
 		if(!already_there) {
 			target->getBK(i)->bookMatrices("fUpSt");
 			target->getBK(i)->bookSymMatrices("fUpCov");

@@ -238,7 +238,7 @@ GFKalman::getChi2Hit(GFAbsRecoHit* hit, GFAbsTrackRep* rep)
   int repDim=rep->getDim();
   TVectorT<double> state(repDim);
   TMatrixTSym<double> cov(repDim);;
-  GFDetPlane pl=hit->getDetPlane(rep);
+  const GFDetPlane& pl(hit->getDetPlane(rep));
   rep->extrapolate(pl,state,cov);
 
 

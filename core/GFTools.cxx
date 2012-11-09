@@ -16,7 +16,7 @@ TVectorT<double> GFTools::getSmoothedPos(const GFTrack* trk, unsigned int irep, 
 
 	if(GFTools::getSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov)) {
 
-		TMatrixT<double> H = trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep));
+		const TMatrixT<double>& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
 		TVectorT<double> pos_tmp(H * smoothed_state);
 		pos.ResizeTo(pos_tmp);
 		pos = pos_tmp;
@@ -117,7 +117,7 @@ TVectorT<double> GFTools::getBiasedSmoothedPos(const GFTrack* trk, unsigned int 
 
 	if(GFTools::getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov)) {
 
-		TMatrixT<double> H = trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep));
+	  const TMatrixT<double>& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
 		//H.Print();smoothed_state.Print();
 		TVectorT<double> pos_tmp(H * smoothed_state);
 		pos.ResizeTo(pos_tmp);
@@ -135,7 +135,7 @@ TMatrixTSym<double> GFTools::getSmoothedCov(const GFTrack* trk, unsigned int ire
 	GFDetPlane pl;
 
 	GFTools::getSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, pl);
-	TMatrixT<double> H = trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep));
+	const TMatrixT<double>& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
 
 	TMatrixTSym<double> cov(smoothed_cov);
 	cov.Similarity(H);
@@ -151,7 +151,7 @@ TMatrixTSym<double> GFTools::getBiasedSmoothedCov(const GFTrack* trk, unsigned i
 	GFDetPlane pl;
 
 	GFTools::getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, pl);
-	TMatrixT<double> H = trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep));
+	const TMatrixT<double>& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
 	TMatrixTSym<double> cov(smoothed_cov);
 	cov.Similarity(H);
 
@@ -624,10 +624,10 @@ double GFTools::getSmoothedChiSqu(const GFTrack* trk, unsigned int irep, unsigne
 	TVectorT<double> smoothed_state;
 	TMatrixTSym<double> smoothed_cov;
 	GFTools::getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov);
-	TMatrixT<double> H = trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep));
+	const TMatrixT<double>& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
 	TVectorT<double> pos = H * smoothed_state;
-	TVectorT<double> m = trk->getHit(ihit)->getRawHitCoord(); //measurement of hit
-	TMatrixTSym<double> V = trk->getHit(ihit)->getRawHitCov(); //covariance matrix of hit
+	const TVectorT<double>& m( trk->getHit(ihit)->getRawHitCoord() ); //measurement of hit
+	const TMatrixTSym<double>& V( trk->getHit(ihit)->getRawHitCov() ); //covariance matrix of hit
 	TVectorT<double> res = m - pos;
 	TMatrixTSym<double> R = V - smoothed_cov.Similarity(H);
 	TMatrixTSym<double> invR;

@@ -152,7 +152,7 @@ GFRave::RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::string
     throw exc;
   }
 
-  GFDetPlane refPlane(rep->getReferencePlane());
+  const GFDetPlane& refPlane(rep->getReferencePlane());
   TVector3 pos, mom;
   TMatrixTSym<double> cov;
 
