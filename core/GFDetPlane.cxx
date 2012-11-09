@@ -71,6 +71,8 @@ GFDetPlane::GFDetPlane(const GFDetPlane& rhs) {
 
 
 GFDetPlane& GFDetPlane::operator=(const GFDetPlane& rhs) {
+  if (this == &rhs)
+    return *this;
   if(fFinitePlane!=NULL) {
     delete fFinitePlane;
   }
@@ -253,6 +255,8 @@ GFDetPlane::Print(const Option_t* option) const
   practical purposes
  */
 bool operator== (const GFDetPlane& lhs, const GFDetPlane& rhs){
+  if (&lhs == &rhs)
+    return true;
   static const double detplaneEpsilon = 1.E-5;
   if(
      fabs( (lhs.fO.X()-rhs.fO.X()) ) > detplaneEpsilon  ||
