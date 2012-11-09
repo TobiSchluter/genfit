@@ -48,7 +48,7 @@ void GFKalman::processTrack(GFTrack* trk){
     GFBookkeeping* bk = trk->getBK(i);
     bk->setNhits(trk->getNumHits());
     if(fSmooth) {
-      std::vector<std::string> vec_keys = bk->getVectorKeys();
+      const std::vector<std::string>& vec_keys = bk->getVectorKeys();
       bool already_there = false;
       for(unsigned int j=0; j<vec_keys.size(); j++) {
         if(vec_keys.at(j) == "fUpSt") {

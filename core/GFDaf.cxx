@@ -267,7 +267,7 @@ void GFDaf::copySmoothing(GFTrack* source, GFTrack* target, int target_irep) {
 
 	for(unsigned int i=0; i<target->getNumReps(); i++) {
 
-                std::vector<std::string> vec_keys = target->getBK(i)->getVectorKeys();
+                const std::vector<std::string>& vec_keys = target->getBK(i)->getVectorKeys();
                 bool already_there = false;
                 for(unsigned int j=0; j<vec_keys.size(); j++) {
                         if(vec_keys.at(j) == "fUpSt") {
