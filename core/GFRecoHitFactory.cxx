@@ -27,16 +27,16 @@ GFRecoHitFactory::~GFRecoHitFactory(){
 }
 
 void GFRecoHitFactory::addProducer(int detID, GFAbsRecoHitProducer* hitProd) {
-  if(fHitProdMap[detID] != NULL) {
+  std::map<int, GFAbsRecoHitProducer*>::iterator it = fHitProdMap.find(detID);
+  if(it == fHitProdMap.end()) {
+	fHitProdMap[detID] = hitProd;
+  } else {
 	GFException exc("GFRecoHitFactory: detID already in use",__LINE__,__FILE__);
 	exc.setFatal();
 	std::vector<double> numbers;
 	numbers.push_back(detID);
 	exc.setNumbers("detID",numbers);
 	throw exc;
-  }
-  else {
-	fHitProdMap[detID] = hitProd;
   }
 }
 
@@ -50,8 +50,9 @@ void GFRecoHitFactory::clear(){
 }
 
 GFAbsRecoHit* GFRecoHitFactory::createOne(int detID, int index) {
-  if(fHitProdMap[detID] != NULL) {
-	return fHitProdMap[detID]->produce(index);
+  std::map<int, GFAbsRecoHitProducer*>::iterator it = fHitProdMap.find(detID);
+  if(it != fHitProdMap.end()) {
+	return it->second->produce(index);
   }
 
 
