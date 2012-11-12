@@ -12,16 +12,18 @@ IF(NOT DEFINED ENV{VMC})
    MESSAGE(FATAL_ERROR "You did not set the environment variable VMC for your virtual Monte Carlo installation.") 
 ENDIF(NOT DEFINED ENV{VMC})
 
-
-SET(CMAKE_CXX_FLAGS "-g -O2")
-#SET(CMAKE_VERBOSE_MAKEFILE ON)
-
 Execute_process(COMMAND root-config --glibs --cflags --evelibs
 	OUTPUT_VARIABLE ROOT_LIBS
     	OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+Execute_process(COMMAND root-config --cflags
+	OUTPUT_VARIABLE ROOT_CFLAGS
+    	OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+SET(CMAKE_CXX_FLAGS "-g -O2 ${ROOT_CFLAGS}")
+#SET(CMAKE_VERBOSE_MAKEFILE ON)
+
 INCLUDE_DIRECTORIES(
-	$ENV{ROOTSYS}/include 
 	$ENV{GENFIT}/core 
 	$ENV{GENFIT}/RecoHitExamples 
 	$ENV{GENFIT}/RKTrackRep 

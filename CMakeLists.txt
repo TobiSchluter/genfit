@@ -4,22 +4,26 @@ IF(NOT DEFINED ENV{ROOTSYS})
    MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
 ENDIF(NOT DEFINED ENV{ROOTSYS})
 
-Execute_process(COMMAND root-config --glibs --cflags
-	OUTPUT_VARIABLE ROOT_LIBS
+FIND_PROGRAM(ROOT_CONFIG root-config $ENV{ROOTSYS}/bin)
+
+IF(ROOT_CONFIG MATCHES "ROOT_CONFIG-NOTFOUND")
+  MESSAGE(FATAL_ERROR "Could not find root-config executable.")
+ENDIF(ROOT_CONFIG MATCHES "ROOT_CONFIG-NOTFOUND")
+
+Execute_process(COMMAND ${ROOT_CONFIG} --cflags
+	OUTPUT_VARIABLE ROOT_CFLAGS
     	OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-SET(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wshadow -ftree-vectorize -ffast-math -march=native -ftree-vectorizer-verbose=0 ${ROOT_LIBS}")
-
+SET(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wshadow -ftree-vectorize -ffast-math -march=native -ftree-vectorizer-verbose=0 ${ROOT_CFLAGS}")
 
 include(macros.cmake)
 
 #SET(CMAKE_VERBOSE_MAKEFILE ON)
 
-
+IF(NOT DEFINED ENV{GENFIT})
+  SET(ENV{GENFIT} "${CMAKE_SOURCE_DIR}")
+ENDIF(NOT DEFINED ENV{GENFIT})
 get_filename_component(GENFIT $ENV{GENFIT} REALPATH)
-get_filename_component(VMC $ENV{VMC} REALPATH)
-SET(GENFIT $ENV{GENFIT})
-SET(VMC $ENV{VMC})
 
 SET(GENFITLIBDIR ${GENFIT}/lib)
 SET(GENFITLIBINSTALLDIR ${GENFITLIBDIR})
