@@ -278,7 +278,7 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
   
 }
 
-void GFBookkeeping::bookVectors(std::string key){
+void GFBookkeeping::bookVectors(const std::string& key){
   if(fNhits<0){
     GFException exc("fNhits not defined",__LINE__,__FILE__);
     throw exc;
@@ -293,7 +293,7 @@ void GFBookkeeping::bookVectors(std::string key){
   fVectors[key]  = new TVectorT<double>[fNhits];
 }
 
-void GFBookkeeping::bookMatrices(std::string key){
+void GFBookkeeping::bookMatrices(const std::string& key){
   if(fNhits<0){
     GFException exc("fNhits not defined",__LINE__,__FILE__);
     throw exc;
@@ -308,7 +308,7 @@ void GFBookkeeping::bookMatrices(std::string key){
   fMatrices[key]  = new TMatrixT<double>[fNhits];
 }
 
-void GFBookkeeping::bookSymMatrices(std::string key){
+void GFBookkeeping::bookSymMatrices(const std::string& key){
   if(fNhits<0){
     GFException exc("fNhits not defined",__LINE__,__FILE__);
     throw exc;
@@ -323,7 +323,7 @@ void GFBookkeeping::bookSymMatrices(std::string key){
   fSymMatrices[key]  = new TMatrixTSym<double>[fNhits];
 }
 
-void GFBookkeeping::bookGFDetPlanes(std::string key){
+void GFBookkeeping::bookGFDetPlanes(const std::string& key){
   if(fNhits<0){
     GFException exc("fNhits not defined",__LINE__,__FILE__);
     throw exc;
@@ -339,7 +339,7 @@ void GFBookkeeping::bookGFDetPlanes(std::string key){
 }
 
 //val is default set to 0.
-void GFBookkeeping::bookNumbers(std::string key,double val){
+void GFBookkeeping::bookNumbers(const std::string& key,double val){
   if(fNhits<0){
     GFException exc("fNhits not defined",__LINE__,__FILE__);
     throw exc;
@@ -359,7 +359,7 @@ void GFBookkeeping::bookNumbers(std::string key,double val){
   
 }
 
-void GFBookkeeping::setVector(std::string key, unsigned int index,
+void GFBookkeeping::setVector(const std::string& key, unsigned int index,
 			    const TVectorT<double>& mat){
   if(fVectors[key] == NULL){
     std::ostringstream ostr;
@@ -378,7 +378,7 @@ void GFBookkeeping::setVector(std::string key, unsigned int index,
   (fVectors[key])[index] = mat;
 }
 
-void GFBookkeeping::setMatrix(std::string key, unsigned int index,
+void GFBookkeeping::setMatrix(const std::string& key, unsigned int index,
 			    const TMatrixT<double>& mat){
   if(fMatrices[key] == NULL){
     std::ostringstream ostr;
@@ -397,7 +397,7 @@ void GFBookkeeping::setMatrix(std::string key, unsigned int index,
   (fMatrices[key])[index] = mat;
 }
 
-void GFBookkeeping::setSymMatrix(std::string key, unsigned int index,
+void GFBookkeeping::setSymMatrix(const std::string& key, unsigned int index,
 				 const TMatrixTSym<double>& mat){
   if(fSymMatrices[key] == NULL){
     std::ostringstream ostr;
@@ -416,7 +416,7 @@ void GFBookkeeping::setSymMatrix(std::string key, unsigned int index,
   (fSymMatrices[key])[index] = mat;
 }
 
-void GFBookkeeping::setDetPlane(std::string key, unsigned int index,
+void GFBookkeeping::setDetPlane(const std::string& key, unsigned int index,
 				  const GFDetPlane& pl){
   if(fPlanes[key] == NULL){
     std::ostringstream ostr;
@@ -433,7 +433,7 @@ void GFBookkeeping::setDetPlane(std::string key, unsigned int index,
   }
   (fPlanes[key])[index] = pl;
 }
-void GFBookkeeping::setNumber(std::string key, unsigned int index,
+void GFBookkeeping::setNumber(const std::string& key, unsigned int index,
 			    const double& num){
   if(fNumbers[key] == NULL){
     std::ostringstream ostr;
@@ -451,7 +451,7 @@ void GFBookkeeping::setNumber(std::string key, unsigned int index,
   ((fNumbers[key])[index])(0,0) = num;
 }
 
-bool GFBookkeeping::getVector(std::string key,
+bool GFBookkeeping::getVector(const std::string& key,
 			    unsigned int index,
 			    TVectorT<double>& vec) const {
   std::map<std::string, TVectorT<double>* >::const_iterator it;
@@ -474,7 +474,7 @@ bool GFBookkeeping::getVector(std::string key,
   return true;
 }
 
-bool GFBookkeeping::getMatrix(std::string key,
+bool GFBookkeeping::getMatrix(const std::string& key,
 			    unsigned int index,
 			    TMatrixT<double>& mat) const {
   std::map<std::string, TMatrixT<double>* >::const_iterator it;
@@ -497,7 +497,7 @@ bool GFBookkeeping::getMatrix(std::string key,
   return true;
 }
 
-bool GFBookkeeping::getSymMatrix(std::string key,
+bool GFBookkeeping::getSymMatrix(const std::string& key,
 			    unsigned int index,
 			    TMatrixTSym<double>& mat) const {
   std::map<std::string, TMatrixTSym<double>* >::const_iterator it;
@@ -520,7 +520,7 @@ bool GFBookkeeping::getSymMatrix(std::string key,
   return true;
 }
 
-bool GFBookkeeping::getDetPlane(std::string key,
+bool GFBookkeeping::getDetPlane(const std::string& key,
 			      unsigned int index,
 			      GFDetPlane& pl) const {
   std::map<std::string, GFDetPlane* >::const_iterator it;
@@ -542,7 +542,7 @@ bool GFBookkeeping::getDetPlane(std::string key,
   return true;
 }
 
-bool GFBookkeeping::getNumber(std::string key,
+bool GFBookkeeping::getNumber(const std::string& key,
 			    unsigned int index,
 			    double& num) const {
   std::map<std::string, TMatrixT<double>* >::const_iterator it;

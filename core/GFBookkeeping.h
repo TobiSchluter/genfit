@@ -51,23 +51,23 @@ class GFBookkeeping : public TObject {
   void reset();
   void setNhits(int n){fNhits=n; reset();}
 
-  void bookVectors(std::string key);
-  void bookMatrices(std::string key);
-  void bookSymMatrices(std::string key);
-  void bookGFDetPlanes(std::string key);
-  void bookNumbers(std::string key,double val=0.);
+  void bookVectors(const std::string& key);
+  void bookMatrices(const std::string& key);
+  void bookSymMatrices(const std::string& key);
+  void bookGFDetPlanes(const std::string& key);
+  void bookNumbers(const std::string& key,double val=0.);
 
-  void setVector(std::string key,unsigned int index,const TVectorT<double>& mat);
-  void setMatrix(std::string key,unsigned int index,const TMatrixT<double>& mat);
-  void setSymMatrix(std::string key,unsigned int index,const TMatrixTSym<double>& mat);
-  void setDetPlane(std::string key,unsigned int index,const GFDetPlane& pl);
-  void setNumber(std::string key,unsigned int index, const double& num);
+  void setVector(const std::string& key,unsigned int index,const TVectorT<double>& mat);
+  void setMatrix(const std::string& key,unsigned int index,const TMatrixT<double>& mat);
+  void setSymMatrix(const std::string& key,unsigned int index,const TMatrixTSym<double>& mat);
+  void setDetPlane(const std::string& key,unsigned int index,const GFDetPlane& pl);
+  void setNumber(const std::string& key,unsigned int index, const double& num);
 
-  bool getVector(std::string key, unsigned int index, TVectorT<double>& mat) const;
-  bool getMatrix(std::string key, unsigned int index, TMatrixT<double>& mat) const;
-  bool getSymMatrix(std::string key, unsigned int index, TMatrixTSym<double>& mat) const;
-  bool getDetPlane(std::string key, unsigned int index, GFDetPlane& pl)  const;
-  bool getNumber(std::string key, unsigned int index, double& num) const;
+  bool getVector(const std::string& key, unsigned int index, TVectorT<double>& mat) const;
+  bool getMatrix(const std::string& key, unsigned int index, TMatrixT<double>& mat) const;
+  bool getSymMatrix(const std::string& key, unsigned int index, TMatrixTSym<double>& mat) const;
+  bool getDetPlane(const std::string& key, unsigned int index, GFDetPlane& pl)  const;
+  bool getNumber(const std::string& key, unsigned int index, double& num) const;
 
   std::vector< std::string > getVectorKeys() const;
   std::vector< std::string > getMatrixKeys() const;
