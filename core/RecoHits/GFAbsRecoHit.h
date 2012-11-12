@@ -24,14 +24,14 @@
 #ifndef GFABSRECOHIT_H
 #define GFABSRECOHIT_H
 
-#include <iostream>
-
+#include "TVectorT.h"
 #include "TMatrixT.h"
 #include "TMatrixTSym.h"
 #include "TObject.h"
 
-#include "GFAbsTrackRep.h"
 #include "GFDetPlane.h"
+
+class GFAbsTrackRep;
 
 /** @brief Base Class for representing a Hit in GENFIT
  *

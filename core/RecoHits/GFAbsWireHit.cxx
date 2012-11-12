@@ -25,6 +25,7 @@
 #include "GFAbsWireHit.h"
 
 #include <assert.h>
+#include "GFAbsTrackRep.h"
 #include <GFException.h>
 
 

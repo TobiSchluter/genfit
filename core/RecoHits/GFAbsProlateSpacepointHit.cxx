@@ -20,6 +20,7 @@
 #include <math.h>
 
 #include "GFAbsProlateSpacepointHit.h"
+#include "GFAbsTrackRep.h"
 #include <GFException.h>
 
 GFAbsProlateSpacepointHit::GFAbsProlateSpacepointHit() :

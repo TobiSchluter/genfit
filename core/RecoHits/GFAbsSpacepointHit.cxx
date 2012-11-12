@@ -18,6 +18,7 @@
 */
 
 #include "GFAbsSpacepointHit.h"
+#include "GFAbsTrackRep.h"
 
 
 void
