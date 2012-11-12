@@ -14,9 +14,15 @@ Execute_process(COMMAND ${ROOT_CONFIG} --cflags
 	OUTPUT_VARIABLE ROOT_CFLAGS
     	OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-SET(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wshadow -ftree-vectorize -ffast-math -march=native -ftree-vectorizer-verbose=0 ${ROOT_CFLAGS}")
-
 include(macros.cmake)
+
+SET(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wshadow -ftree-vectorize -ffast-math -ftree-vectorizer-verbose=0 ${ROOT_CFLAGS}")
+
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag(-march=native HAS_MARCH_NATIVE)
+IF(HAS_MARCH_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+ENDIF(HAS_MARCH_NATIV)
 
 #SET(CMAKE_VERBOSE_MAKEFILE ON)
 
