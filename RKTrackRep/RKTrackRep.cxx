@@ -1391,9 +1391,10 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   // calculate way SmaxAngle after which momentum angle has changed AngleMax
   double Hmag(MagField.Mag()), SmaxAngle(Smax), radius(0), p_perp(0);
   if (Hmag > 1E-5){
-    p_perp = ( dir - MagField*((dir*MagField)/(Hmag*Hmag)) ).Mag() * momentum; // [GeV]
+    double cosAngle = (dir*MagField)/Hmag;
+    p_perp = ( dir - cosAngle/Hmag*MagField ).Mag() * momentum; // [GeV]
     radius = p_perp/(0.3E-3*Hmag); // [cm]
-    double sinAngle = fabs(sin(dir.Angle(MagField)));
+    double sinAngle = sqrt(1 - pow(cosAngle, 2));
     if (sinAngle > 1E-10) SmaxAngle = fabs(dAngleMax * radius / sinAngle); // [cm]
   }
 
