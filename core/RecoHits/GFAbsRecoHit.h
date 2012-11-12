@@ -58,13 +58,14 @@ class GFAbsTrackRep;
  * These classes provide additional functionality for specific hit geometries,
  * such as space points, wires, etc.
  *
- * Background information: The main feature here is
- * that coordinates and covariances are available as general 
- * TMatrixT<double> objects. By using these general algebraic 
- * objects it is possible to abstract from the concrete measurement and 
- * thus define a unified framework to handle the data. This is a key ingredient
- * for the separation of data and algorithms which in turn enables us 
- * to elegantly combine information from different detectors.
+ * Background information: The main feature here is that coordinates
+ * and covariances are available as general TVectorT<double> and
+ * TMatrixTSym<double> objects. By using these general algebraic
+ * objects it is possible to abstract from the concrete measurement
+ * and thus define a unified framework to handle the data. This is a
+ * key ingredient for the separation of data and algorithms which in
+ * turn enables us to elegantly combine information from different
+ * detectors.
  */
 
 class GFAbsRecoHit : public TObject {
