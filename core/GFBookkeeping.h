@@ -36,14 +36,11 @@ class GFBookkeeping : public TObject {
 
   //the string keys will in general be different, so this can't
   //be unified to one container
-  std::map<std::string, TVectorT<double>* > fVectors;
-  std::map<std::string, TMatrixT<double>* > fMatrices;
-  std::map<std::string, TMatrixTSym<double>* > fSymMatrices;
-  std::map<std::string, GFDetPlane* > fPlanes;
-  /* this is a work-around: we want to save doubles, but ROOT has problems
-   * with TObjects that contain map<string,double*>. We take a 1x1 matrix
-   * as a work-around to hold the double internally */
-  std::map<std::string, TMatrixT<double>* > fNumbers;
+  std::map<std::string, std::vector<TVectorT<double> > > fVectors;
+  std::map<std::string, std::vector<TMatrixT<double> > > fMatrices;
+  std::map<std::string, std::vector<TMatrixTSym<double> > > fSymMatrices;
+  std::map<std::string, std::vector<GFDetPlane> > fPlanes;
+  std::map<std::string, std::vector<double> > fNumbers;
   std::vector< unsigned int > fFailedHits;
   int fNhits;
 

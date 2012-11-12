@@ -33,13 +33,13 @@ GFBookkeeping::GFBookkeeping(const GFBookkeeping& bk) {
 
   //deep copy
   {
-    std::map<std::string,TVectorT<double>*>::const_iterator it;
-    std::map<std::string,TVectorT<double>*>::iterator it_here;
+    std::map<std::string,std::vector<TVectorT<double> > >::const_iterator it;
+    std::map<std::string,std::vector<TVectorT<double> > >::iterator it_here;
   
     it = bk.fVectors.begin();
     it_here = fVectors.begin();
     while(it!=bk.fVectors.end()){
-      it_here->second  = new TVectorT<double>[fNhits];
+      it_here->second.resize(fNhits);
       for(int i=0;i<fNhits;++i){
 	(it_here->second)[i].ResizeTo((it->second)[i]);
 	(it_here->second)[i] = (it->second)[i];
@@ -49,13 +49,13 @@ GFBookkeeping::GFBookkeeping(const GFBookkeeping& bk) {
     }
   }
   {
-    std::map<std::string,TMatrixT<double>*>::const_iterator it;
-    std::map<std::string,TMatrixT<double>*>::iterator it_here;
+    std::map<std::string,std::vector<TMatrixT<double> > >::const_iterator it;
+    std::map<std::string,std::vector<TMatrixT<double> > >::iterator it_here;
   
     it = bk.fMatrices.begin();
     it_here = fMatrices.begin();
     while(it!=bk.fMatrices.end()){
-      it_here->second  = new TMatrixT<double>[fNhits];
+      it_here->second.resize(fNhits);
       for(int i=0;i<fNhits;++i){
 	(it_here->second)[i].ResizeTo((it->second)[i]);
 	(it_here->second)[i] = (it->second)[i];
@@ -63,48 +63,43 @@ GFBookkeeping::GFBookkeeping(const GFBookkeeping& bk) {
       it++;
       it_here++;
     }
-
-
-    it = bk.fNumbers.begin();
-    it_here = fNumbers.begin();
-    while(it!=bk.fNumbers.end()){
-      it_here->second  = new TMatrixT<double>[fNhits];
-      for(int i=0;i<fNhits;++i){
-	(it_here->second)[i].ResizeTo((it->second)[i]);
-	(it_here->second)[i] = (it->second)[i];
-      }
-      it++;
-      it_here++;
-    }
   }
-  
   {
-    std::map<std::string,TMatrixTSym<double>*>::const_iterator it;
-    std::map<std::string,TMatrixTSym<double>*>::iterator it_here;
+    std::map<std::string,std::vector<TMatrixTSym<double> > >::const_iterator it;
+    std::map<std::string,std::vector<TMatrixTSym<double> > >::iterator it_here;
   
     it = bk.fSymMatrices.begin();
     it_here = fSymMatrices.begin();
     while(it!=bk.fSymMatrices.end()){
-      it_here->second  = new TMatrixTSym<double>[fNhits];
+      it_here->second.resize(fNhits);
       for(int i=0;i<fNhits;++i){
 	(it_here->second)[i].ResizeTo((it->second)[i]);
 	(it_here->second)[i] = (it->second)[i];
-      }
+      }    
+      it++;
+      it_here++;
+    }
+  }
+  {
+    std::map<std::string, std::vector<double> >::const_iterator it;
+    std::map<std::string, std::vector<double> >::iterator it_here;
+
+    it = bk.fNumbers.begin();
+    it_here = fNumbers.begin();
+    while(it!=bk.fNumbers.end()){
+      it_here->second = it->second;
       it++;
       it_here++;
     }
   }
   
-  std::map<std::string,GFDetPlane*>::const_iterator ip;
-  std::map<std::string,GFDetPlane*>::iterator ip_here;
+  std::map<std::string, std::vector<GFDetPlane> >::const_iterator ip;
+  std::map<std::string, std::vector<GFDetPlane> >::iterator ip_here;
 
   ip = bk.fPlanes.begin();
   ip_here = fPlanes.begin();
   while(ip!=bk.fPlanes.end()){
-    ip_here->second  = new GFDetPlane[fNhits];
-    for(int i=0;i<fNhits;++i){
-      (ip_here->second)[i] = ((ip->second)[i]);
-    }    
+    ip_here->second = ip->second;
     ip++;
     ip_here++;
   }
@@ -112,7 +107,7 @@ GFBookkeeping::GFBookkeeping(const GFBookkeeping& bk) {
 
 }
 
-
+// Use a custom streamer, the auto-generated one is prohibitively slower.
 void GFBookkeeping::Streamer(TBuffer &R__b)
 {
    // Stream an object of class GFBookkeeping.
@@ -188,8 +183,9 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
          key = s.Data();
          bookNumbers(key);
          for(int j=0;j<fNhits;++j){
-           mat.Streamer(R__b);
-           setNumber(key,j,mat(0,0));
+	   double d;
+           R__b >> d;
+           setNumber(key,j,d);
          }
        }
      }//done reading numbers
@@ -264,7 +260,7 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
          TString s(keys.at(i));
          s.Streamer(R__b);
          for(int j=0;j<fNhits;++j){
-           ((fNumbers[keys.at(i)])[j]).Streamer(R__b);
+	   R__b << (fNumbers[keys.at(i)])[j];
          }
        }
      }//done saving numbers 
@@ -278,19 +274,22 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
   
 }
 
+
 void GFBookkeeping::bookVectors(const std::string& key){
   if(fNhits<0){
     GFException exc("fNhits not defined",__LINE__,__FILE__);
     throw exc;
   }
-  if(fVectors[key] != NULL){
+  std::map<std::string, std::vector<TVectorT<double> > >::const_iterator it;
+  it = fVectors.find(key);
+  if(it != fVectors.end()){
     std::ostringstream ostr;
     ostr << "The key " << key 
 	 << " is already occupied in GFBookkeeping::bookVectors()";
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;
   }
-  fVectors[key]  = new TVectorT<double>[fNhits];
+  fVectors[key].resize(fNhits);
 }
 
 void GFBookkeeping::bookMatrices(const std::string& key){
@@ -298,14 +297,16 @@ void GFBookkeeping::bookMatrices(const std::string& key){
     GFException exc("fNhits not defined",__LINE__,__FILE__);
     throw exc;
   }
-  if(fMatrices[key] != NULL){
+  std::map<std::string, std::vector<TMatrixT<double> > >::const_iterator it;
+  it = fMatrices.find(key);
+  if(it != fMatrices.end()){
     std::ostringstream ostr;
     ostr << "The key " << key 
 	 << " is already occupied in GFBookkeeping::bookMatrices()";
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;
   }
-  fMatrices[key]  = new TMatrixT<double>[fNhits];
+  fMatrices[key].resize(fNhits);
 }
 
 void GFBookkeeping::bookSymMatrices(const std::string& key){
@@ -313,14 +314,16 @@ void GFBookkeeping::bookSymMatrices(const std::string& key){
     GFException exc("fNhits not defined",__LINE__,__FILE__);
     throw exc;
   }
-  if(fSymMatrices[key] != NULL){
+  std::map<std::string, std::vector<TMatrixTSym<double> > >::const_iterator it;
+  it = fSymMatrices.find(key);
+  if(it != fSymMatrices.end()){
     std::ostringstream ostr;
     ostr << "The key " << key 
 	 << " is already occupied in GFBookkeeping::bookSymMatrices()";
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;
   }
-  fSymMatrices[key]  = new TMatrixTSym<double>[fNhits];
+  fSymMatrices[key].resize(fNhits);
 }
 
 void GFBookkeeping::bookGFDetPlanes(const std::string& key){
@@ -328,14 +331,16 @@ void GFBookkeeping::bookGFDetPlanes(const std::string& key){
     GFException exc("fNhits not defined",__LINE__,__FILE__);
     throw exc;
   }
-  if(fPlanes[key] != NULL){
+  std::map<std::string, std::vector<GFDetPlane > >::const_iterator it;
+  it = fPlanes.find(key);
+  if(it != fPlanes.end()){
     std::ostringstream ostr;
     ostr << "The key " << key 
 	 << " is already occupied in GFBookkeeping::bookGFDetPlanes()";
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;
   }
-  fPlanes[key]  = new GFDetPlane[fNhits];
+  fPlanes[key].resize(fNhits);
 }
 
 //val is default set to 0.
@@ -344,24 +349,25 @@ void GFBookkeeping::bookNumbers(const std::string& key,double val){
     GFException exc("fNhits not defined",__LINE__,__FILE__);
     throw exc;
   }
-  if(fNumbers[key] != NULL){
+  if(fNumbers[key].size() != 0){
     std::ostringstream ostr;
     ostr << "The key " << key 
 	 << " is already occupied in GFBookkeeping::bookNumbers()";
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;
   }
-  fNumbers[key]  = new TMatrixT<double>[fNhits];
+  fNumbers[key].resize(fNhits);
   for(int i=0;i<fNhits;++i){
-    ((fNumbers[key])[i]).ResizeTo(1,1);
-    ((fNumbers[key])[i])(0,0) = val;
+    (fNumbers[key])[i] = val;
   }
   
 }
 
 void GFBookkeeping::setVector(const std::string& key, unsigned int index,
-			    const TVectorT<double>& mat){
-  if(fVectors[key] == NULL){
+			      const TVectorT<double>& vec){
+  std::map<std::string, std::vector<TVectorT<double> > >::const_iterator it;
+  it = fVectors.find(key);
+  if(it == fVectors.end()){
     std::ostringstream ostr;
     ostr << "The key " << key << " is unknown in GFBookkeeping::setVector()";
     GFException exc(ostr.str(),__LINE__,__FILE__);
@@ -374,13 +380,15 @@ void GFBookkeeping::setVector(const std::string& key, unsigned int index,
    GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;    
   }
-  (fVectors[key])[index].ResizeTo(mat);
-  (fVectors[key])[index] = mat;
+  (fVectors[key])[index].ResizeTo(vec);
+  (fVectors[key])[index] = vec;
 }
 
 void GFBookkeeping::setMatrix(const std::string& key, unsigned int index,
 			    const TMatrixT<double>& mat){
-  if(fMatrices[key] == NULL){
+  std::map<std::string, std::vector<TMatrixT<double> > >::const_iterator it;
+  it = fMatrices.find(key);
+  if(it == fMatrices.end()){
     std::ostringstream ostr;
     ostr << "The key " << key << " is unknown in GFBookkeeping::setMatrix()";
     GFException exc(ostr.str(),__LINE__,__FILE__);
@@ -399,7 +407,9 @@ void GFBookkeeping::setMatrix(const std::string& key, unsigned int index,
 
 void GFBookkeeping::setSymMatrix(const std::string& key, unsigned int index,
 				 const TMatrixTSym<double>& mat){
-  if(fSymMatrices[key] == NULL){
+  std::map<std::string, std::vector<TMatrixTSym<double> > >::const_iterator it;
+  it = fSymMatrices.find(key);
+  if(it == fSymMatrices.end()){
     std::ostringstream ostr;
     ostr << "The key " << key << " is unknown in GFBookkeeping::setMatrix()";
     GFException exc(ostr.str(),__LINE__,__FILE__);
@@ -418,7 +428,9 @@ void GFBookkeeping::setSymMatrix(const std::string& key, unsigned int index,
 
 void GFBookkeeping::setDetPlane(const std::string& key, unsigned int index,
 				  const GFDetPlane& pl){
-  if(fPlanes[key] == NULL){
+  std::map<std::string, std::vector<GFDetPlane> >::const_iterator it;
+  it = fPlanes.find(key);
+  if(it == fPlanes.end()){
     std::ostringstream ostr;
     ostr << "The key " << key << " is unknown in GFBookkeeping::setGFDetPlane()";
     GFException exc(ostr.str(),__LINE__,__FILE__);
@@ -434,8 +446,8 @@ void GFBookkeeping::setDetPlane(const std::string& key, unsigned int index,
   (fPlanes[key])[index] = pl;
 }
 void GFBookkeeping::setNumber(const std::string& key, unsigned int index,
-			    const double& num){
-  if(fNumbers[key] == NULL){
+			      const double& num){
+  if(fNumbers[key].size() == 0){
     std::ostringstream ostr;
     ostr << "The key " << key << " is unknown in GFBookkeeping::setNumber()";
     GFException exc(ostr.str(),__LINE__,__FILE__);
@@ -448,13 +460,13 @@ void GFBookkeeping::setNumber(const std::string& key, unsigned int index,
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;    
   }
-  ((fNumbers[key])[index])(0,0) = num;
+  (fNumbers[key])[index] = num;
 }
 
 bool GFBookkeeping::getVector(const std::string& key,
 			    unsigned int index,
 			    TVectorT<double>& vec) const {
-  std::map<std::string, TVectorT<double>* >::const_iterator it;
+  std::map<std::string, std::vector<TVectorT<double> > >::const_iterator it;
   it = fVectors.find(key);
   if(it == fVectors.end()){
     std::ostringstream ostr;
@@ -477,7 +489,7 @@ bool GFBookkeeping::getVector(const std::string& key,
 bool GFBookkeeping::getMatrix(const std::string& key,
 			    unsigned int index,
 			    TMatrixT<double>& mat) const {
-  std::map<std::string, TMatrixT<double>* >::const_iterator it;
+  std::map<std::string, std::vector<TMatrixT<double> > >::const_iterator it;
   it = fMatrices.find(key);
   if(it == fMatrices.end()){
     std::ostringstream ostr;
@@ -500,7 +512,7 @@ bool GFBookkeeping::getMatrix(const std::string& key,
 bool GFBookkeeping::getSymMatrix(const std::string& key,
 			    unsigned int index,
 			    TMatrixTSym<double>& mat) const {
-  std::map<std::string, TMatrixTSym<double>* >::const_iterator it;
+  std::map<std::string, std::vector<TMatrixTSym<double> > >::const_iterator it;
   it = fSymMatrices.find(key);
   if(it == fSymMatrices.end()){
     std::ostringstream ostr;
@@ -523,7 +535,7 @@ bool GFBookkeeping::getSymMatrix(const std::string& key,
 bool GFBookkeeping::getDetPlane(const std::string& key,
 			      unsigned int index,
 			      GFDetPlane& pl) const {
-  std::map<std::string, GFDetPlane* >::const_iterator it;
+  std::map<std::string, std::vector<GFDetPlane> >::const_iterator it;
   it = fPlanes.find(key);
   if(it == fPlanes.end()){
     std::ostringstream ostr;
@@ -545,7 +557,7 @@ bool GFBookkeeping::getDetPlane(const std::string& key,
 bool GFBookkeeping::getNumber(const std::string& key,
 			    unsigned int index,
 			    double& num) const {
-  std::map<std::string, TMatrixT<double>* >::const_iterator it;
+  std::map<std::string, std::vector<double> >::const_iterator it;
   it = fNumbers.find(key);
   if(it == fNumbers.end()){
     std::ostringstream ostr;
@@ -560,7 +572,7 @@ bool GFBookkeeping::getNumber(const std::string& key,
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;    
   }
-  num = (((*it).second)[index])(0,0);
+  num = ((*it).second)[index];
   return true;
 }
 
@@ -615,68 +627,50 @@ void GFBookkeeping::reset() {
 }
 
 void GFBookkeeping::clearAll(){
-  std::map<std::string, TVectorT<double>* >::iterator itVec;
-  for(itVec=fVectors.begin();itVec!=fVectors.end();itVec++){
-    if(itVec->second!=NULL) delete [] itVec->second;
-  }
-  std::map<std::string, TMatrixT<double>* >::iterator itMat;
-  for(itMat=fMatrices.begin();itMat!=fMatrices.end();itMat++){
-    if(itMat->second!=NULL) delete [] itMat->second;
-  }
-  std::map<std::string, TMatrixTSym<double>* >::iterator itSymMat;
-  for(itSymMat=fSymMatrices.begin();itSymMat!=fSymMatrices.end();itSymMat++){
-    if(itSymMat->second!=NULL) delete [] itSymMat->second;
-  }
-  std::map<std::string, GFDetPlane* >::iterator itPl;
-  for(itPl=fPlanes.begin();itPl!=fPlanes.end();itPl++){
-    if(itPl->second!=NULL) delete [] itPl->second;
-  }
-  std::map<std::string, TMatrixT<double>* >::iterator itNum;
-  for(itNum=fNumbers.begin();itNum!=fNumbers.end();itNum++){
-    if(itNum->second!=NULL) delete [] itNum->second;
-  }
+  fVectors.clear();
   fMatrices.clear();
+  fSymMatrices.clear();
   fPlanes.clear();
   fNumbers.clear();
 }
 
 std::vector< std::string > GFBookkeeping::getVectorKeys() const {
   std::vector< std::string > keys;
-  std::map<std::string, TVectorT<double>* >::const_iterator it;
+  std::map<std::string, std::vector<TVectorT<double> > >::const_iterator it;
   for(it=fVectors.begin();it!=fVectors.end();it++){
-    if(it->second!=NULL) keys.push_back(it->first);
+    if(it->second.size() != 0) keys.push_back(it->first);
   }
   return keys;
 }
 std::vector< std::string > GFBookkeeping::getMatrixKeys() const {
   std::vector< std::string > keys;
-  std::map<std::string, TMatrixT<double>* >::const_iterator it;
+  std::map<std::string, std::vector<TMatrixT<double> > >::const_iterator it;
   for(it=fMatrices.begin();it!=fMatrices.end();it++){
-    if(it->second!=NULL) keys.push_back(it->first);
+    if(it->second.size() != 0) keys.push_back(it->first);
   }
   return keys;
 }
 std::vector< std::string > GFBookkeeping::getSymMatrixKeys() const {
   std::vector< std::string > keys;
-  std::map<std::string, TMatrixTSym<double>* >::const_iterator it;
+  std::map<std::string, std::vector<TMatrixTSym<double> > >::const_iterator it;
   for(it=fSymMatrices.begin();it!=fSymMatrices.end();it++){
-    if(it->second!=NULL) keys.push_back(it->first);
+    if(it->second.size() != 0) keys.push_back(it->first);
   }
   return keys;
 }
 std::vector< std::string > GFBookkeeping::getGFDetPlaneKeys() const {
   std::vector< std::string > keys;
-  std::map<std::string, GFDetPlane* >::const_iterator it;
+  std::map<std::string, std::vector<GFDetPlane> >::const_iterator it;
   for(it=fPlanes.begin();it!=fPlanes.end();it++){
-    if(it->second!=NULL) keys.push_back(it->first);
+    if(it->second.size() != 0) keys.push_back(it->first);
   }
   return keys;
 }
 std::vector< std::string > GFBookkeeping::getNumberKeys() const {
   std::vector< std::string > keys;
-  std::map<std::string, TMatrixT<double>* >::const_iterator it;
+  std::map<std::string, std::vector<double> >::const_iterator it;
   for(it=fNumbers.begin();it!=fNumbers.end();it++){
-    if(it->second!=NULL) keys.push_back(it->first);
+    if(it->second.size() != 0) keys.push_back(it->first);
   }
   return keys;
 }
