@@ -19,9 +19,6 @@
 
 #include "GFRecoHitFactory.h"
 
-#include <iostream>
-
-
 GFRecoHitFactory::GFRecoHitFactory(){
 }
 
