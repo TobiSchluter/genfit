@@ -193,10 +193,11 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
        clearFailedHits();
        unsigned int nFailedHits;
        R__b >> nFailedHits;
-       unsigned int aFailedHit;
+       fFailedHits.reserve(nFailedHits);
        for(unsigned int i=0;i<nFailedHits;++i){
+	 unsigned int aFailedHit;
          R__b >> aFailedHit;
-         fFailedHits.push_back(aFailedHit);
+         fFailedHits[i] = aFailedHit;
        }
      }//done reading failed hits
    } else {
