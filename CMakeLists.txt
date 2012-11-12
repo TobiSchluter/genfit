@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.6.3)
 
 IF(NOT DEFINED ENV{ROOTSYS})
    MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
@@ -16,15 +16,15 @@ Execute_process(COMMAND ${ROOT_CONFIG} --cflags
 
 include(macros.cmake)
 
+#SET(CMAKE_VERBOSE_MAKEFILE ON)
+
 SET(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wshadow -ftree-vectorize -ffast-math -ftree-vectorizer-verbose=0 ${ROOT_CFLAGS}")
 
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-march=native HAS_MARCH_NATIVE)
 IF(HAS_MARCH_NATIVE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-ENDIF(HAS_MARCH_NATIV)
-
-#SET(CMAKE_VERBOSE_MAKEFILE ON)
+ENDIF(HAS_MARCH_NATIVE)
 
 IF(NOT DEFINED ENV{GENFIT})
   SET(ENV{GENFIT} "${CMAKE_SOURCE_DIR}")
