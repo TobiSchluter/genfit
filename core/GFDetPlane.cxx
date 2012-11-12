@@ -342,21 +342,13 @@ void GFDetPlane::getGraphics(double mesh, double length, TPolyMarker3D **pl,TPol
 
 
 double GFDetPlane::distance(const TVector3& point) const {
-  TVector3 pt(point);
-  pt -= fO;
-  double s = pt*fU;
-  double t = pt*fV;
-  TVector3 distanceVector = pt - (s*fU) - (t*fV);
-  return distanceVector.Mag();
+  // Distance is the absolute value of the projection onto the normal
+  // vector after accounting for the displaced origin.
+  return fabs((point - fO)*(fU.Cross(fV)));
 }
 
 double GFDetPlane::distance(double x, double y, double z) const {
-  TVector3 pt(x,y,z);
-  pt -= fO;
-  double s = pt*fU;
-  double t = pt*fV;
-  TVector3 distanceVector = pt - (s*fU) - (t*fV);
-  return distanceVector.Mag();
+  return distance(TVector3(x,y,z));
 }
 
 
