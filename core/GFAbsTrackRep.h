@@ -307,7 +307,7 @@ class GFAbsTrackRep : public TObject{
     fFirstCov = aCov;
   }
   inline void setFirstPlane(const GFDetPlane& aPlane) {
-    fFirstPlane = aPlane;;
+    fFirstPlane = aPlane;
   }
   inline void setLastState(const TVectorT<double>& aState) {
     fLastState = aState;

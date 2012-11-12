@@ -271,7 +271,6 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
        }
      }//done saving failed Hits    
    }
-  
 }
 
 
@@ -636,6 +635,7 @@ void GFBookkeeping::clearAll(){
 
 std::vector< std::string > GFBookkeeping::getVectorKeys() const {
   std::vector< std::string > keys;
+  keys.reserve(fVectors.size());
   std::map<std::string, std::vector<TVectorT<double> > >::const_iterator it;
   for(it=fVectors.begin();it!=fVectors.end();it++){
     if(it->second.size() != 0) keys.push_back(it->first);
@@ -644,6 +644,7 @@ std::vector< std::string > GFBookkeeping::getVectorKeys() const {
 }
 std::vector< std::string > GFBookkeeping::getMatrixKeys() const {
   std::vector< std::string > keys;
+  keys.reserve(fMatrices.size());
   std::map<std::string, std::vector<TMatrixT<double> > >::const_iterator it;
   for(it=fMatrices.begin();it!=fMatrices.end();it++){
     if(it->second.size() != 0) keys.push_back(it->first);
@@ -652,6 +653,7 @@ std::vector< std::string > GFBookkeeping::getMatrixKeys() const {
 }
 std::vector< std::string > GFBookkeeping::getSymMatrixKeys() const {
   std::vector< std::string > keys;
+  keys.reserve(fSymMatrices.size());
   std::map<std::string, std::vector<TMatrixTSym<double> > >::const_iterator it;
   for(it=fSymMatrices.begin();it!=fSymMatrices.end();it++){
     if(it->second.size() != 0) keys.push_back(it->first);
@@ -660,6 +662,7 @@ std::vector< std::string > GFBookkeeping::getSymMatrixKeys() const {
 }
 std::vector< std::string > GFBookkeeping::getGFDetPlaneKeys() const {
   std::vector< std::string > keys;
+  keys.reserve(fPlanes.size());
   std::map<std::string, std::vector<GFDetPlane> >::const_iterator it;
   for(it=fPlanes.begin();it!=fPlanes.end();it++){
     if(it->second.size() != 0) keys.push_back(it->first);
@@ -668,6 +671,7 @@ std::vector< std::string > GFBookkeeping::getGFDetPlaneKeys() const {
 }
 std::vector< std::string > GFBookkeeping::getNumberKeys() const {
   std::vector< std::string > keys;
+  keys.reserve(fNumbers.size());
   std::map<std::string, std::vector<double> >::const_iterator it;
   for(it=fNumbers.begin();it!=fNumbers.end();it++){
     if(it->second.size() != 0) keys.push_back(it->first);
