@@ -18,7 +18,6 @@
 */
 
 #include "GFRecoHitProducer.h"
-#include <iostream>
 
 GFAbsRecoHitProducer::~GFAbsRecoHitProducer() {
 }

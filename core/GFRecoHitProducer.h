@@ -29,10 +29,7 @@
 #ifndef GFRECOHITPRODUCER_H
 #define GFRECOHITPRODUCER_H
 
-#include <vector>
-#include <map>
 #include <assert.h>
-#include <iostream>
 
 #include <TClonesArray.h>
 
