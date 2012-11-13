@@ -97,7 +97,6 @@ private:
   unsigned int fNextHitToFit;
 
   bool fSmooth;
-  bool fSmoothFast;
   
 public:
   
@@ -417,20 +416,12 @@ public:
   bool getHitsByPlane(std::vector<std::vector<int>*>& retVal);
 
   /** @brief Switch smoothing on or off for this track.
-   *
-   *  The "fast" parameter allows for a different method when retrieving the smoothed
-   *  values with GFTools::get(biased)SmoothedData(), but is more demanding with regards
-   *  to memory requirements.
    */
-  void setSmoothing(bool smooth = true, bool fast = false) { fSmooth = smooth; fSmoothFast = fast;}
+  void setSmoothing(bool smooth = true) { fSmooth = smooth;}
 
   /** @brief Read back if smoothing is/was turned on or off for this track.
    */
   bool getSmoothing() const { return fSmooth; }
-
-  /** @brief Read back if "fast-smoothing" is/was turned on or off for this track.
-   */
-  bool getSmoothingFast() const { return fSmoothFast; }
 
   /** @brief this is needed to blow up the covariance matrix before a fitting pass
    * drops off-diagonal elements and blows up diagonal by blowUpFactor
@@ -439,7 +430,7 @@ public:
 
 
  public:
-  ClassDef(GFTrack,3)
+  ClassDef(GFTrack,4)
 
 };
 

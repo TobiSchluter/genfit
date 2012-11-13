@@ -25,17 +25,15 @@
 #include "TVirtualGeoTrack.h"
 
 GFTrack::GFTrack(GFAbsTrackRep* defaultRep, bool smooth) 
-  : fTrackReps(NULL),fCardinal_rep(0), fNextHitToFit(0), fSmooth(false)
+  : fTrackReps(NULL),fCardinal_rep(0), fNextHitToFit(0), fSmooth(smooth)
 {
   addTrackRep(defaultRep);
-  fSmooth = smooth;
-  fSmoothFast = false;
 }
 
 GFTrack::GFTrack() 
   : fTrackReps(NULL), fCardinal_rep(0), fNextHitToFit(0), fSmooth(false)
 {
-  //trackReps = new TObjArray(defNumTrackReps);
+  ;
 }
 
 GFTrack::~GFTrack() {
@@ -58,7 +56,6 @@ GFTrack::GFTrack(const GFTrack& _tr) {
   fCardinal_rep=_tr.fCardinal_rep;
   fNextHitToFit=_tr.fNextHitToFit;
   fSmooth=_tr.fSmooth;
-  fSmoothFast=_tr.fSmoothFast;
   for(unsigned int i=0;i<_tr.getNumHits();i++) {
     fHits.push_back((_tr.getHit(i))->clone());
   }
@@ -100,7 +97,6 @@ GFTrack& GFTrack::operator=(const GFTrack& _tr) {
   fCardinal_rep=_tr.fCardinal_rep;
   fNextHitToFit=_tr.fNextHitToFit;
   fSmooth=_tr.fSmooth;
-  fSmoothFast=_tr.fSmoothFast;
   for(unsigned int i=0;i<_tr.getNumHits();i++) {
     fHits.push_back((_tr.getHit(i))->clone());
   }
@@ -284,8 +280,7 @@ void GFTrack::Print(const Option_t* option) const{
     fBookkeeping.at(i)->Print(option);
   }
   std::cout << "GFTrack has " << getNumHits() << " detector hits. ";
-  if (fSmooth && fSmoothFast ) std::cout << "Fast smoothing is enabled.";
-  else if (fSmooth) std::cout << "Smoothing is enabled.";
+  if (fSmooth) std::cout << "Smoothing is enabled.";
   else std::cout << "Smoothing is disabled.";
   std::cout << std::endl;
 }

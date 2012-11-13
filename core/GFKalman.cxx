@@ -41,7 +41,6 @@ void GFKalman::processTrack(GFTrack* trk){
 #endif
 
   fSmooth = trk->getSmoothing();
-  fSmoothFast = trk->getSmoothingFast();
 
   int nreps = trk->getNumReps();
   for(int i=0; i<nreps; i++) {
@@ -63,12 +62,10 @@ void GFKalman::processTrack(GFTrack* trk){
         bk->bookNumbers("bExtLen"); // extrapolated length from last hit in backward direction
         bk->bookVectors("bUpSt");
         bk->bookSymMatrices("bUpCov");
-        if(fSmoothFast) {
-          bk->bookVectors("fSt");
-          bk->bookSymMatrices("fCov");
-          bk->bookVectors("bSt");
-          bk->bookSymMatrices("bCov");
-        }
+        bk->bookVectors("fSt");
+        bk->bookSymMatrices("fCov");
+        bk->bookVectors("bSt");
+        bk->bookSymMatrices("bCov");
         bk->bookGFDetPlanes("fPl");
         bk->bookGFDetPlanes("bPl");
         if(trk->getTrackRep(i)->hasAuxInfo()) {
@@ -290,7 +287,7 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   }
 
   GFBookkeeping* bk = tr->getBK(irep);
-  if(fSmooth && fSmoothFast) {
+  if(fSmooth) {
     if(direction == 1) {
 	    bk->setVector("fSt",ihit,state);
 	    bk->setSymMatrix("fCov",ihit,cov);

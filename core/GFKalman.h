@@ -113,7 +113,6 @@ private:
   int fInitialDirection;
   Int_t fNumIt;
   bool fSmooth;
-  bool fSmoothFast;
 
 };
 
