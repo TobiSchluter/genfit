@@ -85,15 +85,15 @@ class GFDaf : public GFAbsFitter {
 
 		/** @brief Copy the smoothing matrices from the source track to the target.
 		 */
-		void copySmoothing(GFTrack* source, GFTrack* target, int target_ire);
+		void copySmoothing(const GFTrack* source, GFTrack* target, int target_irep);
 
-		void saveWeights(GFTrack* trk, const std::vector<std::vector<std::vector<double> > >& weights) const;
+		void saveWeights(GFTrack* trk, const GFTrack* DafTrack, const std::vector<std::vector<std::vector<double> > >& weights) const;
 
 		std::vector<std::vector<std::vector<double> > > fWeights;
 		std::vector<double> fBeta;
 		std::map<int,double>  fchi2Cuts;
 
-		GFKalman kalman;
+		GFKalman fKalman;
 };
 
 #endif

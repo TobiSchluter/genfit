@@ -83,6 +83,10 @@ class GFDafHit: public GFAbsRecoHit {
 		 */
 		virtual void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V);
 
+		virtual void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V, unsigned int iHit){
+		  fRawHits[iHit]->getMeasurement(rep, pl, statePred, covPred, m, V);
+		}
+
 		/** @brief Get the H matrix.
 		 *
 		 * Returns the H matrix of the first hit in the GFDafHit. This is valid
@@ -99,15 +103,23 @@ class GFDafHit: public GFAbsRecoHit {
 		 */
 		const GFDetPlane& getDetPlane(GFAbsTrackRep* rep);
 
+		const std::vector<double>& getWeights() {return fWeights;}
+
 		/** @brief Set the weights.
 		 *
 		 * Set the weights as used by getHitCoord() and getHitCov().
 		 */
 		void setWeights(std::vector<double> weights);
 
-		/** @brief Get the number of hits in the GFDafHit.
+		/** @brief Get the number of real RecoHits hits in the GFDafHit.
+		 * E.g A WireDafHit contains only one real RecoHit, but two effective hits.
 		 */
-		unsigned int getNumHits() { return fRawHits.size(); };
+		unsigned int getNumRealHits() { return fRawHits.size(); };
+
+    /** @brief Get the number of effective hits in the GFDafHit.
+     * E.g A WireDafHit contains only one real RecoHit, but two effective hits.
+     */
+    unsigned int getNumEffHits() { return fWeights.size(); };
 
 		/** @brief Get at hit from the GFDafHit.
 		 */

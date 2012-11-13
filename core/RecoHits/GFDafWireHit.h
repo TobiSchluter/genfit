@@ -47,8 +47,7 @@ class GFDafWireHit: public GFDafHit {
 	 */
   void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V);
 
- private:
-  GFAbsWireHit* fRawHit;
+  virtual void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V, unsigned int iHit);
 
  public:
 	ClassDef(GFDafWireHit,3)

@@ -42,6 +42,10 @@ GFAbsRecoHit* GFDafHit::getHit(unsigned int ihit) {
 void GFDafHit::setWeights(std::vector<double> weights) {
 
 	fWeights = weights;
+	static const double minWeight = 1.e-10;
+	for (unsigned int i=0; i<fWeights.size(); ++i) {
+	  if (fWeights[i] < minWeight) fWeights[i] = minWeight;
+	}
 	fHitUpd = false;
 }
 
@@ -63,13 +67,7 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
 
   if(fRawHits.size() == 1) {
     fRawHits[0]->getMeasurement(rep, pl, statePred, covPred, fHitCoord, fHitCov);
-    static const double maxCovSize = 1.e10;
-    if( 1./fWeights[0]  < maxCovSize) {
-      fHitCov = (1. / fWeights[0]) * fHitCov;
-    }
-    else {
-      fHitCov = maxCovSize * fHitCov;
-    }
+    fHitCov = (1. / fWeights[0]) * fHitCov;
   } 
   else { // more than one hit
     TMatrixTSym<double> covInv;

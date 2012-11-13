@@ -27,13 +27,15 @@ along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 GFDafWireHit::GFDafWireHit(GFAbsWireHit* hit)
   : GFDafHit()
 {
+  // fill fRawHits with the hit
+  fRawHits.push_back(hit);
 
-  fRawHit = hit;
-  fWeights.assign(2,1.);
   fHitUpd = false;
 
+  // initialise the two weigths for left and right hit
 	// set initial weights according to l/r resolution (default weights are left:1 right:1)
-	int lr = fRawHit->getLeftRightResolution();
+  fWeights.assign(2,1.);
+	int lr = dynamic_cast<GFAbsWireHit*>(fRawHits[0])->getLeftRightResolution();
 
 	if (lr<0) { // left
 	  fWeights[1] = 0.; // set right to 0
@@ -43,14 +45,14 @@ GFDafWireHit::GFDafWireHit(GFAbsWireHit* hit)
 	}
 
 	// set l/r resolution so that the plane is fixed
-	fRawHit->setLeftRightResolution(1);
+	dynamic_cast<GFAbsWireHit*>(fRawHits[0])->setLeftRightResolution(1);
 }
 
 
 GFDafWireHit::~GFDafWireHit(){
   // set the l/r resolution of the wire hit according to what the DAF has determined
-  if (fWeights[0] > fWeights[1]) fRawHit->setLeftRightResolution(-1);
-  else fRawHit->setLeftRightResolution(1);
+  if (fWeights[0] > fWeights[1]) dynamic_cast<GFAbsWireHit*>(fRawHits[0])->setLeftRightResolution(-1);
+  else dynamic_cast<GFAbsWireHit*>(fRawHits[0])->setLeftRightResolution(1);
 }
 
 
@@ -69,7 +71,7 @@ void GFDafWireHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,
   TMatrixTSym<double> covTemp;
   std::vector< TVectorT<double> > coords;
 
-  fRawHit->getMeasurement(rep, pl, statePred, covPred, coordTemp, covTemp);
+  dynamic_cast<GFAbsWireHit*>(fRawHits[0])->getMeasurement(rep, pl, statePred, covPred, coordTemp, covTemp);
 
   // make sure fHitCoord and fHitCov have right dimensionality and set them to 0
   fHitCoord.ResizeTo(coordTemp);
@@ -104,5 +106,15 @@ void GFDafWireHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,
   fHitUpd = true;
 }
 
+
+void GFDafWireHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V, unsigned int iHit){
+  assert(iHit<2);
+
+  fRawHits[0]->getMeasurement(rep, pl, statePred, covPred, m, V);
+
+  if (iHit == 0){
+    m[0] *= -1.; // invert the sign of the drift radius of the left hit
+  }
+}
 
 ClassImp(GFDafWireHit)
