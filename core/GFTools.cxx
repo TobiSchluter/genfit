@@ -458,7 +458,7 @@ bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsig
 
 	GFTools::invertMatrix(fCovInvert + bCovInvert, smoothed_cov);
 
-	smoothed_state.ResizeTo(smoothed_cov * (fCovInvert*fSt + bCovInvert*bSt));
+	smoothed_state.ResizeTo(fSt);
 	smoothed_state = smoothed_cov * (fCovInvert*fSt + bCovInvert*bSt);
 
 	return true;
