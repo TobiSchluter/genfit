@@ -24,87 +24,12 @@
 
 GFBookkeeping::GFBookkeeping(const GFBookkeeping& bk) {
   fNhits = bk.fNhits;
-  fVectors = bk.fVectors; //implicit copy constructor call
-  fMatrices = bk.fMatrices; //implicit copy constructor call
-  fSymMatrices = bk.fSymMatrices; //implicit copy constructor call
+  fVectors = bk.fVectors;
+  fMatrices = bk.fMatrices;
+  fSymMatrices = bk.fSymMatrices;
   fNumbers = bk.fNumbers; 
   fPlanes = bk.fPlanes; 
   fFailedHits = bk.fFailedHits;
-
-  //deep copy
-  {
-    std::map<std::string,std::vector<TVectorT<double> > >::const_iterator it;
-    std::map<std::string,std::vector<TVectorT<double> > >::iterator it_here;
-  
-    it = bk.fVectors.begin();
-    it_here = fVectors.begin();
-    while(it!=bk.fVectors.end()){
-      it_here->second.resize(fNhits);
-      for(int i=0;i<fNhits;++i){
-	(it_here->second)[i].ResizeTo((it->second)[i]);
-	(it_here->second)[i] = (it->second)[i];
-      }    
-      it++;
-      it_here++;
-    }
-  }
-  {
-    std::map<std::string,std::vector<TMatrixT<double> > >::const_iterator it;
-    std::map<std::string,std::vector<TMatrixT<double> > >::iterator it_here;
-  
-    it = bk.fMatrices.begin();
-    it_here = fMatrices.begin();
-    while(it!=bk.fMatrices.end()){
-      it_here->second.resize(fNhits);
-      for(int i=0;i<fNhits;++i){
-	(it_here->second)[i].ResizeTo((it->second)[i]);
-	(it_here->second)[i] = (it->second)[i];
-      }    
-      it++;
-      it_here++;
-    }
-  }
-  {
-    std::map<std::string,std::vector<TMatrixTSym<double> > >::const_iterator it;
-    std::map<std::string,std::vector<TMatrixTSym<double> > >::iterator it_here;
-  
-    it = bk.fSymMatrices.begin();
-    it_here = fSymMatrices.begin();
-    while(it!=bk.fSymMatrices.end()){
-      it_here->second.resize(fNhits);
-      for(int i=0;i<fNhits;++i){
-	(it_here->second)[i].ResizeTo((it->second)[i]);
-	(it_here->second)[i] = (it->second)[i];
-      }    
-      it++;
-      it_here++;
-    }
-  }
-  {
-    std::map<std::string, std::vector<double> >::const_iterator it;
-    std::map<std::string, std::vector<double> >::iterator it_here;
-
-    it = bk.fNumbers.begin();
-    it_here = fNumbers.begin();
-    while(it!=bk.fNumbers.end()){
-      it_here->second = it->second;
-      it++;
-      it_here++;
-    }
-  }
-  
-  std::map<std::string, std::vector<GFDetPlane> >::const_iterator ip;
-  std::map<std::string, std::vector<GFDetPlane> >::iterator ip_here;
-
-  ip = bk.fPlanes.begin();
-  ip_here = fPlanes.begin();
-  while(ip!=bk.fPlanes.end()){
-    ip_here->second = ip->second;
-    ip++;
-    ip_here++;
-  }
-
-
 }
 
 // Use a custom streamer, the auto-generated one is prohibitively slower.
@@ -349,7 +274,9 @@ void GFBookkeeping::bookNumbers(const std::string& key,double val){
     GFException exc("fNhits not defined",__LINE__,__FILE__);
     throw exc;
   }
-  if(fNumbers[key].size() != 0){
+  std::map<std::string, std::vector<double> >::const_iterator it;
+  it = fNumbers.find(key);
+  if(it != fNumbers.end()){
     std::ostringstream ostr;
     ostr << "The key " << key 
 	 << " is already occupied in GFBookkeeping::bookNumbers()";

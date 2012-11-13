@@ -275,9 +275,9 @@ void GFDaf::copySmoothing(GFTrack* source, GFTrack* target, int target_irep) {
 	    }
     }
 		if(!already_there) {
-			target->getBK(i)->bookMatrices("fUpSt");
+			target->getBK(i)->bookVectors("fUpSt");
 			target->getBK(i)->bookSymMatrices("fUpCov");
-			target->getBK(i)->bookMatrices("bUpSt");
+			target->getBK(i)->bookVectors("bUpSt");
 			target->getBK(i)->bookSymMatrices("bUpCov");
 			target->getBK(i)->bookGFDetPlanes("fPl");
 			target->getBK(i)->bookGFDetPlanes("bPl");
@@ -295,15 +295,15 @@ void GFDaf::copySmoothing(GFTrack* source, GFTrack* target, int target_irep) {
 		GFDafHit* eff_hit = static_cast<GFDafHit*>(source->getHit(pl_i));
 
 		for(unsigned int hit_i=0; hit_i<eff_hit->getNumHits(); hit_i++) {
-
-			TMatrixT<double> fUpSt, bUpSt, fAuxInfo, bAuxInfo;
+  		        TVectorT<double> fUpSt, bUpSt;
+			TMatrixT<double> fAuxInfo, bAuxInfo;
 			TMatrixTSym<double> fUpCov, bUpCov;
 			GFDetPlane fPl, bPl;
 
-			source->getBK(0)->getMatrix("fUpSt",pl_i,fUpSt);
+			source->getBK(0)->getVector("fUpSt",pl_i,fUpSt);
 			source->getBK(0)->getSymMatrix("fUpCov",pl_i,fUpCov);
 			source->getBK(0)->getDetPlane("fPl",pl_i,fPl);
-			source->getBK(0)->getMatrix("bUpSt",pl_i,bUpSt);
+			source->getBK(0)->getVector("bUpSt",pl_i,bUpSt);
 			source->getBK(0)->getSymMatrix("bUpCov",pl_i,bUpCov);
 			source->getBK(0)->getDetPlane("bPl",pl_i,bPl);
 
@@ -314,10 +314,10 @@ void GFDaf::copySmoothing(GFTrack* source, GFTrack* target, int target_irep) {
 				target->getBK(target_irep)->setMatrix("bAuxInfo",hit_count,bAuxInfo);
 			}
 
-			target->getBK(target_irep)->setMatrix("fUpSt",hit_count,fUpSt);
+			target->getBK(target_irep)->setVector("fUpSt",hit_count,fUpSt);
 			target->getBK(target_irep)->setSymMatrix("fUpCov",hit_count,fUpCov);
 			target->getBK(target_irep)->setDetPlane("fPl",hit_count,fPl);
-			target->getBK(target_irep)->setMatrix("bUpSt",hit_count,bUpSt);
+			target->getBK(target_irep)->setVector("bUpSt",hit_count,bUpSt);
 			target->getBK(target_irep)->setSymMatrix("bUpCov",hit_count,bUpCov);
 			target->getBK(target_irep)->setDetPlane("bPl",hit_count,bPl);
 
