@@ -31,7 +31,11 @@
 #define COVEXC "cov_is_zero"
 //#define DEBUG
 
-GFKalman::GFKalman():fInitialDirection(1),fNumIt(3){;}
+GFKalman::GFKalman()
+  : fInitialDirection(1), fNumIt(3)
+{
+  ;
+}
 
 GFKalman::~GFKalman(){;}
 
@@ -41,45 +45,13 @@ void GFKalman::processTrack(GFTrack* trk){
 #endif
 
   fSmooth = trk->getSmoothing();
-
-  int nreps = trk->getNumReps();
-  for(int i=0; i<nreps; i++) {
-    GFBookkeeping* bk = trk->getBK(i);
-    bk->setNhits(trk->getNumHits());
-    if(fSmooth) {
-      const std::vector<std::string>& vec_keys = bk->getVectorKeys();
-      bool already_there = false;
-      for(unsigned int j=0; j<vec_keys.size(); j++) {
-        if(vec_keys.at(j) == "fUpSt") {
-          already_there = true;
-          break;
-        }
-      }
-      if(!already_there) {
-        bk->bookNumbers("fExtLen"); // extrapolated length from last hit in forward direction
-        bk->bookVectors("fUpSt");
-        bk->bookSymMatrices("fUpCov");
-        bk->bookNumbers("bExtLen"); // extrapolated length from last hit in backward direction
-        bk->bookVectors("bUpSt");
-        bk->bookSymMatrices("bUpCov");
-        bk->bookVectors("fSt");
-        bk->bookSymMatrices("fCov");
-        bk->bookVectors("bSt");
-        bk->bookSymMatrices("bCov");
-        bk->bookGFDetPlanes("fPl");
-        bk->bookGFDetPlanes("bPl");
-        if(trk->getTrackRep(i)->hasAuxInfo()) {
-          bk->bookMatrices("fAuxInfo");
-          bk->bookMatrices("bAuxInfo");
-        }
-      }
-    }
-  }
+  initBookkeeping(trk);
+  trk->clearRepAtHit();
 
   int direction=fInitialDirection;
   assert(direction==1 || direction==-1);
-  //  trk->clearGFBookkeeping();
-  trk->clearRepAtHit();
+
+  int nreps = trk->getNumReps();
 
   /*why is there a factor of two here (in the for statement)?
     Because we consider one full iteration to be one back and
@@ -287,17 +259,13 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   }
 
   GFBookkeeping* bk = tr->getBK(irep);
-  if(fSmooth) {
+  if(fSmooth) { // save predictions
     if(direction == 1) {
 	    bk->setVector("fSt",ihit,state);
 	    bk->setSymMatrix("fCov",ihit,cov);
-	    if(rep->hasAuxInfo()) bk->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
-	    bk->setDetPlane("fPl",ihit,pl);
 	  } else {
 	    bk->setVector("bSt",ihit,state);
 	    bk->setSymMatrix("bCov",ihit,cov);
-	    if(rep->hasAuxInfo()) bk->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
-	    bk->setDetPlane("bPl",ihit,pl);
 	  }
   }
   
@@ -345,14 +313,14 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
       bk->setNumber("fExtLen",ihit,extLen);
       bk->setVector("fUpSt",ihit,state);
       bk->setSymMatrix("fUpCov",ihit,cov);
-      if(rep->hasAuxInfo()) bk->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
       bk->setDetPlane("fPl",ihit,pl);
+      if(rep->hasAuxInfo()) bk->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
     } else {
 	    bk->setNumber("bExtLen",ihit,extLen);
       bk->setVector("bUpSt",ihit,state);
       bk->setSymMatrix("bUpCov",ihit,cov);
-      if(rep->hasAuxInfo()) bk->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
       bk->setDetPlane("bPl",ihit,pl);
+      if(rep->hasAuxInfo()) bk->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
     }
   }
 
@@ -369,20 +337,7 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   }
   rep->addNDF( ndf );
 
-  /*
-  if(direction==1){
-    bk->setNumber("fChi2",ihit,chi2/ndf);
-  }
-  else{
-    bk->setNumber("bChi2",ihit,chi2/ndf);
-  }
-  */
-
-  // if we survive until here: update TrackRep
-  //rep->setState(state);
-  //rep->setCov(cov);
-  //rep->setReferencePlane(pl);
-
+  // update TrackRep
   rep->setData(state,pl,&cov);
   tr->setRepAtHit(irep,ihit);
 
@@ -391,6 +346,47 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
    rep->getState().Print();
    rep->getCov().Print();
 #endif
+}
+
+
+void
+GFKalman::initBookkeeping(GFTrack* trk) const {
+
+  int nreps = trk->getNumReps();
+  for(int i=0; i<nreps; i++) {
+    GFBookkeeping* bk = trk->getBK(i);
+    bk->setNhits(trk->getNumHits());
+    if(fSmooth) {
+      const std::vector<std::string>& vec_keys = bk->getVectorKeys();
+      bool already_there = false;
+      for(unsigned int j=0; j<vec_keys.size(); ++j) {
+        if(vec_keys.at(j) == "fUpSt") {
+          already_there = true;
+          break;
+        }
+      }
+      if(!already_there) {
+        bk->bookNumbers("fExtLen");   // extrapolated length from last hit in forward direction
+        bk->bookVectors("fUpSt");     // updated state in forward direction
+        bk->bookSymMatrices("fUpCov");// updated covariance in forward direction
+        bk->bookVectors("fSt");       // state prediction in forward direction
+        bk->bookSymMatrices("fCov");  // covariance prediction in forward direction
+        bk->bookGFDetPlanes("fPl");   // detector plane in forward direction
+
+        bk->bookNumbers("bExtLen");   // extrapolated length from last hit in backward direction
+        bk->bookVectors("bUpSt");     // updated state in backward direction
+        bk->bookSymMatrices("bUpCov");// updated covariance in backward direction
+        bk->bookVectors("bSt");       // state prediction in backward direction
+        bk->bookSymMatrices("bCov");  // covariance prediction in backward direction
+        bk->bookGFDetPlanes("bPl");   // detector plane in backward direction
+
+        if(trk->getTrackRep(i)->hasAuxInfo()) {
+          bk->bookMatrices("fAuxInfo"); // aux info in forward direction
+          bk->bookMatrices("bAuxInfo"); // aux info in backward direction
+        }
+      }
+    }
+  }
 }
 
 

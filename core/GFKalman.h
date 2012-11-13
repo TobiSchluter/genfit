@@ -53,7 +53,7 @@
 class GFKalman : public GFAbsFitter {
 public:
 
-  //friend class KalmanTester; // gives the Tester access to private methods
+  friend class GFDaf;
 
   // Constructors/Destructors ---------
   GFKalman();
@@ -108,6 +108,11 @@ private:
    */
   double chi2Increment(const TVectorT<double>& r,const TMatrixT<double>& H,
 		       const TMatrixTSym<double>& cov,const TMatrixTSym<double>& V);
+
+
+  /** @brief Book all neccessary Bookkeeping entries.
+   */
+  void initBookkeeping(GFTrack* trk) const;
 
 
   int fInitialDirection;
