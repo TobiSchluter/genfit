@@ -14,6 +14,7 @@ Execute_process(COMMAND ${ROOT_CONFIG} --cflags
 INCLUDE_DIRECTORIES(${GENFIT}/core)
 
 set(GENFIT_SRCS 
+	GFAbsFitter.cxx
 	GFAbsTrackRep.cxx 
 	GFBookkeeping.cxx
 	GFDetPlane.cxx 
@@ -42,6 +43,7 @@ set(GENFIT_SRCS
 )
 
 set(GENFIT_HEADERS  
+        GFAbsFitter.h
 	GFAbsTrackRep.h 
 	GFBookkeeping.h
 	GFDetPlane.h 

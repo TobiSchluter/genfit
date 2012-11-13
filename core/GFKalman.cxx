@@ -31,7 +31,7 @@
 #define COVEXC "cov_is_zero"
 //#define DEBUG
 
-GFKalman::GFKalman():fInitialDirection(1),fNumIt(3),fBlowUpFactor(500.){;}
+GFKalman::GFKalman():fInitialDirection(1),fNumIt(3){;}
 
 GFKalman::~GFKalman(){;}
 
@@ -138,10 +138,6 @@ GFKalman::switchDirection(GFTrack* trk){
   for(int i=0; i<nreps; ++i){
     trk->getTrackRep(i)->switchDirection();
   }
-}
-
-void GFKalman::blowUpCovs(GFTrack* trk){
-  trk->blowUpCovs(fBlowUpFactor);
 }
 
 void

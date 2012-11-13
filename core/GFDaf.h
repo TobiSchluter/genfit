@@ -46,7 +46,7 @@ along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
  * So to retrieve for example the weight of hit 10, fitted with track representation 2,
  * use GFTrack::getBK(2)->getNumber("dafWeight", 10,  double& wght).
  */
-class GFDaf: GFKalman {
+class GFDaf : public GFAbsFitter {
 	public:
 
 		GFDaf();
@@ -93,6 +93,7 @@ class GFDaf: GFKalman {
 		std::vector<double> fBeta;
 		std::map<int,double>  fchi2Cuts;
 
+		GFKalman kalman;
 };
 
 #endif

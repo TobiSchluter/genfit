@@ -25,11 +25,11 @@
 #include <assert.h>
 #include <cmath>
 
-GFDaf::GFDaf() : GFKalman::GFKalman() {
+GFDaf::GFDaf() {
 
 	setBetas(81.,8.,4.,1.,1.,1.);
 	setProbCut(0.01);
-	GFKalman::setNumIterations(1);
+	kalman.setNumIterations(1);
 
 };
 
@@ -65,9 +65,9 @@ void GFDaf::processTrack(GFTrack* trk) {
 				hit->setWeights(fWeights.at(i).at(j));
 			}			
 			if ( iBeta != 0){
-				GFKalman::blowUpCovs(mini_trk);
+				this->blowUpCovs(mini_trk);
 			}
-			GFKalman::processTrack(mini_trk);
+			kalman.processTrack(mini_trk);
 
 			if(mini_trk->getTrackRep(0)->getStatusFlag() != 0) break;
 

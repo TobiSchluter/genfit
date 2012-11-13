@@ -34,6 +34,7 @@
 #include "RecoHits/GFAbsRecoHit.h"
 #include "GFAbsTrackRep.h"
 #include "GFTrack.h"
+#include "GFAbsFitter.h"
 
 /** @brief Generic Kalman Filter implementation
  *
@@ -49,7 +50,7 @@
  * The Kalman Filter can use hits from several detectors in a single fit 
  * to estimate the parameters of several track representations in parallel.
  */
-class GFKalman {
+class GFKalman : public GFAbsFitter {
 public:
 
   //friend class KalmanTester; // gives the Tester access to private methods
@@ -57,21 +58,6 @@ public:
   // Constructors/Destructors ---------
   GFKalman();
   ~GFKalman();
-
-  // Operators
-  /** @brief Operator for use with STL.
-   *
-   * This operator allows to use the std::foreach algorithm with an
-   * STL container o GFTrack* objects.
-   */
-  inline void operator()(GFTrack* track){processTrack(track);}
-  
-  /** @brief Operator for use with STL.
-   *
-   * This operator allows to use the std::foreach algorithm with an
-   * STL container o GFTrack* objects.
-   */
-  inline void operator()(std::pair<int,GFTrack*> tr){processTrack(tr.second);}
 
   // Operations ----------------------
 
@@ -86,7 +72,7 @@ public:
    * The hits are processed in the order in which they are stored in the GFTrack
    * object. Sorting of hits in space has to be done before!
    */
-  void processTrack(GFTrack* trk);
+  virtual void processTrack(GFTrack* trk);
 
   /** @brief Performs fit on a GFTrack beginning with the current hit.
    */
@@ -101,17 +87,6 @@ public:
    * or -1 for outer to inner). The standard is 1 and is set in the c'tor
    */
   void setInitialDirection(int d){fInitialDirection=d;}
-
-  /** @brief Set the blowup factor (see blowUpCovs() )
-   */
-  void setBlowUpFactor(double f){fBlowUpFactor=f;}
-  
-  // Protected Methods -----------------
-protected:  
-  /** @brief this is needed to blow up the covariance matrix before a fitting pass
-   * drops off-diagonal elements and blows up diagonal by blowUpFactor
-   */
-  void blowUpCovs(GFTrack* trk);
 
   // Private Methods -----------------
 private:
@@ -137,7 +112,6 @@ private:
 
   int fInitialDirection;
   Int_t fNumIt;
-  double fBlowUpFactor;
   bool fSmooth;
   bool fSmoothFast;
 
