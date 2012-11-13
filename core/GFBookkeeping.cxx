@@ -108,7 +108,7 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
          key = s.Data();
          bookNumbers(key);
          for(int j=0;j<fNhits;++j){
-	   double d;
+           double d;
            R__b >> d;
            setNumber(key,j,d);
          }
@@ -120,7 +120,7 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
        R__b >> nFailedHits;
        fFailedHits.reserve(nFailedHits);
        for(unsigned int i=0;i<nFailedHits;++i){
-	 unsigned int aFailedHit;
+         unsigned int aFailedHit;
          R__b >> aFailedHit;
          fFailedHits[i] = aFailedHit;
        }
@@ -609,67 +609,68 @@ std::vector< std::string > GFBookkeeping::getNumberKeys() const {
 
 
 void GFBookkeeping::Print(const Option_t* option) const {
-  std::cout << "=============GFBookkeeping::print()==============" << std::endl;
-  std::cout << "-----printing all vectors:------" << std::endl;
+  std::cout << "=============GFBookkeeping::print()==============\n";
+  std::cout << "GFBookkeeping has " << fNhits << " hits.\n";
+  std::cout << "-----printing all vectors:------\n";
   std::vector<std::string> keys = getVectorKeys();
   for(unsigned int i=0;i<keys.size();++i){
     std::cout << "key " << keys.at(i) << " has " << fNhits
-	      << " entries:" << std::endl;
+	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
       TVectorT<double> m;
       getVector(keys.at(i),j,m);
       m.Print(option);
     }
   }
-  std::cout << "-----printing all matrices:------" << std::endl;
+  std::cout << "-----printing all matrices:------\n";
   keys = getMatrixKeys();
   for(unsigned int i=0;i<keys.size();++i){
     std::cout << "key " << keys.at(i) << " has " << fNhits
-	      << " entries:" << std::endl;
+	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
       TMatrixT<double> m;
       getMatrix(keys.at(i),j,m);
       m.Print(option);
     }
   }
-  std::cout << "-----printing all symmetric matrices:------" << std::endl;
+  std::cout << "-----printing all symmetric matrices:------\n";
   keys = getSymMatrixKeys();
   for(unsigned int i=0;i<keys.size();++i){
     std::cout << "key " << keys.at(i) << " has " << fNhits
-	      << " entries:" << std::endl;
+	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
       TMatrixTSym<double> m;
       getSymMatrix(keys.at(i),j,m);
       m.Print(option);
     }
   }
-  std::cout << "-----printing all GFDetPlanes:------" << std::endl;
+  std::cout << "-----printing all GFDetPlanes:------\n";
   keys = getGFDetPlaneKeys();
   for(unsigned int i=0;i<keys.size();++i){
     std::cout << "key " << keys.at(i) << " has " << fNhits
-	      << " entries:" << std::endl;
+	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
       GFDetPlane p;
       getDetPlane(keys.at(i),j,p);
       p.Print(option);
     }
   }
-  std::cout << "-----printing all numbers:------" << std::endl;
+  std::cout << "-----printing all numbers:------\n";
   keys = getNumberKeys();
   for(unsigned int i=0;i<keys.size();++i){
     std::cout << "key " << keys.at(i) << " has " << fNhits
-	      << " entries:" << std::endl;
+	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
       double n(-1111.);
       getNumber(keys.at(i),j,n);
       std::cout << n << std::endl;
     }
   }
-  std::cout << "-----failed hits:------" << std::endl;
+  std::cout << "-----failed hits:------\n";
   for(unsigned int i=0;i<fFailedHits.size();++i){
     std::cout << fFailedHits.at(i) << " ";
   }
-  std::cout << std::endl;
+  std::cout << "==========GFBookkeeping::print() - Done==========" << std::endl;
 }
 
 
