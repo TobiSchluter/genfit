@@ -32,7 +32,7 @@ GFBookkeeping::GFBookkeeping(const GFBookkeeping& bk) {
   fFailedHits = bk.fFailedHits;
 }
 
-// Use a custom streamer, the auto-generated one is prohibitively slower.
+// Use a custom streamer, the auto-generated one is prohibitively slower (root 5.34).
 void GFBookkeeping::Streamer(TBuffer &R__b)
 {
    // Stream an object of class GFBookkeeping.

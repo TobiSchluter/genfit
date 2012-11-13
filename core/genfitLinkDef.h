@@ -38,6 +38,7 @@
 #pragma link C++ class GFTrackCandHit+;
 #pragma link C++ class GFTrack+;
 #pragma link C++ class GFDetPlane+;
+// GFBookkeeping has a custom streamer, the auto-generated one is sloooow (root 5.34).
 #pragma link C++ class GFBookkeeping-;
 #pragma link C++ class GFAbsFinitePlane+;
 #pragma link C++ class GFRectFinitePlane+;
