@@ -125,7 +125,8 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 
     TVectorT<double> smoothedState;
     TMatrixTSym<double> smoothedCov;
-    GFTools::getBiasedSmoothedData(trk, 0, i, smoothedState, smoothedCov);
+    GFDetPlane pl;
+    GFTools::getBiasedSmoothedData(trk, 0, i, smoothedState, smoothedCov, pl);
 
     const TMatrixT<double>& H( trk->getHit(i)->getHMatrix(trk->getTrackRep(0)) );
     TVectorT<double> x_smoo(H * smoothedState);
@@ -137,23 +138,12 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
       continue;
     }
 
-    // try to get the plane
-    GFDetPlane pl;
-    try{
-      pl = eff_hit->getDetPlane(trk->getTrackRep(0)); // couldn't figure out how to avoid GFDetPlane copy c'tor here
-    } catch(GFException& e) {
-      e.what();
-      e.info();
-      weights.assign(nEffHits,0.);
-      ret_val.push_back(weights); // can not get det plane, assign weights 0
-      continue; // next eff_hit
-    }
 
     for(unsigned int j=0; j<nEffHits; j++) {
       TVectorT<double> m;
       TMatrixTSym<double> Vorig;
       try{
-        eff_hit->getMeasurement(trk->getTrackRep(0),pl,smoothedState,smoothedCov,m,Vorig, j);
+        eff_hit->getMeasurement(trk->getTrackRep(0), pl, smoothedState, smoothedCov, m, Vorig, j);
       } catch(GFException& e) {
         e.what();
         e.info();
