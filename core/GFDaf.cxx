@@ -123,10 +123,13 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 
     std::vector<double> weights;
 
-    TVectorT<double> x_smoo(GFTools::getBiasedSmoothedPos(trk, 0, i));
     TVectorT<double> smoothedState;
     TMatrixTSym<double> smoothedCov;
-    GFTools::getBiasedSmoothedData(trk, 0, i, smoothedState,smoothedCov);
+    GFTools::getBiasedSmoothedData(trk, 0, i, smoothedState, smoothedCov);
+
+    const TMatrixT<double>& H( trk->getHit(i)->getHMatrix(trk->getTrackRep(0)) );
+    TVectorT<double> x_smoo(H * smoothedState);
+
     if(x_smoo.GetNrows() == 0) {
       weights.assign(nEffHits,0.5);
       //std::cout<<"Assumed weight 0.5!!"<<std::endl;
