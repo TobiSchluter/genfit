@@ -267,7 +267,6 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			std::cout << std::endl;
 		}
 
-    TVector3 plane_pos;
 		TVector3 track_pos;
 		TVector3 old_track_pos;
 
@@ -312,7 +311,6 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 			}
 			
 			track_pos = rep->getPos(plane);
-			plane_pos = plane.getO();
 			TVectorT<double> hit_coords;
 			TMatrixTSym<double> hit_cov;
 			hit->getMeasurement(rep,plane,rep->getState(),rep->getCov(),hit_coords,hit_cov);
@@ -355,6 +353,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
       } else if (dynamic_cast<GFAbsWireHit*>(hit) != NULL) {
 				wire_hit = true;
 				hit_u = hit_coords(0);
+				hit_v = v*(track_pos-o); // move the covariance tube so that the track goes through it
 				hit_res_u = hit_cov(0,0);
 				hit_res_v = 4;
 				plane_size = 4;
@@ -373,7 +372,9 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 			// draw planes if corresponding option is set -----------------------------------------
 			if(drawPlanes || (drawDetectors && planar_hit)) {
-				TEveBox* box = boxCreator(plane_pos, u, v, plane_size, plane_size, 0.01);
+			  TVector3 move(0,0,0);
+			  if (wire_hit) move = v*(v*(track_pos-o)); // move the plane along the wire until the track goes through it
+				TEveBox* box = boxCreator(o + move, u, v, plane_size, plane_size, 0.01);
 				if (drawDetectors && planar_hit) {
 					box->SetMainColor(kCyan);
 				} else {
@@ -413,7 +414,11 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					TGeoRotation* det_rot = new TGeoRotation("det_rot",	(u.Theta()*180)/TMath::Pi(), (u.Phi()*180)/TMath::Pi(),
 							(norm.Theta()*180)/TMath::Pi(), (norm.Phi()*180)/TMath::Pi(),
 							(v.Theta()*180)/TMath::Pi(), (v.Phi()*180)/TMath::Pi()); // move the tube to the right place and rotate it correctly
-					TGeoMatrix* det_trans = new TGeoCombiTrans(o(0),o(1),o(2),det_rot);
+					TVector3 move = v*(v*(track_pos-o)); // move the tube along the wire until the track goes through it
+					TGeoMatrix* det_trans = new TGeoCombiTrans(o(0) + move.X(),
+                                                     o(1) + move.Y(),
+                                                     o(2) + move.Z(),
+                                                     det_rot);
 					det_shape->SetTransMatrix(*det_trans);
 					det_shape->SetMainColor(kCyan);
 					det_shape->SetMainTransparency(25);
@@ -431,7 +436,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 				if(planar_hit) {
 					if(!planar_pixel_hit) {
 						TEveBox* hit_box;
-						hit_box = boxCreator((plane_pos + hit_u*u), u, v, fErrorScale*std::sqrt(hit_res_u), plane_size, 0.0105);
+						hit_box = boxCreator((o + hit_u*u), u, v, fErrorScale*std::sqrt(hit_res_u), plane_size, 0.0105);
 						hit_box->SetMainColor(kYellow);
 						hit_box->SetMainTransparency(0);
 						gEve->AddElement(hit_box);
@@ -466,7 +471,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 						// calculate the semiaxis of the error ellipse ----------------------------
 						det_shape->SetShape(new TGeoEltu(pseudo_res_0, pseudo_res_1, 0.0105));
-						TVector3 pix_pos = plane_pos + hit_u*u + hit_v*v;
+						TVector3 pix_pos = o + hit_u*u + hit_v*v;
 						TVector3 u_semiaxis = (pix_pos + eVec(0,0)*u + eVec(1,0)*v)-pix_pos;
 						TVector3 v_semiaxis = (pix_pos + eVec(0,1)*u + eVec(1,1)*v)-pix_pos;
 						TVector3 norm = u.Cross(v);
@@ -595,7 +600,10 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					TGeoRotation* det_rot = new TGeoRotation("det_rot",	(u.Theta()*180)/TMath::Pi(), (u.Phi()*180)/TMath::Pi(),
 							(norm.Theta()*180)/TMath::Pi(), (norm.Phi()*180)/TMath::Pi(),
 							(v.Theta()*180)/TMath::Pi(), (v.Phi()*180)/TMath::Pi());
-					TGeoMatrix* det_trans = new TGeoCombiTrans(o(0),o(1),o(2),det_rot);
+					TGeoMatrix* det_trans = new TGeoCombiTrans(o(0) + hit_v*v.X(),
+                                                     o(1) + hit_v*v.Y(),
+                                                     o(2) + hit_v*v.Z(),
+                                                     det_rot);
 					det_shape->SetTransMatrix(*det_trans);
 					// finished rotating and translating ------------------------------------------
 
