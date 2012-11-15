@@ -293,8 +293,18 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 				TVectorT<double> state;
 				TMatrixTSym<double> cov;
 				TMatrixT<double> auxInfo;
-				GFTools::getSmoothedData(track, irep, j, state, cov, plane, auxInfo);
-				rep->setData(state, plane, &cov, &auxInfo);
+				try{
+          GFTools::getBiasedSmoothedData(track, irep, j, state, cov, plane, auxInfo);
+          rep->setData(state, plane, &cov, &auxInfo);
+        }catch(GFException& e) {
+          std::cerr << "Error: Exception caught (getSmoothedData): Hit " << j << " in Track " << i << " skipped!" << std::endl;
+          std::cerr << e.what();
+          if (e.isFatal()) {
+            std::cerr<<"Fatal exception, skipping rest of the track"<<std::endl;
+            break;
+          }
+          else continue;
+        }
 			} else {
 				try{
 					plane = hit->getDetPlane(rep);
@@ -303,7 +313,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					std::cerr << "Error: Exception caught (getDetPlane): Hit " << j << " in Track " << i << " skipped!" << std::endl;
 					std::cerr << e.what();
 					if (e.isFatal()) {
-					  std::cerr<<"Fatal exception, skipping track"<<std::endl;
+					  std::cerr<<"Fatal exception, skipping rest of the track"<<std::endl;
 					  break;
 					}
 					else continue;
