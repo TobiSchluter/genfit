@@ -358,14 +358,11 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 				hit_res_u = hit_cov(0,0);
 				hit_res_v = 4;
 				plane_size = 4;
-			} else if (dynamic_cast<GFAbsWirepointHit*>(hit) != NULL) {
-        wire_hit = true;
-        wirepoint_hit = true;
-        hit_u = hit_coords(0);
-        hit_v = hit_coords(1);
-        hit_res_u = hit_cov(0,0);
-        hit_res_v = hit_cov(1,1);
-        plane_size = 4;
+				if (dynamic_cast<GFAbsWirepointHit*>(hit) != NULL) {
+				  wirepoint_hit = true;
+				  hit_v = hit_coords(1);
+				  hit_res_v = hit_cov(1,1);
+				}
       } else {
 				std::cout << "Track " << i << ", Hit " << j << ": Unknown policy name: skipping hit!" << std::endl;
 				break;
@@ -419,7 +416,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					TGeoMatrix* det_trans = new TGeoCombiTrans(o(0),o(1),o(2),det_rot);
 					det_shape->SetTransMatrix(*det_trans);
 					det_shape->SetMainColor(kCyan);
-					det_shape->SetMainTransparency(0);
+					det_shape->SetMainTransparency(25);
 					if((drawHits && (hit_u+0.0105/2 > 0)) || !drawHits) {
 						gEve->AddElement(det_shape);
 					}
