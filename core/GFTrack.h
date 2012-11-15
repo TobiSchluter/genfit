@@ -413,7 +413,7 @@ public:
    * Only hits which are subsequent in the GFTrackCand can be grouped together.
    * Hits with default planeId -1 will not be grouped together!
    */
-  bool getHitsByPlane(std::vector<std::vector<int>*>& retVal);
+  bool getHitsByPlane(std::vector< std::vector<int> >& retVal);
 
   /** @brief Switch smoothing on or off for this track.
    */

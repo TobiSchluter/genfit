@@ -298,11 +298,8 @@ void GFTrack::getHitMap(std::map<GFAbsRecoHit*, unsigned int>& hitMap) const {
 }
 
 
-bool GFTrack::getHitsByPlane(std::vector<std::vector<int>*>& retVal){
-  // clear retVal
-  for(int i=0;retVal.size();++i){
-    delete retVal.at(i);
-  }
+bool GFTrack::getHitsByPlane(std::vector< std::vector<int> >& retVal){
+
   retVal.clear();
 
   //this method can only be called when all hits have been loaded
@@ -318,8 +315,10 @@ bool GFTrack::getHitsByPlane(std::vector<std::vector<int>*>& retVal){
 
   lastPlaneId = planeId;
   lastDetId = detId;
-  retVal.push_back(new std::vector<int>);
-  retVal.at(0)->push_back(0);
+  std::vector<int> vec;
+  retVal.push_back(vec);
+  retVal.at(0).reserve(10);
+  retVal.at(0).push_back(0);
 
   // loop over hits
   for(unsigned int i=1; i<nHits; ++i){
@@ -327,13 +326,14 @@ bool GFTrack::getHitsByPlane(std::vector<std::vector<int>*>& retVal){
 
     // if the next hit is in the same detector and has the same plane id (but not the default plane id -1), group them together
     if(planeId != -1 && planeId == lastPlaneId && detId == lastDetId){
-      retVal.back()->push_back(i);
+      retVal.back().push_back(i);
     }
     else{
       lastPlaneId = planeId;
       lastDetId = detId;
-      retVal.push_back(new std::vector<int>);
-      retVal.back()->push_back(i);
+      retVal.push_back(vec);
+      retVal.back().reserve(10);
+      retVal.back().push_back(i);
     }
   }
 

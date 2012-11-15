@@ -246,7 +246,7 @@ std::vector<GFDafHit*> GFDaf::initHitsWeights(GFTrack* trk) {
 
   std::vector<GFDafHit*> eff_hits;
 
-  std::vector< std::vector<int>* > planes;
+  std::vector< std::vector<int> > planes;
   if(not trk->getHitsByPlane(planes)) return eff_hits;
   int nPlanes = planes.size();
 
@@ -254,8 +254,8 @@ std::vector<GFDafHit*> GFDaf::initHitsWeights(GFTrack* trk) {
 
     std::vector<GFAbsRecoHit*> hits;
 
-    for(unsigned int j=0; j<planes.at(i)->size(); j++) {
-      hits.push_back(trk->getHit(planes.at(i)->at(j)) );
+    for(unsigned int j=0; j<planes[i].size(); j++) {
+      hits.push_back(trk->getHit(planes[i][j]) );
     }
 
     GFDafHit* eff_hit;
