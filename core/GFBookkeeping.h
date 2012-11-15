@@ -73,7 +73,9 @@ class GFBookkeeping : public TObject {
   std::vector< std::string > getNumberKeys() const;
 
   void addFailedHit(unsigned int);
-  unsigned int hitFailed(unsigned int);
+  /** @brief How often did hit nr. iHit fail
+   */
+  unsigned int hitFailed(unsigned int iHit);
   unsigned int getNumFailed();
 
   GFBookkeeping(){fNhits=-1;}
