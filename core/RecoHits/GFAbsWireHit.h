@@ -67,7 +67,7 @@ class GFAbsWireHit : public GFAbsRecoHit {
    /** @brief Get detector plane 
     * Calls GFAbsTrackRep::extrapolateToLine for POCA.
     * The detector plane will contain the wire as plane vector v.
-    * The origin of the plane lies on the wire.
+    * The origin of the plane lies on the wire (first 3 hit coordinates).
     * The plane vector u will be perpendicular to the track direction at the POCA.
     * u = +-1 * (track direction) x (wire direction)
     * The direction of u will be selected according to fLeftRight.

@@ -111,7 +111,7 @@ GFAbsWireHit::getDetPlane(GFAbsTrackRep* rep)
   }
   else if (fLeftRight < 0) U *= -1.;
 
-  fDetPlane.set(poca_onwire, U, wiredirection);
+  fDetPlane.set(wire1, U, wiredirection);
   
   return fDetPlane;
 }

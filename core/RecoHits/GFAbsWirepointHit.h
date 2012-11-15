@@ -44,7 +44,7 @@
  * where w_ji (with j = x, y, z and i = 1, 2) are the wire
  * extremities coordinates; rdrift = distance from the wire (u 
  * coordinate in the plane) and zreco = coordinate along the
- * wire (in the plane reference frame, v coordinate).
+ * wire (w2 -w1) (in the plane reference frame, v coordinate).
  *
  */
 class GFAbsWirepointHit : public GFAbsWireHit {
