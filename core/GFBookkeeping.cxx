@@ -390,9 +390,8 @@ void GFBookkeeping::setNumber(const std::string& key, unsigned int index,
   (fNumbers[key])[index] = num;
 }
 
-bool GFBookkeeping::getVector(const std::string& key,
-			    unsigned int index,
-			    TVectorT<double>& vec) const {
+const TVectorT<double>&
+GFBookkeeping::getVector(const std::string& key, unsigned int index) const {
   std::map<std::string, std::vector<TVectorT<double> > >::const_iterator it;
   it = fVectors.find(key);
   if(it == fVectors.end()){
@@ -408,14 +407,11 @@ bool GFBookkeeping::getVector(const std::string& key,
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;    
   }
-  vec.ResizeTo(((*it).second)[index]);
-  vec = ((*it).second)[index];
-  return true;
+  return ((*it).second)[index];
 }
 
-bool GFBookkeeping::getMatrix(const std::string& key,
-			    unsigned int index,
-			    TMatrixT<double>& mat) const {
+const TMatrixT<double>&
+GFBookkeeping::getMatrix(const std::string& key, unsigned int index) const {
   std::map<std::string, std::vector<TMatrixT<double> > >::const_iterator it;
   it = fMatrices.find(key);
   if(it == fMatrices.end()){
@@ -431,14 +427,11 @@ bool GFBookkeeping::getMatrix(const std::string& key,
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;    
   }
-  mat.ResizeTo(((*it).second)[index]);
-  mat = ((*it).second)[index];
-  return true;
+  return ((*it).second)[index];
 }
 
-bool GFBookkeeping::getSymMatrix(const std::string& key,
-			    unsigned int index,
-			    TMatrixTSym<double>& mat) const {
+const TMatrixTSym<double>&
+GFBookkeeping::getSymMatrix(const std::string& key, unsigned int index) const {
   std::map<std::string, std::vector<TMatrixTSym<double> > >::const_iterator it;
   it = fSymMatrices.find(key);
   if(it == fSymMatrices.end()){
@@ -454,14 +447,11 @@ bool GFBookkeeping::getSymMatrix(const std::string& key,
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;    
   }
-  mat.ResizeTo(((*it).second)[index]);
-  mat = ((*it).second)[index];
-  return true;
+  return ((*it).second)[index];
 }
 
-bool GFBookkeeping::getDetPlane(const std::string& key,
-			      unsigned int index,
-			      GFDetPlane& pl) const {
+const GFDetPlane&
+GFBookkeeping::getDetPlane(const std::string& key, unsigned int index) const {
   std::map<std::string, std::vector<GFDetPlane> >::const_iterator it;
   it = fPlanes.find(key);
   if(it == fPlanes.end()){
@@ -477,13 +467,11 @@ bool GFBookkeeping::getDetPlane(const std::string& key,
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;    
   }
-  pl = ((*it).second)[index];
-  return true;
+  return ((*it).second)[index];
 }
 
-bool GFBookkeeping::getNumber(const std::string& key,
-			    unsigned int index,
-			    double& num) const {
+double
+GFBookkeeping::getNumber(const std::string& key, unsigned int index) const {
   std::map<std::string, std::vector<double> >::const_iterator it;
   it = fNumbers.find(key);
   if(it == fNumbers.end()){
@@ -499,8 +487,7 @@ bool GFBookkeeping::getNumber(const std::string& key,
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;    
   }
-  num = ((*it).second)[index];
-  return true;
+  return ((*it).second)[index];
 }
 
 void GFBookkeeping::addFailedHit(unsigned int id){
@@ -617,9 +604,7 @@ void GFBookkeeping::Print(const Option_t* option) const {
     std::cout << "key " << keys.at(i) << " has " << fNhits
 	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
-      TVectorT<double> m;
-      getVector(keys.at(i),j,m);
-      m.Print(option);
+      getVector(keys.at(i),j).Print(option);
     }
   }
   std::cout << "-----printing all matrices:------\n";
@@ -628,9 +613,7 @@ void GFBookkeeping::Print(const Option_t* option) const {
     std::cout << "key " << keys.at(i) << " has " << fNhits
 	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
-      TMatrixT<double> m;
-      getMatrix(keys.at(i),j,m);
-      m.Print(option);
+      getMatrix(keys.at(i),j).Print(option);
     }
   }
   std::cout << "-----printing all symmetric matrices:------\n";
@@ -639,9 +622,7 @@ void GFBookkeeping::Print(const Option_t* option) const {
     std::cout << "key " << keys.at(i) << " has " << fNhits
 	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
-      TMatrixTSym<double> m;
-      getSymMatrix(keys.at(i),j,m);
-      m.Print(option);
+      getSymMatrix(keys.at(i),j).Print(option);
     }
   }
   std::cout << "-----printing all GFDetPlanes:------\n";
@@ -650,9 +631,7 @@ void GFBookkeeping::Print(const Option_t* option) const {
     std::cout << "key " << keys.at(i) << " has " << fNhits
 	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
-      GFDetPlane p;
-      getDetPlane(keys.at(i),j,p);
-      p.Print(option);
+      getDetPlane(keys.at(i),j).Print(option);
     }
   }
   std::cout << "-----printing all numbers:------\n";
@@ -661,9 +640,7 @@ void GFBookkeeping::Print(const Option_t* option) const {
     std::cout << "key " << keys.at(i) << " has " << fNhits
 	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
-      double n(-1111.);
-      getNumber(keys.at(i),j,n);
-      std::cout << n << std::endl;
+      std::cout << getNumber(keys.at(i),j) << std::endl;
     }
   }
   std::cout << "-----failed hits:------\n";

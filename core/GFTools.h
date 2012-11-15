@@ -86,7 +86,7 @@ namespace GFTools {
 
 	/** @brief Get smoothing plane.
 	 */
-	GFDetPlane getSmoothingPlane(const GFTrack* trk, unsigned int irep, unsigned int ihit);
+	const GFDetPlane& getSmoothingPlane(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
 	/** @brief Get biased smoothed state vector and state covariance.
 	 */

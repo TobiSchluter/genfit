@@ -288,13 +288,6 @@ void GFDaf::copySmoothing(const GFTrack* source, GFTrack* target, int target_ire
   GFBookkeeping* targetBKirep = target->getBK(target_irep);
 
   std::vector< std::string > keys;
-  TVectorT<double>& vec = *(new TVectorT<double>);
-  TMatrixT<double>& mat = *(new TMatrixT<double>);
-  TMatrixTSym<double>& matSym = *(new TMatrixTSym<double>);
-  GFDetPlane& pl = *(new GFDetPlane);
-  double numVal = 0;
-  double& num = numVal;
-
 
   for(unsigned int pl_i=0; pl_i<source->getNumHits(); pl_i++) {
 
@@ -305,36 +298,31 @@ void GFDaf::copySmoothing(const GFTrack* source, GFTrack* target, int target_ire
       // copy vectors
       keys = sourceBK0->getVectorKeys();
       for (unsigned int iKey=0; iKey<keys.size(); ++iKey){
-        sourceBK0->getVector(keys[iKey], pl_i, vec);
-        targetBKirep->setVector(keys[iKey], hit_count, vec);
+        targetBKirep->setVector(keys[iKey], hit_count, sourceBK0->getVector(keys[iKey], pl_i));
       }
 
       // copy matrices
       keys = sourceBK0->getMatrixKeys();
       for (unsigned int iKey=0; iKey<keys.size(); ++iKey){
-        sourceBK0->getMatrix(keys[iKey], pl_i, mat);
-        targetBKirep->setMatrix(keys[iKey], hit_count, mat);
+        targetBKirep->setMatrix(keys[iKey], hit_count, sourceBK0->getMatrix(keys[iKey], pl_i));
       }
 
       // copy symmetric matrices
       keys = sourceBK0->getSymMatrixKeys();
       for (unsigned int iKey=0; iKey<keys.size(); ++iKey){
-        sourceBK0->getSymMatrix(keys[iKey], pl_i, matSym);
-        targetBKirep->setSymMatrix(keys[iKey], hit_count, matSym);
+        targetBKirep->setSymMatrix(keys[iKey], hit_count, sourceBK0->getSymMatrix(keys[iKey], pl_i));
       }
 
       // copy det planes
       keys = sourceBK0->getGFDetPlaneKeys();
       for (unsigned int iKey=0; iKey<keys.size(); ++iKey){
-        sourceBK0->getDetPlane(keys[iKey], pl_i, pl);
-        targetBKirep->setDetPlane(keys[iKey], hit_count, pl);
+        targetBKirep->setDetPlane(keys[iKey], hit_count, sourceBK0->getDetPlane(keys[iKey], pl_i));
       }
 
       // copy numbers
       keys = sourceBK0->getNumberKeys();
       for (unsigned int iKey=0; iKey<keys.size(); ++iKey){
-        sourceBK0->getNumber(keys[iKey], pl_i, num);
-        targetBKirep->setNumber(keys[iKey], hit_count, num);
+        targetBKirep->setNumber(keys[iKey], hit_count, sourceBK0->getNumber(keys[iKey], pl_i));
       }
 
       ++hit_count;

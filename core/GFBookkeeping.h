@@ -60,11 +60,11 @@ class GFBookkeeping : public TObject {
   void setDetPlane(const std::string& key,unsigned int index,const GFDetPlane& pl);
   void setNumber(const std::string& key,unsigned int index, const double& num);
 
-  bool getVector(const std::string& key, unsigned int index, TVectorT<double>& mat) const;
-  bool getMatrix(const std::string& key, unsigned int index, TMatrixT<double>& mat) const;
-  bool getSymMatrix(const std::string& key, unsigned int index, TMatrixTSym<double>& mat) const;
-  bool getDetPlane(const std::string& key, unsigned int index, GFDetPlane& pl)  const;
-  bool getNumber(const std::string& key, unsigned int index, double& num) const;
+  const TVectorT<double>& getVector(const std::string& key, unsigned int index) const;
+  const TMatrixT<double>& getMatrix(const std::string& key, unsigned int index) const;
+  const TMatrixTSym<double>& getSymMatrix(const std::string& key, unsigned int index) const;
+  const GFDetPlane& getDetPlane(const std::string& key, unsigned int index)  const;
+  double getNumber(const std::string& key, unsigned int index) const;
 
   std::vector< std::string > getVectorKeys() const;
   std::vector< std::string > getMatrixKeys() const;
