@@ -113,16 +113,23 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 
   std::vector<std::vector<double> > ret_val;
 
-  for(unsigned int i=0; i<trk->getNumHits(); i++) {
+  for(unsigned int i=0; i<trk->getNumHits(); ++i) {
 
     GFDafHit* eff_hit = static_cast<GFDafHit*>(trk->getHit(i));
     unsigned int nEffHits = eff_hit->getNumEffHits();
-    std::vector<double> phi;
-    double phi_sum = 0;
-    double phi_cut = 0;
 
     std::vector<double> weights;
 
+    if(trk->getBK(0)->hitFailed(i) > 0) { // failed hit
+      weights.assign(nEffHits,0.5);
+      //std::cout<<"Assumed weight 0.5!!"<<std::endl;
+      ret_val.push_back(weights);
+      continue;
+    }
+
+    std::vector<double> phi;
+    double phi_sum = 0;
+    double phi_cut = 0;
     TVectorT<double> smoothedState;
     TMatrixTSym<double> smoothedCov;
     GFDetPlane pl;
@@ -131,12 +138,6 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
     const TMatrixT<double>& H( trk->getHit(i)->getHMatrix(trk->getTrackRep(0)) );
     TVectorT<double> x_smoo(H * smoothedState);
 
-    if(x_smoo.GetNrows() == 0) {
-      weights.assign(nEffHits,0.5);
-      //std::cout<<"Assumed weight 0.5!!"<<std::endl;
-      ret_val.push_back(weights);
-      continue;
-    }
 
 
     for(unsigned int j=0; j<nEffHits; j++) {
