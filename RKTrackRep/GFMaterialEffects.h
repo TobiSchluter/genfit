@@ -25,8 +25,8 @@
 #define GFMATERIALEFFECTS_H
 
 #include "RKTools.h"
-#include "GFAbsMaterialInterface.h"
 #include "GFPointPath.h"
+#include <GFAbsMaterialInterface.h>
 
 #include <iostream>
 #include <vector>

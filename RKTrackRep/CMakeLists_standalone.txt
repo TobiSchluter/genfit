@@ -24,8 +24,6 @@ AUX_SOURCE_DIRECTORY(
 
 SET(GENFIT_RK_HEADERS 
 	RKTrackRep.h 
-	GFAbsMaterialInterface.h
-	GFTGeoMaterialInterface.h
 	GFMaterialEffects.h 
 	GFPointPath.h 
 	RKTools.h
