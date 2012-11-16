@@ -28,10 +28,8 @@
 #ifndef GFPOINTPATH_H
 #define GFPOINTPATH_H
 
-#include "math.h"
-#include "TVector3.h"
-#include "TGeoMaterial.h"
-
+#include <TVector3.h>
+#include <math.h>
 
 class GFPointPath {
 

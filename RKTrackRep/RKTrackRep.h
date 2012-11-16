@@ -28,12 +28,12 @@
 #ifndef RKTRACKREP_H
 #define RKTRACKREP_H
 
-
-#include "GFAbsTrackRep.h"
-#include "GFDetPlane.h"
-#include "GFTrackCand.h"
 #include "GFPointPath.h"
 #include "RKTools.h"
+
+#include <GFAbsTrackRep.h>
+#include <GFDetPlane.h>
+#include <GFTrackCand.h>
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
 

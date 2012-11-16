@@ -17,10 +17,10 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "GFPointPath.h"
 #include <iostream>
 #include <string>
-#include "stdlib.h"
-#include "GFPointPath.h"
+#include <stdlib.h>
 
 
 GFPointPath::GFPointPath() :

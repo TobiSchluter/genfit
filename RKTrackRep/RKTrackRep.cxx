@@ -24,11 +24,11 @@
 */
 
 #include "RKTrackRep.h"
-#include "TGeoManager.h"
-#include "TDatabasePDG.h"
-#include "GFException.h"
-#include "GFFieldManager.h"
-#include "GFMaterialEffects.h"
+
+#include <TDatabasePDG.h>
+#include <GFException.h>
+#include <GFFieldManager.h>
+#include <GFMaterialEffects.h>
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
 //#define DEBUG
@@ -1477,8 +1477,8 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
     if(fabs(Step) > MINSTEP){ // only call stepper if step estimation big enough
       double StepMat = GFMaterialEffects::getInstance()->stepper(fabs(Step),
                                                                  SmaxAngle,
-                                                                 pos.X(), pos.Y(), pos.Z(),
-                                                                 StepSign*dir.X(), StepSign*dir.Y(), StepSign*dir.Z(),
+                                                                 pos,
+                                                                 StepSign*dir,
                                                                  momentum,
                                                                  relMomLoss,
                                                                  fPdg);

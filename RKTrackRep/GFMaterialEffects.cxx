@@ -19,18 +19,16 @@
 
 #include "GFMaterialEffects.h"
 #include "GFException.h"
+
 #include <iostream>
+#include <stdexcept>
 #include <string>
-#include "stdlib.h"
+#include <stdlib.h>
+#include <math.h>
+#include <assert.h>
 
-#include "TDatabasePDG.h"
-#include "TGeoMedium.h"
-#include "TGeoMaterial.h"
-#include "TGeoManager.h"
-#include "TMath.h"
-
-#include "math.h"
-#include "assert.h"
+#include <TDatabasePDG.h>
+#include <TMath.h>
 
 
 //#define DEBUG
@@ -38,8 +36,6 @@
 
 GFMaterialEffects* GFMaterialEffects::finstance = NULL;
 
-float MeanExcEnergy_get(int Z);
-float MeanExcEnergy_get(TGeoMaterial*);
 
 
 GFMaterialEffects::GFMaterialEffects():
@@ -61,12 +57,14 @@ GFMaterialEffects::GFMaterialEffects():
   fpdg(0),
   fcharge(0),
   fmass(0),
-  fMscModelCode(0)
+  fMscModelCode(0),
+  fMaterialInterface(NULL)
 {
 }
 
 GFMaterialEffects::~GFMaterialEffects()
 {
+  if (fMaterialInterface != NULL) delete fMaterialInterface;
 }
 
 GFMaterialEffects* GFMaterialEffects::getInstance()
@@ -82,6 +80,16 @@ void GFMaterialEffects::destruct()
     finstance = NULL;
   }
 }
+
+void GFMaterialEffects::init(GFAbsMaterialInterface* matIfc){
+  if (fMaterialInterface != NULL) {
+    std::string msg("GFMaterialEffects::initMaterialInterface(): Already initialized! ");
+    std::runtime_error err(msg);
+  }
+  fMaterialInterface = matIfc;
+}
+
+
 
 void GFMaterialEffects::setMscModel(const std::string& modelName)
 {
@@ -109,6 +117,12 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
                                   const TVector3* directionAfter)
 {
 
+  if (fMaterialInterface == NULL) {
+    std::string msg("GFMaterialEffects hasn't been initialized with a correct GFAbsMaterialInterface pointer!");
+    std::runtime_error err(msg);
+    throw err;
+  }
+
   if (fNoEffects) return 0.;
 
   fpdg = pdg;
@@ -129,8 +143,7 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
       double step(0); // straight line step
       double realPath = points.at(i-1).getPath(); // real (curved) distance, signed
       
-      gGeoManager->InitTrack(points.at(i-1).X(), points.at(i-1).Y(), points.at(i-1).Z(),
-                             dir.X(), dir.Y(), dir.Z());
+      fMaterialInterface->initTrack(points.at(i-1).getPos(), dir);
 
       unsigned int nIter(0);
       static unsigned int maxIt(300);
@@ -142,10 +155,8 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
           throw exc;
         }
 
-        getMaterialParameters(gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial());
-
-        gGeoManager->FindNextBoundaryAndStep(dist - X);
-        step = gGeoManager->GetStep();
+        fMaterialInterface->getMaterialParameters(fmatDensity, fmatZ, fmatA, fradiationLength, fmEE);
+        step = fMaterialInterface->findNextBoundaryAndStep(dist - X);
         fstep = fabs(step * realPath / dist); // the actual path is curved, not straight!
         if (fstep <= 0.) continue;
         
@@ -180,16 +191,18 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
 
 double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
                                   const double& maxAngleStep,
-                                  const double& posx,
-                                  const double& posy,
-                                  const double& posz,
-                                  const double& dirx,
-                                  const double& diry,
-                                  const double& dirz,
+                                  const TVector3& pos,
+                                  const TVector3& dir,
                                   const double& mom,
                                   double& relMomLoss,
                                   const int& pdg)
 {
+
+  if (fMaterialInterface == NULL) {
+    std::string msg("GFMaterialEffects hasn't been initialized with a correct GFAbsMaterialInterface pointer!");
+    std::runtime_error err(msg);
+    throw err;
+  }
 
   static const double maxRelMomLoss = .005; // maximum relative momentum loss allowed
   static const double minStep = 1.E-4; // 1 µm
@@ -201,18 +214,9 @@ double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
   fpdg = pdg;
   double X(minStep);
   double relMomLossStep(0);
-  TGeoMaterial* mat(NULL);
   getParticleParameters(mom);
 
-  gGeoManager->InitTrack(posx+minStep*dirx,
-                         posy+minStep*diry,
-                         posz+minStep*dirz,
-                         dirx, diry, dirz);
-
-  #ifdef DEBUG
-    //gGeoManager->SetVerboseLevel(5);
-  #endif
-
+  fMaterialInterface->initTrack(pos+minStep*dir, dir);
 
   unsigned int nIter(0);
   static unsigned int maxIt(300);
@@ -225,19 +229,14 @@ double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
     }
 
     relMomLossStep = 0;
-    TGeoMedium* medium = gGeoManager->GetCurrentVolume()->GetMedium();
-    assert(medium != NULL);
-    mat = medium->GetMaterial();
-    gGeoManager->FindNextBoundaryAndStep(maxStep-X);
-    fstep = gGeoManager->GetStep();
+    fMaterialInterface->getMaterialParameters(fmatDensity, fmatZ, fmatA, fradiationLength, fmEE);
+    fstep = fMaterialInterface->findNextBoundaryAndStep(maxStep-X);
 
     #ifdef DEBUG
       std::cout<<"     gGeoManager->GetStep() = " << gGeoManager->GetStep() << "       fstep = " << fstep << "\n";
     #endif
 
     if (fstep <= 0.) continue;
-
-    getMaterialParameters(mat);
 
     if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
 
@@ -259,16 +258,6 @@ double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
   }
 
   return X;
-}
-
-
-void GFMaterialEffects::getMaterialParameters(TGeoMaterial* mat)
-{
-  fmatDensity      = mat->GetDensity();
-  fmatZ            = mat->GetZ();
-  fmatA            = mat->GetA();
-  fradiationLength = mat->GetRadLen();
-  fmEE             = MeanExcEnergy_get(mat);
 }
 
 
@@ -664,36 +653,3 @@ void GFMaterialEffects::noiseBrems(const double& mom,
 
 ClassImp(GFMaterialEffects)
 
-
-/*
-Reference for elemental mean excitation energies at:
-http://physics.nist.gov/PhysRefData/XrayMassCoef/tab1.html
-*/
-
-const int MeanExcEnergy_NELEMENTS = 93; // 0 = vacuum, 1 = hydrogen, 92 = uranium
-const float MeanExcEnergy_vals[] = {1.e15, 19.2, 41.8, 40.0, 63.7, 76.0, 78., 82.0, 95.0, 115.0, 137.0, 149.0, 156.0, 166.0, 173.0, 173.0, 180.0, 174.0, 188.0, 190.0, 191.0, 216.0, 233.0, 245.0, 257.0, 272.0, 286.0, 297.0, 311.0, 322.0, 330.0, 334.0, 350.0, 347.0, 348.0, 343.0, 352.0, 363.0, 366.0, 379.0, 393.0, 417.0, 424.0, 428.0, 441.0, 449.0, 470.0, 470.0, 469.0, 488.0, 488.0, 487.0, 485.0, 491.0, 482.0, 488.0, 491.0, 501.0, 523.0, 535.0, 546.0, 560.0, 574.0, 580.0, 591.0, 614.0, 628.0, 650.0, 658.0, 674.0, 684.0, 694.0, 705.0, 718.0, 727.0, 736.0, 746.0, 757.0, 790.0, 790.0, 800.0, 810.0, 823.0, 823.0, 830.0, 825.0, 794.0, 827.0, 826.0, 841.0, 847.0, 878.0, 890.0};
-
-float MeanExcEnergy_get(int Z)
-{
-  assert(Z >= 0 && Z < MeanExcEnergy_NELEMENTS);
-  return MeanExcEnergy_vals[Z];
-}
-
-float MeanExcEnergy_get(TGeoMaterial* mat)
-{
-  if (mat->IsMixture()) {
-    double logMEE = 0.;
-    double denom  = 0.;
-    TGeoMixture* mix = (TGeoMixture*)mat;
-    for (int i = 0; i < mix->GetNelements(); ++i) {
-      int index = int(floor((mix->GetZmixt())[i]));
-      logMEE += 1. / (mix->GetAmixt())[i] * (mix->GetWmixt())[i] * (mix->GetZmixt())[i] * log(MeanExcEnergy_get(index));
-      denom  += (mix->GetWmixt())[i] * (mix->GetZmixt())[i] * 1. / (mix->GetAmixt())[i];
-    }
-    logMEE /= denom;
-    return exp(logMEE);
-  } else { // not a mixture
-    int index = int(floor(mat->GetZ()));
-    return MeanExcEnergy_get(index);
-  }
-}
