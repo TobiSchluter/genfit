@@ -5,10 +5,12 @@
 #include <GFException.h>
 #include <GFFieldManager.h>
 #include <GFKalman.h>
+#include <GFDaf.h>
 #include <GFTools.h>
 #include <GFTrack.h>
 #include <GFMaterialEffects.h>
 #include <RKTrackRep.h>
+#include <GFTGeoMaterialInterface.h>
 #include <GFRectFinitePlane.h>
 #include <TApplication.h>
 #include <TCanvas.h>
@@ -45,14 +47,16 @@ int main() {
   const double thetaDetPlane = 90;         // degree
   const double phiDetPlane = 0;         // degree
   const double pointDist = 2;      // cm; approx. distance between hits generated w/ RKTrackRep
-  const double pointDistDeg = 5;      // degree; distance between hits generated w/ helix model
+  const double pointDistDeg = 2;      // degree; distance between hits generated w/ helix model
   const double resolution = 0.02;   // cm; resolution of generated hits
 
   const double resolutionWire = 5*resolution;   // cm; resolution of generated hits
-  const TVector3 wireDir(0.5,1,2);
+  const TVector3 wireDir(0.,0.,1.);
   const double minDrift = 0;
   const double maxDrift = 2;
   const bool idealLRResolution = true; // resolve the l/r ambiguities of the wire hits
+
+  const bool useDaf = false;
 
   const int pdg = 13;               // particle pdg code
 
@@ -64,7 +68,6 @@ int main() {
 
   const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
   const bool smoothing = true;
-  const bool fastSmoothing = true;
 
   const bool debug = false;
 
@@ -79,7 +82,7 @@ int main() {
   hitTypes.push_back(0);
   hitTypes.push_back(0);
   hitTypes.push_back(0);
-  hitTypes.push_back(1);
+  /*hitTypes.push_back(1);
   hitTypes.push_back(1);
   hitTypes.push_back(1);
   hitTypes.push_back(2);
@@ -87,26 +90,33 @@ int main() {
   hitTypes.push_back(2);
   hitTypes.push_back(3);
   hitTypes.push_back(3);
-  hitTypes.push_back(3);
+  hitTypes.push_back(3);*/
   hitTypes.push_back(4);
   hitTypes.push_back(4);
   hitTypes.push_back(4);
   hitTypes.push_back(4);
   hitTypes.push_back(4);
   hitTypes.push_back(4);
-  hitTypes.push_back(5);
-  hitTypes.push_back(5);
-  hitTypes.push_back(5);
-  hitTypes.push_back(5);
-  hitTypes.push_back(5);
-  hitTypes.push_back(5);
+  hitTypes.push_back(4);
+  hitTypes.push_back(4);
+  hitTypes.push_back(4);
+  hitTypes.push_back(4);
+  hitTypes.push_back(4);
+  hitTypes.push_back(4);
+  hitTypes.push_back(4);
+  hitTypes.push_back(4);
+
+  //hitTypes.push_back(5);
 
 
 
 
-  // init fitter
+  // init fitters
   GFKalman kalman;
   kalman.setNumIterations(3);
+
+  GFDaf daf;
+
 
 	gRandom->SetSeed(10);
 
@@ -118,6 +128,7 @@ int main() {
   TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
   GFFieldManager::getInstance()->init(new GFConstField(0.,0.,BField));
+  GFMaterialEffects::getInstance()->init(new GFTGeoMaterialInterface());
 
   const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
 
@@ -315,7 +326,7 @@ int main() {
       }
       catch(GFException& e){
 	      std::cerr<<"Exception, next track"<<std::endl;
-	      e.what();
+	      std::cerr<< e.what();
 	      continue; // here is a memleak!
       } 
       
@@ -330,21 +341,30 @@ int main() {
 		  // create track
       if (fitTrack != NULL) delete fitTrack;
 		  fitTrack = new GFTrack(rep); //initialized with smeared rep
-		  fitTrack->setSmoothing(smoothing, fastSmoothing);
+		  fitTrack->setSmoothing(smoothing);
 		  
 		  // add hits
       for(unsigned int i=0; i<hits.size(); ++i){
         fitTrack->addHit(hits[i],
-		                    3,//dummy detector id
-		                    i);
+                         hitTypes[i], //detector id
+		                     i); // hit id
       }
+
+      // print trackCand
+      if (debug) fitTrack->getCand().Print();
 
 
 		  
 		  // do the fit
       try{
-        if (debug) std::cerr<<"Starting the fitter"<<std::endl;
-        kalman.processTrack(fitTrack);
+        if (useDaf) {
+          if (debug) std::cerr<<"Starting the fitter (Daf)"<<std::endl;
+          daf.processTrack(fitTrack);
+        }
+        else {
+          if (debug) std::cerr<<"Starting the fitter (Kalman)"<<std::endl;
+          kalman.processTrack(fitTrack);
+        }
         if (debug) std::cerr<<"fitter is finished!"<<std::endl;
       }
       catch(GFException& e){
@@ -425,6 +445,7 @@ int main() {
 			  }
       }
 
+		  if (debug) std::cerr<<"Fill Tree ..." << std::endl;
 			tree->Fill();
 
 				          
