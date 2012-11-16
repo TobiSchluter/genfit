@@ -9,6 +9,7 @@
 #include <GFTrack.h>
 #include <GFMaterialEffects.h>
 #include <RKTrackRep.h>
+#include <GFTGeoMaterialInterface.h>
 #include <GeaneTrackRep2.h>
 #include <GFRectFinitePlane.h>
 #include <TApplication.h>
@@ -80,6 +81,7 @@ int main() {
   TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
   GFFieldManager::getInstance()->init(new GFConstField(0.,0.,BField));
+  GFMaterialEffects::getInstance()->init(new GFTGeoMaterialInterface());
 
   // init Geane
   if (GEANEhits || testRep==2 || testRep==3) {
