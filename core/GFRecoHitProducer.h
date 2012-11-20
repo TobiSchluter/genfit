@@ -73,17 +73,17 @@ public:
  * @param hit_t template parameter specifying cluster class
  * @param recoHit_t template parameter specifying recoHit
  */
+
+
 template <class hit_T,class recoHit_T>
 class GFRecoHitProducer : public GFAbsRecoHitProducer {
  private:
   /** @brief pointer to array with cluster data */
   TClonesArray* hitArrayTClones;
-  //std::vector<GFAbsRecoHit*>* hitArrayVector;
- public:
 
+ public:
   /** @brief Constructor takes pointer to the cluster array */
   GFRecoHitProducer(TClonesArray*);
-  //GFRecoHitProducer(std::vector<GFAbsRecoHit*>*);
   virtual ~GFRecoHitProducer();
 
   /** @brief Create a RecoHit from the cluster at position index 
@@ -93,47 +93,27 @@ class GFRecoHitProducer : public GFAbsRecoHitProducer {
 };
 /** @} */
 
+
 template <class hit_T,class recoHit_T>
 GFRecoHitProducer<hit_T,recoHit_T>::GFRecoHitProducer(TClonesArray* theArr) {
   hitArrayTClones = theArr;
-  //hitArrayVector = NULL;
 }
-/*
-template <class hit_T,class recoHit_T>
-  GFRecoHitProducer<hit_T,recoHit_T>::GFRecoHitProducer(std::vector<GFAbsRecoHit*>* theArr) {
-  hitArrayTClones = NULL;
-  hitArrayVector = theArr;
-}
-*/
 
 template <class hit_T,class recoHit_T>
 GFRecoHitProducer<hit_T,recoHit_T>::~GFRecoHitProducer() {
-  //we dont assume ownership over the hit arrays
+  // we don't assume ownership over the hit arrays
 }
-
 
 template <class hit_T,class recoHit_T>
 GFAbsRecoHit* GFRecoHitProducer<hit_T,recoHit_T>::produce(int index) {
   assert(hitArrayTClones!=NULL);
-  //assert(hitArrayTClones!=NULL || hitArrayVector!=NULL);//at least one exists
-  //assert(!(hitArrayTClones!=NULL && hitArrayVector!=NULL));//but not both
-  //if(hitArrayTClones!=NULL){
-    //the ROOT guys really use 0 and not NULL grrr...
+  //the ROOT guys really use 0 and not NULL grrr...
   if(hitArrayTClones->At(index) == 0) {
     GFException e("In GFRecoHitProducer: index for hit in TClonesArray out of bounds",__LINE__,__FILE__);
     e.setFatal();
     throw e;
   }
   return ( new recoHit_T( (hit_T*) hitArrayTClones->At(index) ) );
-  //}
-  //else{//after assertions this is save: the hitArrayVector is good
-  //  if(index >= hitArrayVector->size()) {
-  //    GFException e("In GFRecoHitProducer: index for hit in std::vector out of bounds",__LINE__,__FILE__);
-  //    e.setFatal();
-  //    throw e;
-  //  }
-  //  return ( new recoHit_T( (hit_T*) hitArrayVector->at(index) ) );
-  //}
 }
 
 
