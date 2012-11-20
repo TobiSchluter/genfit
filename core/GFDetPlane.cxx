@@ -44,7 +44,7 @@ GFDetPlane::GFDetPlane(GFAbsFinitePlane* finite)
   fO.SetXYZ(0.,0.,0.);
   fU.SetXYZ(1.,0.,0.);
   fV.SetXYZ(0.,1.,0.);
-  sane();
+  // sane() not needed here
 }
 
 GFDetPlane::GFDetPlane(const TVector3& o,
