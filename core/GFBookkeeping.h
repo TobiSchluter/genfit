@@ -45,7 +45,14 @@ class GFBookkeeping : public TObject {
   int fNhits;
 
  public:
+  /** @brief Keep all keys and clear only the data.
+   * Resize the data vectors to fNhits.
+   * Also clears fFailedHits.
+   */
   void reset();
+
+  /** @brief Set number of hits, clear data but keep keys.
+   */
   void setNhits(int n){fNhits=n; reset();}
 
   void bookVectors(const std::string& key);
@@ -60,11 +67,11 @@ class GFBookkeeping : public TObject {
   void setDetPlane(const std::string& key,unsigned int index,const GFDetPlane& pl);
   void setNumber(const std::string& key,unsigned int index, const double& num);
 
-  const TVectorT<double>& getVector(const std::string& key, unsigned int index) const;
-  const TMatrixT<double>& getMatrix(const std::string& key, unsigned int index) const;
+  const TVectorT<double>&    getVector(const std::string& key, unsigned int index) const;
+  const TMatrixT<double>&    getMatrix(const std::string& key, unsigned int index) const;
   const TMatrixTSym<double>& getSymMatrix(const std::string& key, unsigned int index) const;
-  const GFDetPlane& getDetPlane(const std::string& key, unsigned int index)  const;
-  double getNumber(const std::string& key, unsigned int index) const;
+  const GFDetPlane&          getDetPlane(const std::string& key, unsigned int index)  const;
+  double                     getNumber(const std::string& key, unsigned int index) const;
 
   std::vector< std::string > getVectorKeys() const;
   std::vector< std::string > getMatrixKeys() const;
@@ -82,13 +89,18 @@ class GFBookkeeping : public TObject {
   GFBookkeeping(const GFBookkeeping&);
   virtual ~GFBookkeeping(){clearAll();}
 
+  /** @brief clear fVectors, fMatrices, fSymMatrices, fPlanes, fNumbers
+   */
   void clearAll();
+
+  /** @brief clear fFailedHits
+   */
   void clearFailedHits();
 
   void Print(const Option_t* = "") const;
 
  private:
-  //protect from call of not yet defined assignement operator
+  //protect from call of not yet defined assignment operator
   GFBookkeeping& operator=(const GFBookkeeping&){
     return *this;
   }
