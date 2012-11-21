@@ -661,14 +661,18 @@ double RKTrackRep::extrapolateToPoint(const TVector3& pos,
 
 TVector3 RKTrackRep::poca2Line(const TVector3& extr1,const TVector3& extr2,const TVector3& point) const {
   
-  TVector3 theWire = extr2-extr1;
+  TVector3 theWire(extr2);
+  theWire -= extr1;
+
   if(theWire.Mag()<1.E-8){
     GFException exc("RKTrackRep::poca2Line ==> try to find POCA between line and point, but the line is really just a point",__LINE__,__FILE__);
     throw exc;
   }
 
-  double t = 1./(theWire*theWire) * (point*theWire + extr1*extr1 - extr1*extr2);
-  return (extr1 + t*theWire);
+  double t = 1./(theWire.Mag2()) * ((point*theWire) + extr1.Mag2() - (extr1*extr2));
+  theWire *= t;
+  theWire += extr1;
+  return theWire; // theWire is now PocaOnLine = extr1 + t*theWire
 }
 
 
