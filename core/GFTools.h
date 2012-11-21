@@ -130,11 +130,12 @@ namespace GFTools {
 	double getTrackLength(const GFTrack* trk, unsigned int irep, unsigned int startHit=0, unsigned int endHit=0);
 
 	/** @brief Invert a matrix, throwing GFException when inversion fails.
+	 * Optional calculation of determinant.
 	 */
-	void invertMatrix(const TMatrixTSym<double>& mat, TMatrixTSym<double>& inv);
+	void invertMatrix(const TMatrixTSym<double>& mat, TMatrixTSym<double>& inv, double* determinant = NULL);
 	/** @brief Same, replacing its argument.
 	 */
-	void invertMatrix(TMatrixTSym<double>& mat);
+	void invertMatrix(TMatrixTSym<double>& mat, double* determinant = NULL);
 	/** @brief Get smoothed chi2 for a specific hit (ihit).
 	 *
 	 * This function calculates a smoothed chi2 value for a specific hit from the

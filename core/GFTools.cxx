@@ -398,7 +398,7 @@ double GFTools::getTrackLength(const GFTrack* trk, unsigned int irep, unsigned i
 
 }
 
-void GFTools::invertMatrix(const TMatrixTSym<double>& mat, TMatrixTSym<double>& inv){
+void GFTools::invertMatrix(const TMatrixTSym<double>& mat, TMatrixTSym<double>& inv, double* determinant){
 	inv.ResizeTo(mat);
 
 	// check if numerical limits are reached (i.e at least one entry < 1E-100 and/or at least one entry > 1E100)
@@ -410,10 +410,12 @@ void GFTools::invertMatrix(const TMatrixTSym<double>& mat, TMatrixTSym<double>& 
 	}
 	// do the trivial inversions for 1x1 and 2x2 matrices manually
 	if (mat.GetNrows() == 1){
+	  if (determinant != NULL) *determinant = mat(0,0);
 	  inv(0,0) = 1./mat(0,0);
 	  return;
 	} if (mat.GetNrows() == 2){
 	  double det = mat(0,0)*mat(1,1) - mat(1,0)*mat(1,0);
+	  if (determinant != NULL) *determinant = det;
 	  if(fabs(det) < 1E-50){
 	    GFException e("cannot invert matrix GFTools::invertMatrix(), determinant = 0",
 	        __LINE__,__FILE__);
@@ -429,9 +431,7 @@ void GFTools::invertMatrix(const TMatrixTSym<double>& mat, TMatrixTSym<double>& 
 
 	// else use TDecompChol
 	bool status = 0;
-	TDecompChol invertAlgo(mat);
-
-	invertAlgo.SetTol(1E-50); //this is a hack because a tolerance of 1E-22 does not make any sense for doubles only for floats
+	TDecompChol invertAlgo(mat, 1E-50);
 
 	status = invertAlgo.Invert(inv);
 	if(status == 0){
@@ -440,9 +440,15 @@ void GFTools::invertMatrix(const TMatrixTSym<double>& mat, TMatrixTSym<double>& 
 		e.setFatal();
 		throw e;
 	}
+
+	if (determinant != NULL) {
+    double d1, d2;
+    invertAlgo.Det(d1, d2);
+	  *determinant = ldexp(d1, d2);
+	}
 }
 
-void GFTools::invertMatrix(TMatrixTSym<double>& mat){
+void GFTools::invertMatrix(TMatrixTSym<double>& mat, double* determinant){
 	// check if numerical limits are reached (i.e at least one entry < 1E-100 and/or at least one entry > 1E100)
 	if (!(mat<1.E100) || !(mat>-1.E100)){
 		GFException e("cannot invert matrix GFTools::invertMatrix(), entries too big (>1e100)",
@@ -452,11 +458,13 @@ void GFTools::invertMatrix(TMatrixTSym<double>& mat){
 	}
 	// do the trivial inversions for 1x1 and 2x2 matrices manually
 	if (mat.GetNrows() == 1){
+	  if (determinant != NULL) *determinant = mat(0,0);
 	  mat(0,0) = 1./mat(0,0);
 	  return;
 	} else if (mat.GetNrows() == 2){
 	  double *arr = mat.GetMatrixArray();
 	  double det = arr[0]*arr[3] - arr[1]*arr[1];
+	  if (determinant != NULL) *determinant = det;
 	  if(fabs(det) < 1E-50){
 	    GFException e("cannot invert matrix GFTools::invertMatrix(), determinant = 0",
 	        __LINE__,__FILE__);
@@ -477,9 +485,7 @@ void GFTools::invertMatrix(TMatrixTSym<double>& mat){
 
 	// else use TDecompChol
 	bool status = 0;
-	TDecompChol invertAlgo(mat);
-
-	invertAlgo.SetTol(1E-50); //this is a hack because a tolerance of 1E-22 does not make any sense for doubles only for floats
+	TDecompChol invertAlgo(mat, 1E-50);
 
 	status = invertAlgo.Invert(mat);
 	if(status == 0){
@@ -488,6 +494,12 @@ void GFTools::invertMatrix(TMatrixTSym<double>& mat){
 		e.setFatal();
 		throw e;
 	}
+
+  if (determinant != NULL) {
+    double d1, d2;
+    invertAlgo.Det(d1, d2);
+    *determinant = ldexp(d1, d2);
+  }
 }
 
 void GFTools::updateRepSmoothed(GFTrack* trk, unsigned int irep, unsigned int ihit) {

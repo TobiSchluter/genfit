@@ -141,37 +141,41 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
 
 
     for(unsigned int j=0; j<nEffHits; j++) {
-      TVectorT<double> m;
-      TMatrixTSym<double> Vorig;
+      double* detV = new double(0);
+
       try{
-        eff_hit->getMeasurement(trk->getTrackRep(0), pl, smoothedState, smoothedCov, m, Vorig, j);
-      } catch(GFException& e) {
+        TVectorT<double> m;
+        TMatrixTSym<double> Vorig;
+        eff_hit->getMeasurement(trk->getTrackRep(0), pl, smoothedState, smoothedCov, m, Vorig, j); // can throw a GFException
+
+        TMatrixTSym<double> V( beta * Vorig);
+        TVectorT<double> resid(m - x_smoo);
+        TMatrixTSym<double> Vinv;
+        GFTools::invertMatrix(V, Vinv, detV); // can throw a GFException
+
+        phi.push_back((1./(pow(2.*TMath::Pi(),V.GetNrows()/2.)*sqrt(*detV)))*exp(-0.5*Vinv.Similarity(resid)));
+        phi_sum += phi.at(j);
+
+        double cutVal = fchi2Cuts[V.GetNrows()];
+        assert(cutVal>1.E-6);
+        phi_cut += (1./(pow(2.*TMath::Pi(),V.GetNrows()/2.)*sqrt(*detV)))*exp(-0.5*cutVal/beta);
+      }
+      catch(GFException& e) {
+        delete detV;
         e.what();
         e.info();
         phi.push_back(0); //m and Vorig do not contain sensible values, assign weight 0
         continue;
       }
 
-      TMatrixTSym<double> V( beta * Vorig);
-      TVectorT<double> resid(m - x_smoo);
-      double detV = V.Determinant();
-      TMatrixTSym<double> Vinv;
-      GFTools::invertMatrix(V,Vinv);
-
-      phi.push_back((1./(pow(2.*TMath::Pi(),V.GetNrows()/2.)*sqrt(detV)))*exp(-0.5*Vinv.Similarity(resid)));
-      phi_sum += phi.at(j);
-
-      double cutVal = fchi2Cuts[V.GetNrows()];
-      assert(cutVal>1.E-6);
-      phi_cut += (1./(pow(2.*TMath::Pi(),V.GetNrows()/2.)*sqrt(detV)))*exp(-0.5*cutVal/beta);
+      delete detV;
 
     }
 
     for(unsigned int j=0; j<nEffHits; j++) {
-
       weights.push_back(phi.at(j)/(phi_sum+phi_cut));
-
     }
+
     ret_val.push_back(weights);
 
   }
