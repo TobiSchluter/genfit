@@ -577,17 +577,23 @@ void GFBookkeeping::reset() {
 
   std::map<std::string, std::vector<TVectorT<double> > >::iterator itVec;
   for(itVec=fVectors.begin(); itVec!=fVectors.end(); ++itVec){
-    itVec->second.assign(nHits, TVectorT<double>());
+    itVec->second.clear();
+    itVec->second.resize(nHits);
+    //itVec->second.assign(nHits, TVectorT<double>()); // does not work if vector is not empty, because he tries to use TVectorT = operator, which complains about non matching dimensions!
   }
 
   std::map<std::string, std::vector<TMatrixT<double> > >::iterator itMat;
   for(itMat=fMatrices.begin(); itMat!=fMatrices.end(); ++itMat){
-    itMat->second.assign(nHits, TMatrixT<double>());
+    itMat->second.clear();
+    itMat->second.resize(nHits);
+    //itMat->second.assign(nHits, TMatrixT<double>());
   }
 
   std::map<std::string, std::vector<TMatrixTSym<double> > >::iterator itMatSym;
   for(itMatSym=fSymMatrices.begin(); itMatSym!=fSymMatrices.end(); ++itMatSym){
-    itMatSym->second.assign(nHits, TMatrixTSym<double>());
+    itMatSym->second.clear();
+    itMatSym->second.resize(nHits);
+    //itMatSym->second.assign(nHits, TMatrixTSym<double>());
   }
 
   std::map<std::string, std::vector<GFDetPlane> >::iterator itPl;
