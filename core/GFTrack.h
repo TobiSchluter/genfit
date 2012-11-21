@@ -161,9 +161,6 @@ public:
    * All hits from trk will be merged into this GFTrack. 
    * trk will be empty afterwards.
    *
-   * Kalman::continueTrack can be used to include the newly added hits 
-   * in the fit.
-   *
    * Note that the new hits are inserted at the end of the present track!
    */
   void mergeHits(GFTrack* trk); 

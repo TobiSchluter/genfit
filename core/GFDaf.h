@@ -75,7 +75,7 @@ class GFDaf : public GFAbsFitter {
 
 	private:
 
-		/** @brief Initialize the GFDafHit and their weights before the fit.
+		/** @brief Initialize the GFDafHits and their weights before the fit.
 		 */
 		std::vector<GFDafHit*> initHitsWeights(GFTrack* trk);
 

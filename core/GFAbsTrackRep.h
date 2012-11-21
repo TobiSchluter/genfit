@@ -49,9 +49,6 @@ class GFAbsRecoHit;
  * - A track representation is a specific parameterization of a trajectory. 
  * It contains the parameters that describe the track at some point and 
  * code for the extrapolation of the track parameters through space. 
- * The actual extrapolation code is not part of genfit but has to be supplied
- * in some additional package (e.g. GEANE). LSLTrackRep is a very basic example
- * of a track representation.
  * - A Track is a collection of RecoHits (see GFAbsRecoHit) plus a collection
  * of track representation objects. The hits can be from different detectors.
  * There can be several representations of the same track. This makes it 
@@ -111,7 +108,7 @@ class GFAbsTrackRep : public TObject{
   GFDetPlane fLastPlane;  
 
   // detector plane where the track parameters are given
-  GFDetPlane         fRefPlane;
+  GFDetPlane fRefPlane;
 
   double fXX0;
 
