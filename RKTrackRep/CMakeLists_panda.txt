@@ -19,12 +19,15 @@ link_directories( ${LINK_DIRECTORIES})
 
 set(GENFIT_RK_SRCS 
 	RKTrackRep.cxx 
+	GFTGeoMaterialInterface.cxx
 	GFMaterialEffects.cxx 
 	GFPointPath.h 
 	RKTools.cxx)
 
 set(GENFIT_RK_HEADERS
 	RKTrackRep.h 
+	GFAbsMaterialInterface.h
+	GFTGeoMaterialInterface.h
 	GFMaterialEffects.h 
 	GFPointPath.h 
 	RKTools.h

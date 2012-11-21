@@ -22,7 +22,6 @@ set(GENFIT_SRCS
 	GFKalman.cxx 
 	GFRecoHitFactory.cxx 
 	GFRecoHitProducer.cxx 
-	GFTGeoMaterialInterface.cxx
 	GFTools.cxx 
 	GFTrackCand.cxx 
 	GFTrackCandHit.cxx  
@@ -44,8 +43,7 @@ set(GENFIT_SRCS
 )
 
 set(GENFIT_HEADERS  
-    GFAbsFitter.h
-    GFAbsMaterialInterface.h
+  GFAbsFitter.h
 	GFAbsTrackRep.h 
 	GFBookkeeping.h
 	GFDetPlane.h 
@@ -53,7 +51,6 @@ set(GENFIT_HEADERS
 	GFKalman.h 
 	GFRecoHitFactory.h 
 	GFRecoHitProducer.h 
-	GFTGeoMaterialInterface.h
 	GFTools.h 
 	GFTrackCand.h 
 	GFTrackCandHit.h  

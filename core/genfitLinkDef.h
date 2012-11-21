@@ -43,7 +43,5 @@
 #pragma link C++ class GFAbsFinitePlane+;
 #pragma link C++ class GFRectFinitePlane+;
 #pragma link C++ class GFFieldManager+;
-#pragma link C++ class GFAbsMaterialInterface+;
-#pragma link C++ class GFTGeoMaterialInterface+;
 
 #endif
