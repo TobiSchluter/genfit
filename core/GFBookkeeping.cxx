@@ -577,28 +577,35 @@ void GFBookkeeping::reset() {
 
   std::map<std::string, std::vector<TVectorT<double> > >::iterator itVec;
   for(itVec=fVectors.begin(); itVec!=fVectors.end(); ++itVec){
-    itVec->second.clear();
-    itVec->second.resize(nHits);
-    //itVec->second.assign(nHits, TVectorT<double>()); // does not work if vector is not empty, because he tries to use TVectorT = operator, which complains about non matching dimensions!
+    if (itVec->second.size()>0) {
+      TVectorT<double> vec(itVec->second[0]);
+      itVec->second.assign(nHits, vec);
+    }
+    else itVec->second.resize(nHits);
   }
 
   std::map<std::string, std::vector<TMatrixT<double> > >::iterator itMat;
   for(itMat=fMatrices.begin(); itMat!=fMatrices.end(); ++itMat){
-    itMat->second.clear();
-    itMat->second.resize(nHits);
-    //itMat->second.assign(nHits, TMatrixT<double>());
+    if (itMat->second.size()>0) {
+      TMatrixT<double> mat(itMat->second[0]);
+      itMat->second.assign(nHits, mat);
+    }
+    else itMat->second.resize(nHits);
   }
 
   std::map<std::string, std::vector<TMatrixTSym<double> > >::iterator itMatSym;
   for(itMatSym=fSymMatrices.begin(); itMatSym!=fSymMatrices.end(); ++itMatSym){
-    itMatSym->second.clear();
-    itMatSym->second.resize(nHits);
-    //itMatSym->second.assign(nHits, TMatrixTSym<double>());
+    if (itMatSym->second.size()>0){
+      TMatrixTSym<double> matSym(itMatSym->second[0]);
+      itMatSym->second.assign(nHits, matSym);
+    }
+    else itMatSym->second.resize(nHits);
   }
 
   std::map<std::string, std::vector<GFDetPlane> >::iterator itPl;
   for(itPl=fPlanes.begin(); itPl!=fPlanes.end(); ++itPl){
-    itPl->second.assign(nHits, GFDetPlane());
+    GFDetPlane pl;
+    itPl->second.assign(nHits, pl);
   }
 
   std::map<std::string, std::vector<double> >::iterator itNum;
