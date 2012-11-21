@@ -130,15 +130,13 @@ GFAbsWireHit::checkPlane(const GFDetPlane& plane)
 {
   assert(fHitCoord.GetNrows()>6);
 
-  TVector3 wire1(fHitCoord(0), fHitCoord(1), fHitCoord(2));
-  TVector3 wire2(fHitCoord(3), fHitCoord(4), fHitCoord(5));
-  TVector3 wiredirection = wire1 - wire2;
+  TVector3 wiredirection(fHitCoord(3) - fHitCoord(0),
+                         fHitCoord(4) - fHitCoord(1),
+                         fHitCoord(5) - fHitCoord(2));
 
-  TVector3 vaxis = plane.getV();
   wiredirection.SetMag(1.);
-  vaxis.SetMag(1.);
 
-  if(fabs(TMath::Abs(wiredirection.Dot(vaxis)) - 1) > 1e-3) {
+  if(fabs(fabs(wiredirection.Dot(plane.getV())) - 1) > 1e-3) {
     GFException exc("GFAbsWireHit: plane not valid!!", __LINE__,__FILE__);
     throw exc;
   }
