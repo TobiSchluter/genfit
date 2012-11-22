@@ -39,7 +39,7 @@ void GFException::setNumbers(std::string _numbersLabel,
 }
 
 void GFException::setMatrices(std::string _matricesLabel,
-				  const std::vector< TMatrixT<double> >& _matrices) {
+				  const std::vector<TMatrixD>& _matrices) {
   fMatricesLabel = _matricesLabel;
   fMatrices = _matrices;
 }

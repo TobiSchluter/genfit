@@ -28,9 +28,9 @@
 #include <list>
 #include <iostream>
 
-#include <TVectorT.h>
-#include <TMatrixT.h>
-#include <TMatrixTSym.h>
+#include <TVectorD.h>
+#include <TMatrixD.h>
+#include <TMatrixDSym.h>
 #include <TMath.h>
 
 #include "GFDetPlane.h"
@@ -85,10 +85,10 @@ class GFAbsTrackRep : public TObject{
   unsigned int fDimension;
 
   //! The vector of track parameters
-  TVectorT<double> fState;
+  TVectorD fState;
   
   //! The covariance matrix
-  TMatrixTSym<double> fCov;   
+  TMatrixDSym fCov;   
 
   //! chiSqu of the track fit
   double           fChiSqu;
@@ -99,11 +99,11 @@ class GFAbsTrackRep : public TObject{
   int fStatusFlag; 
 
   //!state, cov and plane for first and last point in fit
-  TVectorT<double> fFirstState; 
-  TMatrixTSym<double> fFirstCov;
+  TVectorD fFirstState; 
+  TMatrixDSym fFirstCov;
 
-  TVectorT<double> fLastState; 
-  TMatrixTSym<double> fLastCov;
+  TVectorD fLastState; 
+  TMatrixDSym fLastCov;
   GFDetPlane fFirstPlane;  
   GFDetPlane fLastPlane;  
 
@@ -125,7 +125,7 @@ class GFAbsTrackRep : public TObject{
      overwrite it.
      This method does NOT alter the state of the object!
   */
-  virtual double extrapolate(const GFDetPlane& plane, TVectorT<double>& statePred);
+  virtual double extrapolate(const GFDetPlane& plane, TVectorD& statePred);
 
 
  public:
@@ -182,8 +182,8 @@ class GFAbsTrackRep : public TObject{
       This method does NOT alter the state of the object!
    */ 
   virtual double extrapolate(const GFDetPlane& plane,
-           TVectorT<double>& statePred,
-           TMatrixTSym<double>& covPred)=0;
+           TVectorD& statePred,
+           TMatrixDSym& covPred)=0;
   
   //! This changes the state and cov and plane of the rep
   /*! This method extrapolates to to the plane and sets the results of state,
@@ -196,10 +196,10 @@ class GFAbsTrackRep : public TObject{
   
   virtual void Print(const Option_t* = "") const;
 
-  inline const TVectorT<double>& getState() const {
+  inline const TVectorD& getState() const {
     return fState;
   }
-  inline const TMatrixTSym<double>& getCov() const {
+  inline const TMatrixDSym& getCov() const {
     return fCov;
   }
 
@@ -217,7 +217,7 @@ class GFAbsTrackRep : public TObject{
    * default implementation in cxx file, if a ConcreteTrackRep can 
    * not implement this functionality
    */
-  virtual void getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixTSym<double>& cov);
+  virtual void getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixDSym& cov);
 
   virtual double getCharge()const =0;
 
@@ -230,23 +230,23 @@ class GFAbsTrackRep : public TObject{
   TVector3 getPos() {return getPos(fRefPlane);}
   TVector3 getMom() {return getMom(fRefPlane);}
 
-  void getPosMomCov(TVector3& pos, TVector3& mom, TMatrixTSym<double>& c){
+  void getPosMomCov(TVector3& pos, TVector3& mom, TMatrixDSym& c){
     getPosMomCov(fRefPlane,pos,mom,c);
   }
 
-  inline const TVectorT<double>& getFirstState() const {
+  inline const TVectorD& getFirstState() const {
     return fFirstState;
   }
-  inline const TMatrixTSym<double>& getFirstCov() const {
+  inline const TMatrixDSym& getFirstCov() const {
     return fFirstCov;
   }
   inline GFDetPlane getFirstPlane() const {
     return fFirstPlane;
   }
-  inline const TVectorT<double>& getLastState() const {
+  inline const TVectorD& getLastState() const {
     return fLastState;
   }
-  inline const TMatrixTSym<double>& getLastCov() const {
+  inline const TMatrixDSym& getLastCov() const {
     return fLastCov;
   }
   inline GFDetPlane getLastPlane() const {
@@ -288,28 +288,28 @@ class GFAbsTrackRep : public TObject{
    * to be handed over via the "aux" Matrix. GFAbsTrackRep::getAuxInfo() should
    * return the appropriate information. This is mandatory if smoothing is used.
    */
-  virtual void setData(const TVectorT<double>& st, const GFDetPlane& pl, const TMatrixTSym<double>* cov=NULL, const TMatrixT<double>* aux=NULL){
+  virtual void setData(const TVectorD& st, const GFDetPlane& pl, const TMatrixDSym* cov=NULL, const TMatrixD* aux=NULL){
     fState = st;
     if (&fRefPlane != &pl) fRefPlane = pl; // Copy reference plane only if it changed.
     if(cov!=NULL) fCov = *cov;
     static_cast<void>(aux);
   }
-  inline void setCov(const TMatrixTSym<double>& aCov) {
+  inline void setCov(const TMatrixDSym& aCov) {
     fCov=aCov;
   }
-  inline void setFirstState(const TVectorT<double>& aState) {
+  inline void setFirstState(const TVectorD& aState) {
     fFirstState = aState;
   }
-  inline void setFirstCov(const TMatrixTSym<double>& aCov) {
+  inline void setFirstCov(const TMatrixDSym& aCov) {
     fFirstCov = aCov;
   }
   inline void setFirstPlane(const GFDetPlane& aPlane) {
     fFirstPlane = aPlane;
   }
-  inline void setLastState(const TVectorT<double>& aState) {
+  inline void setLastState(const TVectorD& aState) {
     fLastState = aState;
   }
-  inline void setLastCov(const TMatrixTSym<double>& aCov) {
+  inline void setLastCov(const TMatrixDSym& aCov) {
     fLastCov = aCov;
   }
   inline void setLastPlane(const GFDetPlane& aPlane) {
@@ -321,7 +321,7 @@ class GFAbsTrackRep : public TObject{
    * default implementation in cxx file, if a ConcreteTrackRep can
    * not implement this functionality
    */
-  virtual void setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixTSym<double>& cov);
+  virtual void setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov);
 
   const GFDetPlane& getReferencePlane() const {return fRefPlane;}
 
@@ -368,12 +368,12 @@ class GFAbsTrackRep : public TObject{
    *
    * AuxInfo is a mechanism which allows creators of track representations to
    * hand out any information they like (as long as it is compatible with a
-   * TMatrixT<double>). It should be used if setData requires additional 
+   * TMatrixD). It should be used if setData requires additional 
    * information to update the representation, but it can also be used for
    * debugging information if needed. See also the documentation of 
    * GFAbsTrackRep::setData().
    */
-  virtual const TMatrixT<double>* getAuxInfo(const GFDetPlane&) {
+  virtual const TMatrixD* getAuxInfo(const GFDetPlane&) {
     return NULL;
   }
 

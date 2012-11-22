@@ -24,10 +24,10 @@
 void
 GFAbsSpacepointHit::getMeasurement(const GFAbsTrackRep* rep,
                                 const GFDetPlane& pl,
-                                const TVectorT<double>& statePred,
-                                const TMatrixTSym<double>& covPred,
-                                TVectorT<double>& m,
-                                TMatrixTSym<double>& V) {
+                                const TVectorD& statePred,
+                                const TMatrixDSym& covPred,
+                                TVectorD& m,
+                                TMatrixDSym& V) {
 
   static_cast<void>(rep);
   static_cast<void>(statePred);
@@ -40,7 +40,7 @@ GFAbsSpacepointHit::getMeasurement(const GFAbsTrackRep* rep,
   // m
   m.ResizeTo(2);
 
-  TVectorT<double> D(3);
+  TVectorD D(3);
   D(0) = o.X();
   D(1) = o.Y();
   D(2) = o.Z();
@@ -54,7 +54,7 @@ GFAbsSpacepointHit::getMeasurement(const GFAbsTrackRep* rep,
 
 
   // V
-  TMatrixT<double> jac(3,2);
+  TMatrixD jac(3,2);
   
   // jac = dF_i/dx_j = s_unitvec * t_untivec, with s=u,v and t=x,y,z
   jac(0,0) = u.X();

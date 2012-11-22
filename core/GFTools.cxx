@@ -8,16 +8,16 @@
 #include <TDecompChol.h>
 #include <TMath.h>
 
-TVectorT<double> GFTools::getSmoothedPos(const GFTrack* trk, unsigned int irep, unsigned int ihit) {
+TVectorD GFTools::getSmoothedPos(const GFTrack* trk, unsigned int irep, unsigned int ihit) {
 
-	TVectorT<double> smoothed_state;
-	TMatrixTSym<double> smoothed_cov;
-	TVectorT<double> pos;
+	TVectorD smoothed_state;
+	TMatrixDSym smoothed_cov;
+	TVectorD pos;
 
 	if(GFTools::getSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov)) {
 
-		const TMatrixT<double>& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
-		TVectorT<double> pos_tmp(H * smoothed_state);
+		const TMatrixD& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
+		TVectorD pos_tmp(H * smoothed_state);
 		pos.ResizeTo(pos_tmp);
 		pos = pos_tmp;
 
@@ -31,9 +31,9 @@ TVector3 GFTools::getSmoothedPosXYZ(const GFTrack* trk, unsigned int irep, unsig
 
   std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
 
-  TVectorT<double> smoothed_state;
-  TMatrixTSym<double> smoothed_cov;
-  TMatrixT<double> auxInfo;
+  TVectorD smoothed_state;
+  TMatrixDSym smoothed_cov;
+  TMatrixD auxInfo;
   GFDetPlane smoothing_plane;
 
   getSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
@@ -51,9 +51,9 @@ TVector3 GFTools::getBiasedSmoothedPosXYZ(const GFTrack* trk, unsigned int irep,
 
   std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
 
-  TVectorT<double> smoothed_state;
-  TMatrixTSym<double> smoothed_cov;
-  TMatrixT<double> auxInfo;
+  TVectorD smoothed_state;
+  TMatrixDSym smoothed_cov;
+  TMatrixD auxInfo;
   GFDetPlane smoothing_plane;
 
   getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
@@ -72,9 +72,9 @@ TVector3 GFTools::getSmoothedMomXYZ(const GFTrack* trk, unsigned int irep, unsig
 
   std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
 
-  TVectorT<double> smoothed_state;
-  TMatrixTSym<double> smoothed_cov;
-  TMatrixT<double> auxInfo;
+  TVectorD smoothed_state;
+  TMatrixDSym smoothed_cov;
+  TMatrixD auxInfo;
   GFDetPlane smoothing_plane;
 
   getSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
@@ -92,9 +92,9 @@ TVector3 GFTools::getBiasedSmoothedMomXYZ(const GFTrack* trk, unsigned int irep,
 
   std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
 
-  TVectorT<double> smoothed_state;
-  TMatrixTSym<double> smoothed_cov;
-  TMatrixT<double> auxInfo;
+  TVectorD smoothed_state;
+  TMatrixDSym smoothed_cov;
+  TMatrixD auxInfo;
   GFDetPlane smoothing_plane;
 
   getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
@@ -109,17 +109,17 @@ TVector3 GFTools::getBiasedSmoothedMomXYZ(const GFTrack* trk, unsigned int irep,
 }
 
 
-TVectorT<double> GFTools::getBiasedSmoothedPos(const GFTrack* trk, unsigned int irep, unsigned int ihit) {
+TVectorD GFTools::getBiasedSmoothedPos(const GFTrack* trk, unsigned int irep, unsigned int ihit) {
 
-  TVectorT<double> smoothed_state;
-  TMatrixTSym<double> smoothed_cov;
-  TVectorT<double> pos;
+  TVectorD smoothed_state;
+  TMatrixDSym smoothed_cov;
+  TVectorD pos;
 
 	if(GFTools::getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov)) {
 
-	  const TMatrixT<double>& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
+	  const TMatrixD& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
 		//H.Print();smoothed_state.Print();
-		TVectorT<double> pos_tmp(H * smoothed_state);
+		TVectorD pos_tmp(H * smoothed_state);
 		pos.ResizeTo(pos_tmp);
 		pos = pos_tmp;
 
@@ -128,68 +128,68 @@ TVectorT<double> GFTools::getBiasedSmoothedPos(const GFTrack* trk, unsigned int 
 
 }
 
-TMatrixTSym<double> GFTools::getSmoothedCov(const GFTrack* trk, unsigned int irep, unsigned int ihit) {
+TMatrixDSym GFTools::getSmoothedCov(const GFTrack* trk, unsigned int irep, unsigned int ihit) {
 
-	TVectorT<double> smoothed_state;
-	TMatrixTSym<double> smoothed_cov;
+	TVectorD smoothed_state;
+	TMatrixDSym smoothed_cov;
 	GFDetPlane pl;
 
 	GFTools::getSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, pl);
-	const TMatrixT<double>& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
+	const TMatrixD& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
 
-	TMatrixTSym<double> cov(smoothed_cov);
+	TMatrixDSym cov(smoothed_cov);
 	cov.Similarity(H);
 
 	return cov;
 
 }
 
-TMatrixTSym<double> GFTools::getBiasedSmoothedCov(const GFTrack* trk, unsigned int irep, unsigned int ihit) {
+TMatrixDSym GFTools::getBiasedSmoothedCov(const GFTrack* trk, unsigned int irep, unsigned int ihit) {
 
-	TVectorT<double> smoothed_state;
-	TMatrixTSym<double> smoothed_cov;
+	TVectorD smoothed_state;
+	TMatrixDSym smoothed_cov;
 	GFDetPlane pl;
 
 	GFTools::getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, pl);
-	const TMatrixT<double>& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
-	TMatrixTSym<double> cov(smoothed_cov);
+	const TMatrixD& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
+	TMatrixDSym cov(smoothed_cov);
 	cov.Similarity(H);
 
 	return cov;
 
 }
 
-bool GFTools::getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorT<double>& smoothed_state, TMatrixTSym<double>& smoothed_cov) {
+bool GFTools::getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorD& smoothed_state, TMatrixDSym& smoothed_cov) {
 
 	GFDetPlane pl;
-	TMatrixT<double> auxInfo;
+	TMatrixD auxInfo;
 	return GFTools::getSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, pl, auxInfo);
 
 }
 
-bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorT<double>& smoothed_state, TMatrixTSym<double>& smoothed_cov) {
+bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorD& smoothed_state, TMatrixDSym& smoothed_cov) {
 
 	GFDetPlane pl;
-	TMatrixT<double> auxInfo;
+	TMatrixD auxInfo;
 	return GFTools::getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, pl, auxInfo);
 
 }
 
-bool GFTools::getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorT<double>& smoothed_state, TMatrixTSym<double>& smoothed_cov, GFDetPlane& smoothing_plane) {
+bool GFTools::getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorD& smoothed_state, TMatrixDSym& smoothed_cov, GFDetPlane& smoothing_plane) {
 
-	TMatrixT<double> auxInfo;
+	TMatrixD auxInfo;
 	return GFTools::getSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
 
 }
 
-bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorT<double>& smoothed_state, TMatrixTSym<double>& smoothed_cov, GFDetPlane& smoothing_plane) {
+bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorD& smoothed_state, TMatrixDSym& smoothed_cov, GFDetPlane& smoothing_plane) {
 
-	TMatrixT<double> auxInfo;
+	TMatrixD auxInfo;
 	return GFTools::getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
 
 }
 
-bool GFTools::getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorT<double>& smoothed_state, TMatrixTSym<double>& smoothed_cov, GFDetPlane& smoothing_plane, TMatrixT<double>& auxInfo) {
+bool GFTools::getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorD& smoothed_state, TMatrixDSym& smoothed_cov, GFDetPlane& smoothing_plane, TMatrixD& auxInfo) {
 
 	if(!trk->getSmoothing()) {
 		std::cout << "Trying to get smoothed hit coordinates from a track without smoothing! Aborting..." << std::endl;
@@ -227,12 +227,12 @@ bool GFTools::getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned in
 
 
 	// calculate "mean" between forward and backward predictions
-  const TVectorT<double>& fSt(trk->getBK(irep)->getVector("fSt", ihit));
-  const TMatrixTSym<double>& fCov(trk->getBK(irep)->getSymMatrix("fCov", ihit));
+  const TVectorD& fSt(trk->getBK(irep)->getVector("fSt", ihit));
+  const TMatrixDSym& fCov(trk->getBK(irep)->getSymMatrix("fCov", ihit));
   smoothing_plane = trk->getBK(irep)->getDetPlane("fPl", ihit);
 
-  TVectorT<double> bSt(trk->getBK(irep)->getVector("bSt", ihit)); // can't be const ref since it possibly has to be altered in extrapolate
-  TMatrixTSym<double> bCov(trk->getBK(irep)->getSymMatrix("bCov", ihit)); // can't be const ref since it possibly has to be altered in extrapolate
+  TVectorD bSt(trk->getBK(irep)->getVector("bSt", ihit)); // can't be const ref since it possibly has to be altered in extrapolate
+  TMatrixDSym bCov(trk->getBK(irep)->getSymMatrix("bCov", ihit)); // can't be const ref since it possibly has to be altered in extrapolate
   const GFDetPlane& bPl(trk->getBK(irep)->getDetPlane("bPl", ihit));
 
   if(smoothing_plane != bPl) {
@@ -243,7 +243,7 @@ bool GFTools::getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned in
     // Eventually, if a backwards propagation is done, the covariance can be a bit too large.
     // But it should be much faster this way.
 
-    const TMatrixT<double>* bAuxInfoP;
+    const TMatrixD* bAuxInfoP;
 
     std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
 
@@ -257,8 +257,8 @@ bool GFTools::getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned in
     rep->extrapolate(smoothing_plane, bSt, bCov);
   }
 
-	TMatrixTSym<double> fCovInvert;
-	TMatrixTSym<double> bCovInvert;
+	TMatrixDSym fCovInvert;
+	TMatrixDSym bCovInvert;
 
 	GFTools::invertMatrix(fCov, fCovInvert);
 	GFTools::invertMatrix(bCov, bCovInvert);
@@ -271,17 +271,17 @@ bool GFTools::getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned in
 
 }
 
-bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorT<double>& smoothed_state, TMatrixTSym<double>& smoothed_cov, GFDetPlane& smoothing_plane, TMatrixT<double>& auxInfo) {
+bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorD& smoothed_state, TMatrixDSym& smoothed_cov, GFDetPlane& smoothing_plane, TMatrixD& auxInfo) {
 
 	if(!trk->getSmoothing()) {
 		std::cout << "Trying to get smoothed hit coordinates from a track without smoothing! Aborting..." << std::endl;
-		TMatrixT<double> failed(1,1);
+		TMatrixD failed(1,1);
 		return false;
 	}
 
 	if(ihit >= trk->getNumHits()) {
 		std::cout << "Hit number out of bounds while trying to get smoothed hit coordinates! Aborting..." <<std::endl;
-		TMatrixT<double> failed(1,1);
+		TMatrixD failed(1,1);
 		failed(0,0) = 0;
 		return false;
 	}
@@ -312,12 +312,12 @@ bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsig
 
 
 	// calculate "mean" between forward update and backward prediction
-	const TVectorT<double>& fUpSt(trk->getBK(irep)->getVector("fUpSt",ihit));
-	const TMatrixTSym<double>& fUpCov(trk->getBK(irep)->getSymMatrix("fUpCov",ihit));
+	const TVectorD& fUpSt(trk->getBK(irep)->getVector("fUpSt",ihit));
+	const TMatrixDSym& fUpCov(trk->getBK(irep)->getSymMatrix("fUpCov",ihit));
 	smoothing_plane = trk->getBK(irep)->getDetPlane("fPl",ihit);
 
-	TVectorT<double> bSt(trk->getBK(irep)->getVector("bSt",ihit)); // can't be const ref since it possibly has to be altered in extrapolate
-	TMatrixTSym<double> bCov(trk->getBK(irep)->getSymMatrix("bCov",ihit)); // can't be const ref since it possibly has to be altered in extrapolate
+	TVectorD bSt(trk->getBK(irep)->getVector("bSt",ihit)); // can't be const ref since it possibly has to be altered in extrapolate
+	TMatrixDSym bCov(trk->getBK(irep)->getSymMatrix("bCov",ihit)); // can't be const ref since it possibly has to be altered in extrapolate
 	const GFDetPlane& bPl(trk->getBK(irep)->getDetPlane("bPl",ihit));
 
 
@@ -329,7 +329,7 @@ bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsig
     // Eventually, if a backwards propagation is done, the covariance can be a bit too large.
     // But it should be much faster this way.
 
-    const TMatrixT<double>* bAuxInfoP;
+    const TMatrixD* bAuxInfoP;
 
     std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
 
@@ -344,8 +344,8 @@ bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsig
 
 	}
 
-	TMatrixTSym<double> fCovInvert;
-	TMatrixTSym<double> bCovInvert;
+	TMatrixDSym fCovInvert;
+	TMatrixDSym bCovInvert;
 
 	GFTools::invertMatrix(fUpCov, fCovInvert);
 	GFTools::invertMatrix(bCov, bCovInvert);
@@ -398,7 +398,7 @@ double GFTools::getTrackLength(const GFTrack* trk, unsigned int irep, unsigned i
 
 }
 
-void GFTools::invertMatrix(const TMatrixTSym<double>& mat, TMatrixTSym<double>& inv, double* determinant){
+void GFTools::invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* determinant){
 	inv.ResizeTo(mat);
 
 	// check if numerical limits are reached (i.e at least one entry < 1E-100 and/or at least one entry > 1E100)
@@ -448,7 +448,7 @@ void GFTools::invertMatrix(const TMatrixTSym<double>& mat, TMatrixTSym<double>& 
 	}
 }
 
-void GFTools::invertMatrix(TMatrixTSym<double>& mat, double* determinant){
+void GFTools::invertMatrix(TMatrixDSym& mat, double* determinant){
 	// check if numerical limits are reached (i.e at least one entry < 1E-100 and/or at least one entry > 1E100)
 	if (!(mat<1.E100) || !(mat>-1.E100)){
 		GFException e("cannot invert matrix GFTools::invertMatrix(), entries too big (>1e100)",
@@ -504,9 +504,9 @@ void GFTools::invertMatrix(TMatrixTSym<double>& mat, double* determinant){
 
 void GFTools::updateRepSmoothed(GFTrack* trk, unsigned int irep, unsigned int ihit) {
 
-  TVectorT<double> smoothed_state;
-  TMatrixT<double> auxInfo;
-	TMatrixTSym<double> smoothed_cov;
+  TVectorD smoothed_state;
+  TMatrixD auxInfo;
+	TMatrixDSym smoothed_cov;
 	GFDetPlane smoothing_plane;
 
 	getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
@@ -522,16 +522,16 @@ void GFTools::updateRepSmoothed(GFTrack* trk, unsigned int irep, unsigned int ih
 }
 
 double GFTools::getSmoothedChiSqu(const GFTrack* trk, unsigned int irep, unsigned int ihit){
-	TVectorT<double> smoothed_state;
-	TMatrixTSym<double> smoothed_cov;
+	TVectorD smoothed_state;
+	TMatrixDSym smoothed_cov;
 	GFTools::getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov);
-	const TMatrixT<double>& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
-	TVectorT<double> pos = H * smoothed_state;
-	const TVectorT<double>& m( trk->getHit(ihit)->getRawHitCoord() ); //measurement of hit
-	const TMatrixTSym<double>& V( trk->getHit(ihit)->getRawHitCov() ); //covariance matrix of hit
-	TVectorT<double> res = m - pos;
-	TMatrixTSym<double> R = V - smoothed_cov.Similarity(H);
-	TMatrixTSym<double> invR;
+	const TMatrixD& H( trk->getHit(ihit)->getHMatrix(trk->getTrackRep(irep)) );
+	TVectorD pos = H * smoothed_state;
+	const TVectorD& m( trk->getHit(ihit)->getRawHitCoord() ); //measurement of hit
+	const TMatrixDSym& V( trk->getHit(ihit)->getRawHitCov() ); //covariance matrix of hit
+	TVectorD res = m - pos;
+	TMatrixDSym R = V - smoothed_cov.Similarity(H);
+	TMatrixDSym invR;
 	invertMatrix(R,invR);
 	double smoothedChiSqu = invR.Similarity(res);
 	return smoothedChiSqu;

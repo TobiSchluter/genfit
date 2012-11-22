@@ -23,9 +23,9 @@
 #define GFBOOKKEEPING_H
 
 #include <TObject.h>
-#include <TVectorT.h>
-#include <TMatrixT.h>
-#include <TMatrixTSym.h>
+#include <TVectorD.h>
+#include <TMatrixD.h>
+#include <TMatrixDSym.h>
 #include <vector>
 #include <iostream>
 #include <map>
@@ -36,9 +36,9 @@ class GFBookkeeping : public TObject {
 
   //the string keys will in general be different, so this can't
   //be unified to one container
-  std::map<std::string, std::vector<TVectorT<double> > > fVectors;
-  std::map<std::string, std::vector<TMatrixT<double> > > fMatrices;
-  std::map<std::string, std::vector<TMatrixTSym<double> > > fSymMatrices;
+  std::map<std::string, std::vector<TVectorD> > fVectors;
+  std::map<std::string, std::vector<TMatrixD> > fMatrices;
+  std::map<std::string, std::vector<TMatrixDSym> > fSymMatrices;
   std::map<std::string, std::vector<GFDetPlane> > fPlanes;
   std::map<std::string, std::vector<double> > fNumbers;
   std::vector< unsigned int > fFailedHits;
@@ -61,15 +61,15 @@ class GFBookkeeping : public TObject {
   void bookGFDetPlanes(const std::string& key);
   void bookNumbers(const std::string& key,double val=0.);
 
-  void setVector(const std::string& key,unsigned int index,const TVectorT<double>& mat);
-  void setMatrix(const std::string& key,unsigned int index,const TMatrixT<double>& mat);
-  void setSymMatrix(const std::string& key,unsigned int index,const TMatrixTSym<double>& mat);
+  void setVector(const std::string& key,unsigned int index,const TVectorD& mat);
+  void setMatrix(const std::string& key,unsigned int index,const TMatrixD& mat);
+  void setSymMatrix(const std::string& key,unsigned int index,const TMatrixDSym& mat);
   void setDetPlane(const std::string& key,unsigned int index,const GFDetPlane& pl);
   void setNumber(const std::string& key,unsigned int index, const double& num);
 
-  const TVectorT<double>&    getVector(const std::string& key, unsigned int index) const;
-  const TMatrixT<double>&    getMatrix(const std::string& key, unsigned int index) const;
-  const TMatrixTSym<double>& getSymMatrix(const std::string& key, unsigned int index) const;
+  const TVectorD&    getVector(const std::string& key, unsigned int index) const;
+  const TMatrixD&    getMatrix(const std::string& key, unsigned int index) const;
+  const TMatrixDSym& getSymMatrix(const std::string& key, unsigned int index) const;
   const GFDetPlane&          getDetPlane(const std::string& key, unsigned int index)  const;
   double                     getNumber(const std::string& key, unsigned int index) const;
 

@@ -49,10 +49,10 @@ GFAbsWireHit::GFAbsWireHit(int dim) :
 void
 GFAbsWireHit::getMeasurement(const GFAbsTrackRep* rep,
                              const GFDetPlane& pl,
-                             const TVectorT<double>& statePred,
-                             const TMatrixTSym<double>& covPred,
-                             TVectorT<double>& m,
-                             TMatrixTSym<double>& V) {
+                             const TVectorD& statePred,
+                             const TMatrixDSym& covPred,
+                             TVectorD& m,
+                             TMatrixDSym& V) {
 
   static_cast<void>(rep);
   static_cast<void>(statePred);

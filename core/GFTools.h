@@ -28,7 +28,7 @@
 #include "GFException.h"
 #include "GFTrack.h"
 
-#include <TMatrixT.h>
+#include <TMatrixD.h>
 
 /*! \namespace GFTools
  *  \brief Namespace for various tools, mainly smoothing.
@@ -42,7 +42,7 @@ namespace GFTools {
 	
 	/** @brief Get smoothed track position in plane coordinates
 	 */
-	TVectorT<double> getSmoothedPos(const GFTrack* trk, unsigned int irep, unsigned int ihit);
+	TVectorD getSmoothedPos(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
 	 /** @brief Get smoothed track position in global coordinates
 	   */
@@ -54,18 +54,18 @@ namespace GFTools {
 
 	/** @brief Get smoothed track covariance in plane coordinates
 	 */
-	TMatrixTSym<double> getSmoothedCov(const GFTrack* trk, unsigned int irep, unsigned int ihit);
+	TMatrixDSym getSmoothedCov(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
 	/** @brief Get smoothed state vector and state covariance.
 	 */
-	bool getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorT<double>& smoothed_state, TMatrixTSym<double>& smoothed_cov);
+	bool getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorD& smoothed_state, TMatrixDSym& smoothed_cov);
 
 	/** @brief Get smoothed state vector, state covariance and smoothing plane.
 	 *
 	 * The smoothed data returned by this function includes the detector plane in 
 	 * which the data is calculated.
 	 */
-	bool getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorT<double>& smoothed_state, TMatrixTSym<double>& smoothed_cov, GFDetPlane& smoothing_plane);
+	bool getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorD& smoothed_state, TMatrixDSym& smoothed_cov, GFDetPlane& smoothing_plane);
 
 	/** @brief Get smoothed state vector, state covariance and smoothing plane.
 	 *
@@ -82,7 +82,7 @@ namespace GFTools {
 	 * \f]
 	 * The index k,k-1 denotes that the state vector or covariance matrix contains the information of all hits 1,2,....,k-1 and is extrapolated to hit k. The arrow pointing to the right indicates that the information is saved during the forward fit. The index k,k+1 indicates the the state vector or covariance matrix contains the information of all hits N,N-1,...,k+1 and is extrapolated to hit k. The left-poiting arrow indicates that the information is saved during the backward fit.
 	 */
-	bool getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorT<double>& smoothed_state, TMatrixTSym<double>& smoothed_cov, GFDetPlane& smoothing_plane, TMatrixT<double>& auxInfo);
+	bool getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorD& smoothed_state, TMatrixDSym& smoothed_cov, GFDetPlane& smoothing_plane, TMatrixD& auxInfo);
 
 	/** @brief Get smoothing plane.
 	 */
@@ -90,14 +90,14 @@ namespace GFTools {
 
 	/** @brief Get biased smoothed state vector and state covariance.
 	 */
-	bool getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorT<double>& smoothed_state, TMatrixTSym<double>& smoothed_cov);
+	bool getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorD& smoothed_state, TMatrixDSym& smoothed_cov);
 
 	/** @brief Get biased smoothed state vector, state covariance and smoothing plane.
 	 *
 	 * The smoothed data returned by this function includes the detector plane in 
 	 * which the data is calculated.
 	 */
-	bool getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorT<double>& smoothed_state, TMatrixTSym<double>& smoothed_cov, GFDetPlane& smoothing_plane);
+	bool getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorD& smoothed_state, TMatrixDSym& smoothed_cov, GFDetPlane& smoothing_plane);
 
 	/** @brief Get biased smoothed state vector, state covariance and smoothing plane.
 	 *
@@ -105,11 +105,11 @@ namespace GFTools {
 	 * which the data is calculated as well as the auxiliary information for this
 	 * plane.
 	 */
-	bool getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorT<double>& smoothed_state, TMatrixTSym<double>& smoothed_cov, GFDetPlane& smoothing_plane, TMatrixT<double>& auxInfo);
+	bool getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsigned int ihit, TVectorD& smoothed_state, TMatrixDSym& smoothed_cov, GFDetPlane& smoothing_plane, TMatrixD& auxInfo);
 
 	/** @brief Get biased smoothed track position in plane coordinates
 	 */
-	TVectorT<double> getBiasedSmoothedPos(const GFTrack* trk, unsigned int irep, unsigned int ihit);
+	TVectorD getBiasedSmoothedPos(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
   /** @brief Get biased smoothed track position in global coordinates
      */
@@ -121,7 +121,7 @@ namespace GFTools {
 
 	/** @brief Get biased smoothed track covariance in plane coordinates
 	 */
-	TMatrixTSym<double> getBiasedSmoothedCov(const GFTrack* trk, unsigned int irep, unsigned int ihit);
+	TMatrixDSym getBiasedSmoothedCov(const GFTrack* trk, unsigned int irep, unsigned int ihit);
 
 	/** @bried Get signed track-length between two hits
 	 * If no arguments are given, the track-length between first and last hit will be returned.
@@ -132,10 +132,10 @@ namespace GFTools {
 	/** @brief Invert a matrix, throwing GFException when inversion fails.
 	 * Optional calculation of determinant.
 	 */
-	void invertMatrix(const TMatrixTSym<double>& mat, TMatrixTSym<double>& inv, double* determinant = NULL);
+	void invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* determinant = NULL);
 	/** @brief Same, replacing its argument.
 	 */
-	void invertMatrix(TMatrixTSym<double>& mat, double* determinant = NULL);
+	void invertMatrix(TMatrixDSym& mat, double* determinant = NULL);
 	/** @brief Get smoothed chi2 for a specific hit (ihit).
 	 *
 	 * This function calculates a smoothed chi2 value for a specific hit from the

@@ -81,9 +81,9 @@ class GFDafHit: public GFAbsRecoHit {
 		 * As before, these calculations are only done if the plane is different
 		 * from the one getHitCov was last called.
 		 */
-		virtual void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V);
+		virtual void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorD& statePred,const TMatrixDSym& covPred,TVectorD& m, TMatrixDSym& V);
 
-		virtual void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V, unsigned int iHit){
+		virtual void getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorD& statePred,const TMatrixDSym& covPred,TVectorD& m, TMatrixDSym& V, unsigned int iHit){
 		  fRawHits[iHit]->getMeasurement(rep, pl, statePred, covPred, m, V);
 		}
 
@@ -92,7 +92,7 @@ class GFDafHit: public GFAbsRecoHit {
 		 * Returns the H matrix of the first hit in the GFDafHit. This is valid
 		 * because all hits are on the same plane.
 		 */
-		const TMatrixT<double>& getHMatrix(const GFAbsTrackRep* rep);
+		const TMatrixD& getHMatrix(const GFAbsTrackRep* rep);
 
 		GFDafHit* clone();
 

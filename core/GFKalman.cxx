@@ -164,27 +164,27 @@ GFKalman::fittingPass(GFTrack* trk, int direction){
   //trk->printGFBookkeeping();
 }
 
-double GFKalman::chi2Increment(const TVectorT<double>& r,const TMatrixT<double>& H,
-           const TMatrixTSym<double>& cov,const TMatrixTSym<double>& V){
+double GFKalman::chi2Increment(const TVectorD& r,const TMatrixD& H,
+           const TMatrixDSym& cov,const TMatrixDSym& V){
 
   // residuals covariances:R=(V - HCH^T)
-  TMatrixTSym<double> HcovHt(cov);
+  TMatrixDSym HcovHt(cov);
   HcovHt.Similarity(H);
 
   // instead of
-  //  TMatrixTSym<double> Rinv = TMatrixTSym(V, kMinus, HcovHt)
+  //  TMatrixDSym Rinv = TMatrixDSym(V, kMinus, HcovHt)
   // because kMinus constructor doesn't work in root up to at least 5.34.
   // Bug report: <https://savannah.cern.ch/bugs/index.php?98605>
 
   // chisq= r^TR^(-1)r
-  TMatrixTSym<double> Rinv(V - HcovHt);
+  TMatrixDSym Rinv(V - HcovHt);
   GFTools::invertMatrix(Rinv);
   double chisq = Rinv.Similarity(r);
 
   if(TMath::IsNaN(chisq)){
     GFException exc("chi2 is nan",__LINE__,__FILE__);
     exc.setFatal();
-    std::vector< TMatrixT<double> > matrices;
+    std::vector<TMatrixD> matrices;
     matrices.push_back(V);
     matrices.push_back(Rinv);
     matrices.push_back(cov);
@@ -201,18 +201,18 @@ GFKalman::getChi2Hit(GFAbsRecoHit* hit, GFAbsTrackRep* rep)
 {
   // get prototypes for matrices
   int repDim=rep->getDim();
-  TVectorT<double> state(repDim);
-  TMatrixTSym<double> cov(repDim);;
+  TVectorD state(repDim);
+  TMatrixDSym cov(repDim);;
   const GFDetPlane& pl(hit->getDetPlane(rep));
   rep->extrapolate(pl,state,cov);
 
 
-  const TMatrixT<double>& H = hit->getHMatrix(rep);
-  TVectorT<double> m;
-  TMatrixTSym<double> V;
+  const TMatrixD& H = hit->getHMatrix(rep);
+  TVectorD m;
+  TMatrixDSym V;
   hit->getMeasurement(rep,pl,state,cov,m,V);
 
-  TVectorT<double> res = m-(H*state);
+  TVectorD res = m-(H*state);
   assert(res.GetNrows()>0);
 
   //this is where chi2 is calculated
@@ -229,8 +229,8 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
 
   // get prototypes for matrices
   int repDim = rep->getDim();
-  TVectorT<double> state(repDim);
-  TMatrixTSym<double> cov(repDim);
+  TVectorD state(repDim);
+  TMatrixDSym cov(repDim);
   const GFDetPlane* ppl;
 
   double extLen(0.);
@@ -275,28 +275,28 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   cov.Print();
 #endif
 
-  const TMatrixT<double>& H(hit->getHMatrix(rep));
-  TVectorT<double> m;
-  TMatrixTSym<double> V;
+  const TMatrixD& H(hit->getHMatrix(rep));
+  TVectorD m;
+  TMatrixDSym V;
   hit->getMeasurement(rep,pl,state,cov,m,V);
-  TVectorT<double> res = m-(H*state);
+  TVectorD res = m-(H*state);
 
   // calculate kalman gain ------------------------------
   // calculate covsum (V + HCH^T)
-  TMatrixTSym<double> HcovHt(cov);
+  TMatrixDSym HcovHt(cov);
   HcovHt.Similarity(H);
   
   // invert
-  //TMatrixTSym<double> covSum(V + HcovHt);
+  //TMatrixDSym covSum(V + HcovHt);
   // instead of:
-  //  TMatrixTSym<double> covSum(V, TMatrixTSym<double>::kPlus, HcovHt);
+  //  TMatrixDSym covSum(V, TMatrixDSym::kPlus, HcovHt);
   // because kPlus constructor doesn't work in root up to at least 5.34.
   // Bug report: <https://savannah.cern.ch/bugs/index.php?98605>
-  TMatrixTSym<double> covSumInv(V + HcovHt);
+  TMatrixDSym covSumInv(V + HcovHt);
   GFTools::invertMatrix(covSumInv);
 
-  TMatrixT<double> CHt(cov, TMatrixT<double>::kMultTranspose, H);
-  TVectorT<double> update = TMatrixT<double>(CHt, TMatrixT<double>::kMult, covSumInv) * res;
+  TMatrixD CHt(cov, TMatrixD::kMultTranspose, H);
+  TVectorD update = TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res;
 #ifdef DEBUG
   std::cout<<"residual vector"; res.Print();
   std::cout<<"update = Gain*res"; update.Print();

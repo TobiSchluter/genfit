@@ -61,10 +61,10 @@ class GFAbsWirepointHit : public GFAbsWireHit {
   // Operations ----------------------
   virtual void getMeasurement(const GFAbsTrackRep* rep,
                               const GFDetPlane& pl,
-                              const TVectorT<double>& statePred,
-                              const TMatrixTSym<double>& covPred,
-                              TVectorT<double>& m,
-                              TMatrixTSym<double>& V);
+                              const TVectorD& statePred,
+                              const TMatrixDSym& covPred,
+                              TVectorD& m,
+                              TMatrixDSym& V);
 
  private:
   static const int NparHitRep = 8;

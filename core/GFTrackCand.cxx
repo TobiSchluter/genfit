@@ -30,7 +30,7 @@ ClassImp(GFTrackCand)
 GFTrackCand::GFTrackCand() : 
   fMcTrackId(-1), fPdg(0), 
   fState6D(6),
-  fCov6D(-1.0*TMatrixTSym<double>(TMatrixTSym<double>::kUnit,TMatrixTSym<double>(6))),
+  fCov6D(-1.0*TMatrixDSym(TMatrixDSym::kUnit,TMatrixDSym(6))),
   fQ(0) 
 {
   ;

@@ -56,7 +56,7 @@ GFDafWireHit::~GFDafWireHit(){
 }
 
 
-void GFDafWireHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V) {
+void GFDafWireHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorD& statePred,const TMatrixDSym& covPred,TVectorD& m, TMatrixDSym& V) {
 
   if(fHitUpd && fDetPlane == pl) {
     m.ResizeTo(fHitCoord);
@@ -66,10 +66,10 @@ void GFDafWireHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,
     return;
   }
 
-  TMatrixTSym<double> covInv;
-  TVectorT<double> coordTemp;
-  TMatrixTSym<double> covTemp;
-  std::vector< TVectorT<double> > coords;
+  TMatrixDSym covInv;
+  TVectorD coordTemp;
+  TMatrixDSym covTemp;
+  std::vector<TVectorD> coords;
 
   dynamic_cast<GFAbsWireHit*>(fRawHits[0])->getMeasurement(rep, pl, statePred, covPred, coordTemp, covTemp);
 
@@ -88,7 +88,7 @@ void GFDafWireHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,
   coords[0](0) *= -1.; // invert the sign of the drift radius of the first (left) hit
 
   // invert fHitCov
-  TMatrixTSym<double> HitCovTemp(fHitCov);
+  TMatrixDSym HitCovTemp(fHitCov);
   GFTools::invertMatrix(HitCovTemp, fHitCov);
 
   //set the weighted-mean coord
@@ -107,7 +107,7 @@ void GFDafWireHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,
 }
 
 
-void GFDafWireHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorT<double>& statePred,const TMatrixTSym<double>& covPred,TVectorT<double>& m, TMatrixTSym<double>& V, unsigned int iHit){
+void GFDafWireHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,const TVectorD& statePred,const TMatrixDSym& covPred,TVectorD& m, TMatrixDSym& V, unsigned int iHit){
   assert(iHit<2);
 
   fRawHits[0]->getMeasurement(rep, pl, statePred, covPred, m, V);

@@ -24,9 +24,9 @@
 #ifndef GFABSRECOHIT_H
 #define GFABSRECOHIT_H
 
-#include "TVectorT.h"
-#include "TMatrixT.h"
-#include "TMatrixTSym.h"
+#include "TVectorD.h"
+#include "TMatrixD.h"
+#include "TMatrixDSym.h"
 #include "TObject.h"
 
 #include "GFDetPlane.h"
@@ -59,8 +59,8 @@ class GFAbsTrackRep;
  * such as space points, wires, etc.
  *
  * Background information: The main feature here is that coordinates
- * and covariances are available as general TVectorT<double> and
- * TMatrixTSym<double> objects. By using these general algebraic
+ * and covariances are available as general TVectorD and
+ * TMatrixDSym objects. By using these general algebraic
  * objects it is possible to abstract from the concrete measurement
  * and thus define a unified framework to handle the data. This is a
  * key ingredient for the separation of data and algorithms which in
@@ -71,10 +71,10 @@ class GFAbsTrackRep;
 class GFAbsRecoHit : public TObject {
  protected:
   /// Vector of raw coordinates of hit
-  TVectorT<double> fHitCoord;
+  TVectorD fHitCoord;
 
   /// Covariance of raw hit coordinates
-  TMatrixTSym<double> fHitCov;
+  TMatrixDSym fHitCov;
 
   /// Sorting parameter used in GFTrack::sortHits()
   double fRho;
@@ -124,27 +124,27 @@ class GFAbsRecoHit : public TObject {
    * coordination is necessary. 
    *
    */
-  virtual const TMatrixT<double>& getHMatrix(const GFAbsTrackRep* stateVector) = 0;
+  virtual const TMatrixD& getHMatrix(const GFAbsTrackRep* stateVector) = 0;
 
   /** @brief get measurement vector and hit covariance
    *
    */
   virtual void getMeasurement(const GFAbsTrackRep* rep,
                               const GFDetPlane& pl,
-                              const TVectorT<double>& statePred,
-                              const TMatrixTSym<double>& covPred,
-                              TVectorT<double>& m,
-                              TMatrixTSym<double>& V) = 0;
+                              const TVectorD& statePred,
+                              const TMatrixDSym& covPred,
+                              TVectorD& m,
+                              TMatrixDSym& V) = 0;
 
   /** @brief Get raw hit covariances. 
    *
    */
-  const TMatrixTSym<double>& getRawHitCov() const {return fHitCov;}
+  const TMatrixDSym& getRawHitCov() const {return fHitCov;}
 
   /** @brief Get raw hit coordinates. 
    *
    */
-  const TVectorT<double>& getRawHitCoord() const {return fHitCoord;}
+  const TVectorD& getRawHitCoord() const {return fHitCoord;}
   
   
   /** @brief Get detector plane for a given track representation.

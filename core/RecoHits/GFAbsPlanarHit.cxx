@@ -23,10 +23,10 @@
 void
 GFAbsPlanarHit::getMeasurement(const GFAbsTrackRep* rep,
                                 const GFDetPlane& pl,
-                                const TVectorT<double>& statePred,
-                                const TMatrixTSym<double>& covPred,
-                                TVectorT<double>& m,
-                                TMatrixTSym<double>& V) {
+                                const TVectorD& statePred,
+                                const TMatrixDSym& covPred,
+                                TVectorD& m,
+                                TMatrixDSym& V) {
 
   if (pl != fDetPlane){
     GFException exc("GFAbsPlanarHit::getMeasurement(): Trying to get measurement in a plane that does not match the physical detector plane!", __LINE__,__FILE__);

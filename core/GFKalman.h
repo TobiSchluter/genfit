@@ -27,9 +27,9 @@
 #include <iostream>
 
 #include <Rtypes.h>
-#include <TVectorT.h>
-#include <TMatrixT.h>
-#include <TMatrixTSym.h>
+#include <TVectorD.h>
+#include <TMatrixD.h>
+#include <TMatrixDSym.h>
 
 #include "RecoHits/GFAbsRecoHit.h"
 #include "GFAbsTrackRep.h"
@@ -106,8 +106,8 @@ private:
 
   /** @brief this returns the reduced chi2 increment for a hit
    */
-  double chi2Increment(const TVectorT<double>& r,const TMatrixT<double>& H,
-		       const TMatrixTSym<double>& cov,const TMatrixTSym<double>& V);
+  double chi2Increment(const TVectorD& r,const TMatrixD& H,
+		       const TMatrixDSym& cov,const TMatrixDSym& V);
 
 
   /** @brief Book all neccessary Bookkeeping entries.

@@ -130,13 +130,13 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
     std::vector<double> phi;
     double phi_sum = 0;
     double phi_cut = 0;
-    TVectorT<double> smoothedState;
-    TMatrixTSym<double> smoothedCov;
+    TVectorD smoothedState;
+    TMatrixDSym smoothedCov;
     GFDetPlane pl;
     GFTools::getBiasedSmoothedData(trk, 0, i, smoothedState, smoothedCov, pl);
 
-    const TMatrixT<double>& H( trk->getHit(i)->getHMatrix(trk->getTrackRep(0)) );
-    TVectorT<double> x_smoo(H * smoothedState);
+    const TMatrixD& H( trk->getHit(i)->getHMatrix(trk->getTrackRep(0)) );
+    TVectorD x_smoo(H * smoothedState);
 
 
 
@@ -144,13 +144,13 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
       double* detV = new double(0);
 
       try{
-        TVectorT<double> m;
-        TMatrixTSym<double> Vorig;
+        TVectorD m;
+        TMatrixDSym Vorig;
         eff_hit->getMeasurement(trk->getTrackRep(0), pl, smoothedState, smoothedCov, m, Vorig, j); // can throw a GFException
 
-        TMatrixTSym<double> V( beta * Vorig);
-        TVectorT<double> resid(m - x_smoo);
-        TMatrixTSym<double> Vinv;
+        TMatrixDSym V( beta * Vorig);
+        TVectorD resid(m - x_smoo);
+        TMatrixDSym Vinv;
         GFTools::invertMatrix(V, Vinv, detV); // can throw a GFException
 
         phi.push_back((1./(pow(2.*TMath::Pi(),V.GetNrows()/2.)*sqrt(*detV)))*exp(-0.5*Vinv.Similarity(resid)));
@@ -353,7 +353,7 @@ void GFDaf::saveWeights(GFTrack* trk, const GFTrack* DafTrack, const std::vector
     nEffHits[i] = hit->getNumEffHits();
   }
 
-  TVectorT<double> vec;
+  TVectorD vec;
 
   for(unsigned int rep_i = 0; rep_i < weights.size(); rep_i++) { // loop over trackReps
     GFBookkeeping* bk = trk->getBK(rep_i);

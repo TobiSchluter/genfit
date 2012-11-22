@@ -30,16 +30,16 @@ GFAbsTrackRep::GFAbsTrackRep(int dim) : fDimension(dim), fState(dim), fCov(dim),
 GFAbsTrackRep::~GFAbsTrackRep() {}
 
 double GFAbsTrackRep::extrapolate(const GFDetPlane& plane){
-  TVectorT<double> statePred(fDimension);
-  TMatrixTSym<double> covPred(fDimension);
+  TVectorD statePred(fDimension);
+  TMatrixDSym covPred(fDimension);
   double retVal = extrapolate(plane,statePred,covPred);
   setData(statePred,plane,&covPred);
   return retVal;
 }
 
 //default implentation might be overwritten, please see the doxy docu
-double GFAbsTrackRep::extrapolate(const GFDetPlane& plane, TVectorT<double>& statePred){
-  TMatrixTSym<double> cov(fDimension);
+double GFAbsTrackRep::extrapolate(const GFDetPlane& plane, TVectorD& statePred){
+  TMatrixDSym cov(fDimension);
   return extrapolate(plane,statePred,cov);
 }
 
@@ -83,11 +83,11 @@ int GFAbsTrackRep::getPDG(){
 }
 
 
-void GFAbsTrackRep::getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixTSym<double>& cov){
+void GFAbsTrackRep::getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixDSym& cov){
   Abort("getPosMomCov()");
 }
 
-void GFAbsTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixTSym<double>& cov){
+void GFAbsTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov){
   Abort("setPosMomCov()");
 }
 
