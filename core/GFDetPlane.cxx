@@ -362,3 +362,11 @@ TVector2 GFDetPlane::straightLineToPlane (const TVector3& point, const TVector3&
   double t = 1./dirTimesN * ((fO-point)*normal);
   return project(point - fO + t * dirNorm);
 }
+
+
+void GFDetPlane::reset() {
+  fO.SetXYZ(0.,0.,0.);
+  fU.SetXYZ(1.,0.,0.);
+  fV.SetXYZ(0.,1.,0.);
+  if(fFinitePlane!=NULL) delete fFinitePlane;
+}

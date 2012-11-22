@@ -155,6 +155,9 @@ public:
     return inActive(v.X(),v.Y());
   }
   
+  // delete fFinitePlane and set O, U, V to default values
+  void reset();
+
 private:
 
   // Private Data Members ------------

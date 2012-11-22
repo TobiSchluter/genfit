@@ -94,8 +94,7 @@ void GFAbsTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const
 void
 GFAbsTrackRep::reset(){
   std::cout<<"GFAbsTrackRep::reset"<<std::endl;
-  TVector3 nullVec(0.,0.,0.);
-  fRefPlane.set(nullVec,nullVec,nullVec);
+  fRefPlane.reset();
   fState.Zero();
   fCov.Zero();
   fFirstState.Zero();

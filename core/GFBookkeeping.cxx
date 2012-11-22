@@ -577,7 +577,12 @@ void GFBookkeeping::reset() {
 
   std::map<std::string, std::vector<TVectorD > >::iterator itVec;
   for(itVec=fVectors.begin(); itVec!=fVectors.end(); ++itVec){
-    if (itVec->second.size()>0) {
+    if (itVec->second.size()==nHits) {
+      for (unsigned int i=0; i<itVec->second.size(); ++i){
+        itVec->second[i].Zero();
+      }
+    }
+    else if (itVec->second.size()>0) {
       TVectorD vec(itVec->second[0]);
       itVec->second.assign(nHits, vec);
     }
@@ -586,7 +591,12 @@ void GFBookkeeping::reset() {
 
   std::map<std::string, std::vector<TMatrixD> >::iterator itMat;
   for(itMat=fMatrices.begin(); itMat!=fMatrices.end(); ++itMat){
-    if (itMat->second.size()>0) {
+    if (itMat->second.size()==nHits) {
+      for (unsigned int i=0; i<itMat->second.size(); ++i){
+        itMat->second[i].Zero();
+      }
+    }
+    else if (itMat->second.size()>0) {
       TMatrixD mat(itMat->second[0]);
       itMat->second.assign(nHits, mat);
     }
@@ -595,7 +605,12 @@ void GFBookkeeping::reset() {
 
   std::map<std::string, std::vector<TMatrixDSym> >::iterator itMatSym;
   for(itMatSym=fSymMatrices.begin(); itMatSym!=fSymMatrices.end(); ++itMatSym){
-    if (itMatSym->second.size()>0){
+    if (itMatSym->second.size()==nHits) {
+      for (unsigned int i=0; i<itMatSym->second.size(); ++i){
+        itMatSym->second[i].Zero();
+      }
+    }
+    else if (itMatSym->second.size()>0){
       TMatrixDSym matSym(itMatSym->second[0]);
       itMatSym->second.assign(nHits, matSym);
     }
@@ -604,8 +619,15 @@ void GFBookkeeping::reset() {
 
   std::map<std::string, std::vector<GFDetPlane> >::iterator itPl;
   for(itPl=fPlanes.begin(); itPl!=fPlanes.end(); ++itPl){
-    GFDetPlane pl;
-    itPl->second.assign(nHits, pl);
+    if (itPl->second.size()==nHits) {
+      for (unsigned int i=0; i<itPl->second.size(); ++i){
+        itPl->second[i].reset();
+      }
+    }
+    else {
+      GFDetPlane pl;
+      itPl->second.assign(nHits, pl);
+    }
   }
 
   std::map<std::string, std::vector<double> >::iterator itNum;
