@@ -693,25 +693,25 @@ double RKTrackRep::extrapolateToLine(const TVector3& point1,
   fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
+  TVector3 wireDir(point2-point1);
+  wireDir.SetMag(1.);
   TVector3 lastDir(0,0,0);
 
-  GFDetPlane pl;
+  GFDetPlane pl(point1, fDir.Cross(wireDir), wireDir);
   unsigned int iterations(0);
 
   while(true){
     lastStep = step;
     lastDir = fDir;
 
-    pl.setO(point1);
-    pl.setU(fDir.Cross(point2-point1));
-    pl.setV(point2-point1);
+    pl.setU(fDir.Cross(wireDir));
     step = this->Extrap(pl, state7, NULL, true, maxStep);
     tracklength += step;
     fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
     // check break conditions
     poca.SetXYZ(state7[0], state7[1], state7[2]);
-    poca_onwire = poca2Line(point1,point2,poca);
+    poca_onwire = poca2Line(point1, point2, poca);
     angle = fabs(fDir.Angle((poca_onwire-poca))-TMath::PiOver2()); // angle between direction and connection to point - 90 deg
     distToPoca = (poca_onwire-poca).Mag();
     if (angle*distToPoca < 0.1*MINSTEP) break;
@@ -1396,8 +1396,8 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   // calculate way SmaxAngle after which momentum angle has changed AngleMax
   double Hmag(MagField.Mag()), SmaxAngle(Smax), radius(0), p_perp(0);
   if (Hmag > 1E-5){
-    double cosAngle = (dir*MagField)/Hmag;
-    p_perp = ( dir - cosAngle/Hmag*MagField ).Mag() * momentum; // [GeV]
+    double cosAngle = (dir.Dot(MagField))/Hmag;
+    p_perp = ( dir - (cosAngle/Hmag)*MagField ).Mag() * momentum; // [GeV]
     radius = p_perp/(0.3E-3*Hmag); // [cm]
     double sinAngle = sqrt(1 - pow(cosAngle, 2));
     if (sinAngle > 1E-10) SmaxAngle = fabs(dAngleMax * radius / sinAngle); // [cm]
