@@ -60,7 +60,7 @@ class GFAbsProlateSpacepointHit : public GFAbsSpacepointHit {
   virtual const GFDetPlane& getDetPlane(GFAbsTrackRep* rep);
 
   const TVector3& getLargestErrorDirection(){return fLargestErrorDirection;}
-  void setLargestErrorDirection(TVector3& dir){fLargestErrorDirection = dir; fLargestErrorDirection.SetMag(1.);}
+  void setLargestErrorDirection(TVector3& dir){fLargestErrorDirection = dir.Unit();}
 
  protected:
 

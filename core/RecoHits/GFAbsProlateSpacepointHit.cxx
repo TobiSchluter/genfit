@@ -42,21 +42,16 @@ GFAbsProlateSpacepointHit::getDetPlane(GFAbsTrackRep* rep) {
   TVector3 poca, poca_onwire, dirInPoca;
   rep->extrapolateToLine(wire1, wire2, poca, dirInPoca, poca_onwire);
 
-  // unitary vector along the wire (V)
-  TVector3 wiredirection = wire2 - wire1;
-  wiredirection.SetMag(1.);
-
   // check if direction is parallel to wire
-  if (fabs(wiredirection.Angle(dirInPoca)) < 0.01){
+  if (fabs(fLargestErrorDirection.Angle(dirInPoca)) < 0.01){
     GFException exc("GFAbsProlateSpacepointHit::getDetPlane(): Cannot construct detector plane, track direction is parallel to largest error direction", __LINE__,__FILE__);
     throw exc;
   }
 
   // construct orthogonal vector
-  TVector3 U = wiredirection.Cross(dirInPoca);
-  U.SetMag(1.);
+  TVector3 U = fLargestErrorDirection.Cross(dirInPoca);
 
-  fDetPlane.set(poca_onwire, U, wiredirection);
+  fDetPlane.set(poca_onwire, U, fLargestErrorDirection);
 
   return fDetPlane;
 }

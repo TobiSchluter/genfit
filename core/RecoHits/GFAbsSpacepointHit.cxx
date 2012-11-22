@@ -33,9 +33,9 @@ GFAbsSpacepointHit::getMeasurement(const GFAbsTrackRep* rep,
   static_cast<void>(statePred);
   static_cast<void>(covPred);
 
-  TVector3 o(pl.getO());
-  TVector3 u(pl.getU());
-  TVector3 v(pl.getV());
+  const TVector3& o(pl.getO());
+  const TVector3& u(pl.getU());
+  const TVector3& v(pl.getV());
 
   // m
   m.ResizeTo(2);

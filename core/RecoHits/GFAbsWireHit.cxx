@@ -103,7 +103,6 @@ GFAbsWireHit::getDetPlane(GFAbsTrackRep* rep)
   
   // construct orthogonal vector
   TVector3 U = dirInPoca.Cross(wiredirection);
-  U.SetMag(1.);
 
   // check left/right ambiguity
   if (fLeftRight == 0){ // auto select

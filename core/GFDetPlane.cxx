@@ -28,9 +28,9 @@
 ClassImp(GFDetPlane)
 
 GFDetPlane::GFDetPlane(const TVector3& o,
-		       const TVector3& u,
-		       const TVector3& v,
-		       GFAbsFinitePlane* finite) 
+                       const TVector3& u,
+                       const TVector3& v,
+                       GFAbsFinitePlane* finite)
   :fO(o), fU(u), fV(v), fFinitePlane(finite)
 {
   sane();
@@ -48,8 +48,8 @@ GFDetPlane::GFDetPlane(GFAbsFinitePlane* finite)
 }
 
 GFDetPlane::GFDetPlane(const TVector3& o,
-		       const TVector3& n,
-		       GFAbsFinitePlane* finite)
+                       const TVector3& n,
+                       GFAbsFinitePlane* finite)
   :fO(o), fFinitePlane(finite)
 {
   setNormal(n);
@@ -117,20 +117,22 @@ void
 GFDetPlane::setU(const TVector3& u)
 {
   fU = u;
-  sane();
+  sane(); // sets fV perpendicular to fU
 }
 
 void 
 GFDetPlane::setU(double X,double Y,double Z)
 {
   fU.SetXYZ(X,Y,Z);
-  sane();
+  sane(); // sets fV perpendicular to fU
 }
 
 void 
 GFDetPlane::setV(const TVector3& v)
 {
   fV = v;
+  fU = getNormal().Cross(fV);
+  fU *= -1.;
   sane();
 }
 
@@ -138,6 +140,8 @@ void
 GFDetPlane::setV(double X,double Y,double Z)
 {
   fV.SetXYZ(X,Y,Z);
+  fU = getNormal().Cross(fV);
+  fU *= -1.;
   sane();
 }
 
@@ -164,8 +168,7 @@ GFDetPlane::getNormal() const
 
 void
 GFDetPlane::setNormal(double X,double Y,double Z){
-  TVector3 N(X,Y,Z);
-  setNormal(N);
+  setNormal( TVector3(X,Y,Z) );
 }
 
 void
@@ -175,25 +178,21 @@ GFDetPlane::setNormal(const TVector3& n){
 }
 
 void GFDetPlane::setNormal(const double& theta, const double& phi){
-  TVector3 n(TMath::Sin(theta)*TMath::Cos(phi),TMath::Sin(theta)*TMath::Sin(phi),TMath::Cos(theta));
-  setNormal(n);
+  setNormal( TVector3(TMath::Sin(theta)*TMath::Cos(phi),TMath::Sin(theta)*TMath::Sin(phi),TMath::Cos(theta)) );
 }
 
 
 TVector2
 GFDetPlane::project(const TVector3& x)const
 {
-  Double_t xfU = fU*x;
-  Double_t xfV = fV*x;
-  return TVector2(xfU,xfV);
+  return TVector2(fU*x, fV*x);
 }
 
 
 TVector2 
 GFDetPlane::LabToPlane(const TVector3& x)const
 {
-  TVector3 d = x-fO;
-  return project(d);
+  return project(x-fO);
 }
 
 
@@ -210,9 +209,7 @@ GFDetPlane::toLab(const TVector2& x)const
 TVector3 
 GFDetPlane::dist(const TVector3& x)const
 {
-  TVector2 p = LabToPlane(x);
-  TVector3 xplane = toLab(p);
-  return xplane - x;
+  return toLab(LabToPlane(x)) - x;
 }
 
 
@@ -228,8 +225,7 @@ GFDetPlane::sane(){
   if (fU.Dot(fV) < 1.E-5) return;
 
   // ensure orthogonal system
-  TVector3 n(getNormal());
-  fV = n.Cross(fU);
+  fV = getNormal().Cross(fU);
 }
 
 
@@ -353,8 +349,7 @@ double GFDetPlane::distance(double x, double y, double z) const {
 
 
 TVector2 GFDetPlane::straightLineToPlane (const TVector3& point,const TVector3& dir) const{
-  TVector3 dirNorm(dir);
-  dirNorm.SetMag(1.);
+  TVector3 dirNorm(dir.Unit());
   TVector3 normal = getNormal();
   double dirTimesN = dirNorm*normal;
   if(fabs(dirTimesN)<1.E-6){//straight line is parallel to plane, so return infinity
