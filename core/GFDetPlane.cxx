@@ -338,24 +338,27 @@ void GFDetPlane::getGraphics(double mesh, double length, TPolyMarker3D **pl,TPol
 
 
 double GFDetPlane::distance(const TVector3& point) const {
-  // Distance is the absolute value of the projection onto the normal
-  // vector after accounting for the displaced origin.
-  return fabs((point - fO)*(fU.Cross(fV)));
+  // |(point - fO)*(fU x fV)|
+  return fabs( (point.X()-fO.X()) * (fU.Y()*fV.Z() - fU.Z()*fV.Y()) +
+               (point.Y()-fO.Y()) * (fU.Z()*fV.X() - fU.X()*fV.Z()) +
+               (point.Z()-fO.Z()) * (fU.X()*fV.Y() - fU.Y()*fV.X()));
 }
 
 double GFDetPlane::distance(double x, double y, double z) const {
-  return distance(TVector3(x,y,z));
+  // |(point - fO)*(fU x fV)|
+  return fabs( (x-fO.X()) * (fU.Y()*fV.Z() - fU.Z()*fV.Y()) +
+               (y-fO.Y()) * (fU.Z()*fV.X() - fU.X()*fV.Z()) +
+               (z-fO.Z()) * (fU.X()*fV.Y() - fU.Y()*fV.X()));
 }
 
 
-TVector2 GFDetPlane::straightLineToPlane (const TVector3& point,const TVector3& dir) const{
+TVector2 GFDetPlane::straightLineToPlane (const TVector3& point, const TVector3& dir) const {
   TVector3 dirNorm(dir.Unit());
   TVector3 normal = getNormal();
   double dirTimesN = dirNorm*normal;
   if(fabs(dirTimesN)<1.E-6){//straight line is parallel to plane, so return infinity
-    //doesnt parallel mean that they cross in infinity ;-)
     return TVector2(1.E100,1.E100);
   }
-  double t = 1/dirTimesN * ((fO-point)*normal);
+  double t = 1./dirTimesN * ((fO-point)*normal);
   return project(point - fO + t * dirNorm);
 }

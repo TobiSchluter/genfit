@@ -133,12 +133,14 @@ public:
   //! returns NOT ==
   friend bool operator!= (const GFDetPlane& lhs, const GFDetPlane& rhs);
 
+  //! absolute distance from a point to the plane
   double distance(const TVector3& point) const;
   double distance(double, double, double) const;
 
 
   //! intersect in the active area? C.f. GFAbsFinitePlane
   bool inActive(const TVector3& point, const TVector3& dir) const {
+    if(fFinitePlane==NULL) return true;
     return this->inActive( this->straightLineToPlane(point,dir));
   }
 
