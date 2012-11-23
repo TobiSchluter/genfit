@@ -346,7 +346,7 @@ class RKTrackRep : public GFAbsTrackRep {
   TMatrixD fAuxInfo;
 
   // vectors for getState, transform, Extrap etc. functions. Saves a lot of TVector3 constructions/destructions
-  TVector3 fO, fU, fV, fW; //!
+  TVector3 fW; //!
   TVector3 fPos, fDir; //!
   TVector3 fpTilde; //!
   TVector3 fDirectionBefore, fDirectionAfter; //!

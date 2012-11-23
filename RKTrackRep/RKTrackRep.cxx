@@ -184,8 +184,8 @@ void RKTrackRep::calcStateCov(const TVector3& pos,
   double pu = 0.;
   double pv = 0.;
 
-  fU = fRefPlane.getU();
-  fV = fRefPlane.getV();
+  const TVector3& U(fRefPlane.getU());
+  const TVector3& V(fRefPlane.getV());
   fW = fRefPlane.getNormal();
 
 
@@ -194,21 +194,21 @@ void RKTrackRep::calcStateCov(const TVector3& pos,
                mom.Y()*mom.Y() * momerr.Y()*momerr.Y()+
                mom.Z()*mom.Z() * momerr.Z()*momerr.Z());
 
-  fCov(1,1) = pow((fU.X()/pw - fW.X()*pu/(pw*pw)),2.) * momerr.X()*momerr.X() +
-              pow((fU.Y()/pw - fW.Y()*pu/(pw*pw)),2.) * momerr.Y()*momerr.Y() +
-              pow((fU.Z()/pw - fW.Z()*pu/(pw*pw)),2.) * momerr.Z()*momerr.Z();
+  fCov(1,1) = pow((U.X()/pw - fW.X()*pu/(pw*pw)),2.) * momerr.X()*momerr.X() +
+              pow((U.Y()/pw - fW.Y()*pu/(pw*pw)),2.) * momerr.Y()*momerr.Y() +
+              pow((U.Z()/pw - fW.Z()*pu/(pw*pw)),2.) * momerr.Z()*momerr.Z();
 
-  fCov(2,2) = pow((fV.X()/pw - fW.X()*pv/(pw*pw)),2.) * momerr.X()*momerr.X() +
-              pow((fV.Y()/pw - fW.Y()*pv/(pw*pw)),2.) * momerr.Y()*momerr.Y() +
-              pow((fV.Z()/pw - fW.Z()*pv/(pw*pw)),2.) * momerr.Z()*momerr.Z();
+  fCov(2,2) = pow((V.X()/pw - fW.X()*pv/(pw*pw)),2.) * momerr.X()*momerr.X() +
+              pow((V.Y()/pw - fW.Y()*pv/(pw*pw)),2.) * momerr.Y()*momerr.Y() +
+              pow((V.Z()/pw - fW.Z()*pv/(pw*pw)),2.) * momerr.Z()*momerr.Z();
 
-  fCov(3,3) = poserr.X()*poserr.X() * fU.X()*fU.X() +
-              poserr.Y()*poserr.Y() * fU.Y()*fU.Y() +
-              poserr.Z()*poserr.Z() * fU.Z()*fU.Z();
+  fCov(3,3) = poserr.X()*poserr.X() * U.X()*U.X() +
+              poserr.Y()*poserr.Y() * U.Y()*U.Y() +
+              poserr.Z()*poserr.Z() * U.Z()*U.Z();
 
-  fCov(4,4) = poserr.X()*poserr.X() * fV.X()*fV.X() +
-              poserr.Y()*poserr.Y() * fV.Y()*fV.Y() +
-              poserr.Z()*poserr.Z() * fV.Z()*fV.Z();
+  fCov(4,4) = poserr.X()*poserr.X() * V.X()*V.X() +
+              poserr.Y()*poserr.Y() * V.Y()*V.Y() +
+              poserr.Z()*poserr.Z() * V.Z()*V.Z();
 }
 
 
@@ -238,18 +238,18 @@ void RKTrackRep::getState7(M1x7& state7) {
 
 void RKTrackRep::getState7(M1x7& state7, const TVectorD& state5, const GFDetPlane& pl, const double& spu) {
 
-  fU = pl.getU();
-  fV = pl.getV();
-  fO = pl.getO();
+  const TVector3& U(pl.getU());
+  const TVector3& V(pl.getV());
+  const TVector3& O(pl.getO());
   fW = pl.getNormal();
 
-  state7[0] = fO.X() + state5(3)*fU.X() + state5(4)*fV.X(); // x
-  state7[1] = fO.Y() + state5(3)*fU.Y() + state5(4)*fV.Y(); // y
-  state7[2] = fO.Z() + state5(3)*fU.Z() + state5(4)*fV.Z(); // z
+  state7[0] = O.X() + state5(3)*U.X() + state5(4)*V.X(); // x
+  state7[1] = O.Y() + state5(3)*U.Y() + state5(4)*V.Y(); // y
+  state7[2] = O.Z() + state5(3)*U.Z() + state5(4)*V.Z(); // z
 
-  state7[3] = spu * (fW.X() + state5(1)*fU.X() + state5(2)*fV.X()); // a_x
-  state7[4] = spu * (fW.Y() + state5(1)*fU.Y() + state5(2)*fV.Y()); // a_y
-  state7[5] = spu * (fW.Z() + state5(1)*fU.Z() + state5(2)*fV.Z()); // a_z
+  state7[3] = spu * (fW.X() + state5(1)*U.X() + state5(2)*V.X()); // a_x
+  state7[4] = spu * (fW.Y() + state5(1)*U.Y() + state5(2)*V.Y()); // a_y
+  state7[5] = spu * (fW.Z() + state5(1)*U.Z() + state5(2)*V.Z()); // a_z
 
   // normalize dir
   double norm = 1. / sqrt(state7[3]*state7[3] + state7[4]*state7[4] + state7[5]*state7[5]);
@@ -261,8 +261,8 @@ void RKTrackRep::getState7(M1x7& state7, const TVectorD& state5, const GFDetPlan
 
 TVectorD RKTrackRep::getState5(const M1x7& state7, const GFDetPlane& pl, double& spu) {
 
-  fU = pl.getU();
-  fV = pl.getV();
+  const TVector3& U(pl.getU());
+  const TVector3& V(pl.getV());
 
   fPos.SetXYZ(state7[0], state7[1], state7[2]);
   fPos -= pl.getO();
@@ -280,10 +280,10 @@ TVectorD RKTrackRep::getState5(const M1x7& state7, const GFDetPlane& pl, double&
 
   TVectorD state5(5);
   state5(0) = state7[6];
-  state5(1) = fDir*fU / AtW;
-  state5(2) = fDir*fV / AtW;
-  state5(3) = fPos*fU;
-  state5(4) = fPos*fV;
+  state5(1) = fDir*U / AtW;
+  state5(2) = fDir*V / AtW;
+  state5(3) = fPos*U;
+  state5(4) = fPos*V;
 
   return state5;
 }
@@ -295,42 +295,42 @@ void RKTrackRep::transformPM7(const TMatrixD& in5x5, M7x7& out7x7,
                               TMatrixD* Jac) {
 
   // get vectors and aux variables
-  fU = pl.getU();
-  fV = pl.getV();
+  const TVector3& U(pl.getU());
+  const TVector3& V(pl.getV());
   fW = pl.getNormal();
 
-  fpTilde.SetXYZ(spu * (fW.X() + state5(1)*fU.X() + state5(2)*fV.X()), // a_x
-                 spu * (fW.Y() + state5(1)*fU.Y() + state5(2)*fV.Y()), // a_y
-                 spu * (fW.Z() + state5(1)*fU.Z() + state5(2)*fV.Z()));// a_z
+  fpTilde.SetXYZ(spu * (fW.X() + state5(1)*U.X() + state5(2)*V.X()), // a_x
+                 spu * (fW.Y() + state5(1)*U.Y() + state5(2)*V.Y()), // a_y
+                 spu * (fW.Z() + state5(1)*U.Z() + state5(2)*V.Z()));// a_z
 
 
   const double pTildeMag = fpTilde.Mag();
   const double pTildeMag2 = pTildeMag*pTildeMag;
 
-  const double utpTildeOverpTildeMag2 = fU*fpTilde / pTildeMag2;
-  const double vtpTildeOverpTildeMag2 = fV*fpTilde / pTildeMag2;
+  const double utpTildeOverpTildeMag2 = U*fpTilde / pTildeMag2;
+  const double vtpTildeOverpTildeMag2 = V*fpTilde / pTildeMag2;
 
   //J_pM matrix is d(x,y,z,ax,ay,az,q/p) / d(q/p,u',v',u,v)   (out is 7x7)
 
    // d(x,y,z)/d(u)
-  fJ_pM_5x7[21] = fU.X(); // [3][0]
-  fJ_pM_5x7[22] = fU.Y(); // [3][1]
-  fJ_pM_5x7[23] = fU.Z(); // [3][2]
+  fJ_pM_5x7[21] = U.X(); // [3][0]
+  fJ_pM_5x7[22] = U.Y(); // [3][1]
+  fJ_pM_5x7[23] = U.Z(); // [3][2]
   // d(x,y,z)/d(v)
-  fJ_pM_5x7[28] = fV.X(); // [4][2]
-  fJ_pM_5x7[29] = fV.Y(); // [4][2]
-  fJ_pM_5x7[30] = fV.Z(); // [4][2]
+  fJ_pM_5x7[28] = V.X(); // [4][2]
+  fJ_pM_5x7[29] = V.Y(); // [4][2]
+  fJ_pM_5x7[30] = V.Z(); // [4][2]
   // d(q/p)/d(q/p)
   fJ_pM_5x7[6] = 1.; // not needed for array matrix multiplication
   // d(ax,ay,az)/d(u')
   double fact = spu / pTildeMag;
-  fJ_pM_5x7[10] = fact * ( fU.X() - fpTilde.X()*utpTildeOverpTildeMag2 ); // [1][3]
-  fJ_pM_5x7[11] = fact * ( fU.Y() - fpTilde.Y()*utpTildeOverpTildeMag2 ); // [1][4]
-  fJ_pM_5x7[12] = fact * ( fU.Z() - fpTilde.Z()*utpTildeOverpTildeMag2 ); // [1][5]
+  fJ_pM_5x7[10] = fact * ( U.X() - fpTilde.X()*utpTildeOverpTildeMag2 ); // [1][3]
+  fJ_pM_5x7[11] = fact * ( U.Y() - fpTilde.Y()*utpTildeOverpTildeMag2 ); // [1][4]
+  fJ_pM_5x7[12] = fact * ( U.Z() - fpTilde.Z()*utpTildeOverpTildeMag2 ); // [1][5]
   // d(ax,ay,az)/d(v')
-  fJ_pM_5x7[17] = fact * ( fV.X() - fpTilde.X()*vtpTildeOverpTildeMag2 ); // [2][3]
-  fJ_pM_5x7[18] = fact * ( fV.Y() - fpTilde.Y()*vtpTildeOverpTildeMag2 ); // [2][4]
-  fJ_pM_5x7[19] = fact * ( fV.Z() - fpTilde.Z()*vtpTildeOverpTildeMag2 ); // [2][5]
+  fJ_pM_5x7[17] = fact * ( V.X() - fpTilde.X()*vtpTildeOverpTildeMag2 ); // [2][3]
+  fJ_pM_5x7[18] = fact * ( V.Y() - fpTilde.Y()*vtpTildeOverpTildeMag2 ); // [2][4]
+  fJ_pM_5x7[19] = fact * ( V.Z() - fpTilde.Z()*vtpTildeOverpTildeMag2 ); // [2][5]
 
 
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
@@ -351,18 +351,18 @@ void RKTrackRep::transformPM6(const TMatrixDSym& in5x5, M6x6& out6x6,
                               TMatrixD* Jac) {
 
   // get vectors and aux variables
-  fU = pl.getU();
-  fV = pl.getV();
+  const TVector3& U(pl.getU());
+  const TVector3& V(pl.getV());
 
-  fpTilde.SetXYZ(spu * (fW.X() + state5(1)*fU.X() + state5(2)*fV.X()), // a_x
-                 spu * (fW.Y() + state5(1)*fU.Y() + state5(2)*fV.Y()), // a_y
-                 spu * (fW.Z() + state5(1)*fU.Z() + state5(2)*fV.Z()));// a_z
+  fpTilde.SetXYZ(spu * (fW.X() + state5(1)*U.X() + state5(2)*V.X()), // a_x
+                 spu * (fW.Y() + state5(1)*U.Y() + state5(2)*V.Y()), // a_y
+                 spu * (fW.Z() + state5(1)*U.Z() + state5(2)*V.Z()));// a_z
 
   const double pTildeMag = fpTilde.Mag();
   const double pTildeMag2 = pTildeMag*pTildeMag;
 
-  const double utpTildeOverpTildeMag2 = fU*fpTilde / pTildeMag2;
-  const double vtpTildeOverpTildeMag2 = fV*fpTilde / pTildeMag2;
+  const double utpTildeOverpTildeMag2 = U*fpTilde / pTildeMag2;
+  const double vtpTildeOverpTildeMag2 = V*fpTilde / pTildeMag2;
 
   //J_pM matrix is d(x,y,z,px,py,pz) / d(q/p,u',v',u,v)       (out is 6x6)
 
@@ -376,21 +376,21 @@ void RKTrackRep::transformPM6(const TMatrixDSym& in5x5, M6x6& out6x6,
   fJ_pM_5x6[5] = fact * fpTilde.Z(); // [0][5]
   // d(px,py,pz)/d(u')
   fact = p * spu / pTildeMag;
-  fJ_pM_5x6[9]  = fact * ( fU.X() - fpTilde.X()*utpTildeOverpTildeMag2 ); // [1][3]
-  fJ_pM_5x6[10] = fact * ( fU.Y() - fpTilde.Y()*utpTildeOverpTildeMag2 ); // [1][4]
-  fJ_pM_5x6[11] = fact * ( fU.Z() - fpTilde.Z()*utpTildeOverpTildeMag2 ); // [1][5]
+  fJ_pM_5x6[9]  = fact * ( U.X() - fpTilde.X()*utpTildeOverpTildeMag2 ); // [1][3]
+  fJ_pM_5x6[10] = fact * ( U.Y() - fpTilde.Y()*utpTildeOverpTildeMag2 ); // [1][4]
+  fJ_pM_5x6[11] = fact * ( U.Z() - fpTilde.Z()*utpTildeOverpTildeMag2 ); // [1][5]
   // d(px,py,pz)/d(v')
-  fJ_pM_5x6[15] = fact * ( fV.X() - fpTilde.X()*vtpTildeOverpTildeMag2 ); // [2][3]
-  fJ_pM_5x6[16] = fact * ( fV.Y() - fpTilde.Y()*vtpTildeOverpTildeMag2 ); // [2][4]
-  fJ_pM_5x6[17] = fact * ( fV.Z() - fpTilde.Z()*vtpTildeOverpTildeMag2 ); // [2][5]
+  fJ_pM_5x6[15] = fact * ( V.X() - fpTilde.X()*vtpTildeOverpTildeMag2 ); // [2][3]
+  fJ_pM_5x6[16] = fact * ( V.Y() - fpTilde.Y()*vtpTildeOverpTildeMag2 ); // [2][4]
+  fJ_pM_5x6[17] = fact * ( V.Z() - fpTilde.Z()*vtpTildeOverpTildeMag2 ); // [2][5]
   // d(x,y,z)/d(u)
-  fJ_pM_5x6[18] = fU.X(); // [3][0]
-  fJ_pM_5x6[19] = fU.Y(); // [3][1]
-  fJ_pM_5x6[20] = fU.Z(); // [3][2]
+  fJ_pM_5x6[18] = U.X(); // [3][0]
+  fJ_pM_5x6[19] = U.Y(); // [3][1]
+  fJ_pM_5x6[20] = U.Z(); // [3][2]
   // d(x,y,z)/d(v)
-  fJ_pM_5x6[24] = fV.X(); // [4][0]
-  fJ_pM_5x6[25] = fV.Y(); // [4][1]
-  fJ_pM_5x6[26] = fV.Z(); // [4][2]
+  fJ_pM_5x6[24] = V.X(); // [4][0]
+  fJ_pM_5x6[25] = V.Y(); // [4][1]
+  fJ_pM_5x6[26] = V.Z(); // [4][2]
 
 
   // do the transformation
@@ -412,37 +412,37 @@ void RKTrackRep::transformM7P(const M7x7& in7x7, TMatrixDSym& out5x5,
   out5x5.ResizeTo(5, 5);
 
   // get vectors and aux variables
-  fU = pl.getU();
-  fV = pl.getV();
+  const TVector3& U(pl.getU());
+  const TVector3& V(pl.getV());
   fW = pl.getNormal();
 
   fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
-  const double AtU = fDir*fU;
-  const double AtV = fDir*fV;
+  const double AtU = fDir*U;
+  const double AtV = fDir*V;
   const double AtW = fDir*fW;
 
   // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)   (in is 7x7)
 
   // d(u')/d(ax,ay,az)
   double fact = 1./(AtW*AtW);
-  fJ_Mp_7x5[16] = fact * (fU.X()*AtW - fW.X()*AtU); // [3][1]
-  fJ_Mp_7x5[21] = fact * (fU.Y()*AtW - fW.Y()*AtU); // [4][1]
-  fJ_Mp_7x5[26] = fact * (fU.Z()*AtW - fW.Z()*AtU); // [5][1]
+  fJ_Mp_7x5[16] = fact * (U.X()*AtW - fW.X()*AtU); // [3][1]
+  fJ_Mp_7x5[21] = fact * (U.Y()*AtW - fW.Y()*AtU); // [4][1]
+  fJ_Mp_7x5[26] = fact * (U.Z()*AtW - fW.Z()*AtU); // [5][1]
   // d(v')/d(ax,ay,az)
-  fJ_Mp_7x5[17] = fact * (fV.X()*AtW - fW.X()*AtV); // [3][2]
-  fJ_Mp_7x5[22] = fact * (fV.Y()*AtW - fW.Y()*AtV); // [4][2]
-  fJ_Mp_7x5[27] = fact * (fV.Z()*AtW - fW.Z()*AtV); // [5][2]
+  fJ_Mp_7x5[17] = fact * (V.X()*AtW - fW.X()*AtV); // [3][2]
+  fJ_Mp_7x5[22] = fact * (V.Y()*AtW - fW.Y()*AtV); // [4][2]
+  fJ_Mp_7x5[27] = fact * (V.Z()*AtW - fW.Z()*AtV); // [5][2]
   // d(q/p)/d(q/p)
   fJ_Mp_7x5[30] = 1.; // [6][0]  - not needed for array matrix multiplication
   //d(u)/d(x,y,z)
-  fJ_Mp_7x5[3]  = fU.X(); // [0][3]
-  fJ_Mp_7x5[8]  = fU.Y(); // [1][3]
-  fJ_Mp_7x5[13] = fU.Z(); // [2][3]
+  fJ_Mp_7x5[3]  = U.X(); // [0][3]
+  fJ_Mp_7x5[8]  = U.Y(); // [1][3]
+  fJ_Mp_7x5[13] = U.Z(); // [2][3]
   //d(v)/d(x,y,z)
-  fJ_Mp_7x5[4]  = fV.X(); // [0][4]
-  fJ_Mp_7x5[9]  = fV.Y(); // [1][4]
-  fJ_Mp_7x5[14] = fV.Z(); // [2][4]
+  fJ_Mp_7x5[4]  = V.X(); // [0][4]
+  fJ_Mp_7x5[9]  = V.Y(); // [1][4]
+  fJ_Mp_7x5[14] = V.Z(); // [2][4]
 
 
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
@@ -465,14 +465,14 @@ void RKTrackRep::transformM6P(const M6x6& in6x6, TMatrixDSym& out5x5,
   out5x5.ResizeTo(5, 5);
 
   // get vectors and aux variables
-  fU = pl.getU();
-  fV = pl.getV();
+  const TVector3& U(pl.getU());
+  const TVector3& V(pl.getV());
   fW = pl.getNormal();
 
   fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
-  const double AtU = fDir*fU;
-  const double AtV = fDir*fV;
+  const double AtU = fDir*U;
+  const double AtV = fDir*V;
   const double AtW = fDir*fW;
 
   // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,px,py,pz)       (in is 6x6)
@@ -481,13 +481,13 @@ void RKTrackRep::transformM6P(const M6x6& in6x6, TMatrixDSym& out5x5,
   const double p = fCharge/qop; // momentum
 
   //d(u)/d(x,y,z)
-  fJ_Mp_6x5[3]  = fU.X(); // [0][3]
-  fJ_Mp_6x5[8]  = fU.Y(); // [1][3]
-  fJ_Mp_6x5[13] = fU.Z(); // [2][3]
+  fJ_Mp_6x5[3]  = U.X(); // [0][3]
+  fJ_Mp_6x5[8]  = U.Y(); // [1][3]
+  fJ_Mp_6x5[13] = U.Z(); // [2][3]
   //d(v)/d(x,y,z)
-  fJ_Mp_6x5[4]  = fV.X(); // [0][4]
-  fJ_Mp_6x5[9]  = fV.Y(); // [1][4]
-  fJ_Mp_6x5[14] = fV.Z(); // [2][4]
+  fJ_Mp_6x5[4]  = V.X(); // [0][4]
+  fJ_Mp_6x5[9]  = V.Y(); // [1][4]
+  fJ_Mp_6x5[14] = V.Z(); // [2][4]
   // d(q/p)/d(px,py,pz)
   double fact = (-1.) * qop / p;
   fJ_Mp_6x5[15] = fact * fDir.X(); // [3][0]
@@ -495,13 +495,13 @@ void RKTrackRep::transformM6P(const M6x6& in6x6, TMatrixDSym& out5x5,
   fJ_Mp_6x5[25] = fact * fDir.Z(); // [5][0]
   // d(u')/d(px,py,pz)
   fact = 1./(p*AtW*AtW);
-  fJ_Mp_6x5[16] = fact * (fU.X()*AtW - fW.X()*AtU); // [3][1]
-  fJ_Mp_6x5[21] = fact * (fU.Y()*AtW - fW.Y()*AtU); // [4][1]
-  fJ_Mp_6x5[26] = fact * (fU.Z()*AtW - fW.Z()*AtU); // [5][1]
+  fJ_Mp_6x5[16] = fact * (U.X()*AtW - fW.X()*AtU); // [3][1]
+  fJ_Mp_6x5[21] = fact * (U.Y()*AtW - fW.Y()*AtU); // [4][1]
+  fJ_Mp_6x5[26] = fact * (U.Z()*AtW - fW.Z()*AtU); // [5][1]
   // d(v')/d(px,py,pz)
-  fJ_Mp_6x5[17] = fact * (fV.X()*AtW - fW.X()*AtV); // [3][2]
-  fJ_Mp_6x5[22] = fact * (fV.Y()*AtW - fW.Y()*AtV); // [4][2]
-  fJ_Mp_6x5[27] = fact * (fV.Z()*AtW - fW.Z()*AtV); // [5][2]
+  fJ_Mp_6x5[17] = fact * (V.X()*AtW - fW.X()*AtV); // [3][2]
+  fJ_Mp_6x5[22] = fact * (V.Y()*AtW - fW.Y()*AtV); // [4][2]
+  fJ_Mp_6x5[27] = fact * (V.Z()*AtW - fW.Z()*AtV); // [5][2]
 
   // do the transformation
   // out5x5 = J_Mp^T * in * J_Mp
