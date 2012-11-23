@@ -301,7 +301,6 @@ public:
   // ---------------------
 
   void addFailedHit(unsigned int irep,unsigned int id){
-    assert(irep<fBookkeeping.size());
     fBookkeeping.at(irep)->addFailedHit(id);
   }
   
@@ -337,7 +336,7 @@ public:
 
   //! get GFBookKeeping object for particular track rep (default is cardinal rep)
   GFBookkeeping* getBK(int index=-1) const {
-    if(index==-1) return fBookkeeping.at(fCardinal_rep);
+    if(index==-1) return fBookkeeping[fCardinal_rep];
     assert((unsigned int)index<getNumReps());
     return fBookkeeping.at(index);
   }
@@ -368,14 +367,12 @@ public:
   /** @brief set the hit index at which plane,state&cov of rep irep is defined
    */
   void setRepAtHit(unsigned int irep,int ihit){
-    assert(irep<getNumReps());
     fRepAtHit.at(irep) = ihit;
   }
 
   /** @brief get the hit index at which plane,state&cov of rep irep is defined
    */
   int getRepAtHit(unsigned int irep) const {
-    assert(irep<getNumReps());
     return fRepAtHit.at(irep);
   }
 
@@ -383,7 +380,7 @@ public:
    */
   void clearRepAtHit(){
     for(unsigned int i=0;i<getNumReps();++i){
-      fRepAtHit.at(i)=-1;
+      fRepAtHit[i]=-1;
     }
   }
 
@@ -395,13 +392,13 @@ public:
 
   void clearBookkeeping(){
     for(unsigned int i=0;i<getNumReps();++i){
-      fBookkeeping.at(i)->clearAll();
+      fBookkeeping[i]->clearAll();
     }
   }
 
   void clearFailedHits(){
     for(unsigned int i=0;i<getNumReps();++i){
-      fBookkeeping.at(i)->clearFailedHits();
+      fBookkeeping[i]->clearFailedHits();
     }
   }
 

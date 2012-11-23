@@ -133,7 +133,7 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
 
   for (unsigned int i = 1; i < nPoints; ++i) { // loop over points
 
-    TVector3 dir(points.at(i).getPos() - points.at(i-1).getPos()); // straight line from one point to the next
+    TVector3 dir(points[i].getPos() - points[i-1].getPos()); // straight line from one point to the next
     double dist = dir.Mag(); // straight line distance
 
     if (dist > 1.E-8) { // do material effects only if distance is not too small
@@ -141,9 +141,9 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
       dir.SetMag(1.);
       double X(0.); // path already gone through material (straight line)
       double step(0); // straight line step
-      double realPath = points.at(i-1).getPath(); // real (curved) distance, signed
+      double realPath = points[i-1].getPath(); // real (curved) distance, signed
       
-      fMaterialInterface->initTrack(points.at(i-1).getPos(), dir);
+      fMaterialInterface->initTrack(points[i-1].getPos(), dir);
 
       unsigned int nIter(0);
       static unsigned int maxIt(300);

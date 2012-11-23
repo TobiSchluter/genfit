@@ -57,7 +57,7 @@ void GFDaf::processTrack(GFTrack* trk) {
   mini_trk->setSmoothing();
 
   for(unsigned int j=0; j<eff_hits.size(); j++)
-    mini_trk->addHit(eff_hits.at(j), 0, j); // using dummy det and hit id, they are never used anyway
+    mini_trk->addHit(eff_hits[j], 0, j); // using dummy det and hit id, they are never used anyway
 
 
   // fit for each trackrep separately
@@ -76,7 +76,7 @@ void GFDaf::processTrack(GFTrack* trk) {
 
       for(unsigned int j=0; j<mini_trk->getNumHits(); j++) {
         GFDafHit* hit = static_cast<GFDafHit*>(mini_trk->getHit(j));
-        hit->setWeights(fWeights.at(i).at(j));
+        hit->setWeights(fWeights[i][j]);
       }
       if ( iBeta != 0){
         fKalman.blowUpCovs(mini_trk);
@@ -87,7 +87,7 @@ void GFDaf::processTrack(GFTrack* trk) {
 
       if(iBeta != fBeta.size()-1 )
         try{
-          fWeights.at(i) = calcWeights(mini_trk, fBeta.at(iBeta));
+          fWeights[i] = calcWeights(mini_trk, fBeta[iBeta]);
         } catch(GFException& e) {
           std::cerr<<e.what();
           e.info();
@@ -154,7 +154,7 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
         GFTools::invertMatrix(V, Vinv, detV); // can throw a GFException
 
         phi.push_back((1./(pow(2.*TMath::Pi(),V.GetNrows()/2.)*sqrt(*detV)))*exp(-0.5*Vinv.Similarity(resid)));
-        phi_sum += phi.at(j);
+        phi_sum += phi[j];
 
         double cutVal = fchi2Cuts[V.GetNrows()];
         assert(cutVal>1.E-6);
@@ -173,7 +173,7 @@ std::vector<std::vector<double> > GFDaf::calcWeights(GFTrack* trk, double beta) 
     }
 
     for(unsigned int j=0; j<nEffHits; j++) {
-      weights.push_back(phi.at(j)/(phi_sum+phi_cut));
+      weights.push_back(phi[j]/(phi_sum+phi_cut));
     }
 
     ret_val.push_back(weights);
@@ -275,7 +275,7 @@ std::vector<GFDafHit*> GFDaf::initHitsWeights(GFTrack* trk) {
   for(unsigned int i=0; i<trk->getNumReps(); i++) {
     std::vector<std::vector<double> > rep_weights;
     for(unsigned int j=0; j<eff_hits.size(); j++) {
-      rep_weights.push_back(eff_hits.at(j)->getWeights());
+      rep_weights.push_back(eff_hits[j]->getWeights());
     }
     fWeights.push_back(rep_weights);
   }
@@ -365,14 +365,14 @@ void GFDaf::saveWeights(GFTrack* trk, const GFTrack* DafTrack, const std::vector
       if (nRealHits[i] == nEffHits[i]) {
         for (unsigned int j=0; j<nRealHits[i]; ++j){
           vec.ResizeTo(1);
-          vec(0) = weights.at(rep_i).at(i).at(j);
+          vec(0) = weights[rep_i][i][j];
         }
       }
       else {
         assert (nRealHits[i] == 1);
         vec.ResizeTo(nEffHits[i]);
         for (unsigned int j=0; j<nEffHits[i]; ++j){
-          vec[j] = weights.at(rep_i).at(i).at(j);
+          vec[j] = weights[rep_i][i][j];
         }
       }
       bk->setVector(GFBKKey_dafWeight, hit_i++, vec);

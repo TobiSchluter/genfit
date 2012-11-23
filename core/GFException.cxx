@@ -61,7 +61,7 @@ void GFException::info() {
   if(fNumbers.size() > 0) {
 	std::cout << "---------------------------" << std::endl;
 	std::cout << "Numbers:" << std::endl;
-	for(unsigned int i=0;i<fNumbers.size(); i++ ) std::cout << fNumbers.at(i) << std::endl;
+	for(unsigned int i=0;i<fNumbers.size(); i++ ) std::cout << fNumbers[i] << std::endl;
   }
   if(fMatricesLabel != "") {
 	std::cout << "---------------------------" << std::endl;
@@ -71,7 +71,7 @@ void GFException::info() {
   if(fMatrices.size() > 0) {
 	std::cout << "---------------------------" << std::endl;
 	std::cout << "Matrices:" << std::endl;
-	for(unsigned int i=0;i<fMatrices.size(); i++ ) fMatrices.at(i).Print();
+	for(unsigned int i=0;i<fMatrices.size(); i++ ) fMatrices[i].Print();
   }
   std::cout << "===========================" << std::endl;  
 }

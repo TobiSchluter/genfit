@@ -139,7 +139,7 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
        for(unsigned int i=0;i<keys.size();++i){
          R__b << (unsigned int)(keys[i]);
          for(int j=0;j<fNhits;++j){
-           ((fVectors[keys.at(i)])[j]).Streamer(R__b);
+           ((fVectors[keys[i]])[j]).Streamer(R__b);
          }
        }
      }
@@ -149,7 +149,7 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
        for(unsigned int i=0;i<keys.size();++i){
          R__b << (unsigned int)(keys[i]);
          for(int j=0;j<fNhits;++j){
-           ((fMatrices[keys.at(i)])[j]).Streamer(R__b);
+           ((fMatrices[keys[i]])[j]).Streamer(R__b);
          }
        }
      }
@@ -159,7 +159,7 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
        for(unsigned int i=0;i<keys.size();++i){
          R__b << (unsigned int)(keys[i]);
          for(int j=0;j<fNhits;++j){
-           ((fSymMatrices[keys.at(i)])[j]).Streamer(R__b);
+           ((fSymMatrices[keys[i]])[j]).Streamer(R__b);
          }
        }
      }
@@ -170,7 +170,7 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
        for(unsigned int i=0;i<keys.size();++i){
          R__b << (unsigned int)(keys[i]);
          for(int j=0;j<fNhits;++j){
-           ((fPlanes[keys.at(i)])[j]).Streamer(R__b);
+           ((fPlanes[keys[i]])[j]).Streamer(R__b);
          }
        }
      }//done saving GFDetPlanes
@@ -181,14 +181,14 @@ void GFBookkeeping::Streamer(TBuffer &R__b)
        for(unsigned int i=0;i<keys.size();++i){
          R__b << (unsigned int)(keys[i]);
          for(int j=0;j<fNhits;++j){
-           R__b << (fNumbers[keys.at(i)])[j];
+           R__b << (fNumbers[keys[i]])[j];
          }
        }
      }//done saving numbers 
      {//save failedHits
        R__b << ((unsigned int) fFailedHits.size());
        for(unsigned int i=0;i<fFailedHits.size();++i){
-         R__b << fFailedHits.at(i);
+         R__b << fFailedHits[i];
        }
      }//done saving failed Hits    
    }
@@ -551,7 +551,7 @@ unsigned int GFBookkeeping::getNumFailed(){
 unsigned int GFBookkeeping::hitFailed(unsigned int id){
   unsigned int retVal = 0;
   for(unsigned int i=0; i<fFailedHits.size(); ++i){
-    if(fFailedHits.at(i) == id){
+    if(fFailedHits[i] == id){
       ++retVal;
     }
   }
@@ -647,51 +647,51 @@ void GFBookkeeping::Print(const Option_t* option) const {
   std::cout << "-----printing all vectors:------\n";
   std::vector<GFBKKey> keys = getVectorKeys();
   for(unsigned int i=0;i<keys.size();++i){
-    std::cout << "key " << keys.at(i) << " has " << fNhits
+    std::cout << "key " << keys[i] << " has " << fNhits
 	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
-      getVector(keys.at(i),j).Print(option);
+      getVector(keys[i],j).Print(option);
     }
   }
   std::cout << "-----printing all matrices:------\n";
   keys = getMatrixKeys();
   for(unsigned int i=0;i<keys.size();++i){
-    std::cout << "key " << keys.at(i) << " has " << fNhits
+    std::cout << "key " << keys[i] << " has " << fNhits
 	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
-      getMatrix(keys.at(i),j).Print(option);
+      getMatrix(keys[i],j).Print(option);
     }
   }
   std::cout << "-----printing all symmetric matrices:------\n";
   keys = getSymMatrixKeys();
   for(unsigned int i=0;i<keys.size();++i){
-    std::cout << "key " << keys.at(i) << " has " << fNhits
+    std::cout << "key " << keys[i] << " has " << fNhits
 	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
-      getSymMatrix(keys.at(i),j).Print(option);
+      getSymMatrix(keys[i],j).Print(option);
     }
   }
   std::cout << "-----printing all GFDetPlanes:------\n";
   keys = getGFDetPlaneKeys();
   for(unsigned int i=0;i<keys.size();++i){
-    std::cout << "key " << keys.at(i) << " has " << fNhits
+    std::cout << "key " << keys[i] << " has " << fNhits
 	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
-      getDetPlane(keys.at(i),j).Print(option);
+      getDetPlane(keys[i],j).Print(option);
     }
   }
   std::cout << "-----printing all numbers:------\n";
   keys = getNumberKeys();
   for(unsigned int i=0;i<keys.size();++i){
-    std::cout << "key " << keys.at(i) << " has " << fNhits
+    std::cout << "key " << keys[i] << " has " << fNhits
 	      << " entries:\n";
     for(int j=0;j<fNhits;++j){
-      std::cout << getNumber(keys.at(i),j) << std::endl;
+      std::cout << getNumber(keys[i],j) << std::endl;
     }
   }
   std::cout << "-----failed hits:------\n";
   for(unsigned int i=0;i<fFailedHits.size();++i){
-    std::cout << fFailedHits.at(i) << " ";
+    std::cout << fFailedHits[i] << " ";
   }
   std::cout << "==========GFBookkeeping::print() - Done==========" << std::endl;
 }

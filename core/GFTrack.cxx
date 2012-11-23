@@ -44,10 +44,10 @@ GFTrack::~GFTrack() {
     delete fTrackReps;
   }
   for(unsigned int i=0;i<fHits.size();i++) {
-    if(fHits.at(i)!=NULL) delete fHits.at(i);
+    if(fHits[i]!=NULL) delete fHits[i];
   }
   for(unsigned int i=0;i<fBookkeeping.size();++i){
-    if(fBookkeeping.at(i)!=NULL) delete fBookkeeping.at(i);
+    if(fBookkeeping[i]!=NULL) delete fBookkeeping[i];
   }
 }
 
@@ -67,8 +67,8 @@ GFTrack::GFTrack(const GFTrack& _tr) {
   fBookkeeping.clear();
 
   for(unsigned int i=0;i<_tr.fBookkeeping.size();++i){
-    assert(_tr.fBookkeeping.at(i)!= NULL) ;
-    fBookkeeping.push_back(new GFBookkeeping(*(_tr.fBookkeeping.at(i))));
+    assert(_tr.fBookkeeping[i]!= NULL) ;
+    fBookkeeping.push_back(new GFBookkeeping(*(_tr.fBookkeeping[i])));
   }
   fRepAtHit = _tr.fRepAtHit;
 }
@@ -87,7 +87,7 @@ GFTrack& GFTrack::operator=(const GFTrack& _tr) {
     delete fHits[i];
   }
   for(unsigned int i=0;i<fBookkeeping.size();++i){
-    if(fBookkeeping.at(i)!=NULL) delete fBookkeeping.at(i);
+    if(fBookkeeping[i]!=NULL) delete fBookkeeping[i];
   }
 
   for(unsigned int i=0;i<_tr.getNumReps();++i){
@@ -105,8 +105,8 @@ GFTrack& GFTrack::operator=(const GFTrack& _tr) {
   for(unsigned int i=0; i<fBookkeeping.size(); ++i) delete fBookkeeping[i];
   fBookkeeping.clear();
   for(unsigned int i=0;i<_tr.fBookkeeping.size();++i){
-    assert(_tr.fBookkeeping.at(i)!= NULL) ;
-    fBookkeeping.push_back(new GFBookkeeping(*(_tr.fBookkeeping.at(i))));
+    assert(_tr.fBookkeeping[i]!= NULL) ;
+    fBookkeeping.push_back(new GFBookkeeping(*(_tr.fBookkeeping[i])));
   }
   fRepAtHit = _tr.fRepAtHit;
 
@@ -123,10 +123,10 @@ GFTrack::reset(){
     }
   }
   for(unsigned int i=0;i<fBookkeeping.size();++i){
-    if(fBookkeeping.at(i)!=NULL) delete fBookkeeping.at(i);
+    if(fBookkeeping[i]!=NULL) delete fBookkeeping[i];
   }
   for(unsigned int i=0;i<fHits.size();i++) {
-    if(fHits.at(i)!=NULL) delete fHits.at(i);
+    if(fHits[i]!=NULL) delete fHits[i];
   }
   fHits.clear();
   fRepAtHit.clear();
@@ -268,7 +268,7 @@ void GFTrack::printBookkeeping(){
   std::cout << "GFTrack::printBookkeeping()" << std::endl;
   for(unsigned int i=0;i<getNumReps();++i){
     std::cout << "trackRep " << i << ":" << std::endl;    
-    fBookkeeping.at(i)->Print();
+    fBookkeeping[i]->Print();
   }
 
 }
@@ -277,7 +277,7 @@ void GFTrack::Print(const Option_t* option) const{
   for(unsigned int i=0;i<getNumReps();++i){
     std::cout << "TrackRep " << i << " (defined at hit " << getRepAtHit(i) << "):\n";
     getTrackRep(i)->Print(option);
-    fBookkeeping.at(i)->Print(option);
+    fBookkeeping[i]->Print(option);
   }
   std::cout << "GFTrack has " << getNumHits() << " detector hits. ";
   if (fSmooth) std::cout << "Smoothing is enabled.";
@@ -317,8 +317,8 @@ bool GFTrack::getHitsByPlane(std::vector< std::vector<int> >& retVal){
   lastDetId = detId;
   std::vector<int> vec;
   retVal.push_back(vec);
-  retVal.at(0).reserve(10);
-  retVal.at(0).push_back(0);
+  retVal[0].reserve(10);
+  retVal[0].push_back(0);
 
   // loop over hits
   for(unsigned int i=1; i<nHits; ++i){
