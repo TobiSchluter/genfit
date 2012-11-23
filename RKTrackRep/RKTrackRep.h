@@ -364,7 +364,7 @@ class RKTrackRep : public GFAbsTrackRep {
   M6x5 fJ_Mp_6x5; //!
 
  public:
-  ClassDef(RKTrackRep, 8)
+  ClassDef(RKTrackRep, 9)
 
 };
 
