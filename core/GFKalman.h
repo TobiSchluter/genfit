@@ -68,7 +68,6 @@ public:
   void setNumIterations(Int_t i){fNumIt=i;}
 
   /** @brief Performs fit on a GFTrack.
-   *
    * The hits are processed in the order in which they are stored in the GFTrack
    * object. Sorting of hits in space has to be done before!
    */
@@ -76,7 +75,7 @@ public:
 
   /** @brief Performs fit on a GFTrack beginning with the current hit.
    */
-  void fittingPass(GFTrack*,int dir); // continues track from lastHitInFit
+  void fittingPass(GFTrack*,int dir);
 
   /** @brief Calculates chi2 of a given hit with respect to a 
    * given track representation.

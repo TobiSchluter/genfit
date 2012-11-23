@@ -207,33 +207,33 @@ bool GFTools::getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned in
 
 	// get aux info
 	if(trk->getTrackRep(irep)->hasAuxInfo()) {
-    auxInfo.ResizeTo(trk->getBK(irep)->getMatrix("fAuxInfo",ihit));
-    auxInfo = trk->getBK(irep)->getMatrix("fAuxInfo",ihit);
+    auxInfo.ResizeTo(trk->getBK(irep)->getMatrix(GFBKKey_fAuxInfo,ihit));
+    auxInfo = trk->getBK(irep)->getMatrix(GFBKKey_fAuxInfo,ihit);
 	}
 
 	if(ihit == 0) { // first hit -> get prediction from backward filter
-	  smoothed_state = trk->getBK(irep)->getVector("bSt",ihit);
-	  smoothed_cov = trk->getBK(irep)->getSymMatrix("bCov",ihit);
-	  smoothing_plane = trk->getBK(irep)->getDetPlane("bPl",ihit);
+	  smoothed_state = trk->getBK(irep)->getVector(GFBKKey_bSt,ihit);
+	  smoothed_cov = trk->getBK(irep)->getSymMatrix(GFBKKey_bCov,ihit);
+	  smoothing_plane = trk->getBK(irep)->getDetPlane(GFBKKey_bPl,ihit);
 		return true;
 	}
 
 	if(ihit == trk->getNumHits()-1) { // last hit -> get prediction from forward filter
-	  smoothed_state = trk->getBK(irep)->getVector("fSt",ihit);
-	  smoothed_cov = trk->getBK(irep)->getSymMatrix("fCov",ihit);
-	  smoothing_plane = trk->getBK(irep)->getDetPlane("fPl",ihit);
+	  smoothed_state = trk->getBK(irep)->getVector(GFBKKey_fSt,ihit);
+	  smoothed_cov = trk->getBK(irep)->getSymMatrix(GFBKKey_fCov,ihit);
+	  smoothing_plane = trk->getBK(irep)->getDetPlane(GFBKKey_fPl,ihit);
 		return true;
 	}
 
 
 	// calculate "mean" between forward and backward predictions
-  const TVectorD& fSt(trk->getBK(irep)->getVector("fSt", ihit));
-  const TMatrixDSym& fCov(trk->getBK(irep)->getSymMatrix("fCov", ihit));
-  smoothing_plane = trk->getBK(irep)->getDetPlane("fPl", ihit);
+  const TVectorD& fSt(trk->getBK(irep)->getVector(GFBKKey_fSt, ihit));
+  const TMatrixDSym& fCov(trk->getBK(irep)->getSymMatrix(GFBKKey_fCov, ihit));
+  smoothing_plane = trk->getBK(irep)->getDetPlane(GFBKKey_fPl, ihit);
 
-  TVectorD bSt(trk->getBK(irep)->getVector("bSt", ihit)); // can't be const ref since it possibly has to be altered in extrapolate
-  TMatrixDSym bCov(trk->getBK(irep)->getSymMatrix("bCov", ihit)); // can't be const ref since it possibly has to be altered in extrapolate
-  const GFDetPlane& bPl(trk->getBK(irep)->getDetPlane("bPl", ihit));
+  TVectorD bSt(trk->getBK(irep)->getVector(GFBKKey_bSt, ihit)); // can't be const ref since it possibly has to be altered in extrapolate
+  TMatrixDSym bCov(trk->getBK(irep)->getSymMatrix(GFBKKey_bCov, ihit)); // can't be const ref since it possibly has to be altered in extrapolate
+  const GFDetPlane& bPl(trk->getBK(irep)->getDetPlane(GFBKKey_bPl, ihit));
 
   if(smoothing_plane != bPl) {
     // if the two planes are not identical, we actually would need to extrapolate back
@@ -248,7 +248,7 @@ bool GFTools::getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned in
     std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
 
     if(trk->getTrackRep(irep)->hasAuxInfo()) {
-      bAuxInfoP = &(trk->getBK(irep)->getMatrix("bAuxInfo", ihit));
+      bAuxInfoP = &(trk->getBK(irep)->getMatrix(GFBKKey_bAuxInfo, ihit));
     } else {
       bAuxInfoP = NULL;
     }
@@ -292,33 +292,33 @@ bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsig
 
 
 	if(trk->getTrackRep(irep)->hasAuxInfo()) {
-	  auxInfo.ResizeTo(trk->getBK(irep)->getMatrix("fAuxInfo",ihit));
-	  auxInfo = trk->getBK(irep)->getMatrix("fAuxInfo",ihit);
+	  auxInfo.ResizeTo(trk->getBK(irep)->getMatrix(GFBKKey_fAuxInfo,ihit));
+	  auxInfo = trk->getBK(irep)->getMatrix(GFBKKey_fAuxInfo,ihit);
 	}
 
 	if(ihit == 0) { // first hit -> get update from backward filter
-	  smoothed_state = trk->getBK(irep)->getVector("bUpSt",ihit);
-	  smoothed_cov = trk->getBK(irep)->getSymMatrix("bUpCov",ihit);
-	  smoothing_plane = trk->getBK(irep)->getDetPlane("bPl",ihit);
+	  smoothed_state = trk->getBK(irep)->getVector(GFBKKey_bUpSt,ihit);
+	  smoothed_cov = trk->getBK(irep)->getSymMatrix(GFBKKey_bUpCov,ihit);
+	  smoothing_plane = trk->getBK(irep)->getDetPlane(GFBKKey_bPl,ihit);
 		return true;
 	}
 
 	if(ihit == trk->getNumHits()-1) { // last hit -> get update from forward filter
-	  smoothed_state = trk->getBK(irep)->getVector("fUpSt",ihit);
-	  smoothed_cov = trk->getBK(irep)->getSymMatrix("fUpCov",ihit);
-	  smoothing_plane = trk->getBK(irep)->getDetPlane("fPl",ihit);
+	  smoothed_state = trk->getBK(irep)->getVector(GFBKKey_fUpSt,ihit);
+	  smoothed_cov = trk->getBK(irep)->getSymMatrix(GFBKKey_fUpCov,ihit);
+	  smoothing_plane = trk->getBK(irep)->getDetPlane(GFBKKey_fPl,ihit);
 		return true;
 	}
 
 
 	// calculate "mean" between forward update and backward prediction
-	const TVectorD& fUpSt(trk->getBK(irep)->getVector("fUpSt",ihit));
-	const TMatrixDSym& fUpCov(trk->getBK(irep)->getSymMatrix("fUpCov",ihit));
-	smoothing_plane = trk->getBK(irep)->getDetPlane("fPl",ihit);
+	const TVectorD& fUpSt(trk->getBK(irep)->getVector(GFBKKey_fUpSt,ihit));
+	const TMatrixDSym& fUpCov(trk->getBK(irep)->getSymMatrix(GFBKKey_fUpCov,ihit));
+	smoothing_plane = trk->getBK(irep)->getDetPlane(GFBKKey_fPl,ihit);
 
-	TVectorD bSt(trk->getBK(irep)->getVector("bSt",ihit)); // can't be const ref since it possibly has to be altered in extrapolate
-	TMatrixDSym bCov(trk->getBK(irep)->getSymMatrix("bCov",ihit)); // can't be const ref since it possibly has to be altered in extrapolate
-	const GFDetPlane& bPl(trk->getBK(irep)->getDetPlane("bPl",ihit));
+	TVectorD bSt(trk->getBK(irep)->getVector(GFBKKey_bSt,ihit)); // can't be const ref since it possibly has to be altered in extrapolate
+	TMatrixDSym bCov(trk->getBK(irep)->getSymMatrix(GFBKKey_bCov,ihit)); // can't be const ref since it possibly has to be altered in extrapolate
+	const GFDetPlane& bPl(trk->getBK(irep)->getDetPlane(GFBKKey_bPl,ihit));
 
 
 	if(smoothing_plane != bPl) {
@@ -334,7 +334,7 @@ bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsig
     std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
 
     if(trk->getTrackRep(irep)->hasAuxInfo()) {
-      bAuxInfoP = &(trk->getBK(irep)->getMatrix("bAuxInfo", ihit));
+      bAuxInfoP = &(trk->getBK(irep)->getMatrix(GFBKKey_bAuxInfo, ihit));
     } else {
       bAuxInfoP = NULL;
     }
@@ -359,7 +359,7 @@ bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsig
 }
 
 const GFDetPlane& GFTools::getSmoothingPlane(const GFTrack* trk, unsigned int irep, unsigned int ihit) {
-	return trk->getBK(irep)->getDetPlane("fPl",ihit);
+	return trk->getBK(irep)->getDetPlane(GFBKKey_fPl,ihit);
 }
 
 double GFTools::getTrackLength(const GFTrack* trk, unsigned int irep, unsigned int startHit, unsigned int endHit){
@@ -388,8 +388,8 @@ double GFTools::getTrackLength(const GFTrack* trk, unsigned int irep, unsigned i
   double totLen(0), fLen(0), bLen(0);
 
   for (unsigned int i=startHit; i!=endHit; ++i){
-    fLen = trk->getBK(irep)->getNumber("fExtLen", i+1);
-    bLen = trk->getBK(irep)->getNumber("bExtLen", i);
+    fLen = trk->getBK(irep)->getNumber(GFBKKey_fExtLen, i+1);
+    bLen = trk->getBK(irep)->getNumber(GFBKKey_bExtLen, i);
     totLen += 0.5*(fLen - bLen);
   }
 

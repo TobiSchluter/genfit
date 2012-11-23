@@ -41,7 +41,7 @@ GFKalman::~GFKalman(){;}
 
 void GFKalman::processTrack(GFTrack* trk){
 #ifdef DEBUG
-        std::cout<<"GFKalman::processTrack "<<std::endl;
+  std::cout<<"GFKalman::processTrack with " << fNumIt << " iterations." <<std::endl;
 #endif
 
   fSmooth = trk->getSmoothing();
@@ -66,16 +66,18 @@ void GFKalman::processTrack(GFTrack* trk){
       }
     }
 
+
     if(direction==1){
       trk->setNextHitToFit(0);
     }
     else {
       trk->setNextHitToFit(trk->getNumHits()-1);
     }
+
     fittingPass(trk,direction);
     
-    //save first and last plane,state&cov after the fitting pass
-    if(direction==1){//forward at last hit
+    //save first and last plane, state and cov after the fitting pass
+    if(direction==1){
       for(int i=0; i<nreps; ++i){
         GFAbsTrackRep* rep = trk->getTrackRep(i);
         rep->setLastPlane( rep->getReferencePlane() );
@@ -83,7 +85,7 @@ void GFKalman::processTrack(GFTrack* trk){
         rep->setLastCov( rep->getCov() );
       }
     }
-    else{//backward at first hit
+    else{
       for(int i=0; i<nreps; ++i){
         GFAbsTrackRep* rep = trk->getTrackRep(i);
         rep->setFirstPlane( rep->getReferencePlane() );
@@ -93,8 +95,7 @@ void GFKalman::processTrack(GFTrack* trk){
     }
 
     //switch direction of fitting and also inside all the reps
-    if(direction==1) direction=-1;
-    else direction=1;
+    direction *= -1;
     switchDirection(trk);
   }
   
@@ -112,12 +113,13 @@ GFKalman::switchDirection(GFTrack* trk){
 void
 GFKalman::fittingPass(GFTrack* trk, int direction){
   //loop over hits
-  unsigned int nhits=trk->getNumHits();
-  unsigned int starthit=trk->getNextHitToFit();
+  unsigned int nhits = trk->getNumHits();
+  unsigned int starthit = trk->getNextHitToFit();
 
-  int nreps=trk->getNumReps();
-  int ihit=(int)starthit;
-  
+  int nreps = trk->getNumReps();
+  int ihit = (int)starthit;
+
+
   for(int irep=0; irep<nreps; ++irep) {
     GFAbsTrackRep* arep=trk->getTrackRep(irep);
     if(arep->getStatusFlag()==0) {
@@ -133,35 +135,32 @@ GFKalman::fittingPass(GFTrack* trk, int direction){
       trk->getBK(irep)->clearFailedHits();
     }
   }
-
   while((ihit<(int)nhits && direction==1) || (ihit>-1 && direction==-1)){
-    //    GFAbsRecoHit* ahit=trk->getHit(ihit);
     // loop over reps
     for(int irep=0; irep<nreps; ++irep){
-    GFAbsTrackRep* arep=trk->getTrackRep(irep);
-    if(arep->getStatusFlag()==0) {
-      try {
+      GFAbsTrackRep* arep=trk->getTrackRep(irep);
+      if(arep->getStatusFlag()==0) {
+        try {
 #ifdef DEBUG
-        std::cout<<"++++++++++++++++++++++++++++++++++++++++\n";
-        std::cout<<"GFKalman::fittingPass - process rep nr. "<<irep<<" and hit nr. "<<ihit<<std::endl;
+          std::cout<<"++++++++++++++++++++++++++++++++++++++++\n";
+          std::cout<<"GFKalman::fittingPass, direction = " << direction << ";  process rep nr. "<<irep<<" and hit nr. "<<ihit<<std::endl;
 #endif
-        processHit(trk,ihit,irep,direction);
-      }
-      catch(GFException& e) {
-        trk->addFailedHit(irep,ihit);
-        std::cerr << e.what();
-        e.info();
-        if(e.isFatal()) {
-          arep->setStatusFlag(1);
-          continue; // go to next rep immediately
+          processHit(trk,ihit,irep,direction);
+        }
+        catch(GFException& e) {
+          trk->addFailedHit(irep,ihit);
+          std::cerr << e.what();
+          e.info();
+          if(e.isFatal()) {
+            arep->setStatusFlag(1);
+            continue; // go to next rep immediately
+          }
         }
       }
-    }
     }// end loop over reps
+
     ihit+=direction;
   }// end loop over hits
-  trk->setNextHitToFit(ihit-2*direction);
-  //trk->printGFBookkeeping();
 }
 
 double GFKalman::chi2Increment(const TVectorD& r,const TMatrixD& H,
@@ -261,11 +260,11 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   GFBookkeeping* bk = tr->getBK(irep);
   if(fSmooth) { // save predictions
     if(direction == 1) {
-	    bk->setVector("fSt",ihit,state);
-	    bk->setSymMatrix("fCov",ihit,cov);
+	    bk->setVector(GFBKKey_fSt,ihit,state);
+	    bk->setSymMatrix(GFBKKey_fCov,ihit,cov);
 	  } else {
-	    bk->setVector("bSt",ihit,state);
-	    bk->setSymMatrix("bCov",ihit,cov);
+	    bk->setVector(GFBKKey_bSt,ihit,state);
+	    bk->setSymMatrix(GFBKKey_bCov,ihit,cov);
 	  }
   }
   
@@ -310,17 +309,17 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
 
   if(fSmooth) {
     if(direction == 1) {
-      bk->setNumber("fExtLen",ihit,extLen);
-      bk->setVector("fUpSt",ihit,state);
-      bk->setSymMatrix("fUpCov",ihit,cov);
-      bk->setDetPlane("fPl",ihit,pl);
-      if(rep->hasAuxInfo()) bk->setMatrix("fAuxInfo",ihit,*(rep->getAuxInfo(pl)));
+      bk->setNumber(GFBKKey_fExtLen,ihit,extLen);
+      bk->setVector(GFBKKey_fUpSt,ihit,state);
+      bk->setSymMatrix(GFBKKey_fUpCov,ihit,cov);
+      bk->setDetPlane(GFBKKey_fPl,ihit,pl);
+      if(rep->hasAuxInfo()) bk->setMatrix(GFBKKey_fAuxInfo,ihit,*(rep->getAuxInfo(pl)));
     } else {
-	    bk->setNumber("bExtLen",ihit,extLen);
-      bk->setVector("bUpSt",ihit,state);
-      bk->setSymMatrix("bUpCov",ihit,cov);
-      bk->setDetPlane("bPl",ihit,pl);
-      if(rep->hasAuxInfo()) bk->setMatrix("bAuxInfo",ihit,*(rep->getAuxInfo(pl)));
+	    bk->setNumber(GFBKKey_bExtLen,ihit,extLen);
+      bk->setVector(GFBKKey_bUpSt,ihit,state);
+      bk->setSymMatrix(GFBKKey_bUpCov,ihit,cov);
+      bk->setDetPlane(GFBKKey_bPl,ihit,pl);
+      if(rep->hasAuxInfo()) bk->setMatrix(GFBKKey_bAuxInfo,ihit,*(rep->getAuxInfo(pl)));
     }
   }
 
@@ -357,36 +356,36 @@ GFKalman::initBookkeeping(GFTrack* trk) const {
     GFBookkeeping* bk = trk->getBK(i);
     bk->setNhits(trk->getNumHits());
     if(fSmooth) {
-      const std::vector<std::string>& vec_keys = bk->getVectorKeys();
+      const std::vector<GFBKKey>& keys = bk->getGFDetPlaneKeys();
       bool already_there = false;
-      for(unsigned int j=0; j<vec_keys.size(); ++j) {
-        if(vec_keys.at(j) == "fUpSt") {
+      for(unsigned int j=0; j<keys.size(); ++j) {
+        if(keys[j] == GFBKKey_bPl) {
           already_there = true;
           break;
         }
       }
       if(!already_there) {
-        bk->bookNumbers("fExtLen");   // extrapolated length from last hit in forward direction
-        bk->bookVectors("fUpSt");     // updated state in forward direction
-        bk->bookSymMatrices("fUpCov");// updated covariance in forward direction
-        bk->bookVectors("fSt");       // state prediction in forward direction
-        bk->bookSymMatrices("fCov");  // covariance prediction in forward direction
-        bk->bookGFDetPlanes("fPl");   // detector plane in forward direction
+        bk->bookVectors(GFBKKey_fSt);       // state prediction in forward direction
+        bk->bookSymMatrices(GFBKKey_fCov);  // covariance prediction in forward direction
+        bk->bookVectors(GFBKKey_fUpSt);     // updated state in forward direction
+        bk->bookSymMatrices(GFBKKey_fUpCov);// updated covariance in forward direction
+        bk->bookGFDetPlanes(GFBKKey_fPl);   // detector plane in forward direction
+        bk->bookNumbers(GFBKKey_fExtLen);   // extrapolated length from last hit in forward direction
 
-        bk->bookNumbers("bExtLen");   // extrapolated length from last hit in backward direction
-        bk->bookVectors("bUpSt");     // updated state in backward direction
-        bk->bookSymMatrices("bUpCov");// updated covariance in backward direction
-        bk->bookVectors("bSt");       // state prediction in backward direction
-        bk->bookSymMatrices("bCov");  // covariance prediction in backward direction
-        bk->bookGFDetPlanes("bPl");   // detector plane in backward direction
+        bk->bookVectors(GFBKKey_bSt);       // state prediction in backward direction
+        bk->bookSymMatrices(GFBKKey_bCov);  // covariance prediction in backward direction
+        bk->bookVectors(GFBKKey_bUpSt);     // updated state in backward direction
+        bk->bookSymMatrices(GFBKKey_bUpCov);// updated covariance in backward direction
+        bk->bookGFDetPlanes(GFBKKey_bPl);   // detector plane in backward direction
+        bk->bookNumbers(GFBKKey_bExtLen);   // extrapolated length from last hit in backward direction
 
         if(trk->getTrackRep(i)->hasAuxInfo()) {
-          bk->bookMatrices("fAuxInfo"); // aux info in forward direction
-          bk->bookMatrices("bAuxInfo"); // aux info in backward direction
+          bk->bookMatrices(GFBKKey_fAuxInfo); // aux info in forward direction
+          bk->bookMatrices(GFBKKey_bAuxInfo); // aux info in backward direction
         }
       }
-    }
-  }
+    }// end if(fSmooth)
+  } // end loop over reps
 }
 
 

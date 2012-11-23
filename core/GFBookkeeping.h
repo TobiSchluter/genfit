@@ -31,16 +31,44 @@
 #include <map>
 #include "GFDetPlane.h"
 
+
+enum GFBKKey {
+  // forward info ------
+  GFBKKey_fSt,
+  GFBKKey_fCov,
+  GFBKKey_fUpSt,
+  GFBKKey_fUpCov,
+  GFBKKey_fPl,
+  GFBKKey_fAuxInfo,
+  GFBKKey_fExtLen,
+  // add further forward keys here
+
+  // backward info ------
+  GFBKKey_bSt=1000,
+  GFBKKey_bCov,
+  GFBKKey_bUpSt,
+  GFBKKey_bUpCov,
+  GFBKKey_bPl,
+  GFBKKey_bAuxInfo,
+  GFBKKey_bExtLen,
+  // add further backward keys here
+
+  // other info ------
+  GFBKKey_dafWeight=2000
+  // add further other keys here
+};
+
+
 class GFBookkeeping : public TObject {
  private:
 
   //the string keys will in general be different, so this can't
   //be unified to one container
-  std::map<std::string, std::vector<TVectorD> > fVectors;
-  std::map<std::string, std::vector<TMatrixD> > fMatrices;
-  std::map<std::string, std::vector<TMatrixDSym> > fSymMatrices;
-  std::map<std::string, std::vector<GFDetPlane> > fPlanes;
-  std::map<std::string, std::vector<double> > fNumbers;
+  std::map<GFBKKey, std::vector<TVectorD> > fVectors;
+  std::map<GFBKKey, std::vector<TMatrixD> > fMatrices;
+  std::map<GFBKKey, std::vector<TMatrixDSym> > fSymMatrices;
+  std::map<GFBKKey, std::vector<GFDetPlane> > fPlanes;
+  std::map<GFBKKey, std::vector<double> > fNumbers;
   std::vector< unsigned int > fFailedHits;
   int fNhits;
 
@@ -55,29 +83,29 @@ class GFBookkeeping : public TObject {
    */
   void setNhits(int n){fNhits=n; reset();}
 
-  void bookVectors(const std::string& key);
-  void bookMatrices(const std::string& key);
-  void bookSymMatrices(const std::string& key);
-  void bookGFDetPlanes(const std::string& key);
-  void bookNumbers(const std::string& key,double val=0.);
+  void bookVectors(const GFBKKey& key);
+  void bookMatrices(const GFBKKey& key);
+  void bookSymMatrices(const GFBKKey& key);
+  void bookGFDetPlanes(const GFBKKey& key);
+  void bookNumbers(const GFBKKey& key,double val=0.);
 
-  void setVector(const std::string& key,unsigned int index,const TVectorD& mat);
-  void setMatrix(const std::string& key,unsigned int index,const TMatrixD& mat);
-  void setSymMatrix(const std::string& key,unsigned int index,const TMatrixDSym& mat);
-  void setDetPlane(const std::string& key,unsigned int index,const GFDetPlane& pl);
-  void setNumber(const std::string& key,unsigned int index, const double& num);
+  void setVector(const GFBKKey& key,unsigned int index,const TVectorD& mat);
+  void setMatrix(const GFBKKey& key,unsigned int index,const TMatrixD& mat);
+  void setSymMatrix(const GFBKKey& key,unsigned int index,const TMatrixDSym& mat);
+  void setDetPlane(const GFBKKey& key,unsigned int index,const GFDetPlane& pl);
+  void setNumber(const GFBKKey& key,unsigned int index, const double& num);
 
-  const TVectorD&    getVector(const std::string& key, unsigned int index) const;
-  const TMatrixD&    getMatrix(const std::string& key, unsigned int index) const;
-  const TMatrixDSym& getSymMatrix(const std::string& key, unsigned int index) const;
-  const GFDetPlane&          getDetPlane(const std::string& key, unsigned int index)  const;
-  double                     getNumber(const std::string& key, unsigned int index) const;
+  const TVectorD&    getVector(const GFBKKey& key, unsigned int index) const;
+  const TMatrixD&    getMatrix(const GFBKKey& key, unsigned int index) const;
+  const TMatrixDSym& getSymMatrix(const GFBKKey& key, unsigned int index) const;
+  const GFDetPlane&          getDetPlane(const GFBKKey& key, unsigned int index)  const;
+  double                     getNumber(const GFBKKey& key, unsigned int index) const;
 
-  std::vector< std::string > getVectorKeys() const;
-  std::vector< std::string > getMatrixKeys() const;
-  std::vector< std::string > getSymMatrixKeys() const;
-  std::vector< std::string > getGFDetPlaneKeys() const;
-  std::vector< std::string > getNumberKeys() const;
+  std::vector<GFBKKey> getVectorKeys() const;
+  std::vector<GFBKKey> getMatrixKeys() const;
+  std::vector<GFBKKey> getSymMatrixKeys() const;
+  std::vector<GFBKKey> getGFDetPlaneKeys() const;
+  std::vector<GFBKKey> getNumberKeys() const;
 
   void addFailedHit(unsigned int);
   /** @brief How often did hit nr. iHit fail
@@ -106,8 +134,9 @@ class GFBookkeeping : public TObject {
   }
 
  public:
-  ClassDef(GFBookkeeping,3)
+  ClassDef(GFBookkeeping,4)
 
 };
+
 
 #endif

@@ -292,7 +292,7 @@ void GFDaf::copySmoothing(const GFTrack* source, GFTrack* target, int target_ire
   GFBookkeeping* sourceBK0 = source->getBK(0);
   GFBookkeeping* targetBKirep = target->getBK(target_irep);
 
-  std::vector< std::string > keys;
+  std::vector< GFBKKey > keys;
 
   for(unsigned int pl_i=0; pl_i<source->getNumHits(); pl_i++) {
 
@@ -357,7 +357,7 @@ void GFDaf::saveWeights(GFTrack* trk, const GFTrack* DafTrack, const std::vector
 
   for(unsigned int rep_i = 0; rep_i < weights.size(); rep_i++) { // loop over trackReps
     GFBookkeeping* bk = trk->getBK(rep_i);
-    bk->bookVectors("dafWeight");
+    bk->bookVectors(GFBKKey_dafWeight);
     unsigned int hit_i = 0;
 
 
@@ -375,7 +375,7 @@ void GFDaf::saveWeights(GFTrack* trk, const GFTrack* DafTrack, const std::vector
           vec[j] = weights.at(rep_i).at(i).at(j);
         }
       }
-      bk->setVector("dafWeight", hit_i++, vec);
+      bk->setVector(GFBKKey_dafWeight, hit_i++, vec);
     }
 
     assert(hit_i == trk->getNumHits());
