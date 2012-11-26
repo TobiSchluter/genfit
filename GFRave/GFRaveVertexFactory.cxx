@@ -43,7 +43,7 @@ GFRaveVertexFactory::GFRaveVertexFactory(int verbosity, bool useVacuumPropagator
   }
   else {
     fPropagator = new GFRavePropagator();
-    ((GFRavePropagator*)fPropagator)->setIdGFTrackRepMap(fIdGFTrackRepMap);
+    (static_cast<GFRavePropagator*>(fPropagator))->setIdGFTrackRepMap(fIdGFTrackRepMap);
   }
 
   fMagneticField = new GFRaveMagneticField();
