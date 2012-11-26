@@ -32,7 +32,7 @@
 //#define DEBUG
 
 GFKalman::GFKalman()
-  : fInitialDirection(1), fNumIt(3), fSmooth(false)
+  : fInitialDirection(1), fNumIt(3)
 {
   ;
 }
@@ -44,7 +44,6 @@ void GFKalman::processTrack(GFTrack* trk){
   std::cout<<"GFKalman::processTrack with " << fNumIt << " iterations." <<std::endl;
 #endif
 
-  fSmooth = trk->getSmoothing();
   initBookkeeping(trk);
   trk->clearRepAtHit();
 
@@ -258,7 +257,7 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   }
 
   GFBookkeeping* bk = tr->getBK(irep);
-  if(fSmooth) { // save predictions
+  if(tr->getSmoothing()) { // save predictions
     if(direction == 1) {
 	    bk->setVector(GFBKKey_fSt,ihit,state);
 	    bk->setSymMatrix(GFBKKey_fCov,ihit,cov);
@@ -307,7 +306,7 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   covSumInv.Similarity(CHt);
   cov-=covSumInv;  // Cnew = C - C Ht (V + H C Ht)^-1 H C
 
-  if(fSmooth) {
+  if(tr->getSmoothing()) {
     if(direction == 1) {
       bk->setNumber(GFBKKey_fExtLen,ihit,extLen);
       bk->setVector(GFBKKey_fUpSt,ihit,state);
@@ -352,10 +351,10 @@ void
 GFKalman::initBookkeeping(GFTrack* trk) const {
 
   int nreps = trk->getNumReps();
-  for(int i=0; i<nreps; i++) {
+  for(int i=0; i<nreps; ++i) {
     GFBookkeeping* bk = trk->getBK(i);
     bk->setNhits(trk->getNumHits());
-    if(fSmooth) {
+    if(trk->getSmoothing()) {
       const std::vector<GFBKKey>& keys = bk->getGFDetPlaneKeys();
       bool already_there = false;
       for(unsigned int j=0; j<keys.size(); ++j) {
@@ -384,7 +383,7 @@ GFKalman::initBookkeeping(GFTrack* trk) const {
           bk->bookMatrices(GFBKKey_bAuxInfo); // aux info in backward direction
         }
       }
-    }// end if(fSmooth)
+    }// end if(trk->getSmoothing())
   } // end loop over reps
 }
 
