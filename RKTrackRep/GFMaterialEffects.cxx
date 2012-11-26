@@ -319,8 +319,6 @@ void GFMaterialEffects::noiseBetheBloch(const double& mom,
     sigma2E += zeta * Emax * (1. - fbeta * fbeta / 2.); // eV^2
   }
   else { // Urban/Landau approximation
-    double alpha = 0.996;
-    double sigmaalpha = 15.76;
     // calculate number of collisions Nc
     double I = 16. * pow(fmatZ, 0.9); // eV
     double f2 = 0.;
@@ -337,6 +335,7 @@ void GFMaterialEffects::noiseBetheBloch(const double& mom,
     double Nc = (Sigma1 + Sigma2 + Sigma3) * fabs(fstep);
 
     if (Nc > 50.) { // truncated Landau distribution
+      double sigmaalpha = 15.76;
       // calculate sigmaalpha  (see GEANT3 manual W5013)
       double RLAMED = -0.422784 - fbeta * fbeta - log(zeta / Emax);
       double RLAMAX =  0.60715 + 1.1934 * RLAMED + (0.67794 + 0.052382 * RLAMED) * exp(0.94753 + 0.74442 * RLAMED);
@@ -353,6 +352,7 @@ void GFMaterialEffects::noiseBetheBloch(const double& mom,
       if (sigmaalpha > 54.6) sigmaalpha = 54.6;
       sigma2E += sigmaalpha * sigmaalpha * zeta * zeta; // eV^2
     } else { // Urban model
+      static const double alpha = 0.996;
       double Ealpha  = I / (1. - (alpha * Emax / (Emax + I))); // eV
       double meanE32 = I * (Emax + I) / Emax * (Ealpha - I); // eV^2
       sigma2E += fabs(fstep) * (Sigma1 * e1 * e1 + Sigma2 * e2 * e2 + Sigma3 * meanE32); // eV^2
@@ -488,7 +488,7 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
 
   double BCUT = 10000.; // energy up to which soft bremsstrahlung energy loss is calculated
 
-  double THIGH = 100., CHIGH = 50.;
+  static const double THIGH = 100., CHIGH = 50.;
   double dedxBrems = 0.;
 
   if (BCUT > 0.) {
@@ -574,9 +574,9 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
       if (FAC <= 0.) return 0.;
       dedxBrems = FAC * S;
 
-      double RAT;
 
       if (mom > THIGH) {
+        double RAT;
         if (BCUT < THIGH) {
           RAT = BCUT / mom;
           S = (1. - 0.5 * RAT + 2.*RAT * RAT / 9.);
@@ -614,12 +614,10 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
       }
     }
 
-    double E0;
-
     if (ETA < 0.0001) factor = 1.E-10;
     else if (ETA > 0.9999) factor = 1.;
     else {
-      E0 = BCUT / mom;
+      double E0 = BCUT / mom;
       if (E0 > 1.) E0 = 1.;
       if (E0 < 1.E-8) factor = 1.;
       else factor = ETA * (1. - pow(1. - E0, 1. / ETA)) / E0;

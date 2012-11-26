@@ -270,6 +270,7 @@ class RKTrackRep : public GFAbsTrackRep {
                     const M1x7& state7,
                     TMatrixD* Jac = NULL);
 
+  //! protect from call to not yet implemented = operator
   RKTrackRep& operator=(const RKTrackRep*){
     return *this;
   };

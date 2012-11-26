@@ -121,7 +121,7 @@ RKTrackRep::RKTrackRep(const GFTrackCand* const aGFTrackCandPtr, int pdgCode) :
 void RKTrackRep::initArrays(){
   memset(fStateJac,0x00,(7+7*7)*sizeof(double));
   memset(fNoise,0x00,7*7*sizeof(double));
-  memset(fStateJac,0x00,7*7*sizeof(double));
+  memset(fOldCov,0x00,7*7*sizeof(double));
 
   memset(fJ_pM_5x7,0x00,5*7*sizeof(double));
   memset(fJ_pM_5x6,0x00,5*6*sizeof(double));
