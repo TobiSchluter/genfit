@@ -26,8 +26,9 @@ along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 
 
 GFDafHit::GFDafHit(std::vector<GFAbsRecoHit*> HitsInPlane)
-  : fRawHits(HitsInPlane),
-    fHitUpd(false)
+  : fHitUpd(false),
+    fRawHits(HitsInPlane)
+
 {
 	fWeights.assign(fRawHits.size(),1.);
 }
