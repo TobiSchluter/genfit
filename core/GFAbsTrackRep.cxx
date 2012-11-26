@@ -19,11 +19,11 @@
 
 #include "GFAbsTrackRep.h"
 
-GFAbsTrackRep::GFAbsTrackRep() : fDimension(5),fState(5), fCov(5), fChiSqu(0), fNdf(0), fStatusFlag(0), fFirstState(5), fFirstCov(5), fLastState(5), fLastCov(5), fXX0(-1.)
+GFAbsTrackRep::GFAbsTrackRep() : fDimension(5),fState(5), fCov(5), fChiSqu(0), fForwardChiSqu(0), fNdf(0), fStatusFlag(0), fFirstState(5), fFirstCov(5), fLastState(5), fLastCov(5), fXX0(-1.)
 {
 }
 
-GFAbsTrackRep::GFAbsTrackRep(int dim) : fDimension(dim), fState(dim), fCov(dim), fChiSqu(0), fNdf(0), fStatusFlag(0), fFirstState(dim), fFirstCov(dim), fLastState(dim), fLastCov(dim), fXX0(-1.)
+GFAbsTrackRep::GFAbsTrackRep(int dim) : fDimension(dim), fState(dim), fCov(dim), fChiSqu(0), fForwardChiSqu(0), fNdf(0), fStatusFlag(0), fFirstState(dim), fFirstCov(dim), fLastState(dim), fLastCov(dim), fXX0(-1.)
 {
 }
 

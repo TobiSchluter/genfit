@@ -32,7 +32,7 @@
 //#define DEBUG
 
 GFKalman::GFKalman()
-  : fInitialDirection(1), fNumIt(3)
+  : fInitialDirection(1), fNumIt(3), fSmooth(false)
 {
   ;
 }

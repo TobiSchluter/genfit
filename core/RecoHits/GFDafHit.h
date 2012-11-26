@@ -39,7 +39,7 @@
 class GFDafHit: public GFAbsRecoHit {
 	public:
 
-		GFDafHit(){};	
+		GFDafHit() : fHitUpd(false) {};
 
 		~GFDafHit(){ fRawHits.clear(); };
 

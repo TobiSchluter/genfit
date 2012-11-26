@@ -45,7 +45,7 @@ void GFDaf::processTrack(GFTrack* trk) {
   fWeights.clear();
 
   std::vector<GFDafHit*> eff_hits = initHitsWeights(trk);
-  if(eff_hits.size() == 0) {
+  if(eff_hits.empty()) {
     for(unsigned int i=0; i<trk->getNumReps(); i++) {
       trk->getTrackRep(i)->setStatusFlag(1);
     }

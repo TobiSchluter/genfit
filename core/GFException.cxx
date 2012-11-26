@@ -51,27 +51,27 @@ const char* GFException::what() const throw(){
 
 void GFException::info() {
   if(fQuiet) return;
-  if(fNumbers.size() == 0 && fMatrices.size() == 0) return;//do nothing
+  if(fNumbers.empty() && fMatrices.empty()) return; //do nothing
   std::cout << "GFException Info Output" << std::endl;
   std::cout << "===========================" << std::endl;
   if(fNumbersLabel != "") {
 	std::cout << "Numbers Label String:" << std::endl;
 	std::cout << fNumbersLabel << std::endl;
   }
-  if(fNumbers.size() > 0) {
+  if(!fNumbers.empty()) {
 	std::cout << "---------------------------" << std::endl;
 	std::cout << "Numbers:" << std::endl;
-	for(unsigned int i=0;i<fNumbers.size(); i++ ) std::cout << fNumbers[i] << std::endl;
+	for(unsigned int i=0;i<fNumbers.size(); ++i ) std::cout << fNumbers[i] << std::endl;
   }
   if(fMatricesLabel != "") {
 	std::cout << "---------------------------" << std::endl;
 	std::cout << "Matrices Label String:" << std::endl;
 	std::cout << fMatricesLabel << std::endl;
   }
-  if(fMatrices.size() > 0) {
+  if(!fMatrices.empty()) {
 	std::cout << "---------------------------" << std::endl;
 	std::cout << "Matrices:" << std::endl;
-	for(unsigned int i=0;i<fMatrices.size(); i++ ) fMatrices[i].Print();
+	for(unsigned int i=0;i<fMatrices.size(); ++i ) fMatrices[i].Print();
   }
   std::cout << "===========================" << std::endl;  
 }

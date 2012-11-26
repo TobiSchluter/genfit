@@ -207,7 +207,7 @@ GFTrack::setCandidate(const GFTrackCand& cand, bool doreset)
   // reset fits
   if(doreset) {
     for(unsigned int i=0;i<getNumReps();i++) {
-      ((GFAbsTrackRep*)fTrackReps->At(i))->reset();
+      (reinterpret_cast<GFAbsTrackRep*>(fTrackReps->At(i)))->reset();
     }
   }
 }

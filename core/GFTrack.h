@@ -209,7 +209,9 @@ public:
    * best one after the fit. Usually the track representation giving the 
    * smallest chi2 is chosen. By default the first in the list is returned.
    */
-  GFAbsTrackRep* getCardinalRep() const {return ((GFAbsTrackRep*)fTrackReps->At(fCardinal_rep));}
+  GFAbsTrackRep* getCardinalRep() const {
+    return reinterpret_cast<GFAbsTrackRep*>(fTrackReps->At(fCardinal_rep));
+  }
   
   /** @brief Get ID of the cardinal track representation
    */  

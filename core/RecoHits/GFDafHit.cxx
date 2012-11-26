@@ -25,19 +25,18 @@ along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 
 
-GFDafHit::GFDafHit(std::vector<GFAbsRecoHit*> HitsInPlane) {
-
-	fRawHits = HitsInPlane;
+GFDafHit::GFDafHit(std::vector<GFAbsRecoHit*> HitsInPlane)
+  : fRawHits(HitsInPlane),
+    fHitUpd(false)
+{
 	fWeights.assign(fRawHits.size(),1.);
-	fHitUpd = false;
-
 }
+
 
 GFAbsRecoHit* GFDafHit::getHit(unsigned int ihit) {
-
 	return fRawHits.at(ihit);
-
 }
+
 
 void GFDafHit::setWeights(std::vector<double> weights) {
 
