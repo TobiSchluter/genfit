@@ -115,7 +115,6 @@ class GFBookkeeping : public TObject {
 
   GFBookkeeping(){fNhits=-1;}
   GFBookkeeping(const GFBookkeeping&);
-  virtual ~GFBookkeeping(){clearAll();}
 
   /** @brief clear fVectors, fMatrices, fSymMatrices, fPlanes, fNumbers
    */
