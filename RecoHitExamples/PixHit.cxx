@@ -27,7 +27,7 @@ PixHit::PixHit(const TVector3& point, const TVector3& norm,
 
   assert(fabs(norm*u)<1.E-5);
   TVector3 v = u.Cross(norm);
-  GFDetPlane d(point,u,v);
+  GFDetPlane plane(point,u,v);
 
   if(smear) {
     fHitCoord(0) = gRandom->Gaus(0,res);
@@ -38,7 +38,7 @@ PixHit::PixHit(const TVector3& point, const TVector3& norm,
     fHitCoord(1) = 0;
   }
 
-  setDetPlane(d);
+  setDetPlane(plane);
 }
 
 
