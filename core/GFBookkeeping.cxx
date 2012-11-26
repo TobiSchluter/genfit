@@ -578,7 +578,7 @@ void GFBookkeeping::reset() {
       }
     }
     else if (itVec->second.size()>0) {
-      TVectorD vec(itVec->second[0]);
+      TVectorD vec(itVec->second[0].GetNrows()); // TVector filled with 0
       itVec->second.assign(nHits, vec);
     }
     else itVec->second.resize(nHits);
@@ -592,7 +592,7 @@ void GFBookkeeping::reset() {
       }
     }
     else if (itMat->second.size()>0) {
-      TMatrixD mat(itMat->second[0]);
+      TMatrixD mat(itMat->second[0].GetNrows(), itMat->second[0].GetNcols()); // TMatrix filled with 0
       itMat->second.assign(nHits, mat);
     }
     else itMat->second.resize(nHits);
@@ -606,7 +606,7 @@ void GFBookkeeping::reset() {
       }
     }
     else if (itMatSym->second.size()>0){
-      TMatrixDSym matSym(itMatSym->second[0]);
+      TMatrixDSym matSym(itMatSym->second[0].GetNrows()); // TMatrix filled with 0
       itMatSym->second.assign(nHits, matSym);
     }
     else itMatSym->second.resize(nHits);
