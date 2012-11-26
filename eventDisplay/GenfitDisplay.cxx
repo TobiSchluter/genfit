@@ -84,12 +84,12 @@ void GenfitDisplay::reset() {
 
 	for(unsigned int i = 0; i < fEvents.size(); i++) {
 
-		for(unsigned int j = 0; j < fEvents.at(i)->size(); j++) {
+		for(unsigned int j = 0; j < fEvents[i]->size(); j++) {
 
-			delete fEvents.at(i)->at(j);
+			delete fEvents[i]->at(j);
 
 		}
-		delete fEvents.at(i);
+		delete fEvents[i];
 	}
 
 	fEvents.clear();
@@ -103,7 +103,7 @@ void GenfitDisplay::addEvent(std::vector<GFTrack*>& evts) {
 
 	for(unsigned int i = 0; i < evts.size(); i++) {
 
-		vec->push_back(new GFTrack(*(evts.at(i))));
+		vec->push_back(new GFTrack(*(evts[i])));
 
 	}
 
@@ -159,8 +159,8 @@ void GenfitDisplay::open() {
 
 	// parse the global options
 	for(size_t i = 0; i < fOption.length(); i++) {
-		if(fOption.at(i) == 'X') drawSilent = true;
-		if(fOption.at(i) == 'G') drawGeometry = true;
+		if(fOption[i] == 'X') drawSilent = true;
+		if(fOption[i] == 'G') drawGeometry = true;
 	}
 
 	// draw the geometry, does not really work yet. If it's fixed, the docu in the header file should be changed.
@@ -210,14 +210,14 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 	if(fOption != "") {
 		for(size_t i = 0; i < fOption.length(); i++) {
-			if(fOption.at(i) == 'A') drawAutoScale = true;
-			if(fOption.at(i) == 'D') drawDetectors = true;
-			if(fOption.at(i) == 'H') drawHits = true;
-			if(fOption.at(i) == 'M') drawTrackMarkers = true;
-			if(fOption.at(i) == 'P') drawPlanes = true;
-			if(fOption.at(i) == 'S') drawScaleMan = true;
-			if(fOption.at(i) == 'T') drawTrack = true;
-			if(fOption.at(i) == 'R') drawRawHits = true;
+			if(fOption[i] == 'A') drawAutoScale = true;
+			if(fOption[i] == 'D') drawDetectors = true;
+			if(fOption[i] == 'H') drawHits = true;
+			if(fOption[i] == 'M') drawTrackMarkers = true;
+			if(fOption[i] == 'P') drawPlanes = true;
+			if(fOption[i] == 'S') drawScaleMan = true;
+			if(fOption[i] == 'T') drawTrack = true;
+			if(fOption[i] == 'R') drawRawHits = true;
 		}
 	}
 	// finished parsing the option string -------------------------------------------------------------
@@ -245,13 +245,12 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 
 
-	for(unsigned int i = 0; i < fEvents.at(id)->size(); i++) { // loop over all tracks in an event
+	for(unsigned int i = 0; i < fEvents[id]->size(); i++) { // loop over all tracks in an event
 
-		GFTrack* track = fEvents.at(id)->at(i);
+		GFTrack* track = fEvents[id]->at(i);
 
-		GFAbsTrackRep* rep;
-		int irep = 0;
-		rep = track->getTrackRep(irep);
+		GFAbsTrackRep* rep(track->getCardinalRep());
+		unsigned int irep = track->getCardinalRepID();
 
 		unsigned int numhits = track->getNumHits();
 		double charge = rep->getCharge();
