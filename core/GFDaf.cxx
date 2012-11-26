@@ -52,6 +52,8 @@ void GFDaf::processTrack(GFTrack* trk) {
     return;
   }
 
+  fKalman.initBookkeeping(trk);
+
   // prepare track
   GFTrack* mini_trk = new GFTrack();
   mini_trk->setSmoothing();
@@ -61,22 +63,22 @@ void GFDaf::processTrack(GFTrack* trk) {
 
 
   // fit for each trackrep separately
-  for(unsigned int i=0; i<trk->getNumReps(); i++) { // loop over trackreps
+  for(unsigned int iRep=0; iRep<trk->getNumReps(); ++iRep) { // loop over trackreps
 
-    trk->getBK(i)->setNhits(trk->getNumHits());
-    if(trk->getTrackRep(i)->getStatusFlag()!=0) continue;
+    trk->getBK(iRep)->setNhits(trk->getNumHits());
+    if(trk->getTrackRep(iRep)->getStatusFlag()!=0) continue;
 
-    mini_trk->addTrackRep(trk->getTrackRep(i));
+    mini_trk->addTrackRep(trk->getTrackRep(iRep)); // mini_trk uses the original trackRep here. No copy is made!
 
     for(unsigned int iBeta=0; iBeta<fBeta.size(); iBeta++) { // loop over betas
 
 #ifdef DEBUG
-        std::cout<<"GFDaf::processTrack, trackRep nr. " << i << ", beta = " << fBeta[iBeta] << std::endl;
+        std::cout<<"GFDaf::processTrack, trackRep nr. " << iRep << ", beta = " << fBeta[iBeta] << std::endl;
 #endif
 
       for(unsigned int j=0; j<mini_trk->getNumHits(); j++) {
         GFDafHit* hit = static_cast<GFDafHit*>(mini_trk->getHit(j));
-        hit->setWeights(fWeights[i][j]);
+        hit->setWeights(fWeights[iRep][j]);
       }
       if ( iBeta != 0){
         fKalman.blowUpCovs(mini_trk);
@@ -87,7 +89,7 @@ void GFDaf::processTrack(GFTrack* trk) {
 
       if(iBeta != fBeta.size()-1 )
         try{
-          fWeights[i] = calcWeights(mini_trk, fBeta[iBeta]);
+          fWeights[iRep] = calcWeights(mini_trk, fBeta[iBeta]);
         } catch(GFException& e) {
           std::cerr<<e.what();
           e.info();
@@ -97,7 +99,7 @@ void GFDaf::processTrack(GFTrack* trk) {
 
     } // end loop over betas
 
-    if(trk->getSmoothing()) copySmoothing(mini_trk, trk, i);
+    if(trk->getSmoothing()) copySmoothing(mini_trk, trk, iRep);
 
     mini_trk->releaseTrackReps();
 
@@ -105,7 +107,9 @@ void GFDaf::processTrack(GFTrack* trk) {
 
   saveWeights(trk, mini_trk, fWeights);
 
+
   delete mini_trk;
+
 
 };
 
@@ -285,8 +289,6 @@ std::vector<GFDafHit*> GFDaf::initHitsWeights(GFTrack* trk) {
 }
 
 void GFDaf::copySmoothing(const GFTrack* source, GFTrack* target, int target_irep) {
-
-  fKalman.initBookkeeping(target);
 
   unsigned int hit_count = 0;
   GFBookkeeping* sourceBK0 = source->getBK(0);
