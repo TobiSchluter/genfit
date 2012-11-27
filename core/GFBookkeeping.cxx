@@ -19,7 +19,6 @@
 
 #include "GFBookkeeping.h"
 #include "GFException.h"
-#include <TString.h>
 
 
 GFBookkeeping::GFBookkeeping(const GFBookkeeping& bk) {

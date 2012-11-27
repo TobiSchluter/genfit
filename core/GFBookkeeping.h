@@ -98,8 +98,8 @@ class GFBookkeeping : public TObject {
   const TVectorD&    getVector(const GFBKKey& key, unsigned int index) const;
   const TMatrixD&    getMatrix(const GFBKKey& key, unsigned int index) const;
   const TMatrixDSym& getSymMatrix(const GFBKKey& key, unsigned int index) const;
-  const GFDetPlane&          getDetPlane(const GFBKKey& key, unsigned int index)  const;
-  double                     getNumber(const GFBKKey& key, unsigned int index) const;
+  const GFDetPlane&  getDetPlane(const GFBKKey& key, unsigned int index)  const;
+  double             getNumber(const GFBKKey& key, unsigned int index) const;
 
   std::vector<GFBKKey> getVectorKeys() const;
   std::vector<GFBKKey> getMatrixKeys() const;
