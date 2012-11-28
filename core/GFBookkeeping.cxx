@@ -208,7 +208,7 @@ void GFBookkeeping::bookVectors(const GFBKKey& key){
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;
   }
-  fVectors[key].resize(fNhits);
+  fVectors[key].resize(fNhits); // valgrind detects a memory leak here, but it is probably only due to stl optimizations: http://stackoverflow.com/questions/1379564/c-tiny-memory-leak-with-stdmap
 }
 
 void GFBookkeeping::bookMatrices(const GFBKKey& key){
@@ -225,7 +225,7 @@ void GFBookkeeping::bookMatrices(const GFBKKey& key){
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;
   }
-  fMatrices[key].resize(fNhits);
+  fMatrices[key].resize(fNhits); // valgrind detects a memory leak here, but it is probably only due to stl optimizations: http://stackoverflow.com/questions/1379564/c-tiny-memory-leak-with-stdmap
 }
 
 void GFBookkeeping::bookSymMatrices(const GFBKKey& key){
@@ -242,7 +242,7 @@ void GFBookkeeping::bookSymMatrices(const GFBKKey& key){
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;
   }
-  fSymMatrices[key].resize(fNhits);
+  fSymMatrices[key].resize(fNhits); // valgrind detects a memory leak here, but it is probably only due to stl optimizations: http://stackoverflow.com/questions/1379564/c-tiny-memory-leak-with-stdmap
 }
 
 void GFBookkeeping::bookGFDetPlanes(const GFBKKey& key){
@@ -259,7 +259,7 @@ void GFBookkeeping::bookGFDetPlanes(const GFBKKey& key){
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;
   }
-  fPlanes[key].resize(fNhits);
+  fPlanes[key].resize(fNhits);// valgrind detects a memory leak here, but it is probably only due to stl optimizations: http://stackoverflow.com/questions/1379564/c-tiny-memory-leak-with-stdmap
 }
 
 void GFBookkeeping::bookNumbers(const GFBKKey& key, double val){ //val is set to 0. per default
@@ -276,7 +276,7 @@ void GFBookkeeping::bookNumbers(const GFBKKey& key, double val){ //val is set to
     GFException exc(ostr.str(),__LINE__,__FILE__);
     throw exc;
   }
-  fNumbers[key].assign(fNhits, val);
+  fNumbers[key].assign(fNhits, val);// valgrind detects a memory leak here, but it is probably only due to stl optimizations: http://stackoverflow.com/questions/1379564/c-tiny-memory-leak-with-stdmap
 }
 
 
