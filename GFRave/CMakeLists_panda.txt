@@ -2,43 +2,44 @@
 # the array .
 # The extension is already found.  Any number of sources could be listed here.
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 #check for ENV variables that are needed
+IF(NOT DEFINED ENV{RAVEPATH})
+   MESSAGE(FATAL_ERROR "You did not define the environment variable RAVEPATH which is needed to find rave. GFRave will not be built.") 
+ENDIF(NOT DEFINED ENV{RAVEPATH})  
+SET(RAVEPATH $ENV{RAVEPATH})
+
 IF(NOT DEFINED ENV{ROOTSYS})
    MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
 ENDIF(NOT DEFINED ENV{ROOTSYS})
 
-IF(NOT DEFINED ENV{RAVEPATH})
-   MESSAGE(FATAL_ERROR "RAVEPATH is not set!") 
-ENDIF(NOT DEFINED ENV{RAVEPATH})  
-SET(RAVEPATH $ENV{RAVEPATH})
-
 
 # get compiler flags from rave
-INCLUDE(UsePkgConfig)
+INCLUDE(FindPkgConfig)
 SET(ENV{PKG_CONFIG_PATH} ${RAVEPATH})
-PKGCONFIG(rave 
-  RAVE_INCLUDE_DIR 
-  RAVE_LINK_DIR 
-  RAVE_LINK_FLAGS 
-  CMAKE_CXX_FLAGS
-)
+pkg_search_module(RAVE rave REQUIRED)
 
-set (INCLUDE_DIRECTORIES
+# turn comma separated lists into space separated strings
+string (REPLACE ";" " " RAVE_LDFLAGS_STR "${RAVE_LDFLAGS}")
+string (REPLACE ";" " " RAVE_INCLUDE_DIRS_STR "${RAVE_INCLUDE_DIRS}")
+string (REPLACE ";" " " RAVE_CFLAGS_STR "${RAVE_CFLAGS}")
+
+SET (CMAKE_CXX_FLAGS ${RAVE_CFLAGS_STR})
+
+
+INCLUDE_DIRECTORIES(
   $ENV{ROOTSYS}/include  
   ${CMAKE_SOURCE_DIR}/genfit
   ${CMAKE_SOURCE_DIR}/GenfitTools/GFRave
   ${CLHEP_INCLUDE_DIR}
-  ${RAVE_INCLUDE_DIR}
+  ${RAVE_INCLUDE_DIRS_STR}
 )
-include_directories( ${INCLUDE_DIRECTORIES})
 
-set(LINK_DIRECTORIES
+LINK_DIRECTORIES(
 	${ROOT_LIBRARY_DIR}
 	$ENV{RAVELIBPATH}
 )
-link_directories( ${LINK_DIRECTORIES})
 
 
 set(GFRAVE_SRCS 
@@ -55,13 +56,12 @@ set(GFRAVEDICT_HEADERS
 	GFRaveVertex.h
 )
 
+string (REPLACE ".h" ".cxx" GFRAVE_HEADERS "${GFRAVE_SRCS}")
+
 if(RULE_CHECKER_FOUND)
     CHECK_RULES("${GFRAVE_SRCS}" "${INCLUDE_DIRECTORIES}" GFRAVE_RULES)
 endif(RULE_CHECKER_FOUND)
 
-# fill list of header files from list of source files
-# by exchanging the file extension
-CHANGE_FILE_EXTENSION(*.cxx *.h GFRAVE_HEADERS "${GFRAVE_SRCS}")
 
 set(GFRAVE_LINKDEF  GFRaveLinkDef.h)
 set(GFRAVE_DICTIONARY ${CMAKE_CURRENT_BINARY_DIR}/GFRaveDict.cxx) 
@@ -69,11 +69,13 @@ ROOT_GENERATE_DICTIONARY("${GFRAVEDICT_HEADERS}" "${GFRAVE_LINKDEF}" "${GFRAVE_D
 
 SET(GFRAVE_SRCS_ALL ${GFRAVE_SRCS} ${GFRAVE_DICTIONARY})
 
+string (REPLACE " " " -I" RAVE_INCLUDE_DIRS_I "${RAVE_INCLUDE_DIRS_STR}")
+
 add_library(gfrave SHARED ${GFRAVE_SRCS_ALL})
 target_link_libraries(gfrave 
 	${ROOT_LIBRARIES}
-    ${RAVE_LINK_FLAGS}
-    -I${RAVE_INCLUDE_DIR}
+  ${RAVE_LDFLAGS_STR}
+  -I${RAVE_INCLUDE_DIRS_I}
 )
 set_target_properties(gfrave PROPERTIES ${FAIRROOT_LIBRARY_PROPERTIES})
 ################ install ###################

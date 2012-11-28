@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 
 #check for ENV variables that are needed
@@ -58,6 +58,14 @@ Execute_process(COMMAND root-config --glibs --cflags
 
 
 ADD_LIBRARY(genfitRK SHARED ${GENFIT_RK_SRCS})
-TARGET_LINK_LIBRARIES(genfitRK ${ROOT_LIBS} -L${GENFITLIBDIR} -lgenfit -lGeom -lVMC -lEG)
+TARGET_LINK_LIBRARIES(genfitRK 
+	${ROOT_LIBS} 
+	-L${GENFITLIBDIR} 
+	-lgenfit 
+	-lGeom 
+	-lVMC 
+	-lEG
+)
+
 INSTALL(TARGETS genfitRK DESTINATION ${GENFITLIBINSTALLDIR} )
 

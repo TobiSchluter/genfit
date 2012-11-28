@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 #check for ENV variables that are needed
 FIND_PROGRAM(ROOT_CONFIG root-config $ENV{ROOTSYS}/bin)
@@ -42,34 +42,8 @@ set(GENFIT_SRCS
 	RecoHits/GFDafWireHit.cxx
 )
 
-set(GENFIT_HEADERS  
-  GFAbsFitter.h
-	GFAbsTrackRep.h 
-	GFBookkeeping.h
-	GFDetPlane.h 
-	GFException.h 
-	GFKalman.h 
-	GFRecoHitFactory.h 
-	GFRecoHitProducer.h 
-	GFTools.h 
-	GFTrackCand.h 
-	GFTrackCandHit.h  
-	GFTrack.h 
-	GFConstField.h 
-	GFFieldManager.h
-	GFAbsFinitePlane.h 
-	GFRectFinitePlane.h
-	GFDaf.h 
-	GFTrackProximity.h
-	RecoHits/GFAbsPlanarHit.h 
-	RecoHits/GFAbsProlateSpacepointHit.h
-	RecoHits/GFAbsRecoHit.h
-	RecoHits/GFAbsSpacepointHit.h
-	RecoHits/GFAbsWireHit.h
-	RecoHits/GFAbsWirepointHit.h 
-	RecoHits/GFDafHit.h
-	RecoHits/GFDafWireHit.h
-)
+string (REPLACE ".cxx" ".h" GENFIT_HEADERS "${GENFIT_SRCS}")
+
 
 set(GENFIT_LINKDEF  genfitLinkDef.h)
 set(GENFIT_DICTIONARY genfitDict.cxx) 
@@ -84,10 +58,7 @@ ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY}
       	-I${GENFIT}/core ${GENFIT_HEADERS} ${GENFIT_LINKDEF}
       	DEPENDS ${GENFIT_HEADERS} ${GENFIT_LINKDEF})
       	
-message(${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY})
-
 SET(GENFIT_SRCS ${GENFIT_SRCS} ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY})
-#SET(GENFIT_SRCS ${GENFIT_SRCS} ${GENFIT_DICTIONARY})
 
 ################ install ###################
 
@@ -97,8 +68,8 @@ Execute_process(COMMAND root-config --glibs --cflags
     	OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 
-
 ADD_LIBRARY(genfit SHARED ${GENFIT_SRCS})
+
 TARGET_LINK_LIBRARIES(genfit ${ROOT_LIBS}  -lGeom -lVMC -lEG)
 
 INSTALL(TARGETS genfit DESTINATION ${GENFITLIBINSTALLDIR})
