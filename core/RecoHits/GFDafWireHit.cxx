@@ -77,15 +77,15 @@ void GFDafWireHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,
 
   GFTools::invertMatrix(cov);
 
-  fHitCov += (fWeights[0] + fWeights[1]) * cov;
+  fHitCov += (fWeights[0] + fWeights[1]) * cov; // cov is already inverted
 
   // invert fHitCov
   GFTools::invertMatrix(fHitCov);
 
   //set the weighted-mean coord
-  fHitCoord = fWeights[1] * cov * coord; // right side
+  fHitCoord = fWeights[1] * cov * coord; // right side  // cov is already inverted
   coord(0) *= -1.; // invert the sign of the drift radius of the first (left) hit
-  fHitCoord += fWeights[0] * cov * coord; // left side
+  fHitCoord += fWeights[0] * cov * coord; // left side  // cov is already inverted
 
 
   fHitCoord = fHitCov * fHitCoord;
