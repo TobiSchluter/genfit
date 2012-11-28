@@ -77,7 +77,7 @@ void GFDafWireHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,
 
   GFTools::invertMatrix(cov);
 
-  fHitCov += (fWeights[0] + fWeights[1]) * cov; // cov is already inverted
+  fHitCov = (fWeights[0] + fWeights[1]) * cov; // cov is already inverted
 
   // invert fHitCov
   GFTools::invertMatrix(fHitCov);
@@ -88,7 +88,7 @@ void GFDafWireHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,
   fHitCoord += fWeights[0] * cov * coord; // left side  // cov is already inverted
 
 
-  fHitCoord = fHitCov * fHitCoord;
+  fHitCoord *= fHitCov;
 
   //return by refernce
   m.ResizeTo(fHitCoord);

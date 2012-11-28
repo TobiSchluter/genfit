@@ -67,29 +67,30 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
 
   if(fRawHits.size() == 1) {
     fRawHits[0]->getMeasurement(rep, pl, statePred, covPred, fHitCoord, fHitCov);
-    fHitCov = (1. / fWeights[0]) * fHitCov;
+    fHitCov *= 1. / fWeights[0];
   } 
   else { // more than one hit
     TMatrixDSym cov;
-    TVectorD coordTemp;
+    TVectorD coord;
     std::vector<TVectorD> coords;
-    std::vector<TMatrixDSym> covInvs;
+    std::vector<TMatrixDSym> weightedCovInvs;
 
     for(unsigned int i=0; i<fRawHits.size(); ++i) {
-      fRawHits[i]->getMeasurement(rep, pl, statePred, covPred, coordTemp, cov);
+      fRawHits[i]->getMeasurement(rep, pl, statePred, covPred, coord, cov);
 
       // make sure fHitCoord and fHitCov have right dimensionality and set them to 0
       if (i==0){
-        fHitCoord.ResizeTo(coordTemp);
+        fHitCoord.ResizeTo(coord);
         fHitCoord.Zero();
         fHitCov.ResizeTo(cov);
         fHitCov.Zero();
       }
 
-      coords.push_back(coordTemp);
-      GFTools::invertMatrix(cov);
-      covInvs.push_back(cov); // cov is already inverted
-      fHitCov += fWeights[i] * cov; // cov is already inverted
+      coords.push_back(coord);
+      GFTools::invertMatrix(cov); // invert cov
+      cov *= fWeights[i]; // weigh cov
+      weightedCovInvs.push_back(cov); // cov is already inverted and weighted
+      fHitCov += cov; // cov is already inverted and weighted
     }
 
     // invert fHitCov
@@ -97,9 +98,9 @@ void GFDafHit::getMeasurement(const GFAbsTrackRep* rep,const GFDetPlane& pl,cons
 
     //set the weighted-mean coord
     for(unsigned int i=0; i<coords.size(); ++i) {
-      fHitCoord += fWeights[i] * covInvs[i] * coords[i];
+      fHitCoord += weightedCovInvs[i] * coords[i];
     }
-    fHitCoord = fHitCov * fHitCoord;
+    fHitCoord *= fHitCov;
   }
 
   //return by refernce
