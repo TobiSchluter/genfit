@@ -40,17 +40,14 @@ GFAbsSpacepointHit::getMeasurement(const GFAbsTrackRep* rep,
   // m
   m.ResizeTo(2);
 
-  TVectorD D(3);
-  D(0) = o.X();
-  D(1) = o.Y();
-  D(2) = o.Z();
 
-  D *= -1.;
-  D += fHitCoord;
-  //now the vector D points from the origin of the plane to the hit point
+  m(0) = (fHitCoord(0)-o.X()) * u.X() +
+         (fHitCoord(1)-o.Y()) * u.Y() +
+         (fHitCoord(2)-o.Z()) * u.Z();
 
-  m(0) = D(0) * u.X() + D(1) * u.Y() + D(2) * u.Z();
-  m(1) = D(0) * v.X() + D(1) * v.Y() + D(2) * v.Z();
+  m(1) = (fHitCoord(0)-o.X()) * v.X() +
+         (fHitCoord(1)-o.Y()) * v.Y() +
+         (fHitCoord(2)-o.Z()) * v.Z();
 
 
   // V
