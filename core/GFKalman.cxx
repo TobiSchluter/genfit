@@ -167,21 +167,21 @@ double GFKalman::chi2Increment(const TVectorD& r,
                                const TMatrixDSym& cov,
                                const TMatrixDSym& V){
 
-  // residuals covariances: R = (V - HCH^T)
-  TMatrixDSym HcovHt(cov);
-  HcovHt.Similarity(H);
+  // residuals covariances: Rinv = R^-1 = (V - HCH^T)^-1
+  TMatrixDSym Rinv(cov);
+  Rinv.Similarity(H);
 
-  HcovHt *= -1.;
-  HcovHt += V; // this is now  R = V - HCH^T
-  GFTools::invertMatrix(HcovHt); // this is now  R^(-1)
-  double chisq = HcovHt.Similarity(r); // chisq = r^T R^(-1) r
+  Rinv *= -1.;
+  Rinv += V; // this is now  R = V - HCH^T
+  GFTools::invertMatrix(Rinv); // this is now  R^(-1)
+  double chisq = Rinv.Similarity(r); // chisq = r^T R^(-1) r
 
   if(TMath::IsNaN(chisq)){
     GFException exc("chi2 is nan",__LINE__,__FILE__);
     exc.setFatal();
     std::vector<TMatrixD> matrices;
     matrices.push_back(V);
-    matrices.push_back(HcovHt);
+    matrices.push_back(Rinv);
     matrices.push_back(cov);
     exc.setMatrices("V, R^(-1), cov",matrices);
     throw exc;
