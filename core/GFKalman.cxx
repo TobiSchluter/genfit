@@ -171,10 +171,10 @@ double GFKalman::chi2Increment(const TVectorD& r,
   TMatrixDSym Rinv(cov);
   Rinv.Similarity(H);
 
-  Rinv *= -1.;
-  Rinv += V; // this is now  R = V - HCH^T
-  GFTools::invertMatrix(Rinv); // this is now  R^(-1)
-  double chisq = Rinv.Similarity(r); // chisq = r^T R^(-1) r
+  Rinv -= V; // this is now  -R = HCH^T - V
+  GFTools::invertMatrix(Rinv); // this is now  -R^(-1)
+  double chisq = Rinv.Similarity(r); // -chisq = r^T -R^(-1) r
+  chisq *= -1.;
 
   if(TMath::IsNaN(chisq)){
     GFException exc("chi2 is nan",__LINE__,__FILE__);
