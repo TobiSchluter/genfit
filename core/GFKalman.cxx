@@ -162,31 +162,28 @@ GFKalman::fittingPass(GFTrack* trk, int direction){
   }// end loop over hits
 }
 
-double GFKalman::chi2Increment(const TVectorD& r,const TMatrixD& H,
-           const TMatrixDSym& cov,const TMatrixDSym& V){
+double GFKalman::chi2Increment(const TVectorD& r,
+                               const TMatrixD& H,
+                               const TMatrixDSym& cov,
+                               const TMatrixDSym& V){
 
-  // residuals covariances:R=(V - HCH^T)
+  // residuals covariances: R = (V - HCH^T)
   TMatrixDSym HcovHt(cov);
   HcovHt.Similarity(H);
 
-  // instead of
-  //  TMatrixDSym Rinv = TMatrixDSym(V, kMinus, HcovHt)
-  // because kMinus constructor doesn't work in root up to at least 5.34.
-  // Bug report: <https://savannah.cern.ch/bugs/index.php?98605>
-
-  // chisq= r^TR^(-1)r
-  TMatrixDSym Rinv(V - HcovHt);
-  GFTools::invertMatrix(Rinv);
-  double chisq = Rinv.Similarity(r);
+  HcovHt *= -1.;
+  HcovHt += V; // this is now  R = V - HCH^T
+  GFTools::invertMatrix(HcovHt); // this is now  R^(-1)
+  double chisq = HcovHt.Similarity(r); // chisq = r^T R^(-1) r
 
   if(TMath::IsNaN(chisq)){
     GFException exc("chi2 is nan",__LINE__,__FILE__);
     exc.setFatal();
     std::vector<TMatrixD> matrices;
     matrices.push_back(V);
-    matrices.push_back(Rinv);
+    matrices.push_back(HcovHt);
     matrices.push_back(cov);
-    exc.setMatrices("V, R, cov",matrices);
+    exc.setMatrices("V, R^(-1), cov",matrices);
     throw exc;
   }
 
