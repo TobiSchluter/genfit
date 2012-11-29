@@ -35,7 +35,8 @@ class GFAbsMaterialInterface : public TObject {
 
   /** @brief Initialize the navigator at given position and with given direction
    */
-  virtual void initTrack(const TVector3& pos, const TVector3& dir) = 0;
+  virtual void initTrack(double posX, double posY, double posZ,
+                         double dirX, double dirY, double dirZ) = 0;
 
   /** @brief Get material parameters in current material
    */

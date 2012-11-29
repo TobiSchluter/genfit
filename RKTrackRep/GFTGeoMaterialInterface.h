@@ -34,7 +34,8 @@ class GFTGeoMaterialInterface : public GFAbsMaterialInterface {
 
   /** @brief Initialize the navigator at given position and with given direction
    */
-  void initTrack(const TVector3& pos, const TVector3& dir);
+  void initTrack(double posX, double posY, double posZ,
+                 double dirX, double dirY, double dirZ);
 
   /** @brief Get material parameters in current material
    */

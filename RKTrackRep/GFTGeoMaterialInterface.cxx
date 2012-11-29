@@ -31,10 +31,11 @@ double MeanExcEnergy_get(TGeoMaterial*);
 
 
 void
-GFTGeoMaterialInterface::initTrack(const TVector3& pos, const TVector3& dir){
+GFTGeoMaterialInterface::initTrack(double posX, double posY, double posZ,
+                                   double dirX, double dirY, double dirZ){
 
-  gGeoManager->InitTrack(pos.X(), pos.Y(), pos.Z(),
-                         dir.X(), dir.Y(), dir.Z());
+  gGeoManager->InitTrack(posX, posY, posZ,
+                         dirX, dirY, dirZ);
 
 }
 

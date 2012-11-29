@@ -867,7 +867,7 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, boo
 
     // propagation
     std::vector<GFPointPath> points;
-    points.reserve(100); // Saves re-allocations and associated copying when putting together the path.
+    points.reserve(50);
 
     bool checkJacProj = true;
 
