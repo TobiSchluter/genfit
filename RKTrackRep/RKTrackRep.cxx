@@ -603,8 +603,8 @@ void RKTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TM
 
 
 double RKTrackRep::extrapolateToPoint(const TVector3& pos,
-                                    TVector3& poca,
-                                    TVector3& dirInPoca){
+                                      TVector3& poca,
+                                      TVector3& dirInPoca){
 
 #ifdef DEBUG
   std::cout << "RKTrackRep::extrapolateToPoint()\n";
@@ -619,20 +619,20 @@ double RKTrackRep::extrapolateToPoint(const TVector3& pos,
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
   TVector3 lastDir(0,0,0);
 
-  GFDetPlane pl;
+  GFDetPlane pl(pos, fDir);
   unsigned int iterations(0);
 
   while(true){
     lastStep = step;
     lastDir = fDir;
 
-    pl.setON(pos, fDir);
     step =  this->Extrap(pl, state7, NULL, true, maxStep);
     tracklength += step;
+
     fDir.SetXYZ(state7[3], state7[4], state7[5]);
+    poca.SetXYZ(state7[0], state7[1], state7[2]);
 
     // check break conditions
-    poca.SetXYZ(state7[0], state7[1], state7[2]);
     angle = fabs(fDir.Angle((pos-poca))-TMath::PiOver2()); // angle between direction and connection to point - 90 deg
     distToPoca = (pos-poca).Mag();
     if (angle*distToPoca < 0.1*MINSTEP) break;
@@ -647,6 +647,8 @@ double RKTrackRep::extrapolateToPoint(const TVector3& pos,
       fDir += lastDir;
       maxStep = 0.5*fabs(lastStep); // make it converge!
     }
+
+    pl.setNormal(fDir);
   }
 
   dirInPoca.SetXYZ(state7[3], state7[4], state7[5]);
@@ -677,10 +679,10 @@ TVector3 RKTrackRep::poca2Line(const TVector3& extr1,const TVector3& extr2,const
 
 
 double RKTrackRep::extrapolateToLine(const TVector3& point1,
-                                   const TVector3& point2,
-                                   TVector3& poca,
-                                   TVector3& dirInPoca,
-                                   TVector3& poca_onwire){
+                                     const TVector3& point2,
+                                     TVector3& poca,
+                                     TVector3& dirInPoca,
+                                     TVector3& poca_onwire){
 
 #ifdef DEBUG
   std::cout << "RKTrackRep::extrapolateToLine(), (x,y) = (" << point1.X() << ", " << point1.Y() << ")\n";
@@ -693,7 +695,8 @@ double RKTrackRep::extrapolateToLine(const TVector3& point1,
   fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
-  TVector3 wireDir(point2-point1);
+  TVector3 wireDir(point2);
+  wireDir -= point1;
   wireDir.SetMag(1.);
   TVector3 lastDir(0,0,0);
 
@@ -704,14 +707,14 @@ double RKTrackRep::extrapolateToLine(const TVector3& point1,
     lastStep = step;
     lastDir = fDir;
 
-    pl.setU(fDir.Cross(wireDir));
     step = this->Extrap(pl, state7, NULL, true, maxStep);
     tracklength += step;
-    fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
-    // check break conditions
+    fDir.SetXYZ(state7[3], state7[4], state7[5]);
     poca.SetXYZ(state7[0], state7[1], state7[2]);
     poca_onwire = poca2Line(point1, point2, poca);
+
+    // check break conditions
     angle = fabs(fDir.Angle((poca_onwire-poca))-TMath::PiOver2()); // angle between direction and connection to point - 90 deg
     distToPoca = (poca_onwire-poca).Mag();
     if (angle*distToPoca < 0.1*MINSTEP) break;
@@ -722,10 +725,12 @@ double RKTrackRep::extrapolateToLine(const TVector3& point1,
 
     // if lastStep and step have opposite sign, the real normal vector lies somewhere between the last two normal vectors (i.e. the directions)
     // -> try mean value of the two (normalization not needed)
-    if (lastStep*step <0){
+    if (lastStep*step < 0){
       fDir += lastDir;
       maxStep = 0.5*fabs(lastStep); // make it converge!
     }
+
+    pl.setU(fDir.Cross(wireDir));
   }
 
   dirInPoca.SetXYZ(state7[3], state7[4], state7[5]);
