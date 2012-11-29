@@ -173,8 +173,10 @@ GFDetPlane::setNormal(double X,double Y,double Z){
 
 void
 GFDetPlane::setNormal(const TVector3& n){
-  fU = n.Orthogonal().Unit();
-  fV = n.Cross(fU).Unit();
+  fU = n.Orthogonal();
+  fU.SetMag(1.);
+  fV = n.Cross(fU);
+  fV.SetMag(1.);
 }
 
 void GFDetPlane::setNormal(const double& theta, const double& phi){
