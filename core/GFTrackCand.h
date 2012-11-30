@@ -70,6 +70,11 @@ public:
   GFTrackCand();
   ~GFTrackCand();
 
+  //! copy constructor
+  GFTrackCand( const GFTrackCand& other );
+  //! assignment operator
+  GFTrackCand& operator=( const GFTrackCand& other );
+
   /* @brief == operator checks equality of TrackCandHits. Does not check for rho. */
   friend bool operator== (const GFTrackCand& lhs, const GFTrackCand& rhs);
   friend bool operator!= (const GFTrackCand& lhs, const GFTrackCand& rhs) {

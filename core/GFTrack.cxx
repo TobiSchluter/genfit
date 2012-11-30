@@ -203,7 +203,7 @@ void GFTrack::sortHits(){
 void
 GFTrack::setCandidate(const GFTrackCand& cand, bool doreset)
 {
-  fCand=cand;
+  fCand = cand;
   // reset fits
   if(doreset) {
     for(unsigned int i=0;i<getNumReps();i++) {

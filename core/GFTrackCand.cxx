@@ -28,7 +28,8 @@
 ClassImp(GFTrackCand)
 
 GFTrackCand::GFTrackCand() : 
-  fMcTrackId(-1), fPdg(0), 
+  fMcTrackId(-1),
+  fPdg(0),
   fState6D(6),
   fCov6D(-1.0*TMatrixDSym(TMatrixDSym::kUnit,TMatrixDSym(6))),
   fQ(0) 
@@ -42,6 +43,42 @@ GFTrackCand::~GFTrackCand() {
   }
   fHits.clear();
 }
+
+
+GFTrackCand::GFTrackCand( const GFTrackCand& other ) :
+  fMcTrackId(other.fMcTrackId),
+  fPdg(other.fPdg),
+  fState6D(other.fState6D),
+  fCov6D(other.fCov6D),
+  fQ(other.fQ)
+{
+  // deep copy
+  fHits.reserve(other.fHits.size());
+  for (unsigned int i=0; i<other.fHits.size(); ++i) {
+    fHits.push_back( new GFTrackCandHit(*(other.fHits[i])) );
+  }
+}
+
+GFTrackCand&
+GFTrackCand::operator=( const GFTrackCand& other ){
+  fMcTrackId = other.fMcTrackId;
+  fPdg = other.fPdg;
+  fState6D = other.fState6D;
+  fCov6D = other.fCov6D;
+  fQ = other.fQ;
+
+  for (unsigned int i=0; i<fHits.size(); ++i) {
+    delete fHits[i];
+  }
+  fHits.clear();
+  fHits.reserve(other.fHits.size());
+  for (unsigned int i=0; i<other.fHits.size(); ++i) {
+    fHits.push_back( new GFTrackCandHit(*(other.fHits[i])) );
+  }
+
+  return *this;
+}
+
 
 void 
 GFTrackCand::addHit(unsigned int detId, unsigned int hitId, int planeId, double rho)
