@@ -64,7 +64,7 @@
  */
 
 class GFTrackCand : public TObject {
-public:
+ public:
 
   // Constructors/Destructors ---------
   GFTrackCand();
@@ -79,6 +79,10 @@ public:
   friend bool operator== (const GFTrackCand& lhs, const GFTrackCand& rhs);
   friend bool operator!= (const GFTrackCand& lhs, const GFTrackCand& rhs) {
     return !(lhs == rhs);
+  }
+
+  static bool compareTrackCandHits(const GFTrackCandHit* lhs, const GFTrackCandHit* rhs){
+    return (*lhs < *rhs); // < operator defined in GFTrackCandHit.h
   }
 
   // Accessors -----------------------

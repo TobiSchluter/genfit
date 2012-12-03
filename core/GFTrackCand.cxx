@@ -176,7 +176,7 @@ void GFTrackCand::append(const GFTrackCand& rhs){
 
 
 void GFTrackCand::sortHits(){
-	std::stable_sort(fHits.begin(), fHits.end());
+	std::stable_sort(fHits.begin(), fHits.end(), compareTrackCandHits);
 }
 
 
