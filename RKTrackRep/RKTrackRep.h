@@ -295,6 +295,14 @@ class RKTrackRep : public GFAbsTrackRep {
                bool onlyOneStep = false,
                double maxStep = 1.E99);
 
+  //! The actual Runge Kutta propagation
+  /** propagate P with step S. Fills SA (Start directions derivatives dA/S).
+   *  If calcCov is falso, only the first 6 entries of P (pos and dir) are propagated,
+   *  otherwise also the 7x7 jacobian is calculated.
+   *  If varField is false, the magnetic field will only be evaluated at the starting position.
+   */
+  void RKPropagate(M8x7& P, M1x3& SA, double S, bool calcCov, bool varField = true) const;
+
   double estimateStep(std::vector<GFPointPath>& points,
                       const TVector3& pos,
                       const TVector3& dir,

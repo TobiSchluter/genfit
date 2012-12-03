@@ -855,7 +855,7 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, boo
       throw exc;
     }
 
-    // initialize fStateJac with unit matrix; last entry is not 1 but q/p
+    // initialize fStateJac with unit matrix
     if(calcCov){
       memset(&fStateJac[7],0x00,49*sizeof(double));
       for(int i=0; i<7; ++i){
@@ -1023,10 +1023,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
                          double maxStep) {
 
   // important fixed numbers
-  static const double EC     = 0.000149896229;  // c/(2*10^12) resp. c/2Tera
-  static const double P3     = 1./3.;           // 1/3
   static const int    ND     = 56;              // number of variables for derivatives calculation
-  static const int    ND1    = ND-7;            // = 49
   // limits, check-values, etc. Can be tuned!
   static const double Wmax   = 3000.;           // max. way allowed [cm]
   static const double AngleMax = 6.3;           // max. total angle change of momentum. Prevents extrapolating a curler round and round if no active plane is found.
@@ -1036,7 +1033,6 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   M1x3&   R           = *((M1x3*) &P[0]);       // Start coordinates  [cm] 	(x,  y,  z)
   M1x3&   A           = *((M1x3*) &P[3]);       // Start directions 	      (ax, ay, az); 	ax^2+ay^2+az^2=1
   M1x3    SA          = {0.,0.,0.};             // Start directions derivatives dA/S
-  double  Pinv        = P[6]*EC;                // P[6] is charge/momentum in e/(GeV/c)
   double  Way         = 0.;                     // Sum of absolute values of all extrapolation steps [cm]
   bool    atPlane = false;                      // stepper thinks that the plane will be reached in that step -> linear extrapolation and projection of jacobian
   bool    momLossExceeded = false;              // stepper had to limit stepsize due to momentum loss -> no next RKutta loop, no linear extrapolation
@@ -1045,16 +1041,9 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   double   momentum   = fabs(fCharge/P[6]);     // momentum [GeV]
   double   relMomLoss = 0;                      // relative momentum loss in RKutta
   double   deltaAngle = 0.;                     // total angle by which the momentum has changed during extrapolation
-  double   An(0), S(0), Sl(0), S3(0), S4(0), PS2(0), CBA(0);
-  // Variables for RKutta main loop
+  double   An(0), S(0), Sl(0), CBA(0);
   M1x4     SU = {0.,0.,0.,0.};
-  M1x3     H0 = {0.,0.,0.}, H1 = {0.,0.,0.}, H2 = {0.,0.,0.}, r = {0.,0.,0.};
-  double   A0(0), A1(0), A2(0), A3(0), A4(0), A5(0), A6(0);
-  double   B0(0), B1(0), B2(0), B3(0), B4(0), B5(0), B6(0);
-  double   C0(0), C1(0), C2(0), C3(0), C4(0), C5(0), C6(0);
-  double   dA0(0), dA2(0), dA3(0), dA4(0), dA5(0), dA6(0);
-  double   dB0(0), dB2(0), dB3(0), dB4(0), dB5(0), dB6(0);
-  double   dC0(0), dC2(0), dC3(0), dC4(0), dC5(0), dC6(0);
+
 
   #ifdef DEBUG
     std::cout << "RKTrackRep::RKutta \n";
@@ -1109,42 +1098,6 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
       std::cout << "------ RKutta main loop nr. " << counter-1 << " ------\n";
     #endif
 
-    //
-    // Runge Kutta Extrapolation
-    //
-    S3 = P3*S;
-    S4 = 0.25*S;
-    PS2 = Pinv*S;
-    
-    // First point
-    r[0] = R[0];           r[1] = R[1];           r[2]=R[2];
-    fPos.SetXYZ(r[0], r[1], r[2]); // vector of start coordinates R0	(x, y, z)
-    fH = GFFieldManager::getFieldVal(fPos);				// magnetic field in 10^-4 T = kGauss
-    H0[0] = PS2*fH.X(); H0[1] = PS2*fH.Y(); H0[2] = PS2*fH.Z(); 		// H0 is PS2*(Hx, Hy, Hz) @ R0
-    A0 = A[1]*H0[2]-A[2]*H0[1]; B0 = A[2]*H0[0]-A[0]*H0[2]; C0 = A[0]*H0[1]-A[1]*H0[0]; // (ax, ay, az) x H0
-    A2 = A[0]+A0              ; B2 = A[1]+B0              ; C2 = A[2]+C0              ; // (A0, B0, C0) + (ax, ay, az)
-    A1 = A2+A[0]              ; B1 = B2+A[1]              ; C1 = C2+A[2]              ; // (A0, B0, C0) + 2*(ax, ay, az)
-      
-    // Second point
-    r[0] += A1*S4;         r[1] += B1*S4;         r[2] += C1*S4;
-    fPos.SetXYZ(r[0], r[1], r[2]);
-    fH = GFFieldManager::getFieldVal(fPos);
-    H1[0] = fH.X()*PS2; H1[1] = fH.Y()*PS2; H1[2] = fH.Z()*PS2;	// H1 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * [(A0, B0, C0) + 2*(ax, ay, az)]
-    A3 = B2*H1[2]-C2*H1[1]+A[0]; B3 = C2*H1[0]-A2*H1[2]+A[1]; C3 = A2*H1[1]-B2*H1[0]+A[2]; // (A2, B2, C2) x H1 + (ax, ay, az)
-    A4 = B3*H1[2]-C3*H1[1]+A[0]; B4 = C3*H1[0]-A3*H1[2]+A[1]; C4 = A3*H1[1]-B3*H1[0]+A[2]; // (A3, B3, C3) x H1 + (ax, ay, az)
-    A5 = A4-A[0]+A4            ; B5 = B4-A[1]+B4            ; C5 = C4-A[2]+C4            ; //    2*(A4, B4, C4) - (ax, ay, az)
-
-    // Last point
-    r[0]=R[0]+S*A4;         r[1]=R[1]+S*B4;         r[2]=R[2]+S*C4;  //setup.Field(r,H2);
-    fPos.SetXYZ(r[0], r[1], r[2]);
-    fH = GFFieldManager::getFieldVal(fPos);
-    H2[0] = fH.X()*PS2;  H2[1] = fH.Y()*PS2;  H2[2] = fH.Z()*PS2;	// H2 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * (A4, B4, C4)
-    A6 = B5*H2[2]-C5*H2[1]; B6 = C5*H2[0]-A5*H2[2]; C6 = A5*H2[1]-B5*H2[0]; // (A5, B5, C5) x H2
-    
-    #ifdef DEBUG
-      std::cout << "Mag field: "; fH.Print();
-    #endif
-    
     // update paths
     coveredDistance += S;				// add stepsize to way (signed)
     Way  += fabs(S);
@@ -1158,81 +1111,9 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
       throw exc;
     }
 
-    //
-    // Derivatives of track parameters in last point
-    //
-    if(calcCov){
-      // d(x, y, z)/d(x, y, z) submatrix is unit matrix
-      P[7] = 1;  P[15] = 1;  P[23] = 1;
-      // d(ax, ay, az)/d(ax, ay, az) submatrix is 0
-      // start with d(x, y, z)/d(ax, ay, az)
-      for(int i=4*7; i<ND; i+=7) {				// i = 28, 35, 42, 49;    ND = 56;	ND1 = 49; rows of Jacobian
-	
-        M1x3& dR = *((M1x3*) &P[i]);			            		// dR = (dX/dpN,  dY/dpN,  dZ/dpN)
-        M1x3& dA = *((M1x3*) &P[i+3]);				           	// dA = (dAx/dpN, dAy/dpN, dAz/dpN); N = X,Y,Z,Ax,Ay,Az,q/p
-        
-        if(i==ND1) {dA[0]*=P[6]; dA[1]*=P[6]; dA[2]*=P[6];}
-
-        //first point
-        dA0 = H0[2]*dA[1]-H0[1]*dA[2];		// dA0/dp	}
-        dB0 = H0[0]*dA[2]-H0[2]*dA[0];		// dB0/dp	 } = dA x H0
-        dC0 = H0[1]*dA[0]-H0[0]*dA[1];		// dC0/dp	}
-        
-        if(i==ND1) {dA0+=A0; dB0+=B0; dC0+=C0;}			// if last row: (dA0, dB0, dC0) := (dA0, dB0, dC0) + (A0, B0, C0)
-        
-        dA2 = dA0+dA[0];				// }
-        dB2 = dB0+dA[1]; 			  //  } = (dA0, dB0, dC0) + dA
-        dC2 = dC0+dA[2];				// }
-         
-        //second point
-        dA3 = dA[0]+dB2*H1[2]-dC2*H1[1];		// dA3/dp	}
-        dB3 = dA[1]+dC2*H1[0]-dA2*H1[2];		// dB3/dp	 } = dA + (dA2, dB2, dC2) x H1
-        dC3 = dA[2]+dA2*H1[1]-dB2*H1[0];		// dC3/dp	}
-        
-        if(i==ND1) {dA3+=A3-A[0]; dB3+=B3-A[1]; dC3+=C3-A[2];} // if last row: (dA3, dB3, dC3) := (dA3, dB3, dC3) + (A3, B3, C3) - (ax, ay, az)
-
-        dA4 = dA[0]+dB3*H1[2]-dC3*H1[1];		// dA4/dp	}
-        dB4 = dA[1]+dC3*H1[0]-dA3*H1[2];		// dB4/dp	 } = dA + (dA3, dB3, dC3) x H1
-        dC4 = dA[2]+dA3*H1[1]-dB3*H1[0];		// dC4/dp	}
-        
-        if(i==ND1) {dA4+=A4-A[0]; dB4+=B4-A[1]; dC4+=C4-A[2];} // if last row: (dA4, dB4, dC4) := (dA4, dB4, dC4) + (A4, B4, C4) - (ax, ay, az)
-        
-        //last point	
-        dA5 = dA4+dA4-dA[0];			// }
-        dB5 = dB4+dB4-dA[1];	  	//  } =  2*(dA4, dB4, dC4) - dA
-        dC5 = dC4+dC4-dA[2]; 			// }
-
-        dA6 = dB5*H2[2]-dC5*H2[1];			// dA6/dp	}
-        dB6 = dC5*H2[0]-dA5*H2[2];			// dB6/dp	 } = (dA5, dB5, dC5) x H2
-        dC6 = dA5*H2[1]-dB5*H2[0];			// dC6/dp	}
-
-        if(i==ND1) {dA6+=A6; dB6+=B6; dC6+=C6;}			// if last row: (dA6, dB6, dC6) := (dA6, dB6, dC6) + (A6, B6, C6)                                    
-        
-        if(i==ND1) {
-          dR[0] += (dA2+dA3+dA4)*S3/P[6];  dA[0] = (dA0+dA3+dA3+dA5+dA6)*P3/P[6]; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
-          dR[1] += (dB2+dB3+dB4)*S3/P[6];  dA[1] = (dB0+dB3+dB3+dB5+dB6)*P3/P[6]; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
-          dR[2] += (dC2+dC3+dC4)*S3/P[6];  dA[2] = (dC0+dC3+dC3+dC5+dC6)*P3/P[6];
-        }
-        else {
-          dR[0] += (dA2+dA3+dA4)*S3;  dA[0] = (dA0+dA3+dA3+dA5+dA6)*P3;	// dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
-          dR[1] += (dB2+dB3+dB4)*S3;  dA[1] = (dB0+dB3+dB3+dB5+dB6)*P3;	// dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
-          dR[2] += (dC2+dC3+dC4)*S3;  dA[2] = (dC0+dC3+dC3+dC5+dC6)*P3;
-        }
-      }
-    }
-
-    //
-    // Track parameters in last point
-    //   
-    R[0] += (A2+A3+A4)*S3;   A[0] += (SA[0]=(A0+A3+A3+A5+A6)*P3-A[0]);  // R  = R0 + S3*[(A2, B2, C2) +   (A3, B3, C3) + (A4, B4, C4)]
-    R[1] += (B2+B3+B4)*S3;   A[1] += (SA[1]=(B0+B3+B3+B5+B6)*P3-A[1]);  // A  =     1/3*[(A0, B0, C0) + 2*(A3, B3, C3) + (A5, B5, C5) + (A6, B6, C6)]
-    R[2] += (C2+C3+C4)*S3;   A[2] += (SA[2]=(C0+C3+C3+C5+C6)*P3-A[2]); 	// SA = A_new - A_old
-    fPos.SetXYZ(R[0], R[1], R[2]);
-
-    // normalize A
-    CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);	// 1/|A|
-    A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
-    fDir.SetXYZ(A[0], A[1], A[2]);
+    RKPropagate(P, SA, S, calcCov); // the actual Runkge Kutta propagation
+    fPos.SetXYZ(R[0],R[1],R[2]);
+    fDir.SetXYZ(A[0],A[1],A[2]);
     
     if (onlyOneStep) return(true);
 
@@ -1349,6 +1230,152 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
 }
 
 
+void
+RKTrackRep::RKPropagate(M8x7& P,
+                        M1x3& SA,
+                        double S,
+                        bool calcCov,
+                        bool varField) const {
+
+  // important fixed numbers
+  static const double EC     = 0.000149896229;  // c/(2*10^12) resp. c/2Tera
+  static const double P3     = 1./3.;           // 1/3
+  static const int    ND     = 56;              // number of variables for derivatives calculation
+  static const int    ND1    = ND-7;            // = 49
+  // Aux parameters
+  M1x3&   R           = *((M1x3*) &P[0]);       // Start coordinates  [cm]  (x,  y,  z)
+  M1x3&   A           = *((M1x3*) &P[3]);       // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
+  double  S3(0), S4(0), PS2(0);
+  M1x3     H0 = {0.,0.,0.}, H1 = {0.,0.,0.}, H2 = {0.,0.,0.}, r = {0.,0.,0.};
+  // Variables for RKutta main loop
+  double   A0(0), A1(0), A2(0), A3(0), A4(0), A5(0), A6(0);
+  double   B0(0), B1(0), B2(0), B3(0), B4(0), B5(0), B6(0);
+  double   C0(0), C1(0), C2(0), C3(0), C4(0), C5(0), C6(0);
+
+  //
+  // Runge Kutta Extrapolation
+  //
+  S3 = P3*S;
+  S4 = 0.25*S;
+  PS2 = P[6]*EC * S;
+
+  // First point
+  r[0] = R[0];           r[1] = R[1];           r[2]=R[2];
+  TVector3 pos(r[0], r[1], r[2]);// vector of start coordinates R0  (x, y, z)
+  TVector3 field(GFFieldManager::getFieldVal(pos));       // magnetic field in 10^-4 T = kGauss
+  H0[0] = PS2*field.X(); H0[1] = PS2*field.Y(); H0[2] = PS2*field.Z();     // H0 is PS2*(Hx, Hy, Hz) @ R0
+  A0 = A[1]*H0[2]-A[2]*H0[1]; B0 = A[2]*H0[0]-A[0]*H0[2]; C0 = A[0]*H0[1]-A[1]*H0[0]; // (ax, ay, az) x H0
+  A2 = A[0]+A0              ; B2 = A[1]+B0              ; C2 = A[2]+C0              ; // (A0, B0, C0) + (ax, ay, az)
+  if (varField) {
+    A1 = A2+A[0]            ; B1 = B2+A[1]              ; C1 = C2+A[2]              ; // (A0, B0, C0) + 2*(ax, ay, az)
+  }
+
+  // Second point
+  if (varField) {
+    r[0] += A1*S4;         r[1] += B1*S4;         r[2] += C1*S4;
+    pos.SetXYZ(r[0], r[1], r[2]);
+    field = GFFieldManager::getFieldVal(pos);
+    H1[0] = field.X()*PS2; H1[1] = field.Y()*PS2; H1[2] = field.Z()*PS2; // H1 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * [(A0, B0, C0) + 2*(ax, ay, az)]
+  }
+  else if (calcCov) memcpy(H1, H0, 3*sizeof(double));
+  A3 = B2*H1[2]-C2*H1[1]+A[0]; B3 = C2*H1[0]-A2*H1[2]+A[1]; C3 = A2*H1[1]-B2*H1[0]+A[2]; // (A2, B2, C2) x H1 + (ax, ay, az)
+  A4 = B3*H1[2]-C3*H1[1]+A[0]; B4 = C3*H1[0]-A3*H1[2]+A[1]; C4 = A3*H1[1]-B3*H1[0]+A[2]; // (A3, B3, C3) x H1 + (ax, ay, az)
+  A5 = A4-A[0]+A4            ; B5 = B4-A[1]+B4            ; C5 = C4-A[2]+C4            ; //    2*(A4, B4, C4) - (ax, ay, az)
+
+  // Last point
+  if (varField) {
+    r[0]=R[0]+S*A4;         r[1]=R[1]+S*B4;         r[2]=R[2]+S*C4;  //setup.Field(r,H2);
+    pos.SetXYZ(r[0], r[1], r[2]);
+    field = GFFieldManager::getFieldVal(pos);
+    H2[0] = field.X()*PS2;  H2[1] = field.Y()*PS2;  H2[2] = field.Z()*PS2; // H2 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * (A4, B4, C4)
+  }
+  else if (calcCov) memcpy(H2, H0, 3*sizeof(double));
+  A6 = B5*H2[2]-C5*H2[1]; B6 = C5*H2[0]-A5*H2[2]; C6 = A5*H2[1]-B5*H2[0]; // (A5, B5, C5) x H2
+
+  #ifdef DEBUG
+    std::cout << "Mag field: "; fH.Print();
+  #endif
+
+  //
+  // Derivatives of track parameters
+  //
+  if(calcCov){
+    double   dA0(0), dA2(0), dA3(0), dA4(0), dA5(0), dA6(0);
+    double   dB0(0), dB2(0), dB3(0), dB4(0), dB5(0), dB6(0);
+    double   dC0(0), dC2(0), dC3(0), dC4(0), dC5(0), dC6(0);
+
+    // d(x, y, z)/d(x, y, z) submatrix is unit matrix
+    P[7] = 1;  P[15] = 1;  P[23] = 1;
+    // d(ax, ay, az)/d(ax, ay, az) submatrix is 0
+    // start with d(x, y, z)/d(ax, ay, az)
+    for(int i=4*7; i<ND; i+=7) {        // i = 28, 35, 42, 49;    ND = 56;  ND1 = 49; rows of Jacobian
+
+      M1x3& dR = *((M1x3*) &P[i]);                      // dR = (dX/dpN,  dY/dpN,  dZ/dpN)
+      M1x3& dA = *((M1x3*) &P[i+3]);                    // dA = (dAx/dpN, dAy/dpN, dAz/dpN); N = X,Y,Z,Ax,Ay,Az,q/p
+
+      if(i==ND1) {dA[0]*=P[6]; dA[1]*=P[6]; dA[2]*=P[6];}
+
+      //first point
+      dA0 = H0[2]*dA[1]-H0[1]*dA[2];    // dA0/dp }
+      dB0 = H0[0]*dA[2]-H0[2]*dA[0];    // dB0/dp  } = dA x H0
+      dC0 = H0[1]*dA[0]-H0[0]*dA[1];    // dC0/dp }
+
+      if(i==ND1) {dA0+=A0; dB0+=B0; dC0+=C0;}     // if last row: (dA0, dB0, dC0) := (dA0, dB0, dC0) + (A0, B0, C0)
+
+      dA2 = dA0+dA[0];        // }
+      dB2 = dB0+dA[1];        //  } = (dA0, dB0, dC0) + dA
+      dC2 = dC0+dA[2];        // }
+
+      //second point
+      dA3 = dA[0]+dB2*H1[2]-dC2*H1[1];    // dA3/dp }
+      dB3 = dA[1]+dC2*H1[0]-dA2*H1[2];    // dB3/dp  } = dA + (dA2, dB2, dC2) x H1
+      dC3 = dA[2]+dA2*H1[1]-dB2*H1[0];    // dC3/dp }
+
+      if(i==ND1) {dA3+=A3-A[0]; dB3+=B3-A[1]; dC3+=C3-A[2];} // if last row: (dA3, dB3, dC3) := (dA3, dB3, dC3) + (A3, B3, C3) - (ax, ay, az)
+
+      dA4 = dA[0]+dB3*H1[2]-dC3*H1[1];    // dA4/dp }
+      dB4 = dA[1]+dC3*H1[0]-dA3*H1[2];    // dB4/dp  } = dA + (dA3, dB3, dC3) x H1
+      dC4 = dA[2]+dA3*H1[1]-dB3*H1[0];    // dC4/dp }
+
+      if(i==ND1) {dA4+=A4-A[0]; dB4+=B4-A[1]; dC4+=C4-A[2];} // if last row: (dA4, dB4, dC4) := (dA4, dB4, dC4) + (A4, B4, C4) - (ax, ay, az)
+
+      //last point
+      dA5 = dA4+dA4-dA[0];      // }
+      dB5 = dB4+dB4-dA[1];      //  } =  2*(dA4, dB4, dC4) - dA
+      dC5 = dC4+dC4-dA[2];      // }
+
+      dA6 = dB5*H2[2]-dC5*H2[1];      // dA6/dp }
+      dB6 = dC5*H2[0]-dA5*H2[2];      // dB6/dp  } = (dA5, dB5, dC5) x H2
+      dC6 = dA5*H2[1]-dB5*H2[0];      // dC6/dp }
+
+      if(i==ND1) {dA6+=A6; dB6+=B6; dC6+=C6;}     // if last row: (dA6, dB6, dC6) := (dA6, dB6, dC6) + (A6, B6, C6)
+
+      if(i==ND1) {
+        dR[0] += (dA2+dA3+dA4)*S3/P[6];  dA[0] = (dA0+dA3+dA3+dA5+dA6)*P3/P[6]; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
+        dR[1] += (dB2+dB3+dB4)*S3/P[6];  dA[1] = (dB0+dB3+dB3+dB5+dB6)*P3/P[6]; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
+        dR[2] += (dC2+dC3+dC4)*S3/P[6];  dA[2] = (dC0+dC3+dC3+dC5+dC6)*P3/P[6];
+      }
+      else {
+        dR[0] += (dA2+dA3+dA4)*S3;  dA[0] = (dA0+dA3+dA3+dA5+dA6)*P3; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
+        dR[1] += (dB2+dB3+dB4)*S3;  dA[1] = (dB0+dB3+dB3+dB5+dB6)*P3; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
+        dR[2] += (dC2+dC3+dC4)*S3;  dA[2] = (dC0+dC3+dC3+dC5+dC6)*P3;
+      }
+    }
+  }
+
+  //
+  // Track parameters in last point
+  //
+  R[0] += (A2+A3+A4)*S3;   A[0] += (SA[0]=(A0+A3+A3+A5+A6)*P3-A[0]);  // R  = R0 + S3*[(A2, B2, C2) +   (A3, B3, C3) + (A4, B4, C4)]
+  R[1] += (B2+B3+B4)*S3;   A[1] += (SA[1]=(B0+B3+B3+B5+B6)*P3-A[1]);  // A  =     1/3*[(A0, B0, C0) + 2*(A3, B3, C3) + (A5, B5, C5) + (A6, B6, C6)]
+  R[2] += (C2+C3+C4)*S3;   A[2] += (SA[2]=(C0+C3+C3+C5+C6)*P3-A[2]);  // SA = A_new - A_old
+
+  // normalize A
+  double CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]); // 1/|A|
+  A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
+}
+
+
 double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
                                 const TVector3& pos,
                                 const TVector3& dir,
@@ -1399,13 +1426,13 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   #endif
 
   // calculate way SmaxAngle after which momentum angle has changed AngleMax
-  double Hmag(MagField.Mag()), SmaxAngle(Smax);
+  double Hmag(MagField.Mag()), SmaxAngle(Smax), radius(0);
   if (Hmag > 1E-5){
     double cosAngle = (dir.Dot(MagField))/Hmag;
-    double radius = momentum/(0.299792458E-3*Hmag) *
-                    sqrt( pow(dir.X() - cosAngle/Hmag * MagField.X(), 2) +
-                          pow(dir.Y() - cosAngle/Hmag * MagField.Y(), 2) +
-                          pow(dir.Z() - cosAngle/Hmag * MagField.Z(), 2)); // [cm]
+    radius = momentum/(0.299792458E-3*Hmag) *
+             sqrt( pow(dir.X() - cosAngle/Hmag * MagField.X(), 2) +
+                   pow(dir.Y() - cosAngle/Hmag * MagField.Y(), 2) +
+                   pow(dir.Z() - cosAngle/Hmag * MagField.Z(), 2)); // [cm]
     double sinAngle = sqrt(1 - cosAngle*cosAngle);
     if (sinAngle > 1E-10) SmaxAngle = fabs(dAngleMax * radius / sinAngle); // [cm]
   }
@@ -1510,37 +1537,23 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
     
     // improve step estimation to surface according to curvature
     if (Hmag > 1E-5 && fabs(Step) > 0.1*SmaxAngle){
-      //
-      // simplified Runge Kutta Extrapolation
-      //
-      double S3 = Step/3.;
-      double PS2 = fCharge/momentum*0.000149896229 * Step;
-      M1x3   H0 = {0.,0.,0.};
-      double   A0(0), A2(0), A3(0), A4(0), A5(0), A6(0);
-      double   B0(0), B2(0), B3(0), B4(0), B5(0), B6(0);
-      double   C0(0), C2(0), C3(0), C4(0), C5(0), C6(0);
 
-      // First point
-      H0[0] = PS2*MagField.X(); H0[1] = PS2*MagField.Y(); H0[2] = PS2*MagField.Z();     // H0 is PS2*(Hx, Hy, Hz) @ R0
-      A0 = dir.Y()*H0[2]-dir.Z()*H0[1]; B0 = dir.Z()*H0[0]-dir.X()*H0[2]; C0 = dir.X()*H0[1]-dir.Y()*H0[0]; // (ax, ay, az) x H0
-      A2 = dir.X()+A0                 ; B2 = dir.Y()+B0                 ; C2 = dir.Z()+C0                 ; // (A0, B0, C0) + (ax, ay, az)
+      M8x7 P;
+      P[0] = pos.X();  P[1] = pos.Y(); P[2] = pos.Z();
+      P[3] = dir.X();  P[4] = dir.Y(); P[5] = dir.Z();
+      P[6] = fCharge/momentum;
+      M1x3 SA;
 
-      // Second point
-      A3 = B2*H0[2]-C2*H0[1]+dir.X(); B3 = C2*H0[0]-A2*H0[2]+dir.Y(); C3 = A2*H0[1]-B2*H0[0]+dir.Z(); // (A2, B2, C2) x H0 + (ax, ay, az)
-      A4 = B3*H0[2]-C3*H0[1]+dir.X(); B4 = C3*H0[0]-A3*H0[2]+dir.Y(); C4 = A3*H0[1]-B3*H0[0]+dir.Z(); // (A3, B3, C3) x H0 + (ax, ay, az)
-      A5 = A4-dir.X()+A4            ; B5 = B4-dir.Y()+B4            ; C5 = C4-dir.Z()+C4            ; //    2*(A4, B4, C4) - (ax, ay, az)
-
-      // Last point
-      A6 = B5*H0[2]-C5*H0[1]; B6 = C5*H0[0]-A5*H0[2]; C6 = A5*H0[1]-B5*H0[0]; // (A5, B5, C5) x H0
+      RKPropagate(P, SA, Step, false, false);
 
       // calculate distance to surface
-      Dist = SU[3] - ((pos.X()+(A2+A3+A4)*S3) * SU[0] +
-                      (pos.Y()+(B2+B3+B4)*S3) * SU[1] +
-                      (pos.Z()+(C2+C3+C4)*S3) * SU[2]);        // Distance between start coordinates and surface
+      Dist = SU[3] - (P[0] * SU[0] +
+                      P[1] * SU[1] +
+                      P[2] * SU[2]); // Distance between position and surface
 
-      An = (A0+A3+A3+A5+A6)/3. * SU[0] +
-           (B0+B3+B3+B5+B6)/3. * SU[1] +
-           (C0+C3+C3+C5+C6)/3. * SU[2];    // An = dir * N;  component of dir normal to surface
+      An = P[3] * SU[0] +
+           P[4] * SU[1] +
+           P[5] * SU[2];    // An = dir * N;  component of dir normal to surface
 
       Step += Dist/An;
 
