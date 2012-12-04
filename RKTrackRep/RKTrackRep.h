@@ -277,14 +277,12 @@ class RKTrackRep : public GFAbsTrackRep {
 
   //! Propagates the particle through the magnetic field.
   /** If the propagation is successfull and the plane is reached, the function returns true.
-    * The argument P has to contain the state (#P[0] - #P[6]) and a unity matrix (#P[7] - #P[55]) 
-    * with the last column multiplied wit q/p (hence #P[55] is not 1 but q/p).  
-    * Propagated state and the jacobian (with the last column multiplied wit q/p) of the extrapolation are written to #P.
+    * Propagated state and the jacobian of the extrapolation are written to state7 and cov.
+    * The jacobian is only calculated if cov != NULL.
     * In the main loop of the Runge Kutta algorithm, the steppers in  #fEffect are called
     * and may reduce the estimated stepsize so that a maximum momentum loss will not be exceeded.
     * If this is the case, RKutta() will only propagate the reduced distance and then return. This is to ensure that 
     * material effects, which are calculated after the propagation, are taken into account properly.
-    * 
     */
   bool RKutta (const GFDetPlane& plane,
                M1x7& state7,
