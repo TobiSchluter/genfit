@@ -185,7 +185,7 @@ void RKTrackRep::calcStateCov(const TVector3& pos,
 
   const TVector3& U(fRefPlane.getU());
   const TVector3& V(fRefPlane.getV());
-  fW = fRefPlane.getNormal();
+  TVector3 W(fRefPlane.getNormal());
 
 
   fCov(0,0) = fCharge*fCharge/pow(mom.Mag(),6.) *
@@ -193,13 +193,13 @@ void RKTrackRep::calcStateCov(const TVector3& pos,
                mom.Y()*mom.Y() * momerr.Y()*momerr.Y()+
                mom.Z()*mom.Z() * momerr.Z()*momerr.Z());
 
-  fCov(1,1) = pow((U.X()/pw - fW.X()*pu/(pw*pw)),2.) * momerr.X()*momerr.X() +
-              pow((U.Y()/pw - fW.Y()*pu/(pw*pw)),2.) * momerr.Y()*momerr.Y() +
-              pow((U.Z()/pw - fW.Z()*pu/(pw*pw)),2.) * momerr.Z()*momerr.Z();
+  fCov(1,1) = pow((U.X()/pw - W.X()*pu/(pw*pw)),2.) * momerr.X()*momerr.X() +
+              pow((U.Y()/pw - W.Y()*pu/(pw*pw)),2.) * momerr.Y()*momerr.Y() +
+              pow((U.Z()/pw - W.Z()*pu/(pw*pw)),2.) * momerr.Z()*momerr.Z();
 
-  fCov(2,2) = pow((V.X()/pw - fW.X()*pv/(pw*pw)),2.) * momerr.X()*momerr.X() +
-              pow((V.Y()/pw - fW.Y()*pv/(pw*pw)),2.) * momerr.Y()*momerr.Y() +
-              pow((V.Z()/pw - fW.Z()*pv/(pw*pw)),2.) * momerr.Z()*momerr.Z();
+  fCov(2,2) = pow((V.X()/pw - W.X()*pv/(pw*pw)),2.) * momerr.X()*momerr.X() +
+              pow((V.Y()/pw - W.Y()*pv/(pw*pw)),2.) * momerr.Y()*momerr.Y() +
+              pow((V.Z()/pw - W.Z()*pv/(pw*pw)),2.) * momerr.Z()*momerr.Z();
 
   fCov(3,3) = poserr.X()*poserr.X() * U.X()*U.X() +
               poserr.Y()*poserr.Y() * U.Y()*U.Y() +
@@ -240,15 +240,15 @@ void RKTrackRep::getState7(M1x7& state7, const TVectorD& state5, const GFDetPlan
   const TVector3& U(pl.getU());
   const TVector3& V(pl.getV());
   const TVector3& O(pl.getO());
-  fW = pl.getNormal();
+  TVector3 W(pl.getNormal());
 
   state7[0] = O.X() + state5(3)*U.X() + state5(4)*V.X(); // x
   state7[1] = O.Y() + state5(3)*U.Y() + state5(4)*V.Y(); // y
   state7[2] = O.Z() + state5(3)*U.Z() + state5(4)*V.Z(); // z
 
-  state7[3] = spu * (fW.X() + state5(1)*U.X() + state5(2)*V.X()); // a_x
-  state7[4] = spu * (fW.Y() + state5(1)*U.Y() + state5(2)*V.Y()); // a_y
-  state7[5] = spu * (fW.Z() + state5(1)*U.Z() + state5(2)*V.Z()); // a_z
+  state7[3] = spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()); // a_x
+  state7[4] = spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()); // a_y
+  state7[5] = spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()); // a_z
 
   // normalize dir
   double norm = 1. / sqrt(state7[3]*state7[3] + state7[4]*state7[4] + state7[5]*state7[5]);
@@ -296,11 +296,11 @@ void RKTrackRep::transformPM7(const TMatrixD& in5x5, M7x7& out7x7,
   // get vectors and aux variables
   const TVector3& U(pl.getU());
   const TVector3& V(pl.getV());
-  fW = pl.getNormal();
+  TVector3 W(pl.getNormal());
 
-  fpTilde.SetXYZ(spu * (fW.X() + state5(1)*U.X() + state5(2)*V.X()), // a_x
-                 spu * (fW.Y() + state5(1)*U.Y() + state5(2)*V.Y()), // a_y
-                 spu * (fW.Z() + state5(1)*U.Z() + state5(2)*V.Z()));// a_z
+  fpTilde.SetXYZ(spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()), // a_x
+                 spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()), // a_y
+                 spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()));// a_z
 
 
   const double pTildeMag = fpTilde.Mag();
@@ -352,10 +352,11 @@ void RKTrackRep::transformPM6(const TMatrixDSym& in5x5, M6x6& out6x6,
   // get vectors and aux variables
   const TVector3& U(pl.getU());
   const TVector3& V(pl.getV());
+  TVector3 W(pl.getNormal());
 
-  fpTilde.SetXYZ(spu * (fW.X() + state5(1)*U.X() + state5(2)*V.X()), // a_x
-                 spu * (fW.Y() + state5(1)*U.Y() + state5(2)*V.Y()), // a_y
-                 spu * (fW.Z() + state5(1)*U.Z() + state5(2)*V.Z()));// a_z
+  fpTilde.SetXYZ(spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()), // a_x
+                 spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()), // a_y
+                 spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()));// a_z
 
   const double pTildeMag = fpTilde.Mag();
   const double pTildeMag2 = pTildeMag*pTildeMag;
@@ -413,25 +414,25 @@ void RKTrackRep::transformM7P(const M7x7& in7x7, TMatrixDSym& out5x5,
   // get vectors and aux variables
   const TVector3& U(pl.getU());
   const TVector3& V(pl.getV());
-  fW = pl.getNormal();
+  TVector3 W(pl.getNormal());
 
   fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
   const double AtU = fDir*U;
   const double AtV = fDir*V;
-  const double AtW = fDir*fW;
+  const double AtW = fDir*W;
 
   // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)   (in is 7x7)
 
   // d(u')/d(ax,ay,az)
   double fact = 1./(AtW*AtW);
-  fJ_Mp_7x5[16] = fact * (U.X()*AtW - fW.X()*AtU); // [3][1]
-  fJ_Mp_7x5[21] = fact * (U.Y()*AtW - fW.Y()*AtU); // [4][1]
-  fJ_Mp_7x5[26] = fact * (U.Z()*AtW - fW.Z()*AtU); // [5][1]
+  fJ_Mp_7x5[16] = fact * (U.X()*AtW - W.X()*AtU); // [3][1]
+  fJ_Mp_7x5[21] = fact * (U.Y()*AtW - W.Y()*AtU); // [4][1]
+  fJ_Mp_7x5[26] = fact * (U.Z()*AtW - W.Z()*AtU); // [5][1]
   // d(v')/d(ax,ay,az)
-  fJ_Mp_7x5[17] = fact * (V.X()*AtW - fW.X()*AtV); // [3][2]
-  fJ_Mp_7x5[22] = fact * (V.Y()*AtW - fW.Y()*AtV); // [4][2]
-  fJ_Mp_7x5[27] = fact * (V.Z()*AtW - fW.Z()*AtV); // [5][2]
+  fJ_Mp_7x5[17] = fact * (V.X()*AtW - W.X()*AtV); // [3][2]
+  fJ_Mp_7x5[22] = fact * (V.Y()*AtW - W.Y()*AtV); // [4][2]
+  fJ_Mp_7x5[27] = fact * (V.Z()*AtW - W.Z()*AtV); // [5][2]
   // d(q/p)/d(q/p)
   fJ_Mp_7x5[30] = 1.; // [6][0]  - not needed for array matrix multiplication
   //d(u)/d(x,y,z)
@@ -466,13 +467,13 @@ void RKTrackRep::transformM6P(const M6x6& in6x6, TMatrixDSym& out5x5,
   // get vectors and aux variables
   const TVector3& U(pl.getU());
   const TVector3& V(pl.getV());
-  fW = pl.getNormal();
+  TVector3 W(pl.getNormal());
 
   fDir.SetXYZ(state7[3], state7[4], state7[5]);
 
   const double AtU = fDir*U;
   const double AtV = fDir*V;
-  const double AtW = fDir*fW;
+  const double AtW = fDir*W;
 
   // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,px,py,pz)       (in is 6x6)
 
@@ -494,13 +495,13 @@ void RKTrackRep::transformM6P(const M6x6& in6x6, TMatrixDSym& out5x5,
   fJ_Mp_6x5[25] = fact * fDir.Z(); // [5][0]
   // d(u')/d(px,py,pz)
   fact = 1./(p*AtW*AtW);
-  fJ_Mp_6x5[16] = fact * (U.X()*AtW - fW.X()*AtU); // [3][1]
-  fJ_Mp_6x5[21] = fact * (U.Y()*AtW - fW.Y()*AtU); // [4][1]
-  fJ_Mp_6x5[26] = fact * (U.Z()*AtW - fW.Z()*AtU); // [5][1]
+  fJ_Mp_6x5[16] = fact * (U.X()*AtW - W.X()*AtU); // [3][1]
+  fJ_Mp_6x5[21] = fact * (U.Y()*AtW - W.Y()*AtU); // [4][1]
+  fJ_Mp_6x5[26] = fact * (U.Z()*AtW - W.Z()*AtU); // [5][1]
   // d(v')/d(px,py,pz)
-  fJ_Mp_6x5[17] = fact * (V.X()*AtW - fW.X()*AtV); // [3][2]
-  fJ_Mp_6x5[22] = fact * (V.Y()*AtW - fW.Y()*AtV); // [4][2]
-  fJ_Mp_6x5[27] = fact * (V.Z()*AtW - fW.Z()*AtV); // [5][2]
+  fJ_Mp_6x5[17] = fact * (V.X()*AtW - W.X()*AtV); // [3][2]
+  fJ_Mp_6x5[22] = fact * (V.Y()*AtW - W.Y()*AtV); // [4][2]
+  fJ_Mp_6x5[27] = fact * (V.Z()*AtW - W.Z()*AtV); // [5][2]
 
   // do the transformation
   // out5x5 = J_Mp^T * in * J_Mp
@@ -1060,8 +1061,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   unsigned int counter(0);
 
   // Step estimation (signed)
-  fH = GFFieldManager::getFieldVal(fPos);
-  S = estimateStep(points, fPos, fDir, SU, fH, plane, momentum, relMomLoss, deltaAngle, momLossExceeded, atPlane, maxStep);
+  S = estimateStep(points, fPos, fDir, SU, plane, momentum, relMomLoss, deltaAngle, momLossExceeded, atPlane, maxStep);
   if (fabs(S) < 0.001*MINSTEP) {
     #ifdef DEBUG
       std::cout << " RKutta - step too small -> break \n";
@@ -1113,7 +1113,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
 
     // estimate Step for next loop or linear extrapolation
     Sl = S;	// last S used
-    S = estimateStep(points, fPos, fDir, SU, fH, plane, momentum, relMomLoss, deltaAngle, momLossExceeded, atPlane, maxStep);
+    S = estimateStep(points, fPos, fDir, SU, plane, momentum, relMomLoss, deltaAngle, momLossExceeded, atPlane, maxStep);
 
     if (atPlane && fabs(S) < MINSTEP) {
       #ifdef DEBUG
@@ -1276,10 +1276,6 @@ RKTrackRep::RKPropagate(M1x7& state7,
   else if (calcCov) memcpy(H2, H0, 3*sizeof(double));
   A6 = B5*H2[2]-C5*H2[1]; B6 = C5*H2[0]-A5*H2[2]; C6 = A5*H2[1]-B5*H2[0]; // (A5, B5, C5) x H2
 
-  #ifdef DEBUG
-    std::cout << "Mag field: "; fH.Print();
-  #endif
-
   //
   // Derivatives of track parameters
   //
@@ -1361,7 +1357,6 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
                                 const TVector3& pos,
                                 const TVector3& dir,
                                 const M1x4& SU,
-                                const TVector3& MagField,
                                 const GFDetPlane& plane,
                                 const double& momentum,
                                 double& relMomLoss,
@@ -1407,6 +1402,7 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   #endif
 
   // calculate way SmaxAngle after which momentum angle has changed AngleMax
+  TVector3 MagField(GFFieldManager::getFieldVal(pos));
   double Hmag(MagField.Mag()), SmaxAngle(Smax), radius(0);
   if (Hmag > 1E-5){
     double cosAngle = (dir.Dot(MagField))/Hmag;

@@ -311,7 +311,6 @@ class RKTrackRep : public GFAbsTrackRep {
                       const TVector3& pos,
                       const TVector3& dir,
                       const M1x4& SU,
-                      const TVector3& MagField,
                       const GFDetPlane& plane,
                       const double& mom,
                       double& relMomLoss,
@@ -359,11 +358,9 @@ class RKTrackRep : public GFAbsTrackRep {
   TMatrixD fAuxInfo;
 
   // vectors for getState, transform, Extrap etc. functions. Saves a lot of TVector3 constructions/destructions
-  TVector3 fW; //!
   TVector3 fPos, fDir; //!
   TVector3 fpTilde; //!
   TVector3 fDirectionBefore, fDirectionAfter; //!
-  TVector3 fH; //!
 
   // auxiliary variables and arrays
   // needed in Extrap()
@@ -376,7 +373,7 @@ class RKTrackRep : public GFAbsTrackRep {
   M6x5 fJ_Mp_6x5; //!
 
  public:
-  ClassDef(RKTrackRep, 9)
+  ClassDef(RKTrackRep, 10)
 
 };
 
