@@ -287,11 +287,11 @@ class RKTrackRep : public GFAbsTrackRep {
     * 
     */
   bool RKutta (const GFDetPlane& plane,
-               M8x7& P,
+               M1x7& state7,
+               M7x7* cov,
                double& coveredDistance,
                std::vector<GFPointPath>& points,
                bool& checkJacProj,
-               bool calcCov = true,
                bool onlyOneStep = false,
                double maxStep = 1.E99);
 
@@ -301,7 +301,11 @@ class RKTrackRep : public GFAbsTrackRep {
    *  otherwise also the 7x7 jacobian is calculated.
    *  If varField is false, the magnetic field will only be evaluated at the starting position.
    */
-  void RKPropagate(M8x7& P, M1x3& SA, double S, bool calcCov, bool varField = true) const;
+  void RKPropagate(M1x7& state7,
+                   M7x7* cov,
+                   M1x3& SA,
+                   double S,
+                   bool varField = true) const;
 
   double estimateStep(std::vector<GFPointPath>& points,
                       const TVector3& pos,
@@ -363,7 +367,6 @@ class RKTrackRep : public GFAbsTrackRep {
 
   // auxiliary variables and arrays
   // needed in Extrap()
-  M8x7 fStateJac; //!
   M7x7 fNoise; //!
   M7x7 fOldCov; //!
   // needed in transform...

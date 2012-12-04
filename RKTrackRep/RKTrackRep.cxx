@@ -119,7 +119,6 @@ RKTrackRep::RKTrackRep(const GFTrackCand* const aGFTrackCandPtr, int pdgCode) :
 
 
 void RKTrackRep::initArrays(){
-  memset(fStateJac,0x00,(7+7*7)*sizeof(double));
   memset(fNoise,0x00,7*7*sizeof(double));
   memset(fOldCov,0x00,7*7*sizeof(double));
 
@@ -836,10 +835,6 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, boo
   unsigned int numIt(0);
 
   const bool calcCov(cov!=NULL);
-
-  // set initial state
-  memcpy(fStateJac, state7, 7*sizeof(double));
-
   double coveredDistance(0.);
   double sumDistance(0.);
 
@@ -855,15 +850,14 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, boo
       throw exc;
     }
 
-    // initialize fStateJac with unit matrix
+    // initialize cov with unit matrix
     if(calcCov){
-      memset(&fStateJac[7],0x00,49*sizeof(double));
-      for(int i=0; i<7; ++i){
-        fStateJac[(i+1)*7+i] = 1.;
-      }
+      memcpy(fOldCov, cov, 7*7*sizeof(double));
+      memset(cov,0x00,49*sizeof(double));
+      for(int i=0; i<7; ++i) (*cov)[8*i] = 1.;
     }
 
-    fDirectionBefore.SetXYZ(fStateJac[3], fStateJac[4], fStateJac[5]); // direction before propagation
+    fDirectionBefore.SetXYZ(state7[3], state7[4], state7[5]); // direction before propagation
 
     // propagation
     std::vector<GFPointPath> points;
@@ -871,13 +865,13 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, boo
 
     bool checkJacProj = true;
 
-    if( ! this->RKutta(plane, fStateJac, coveredDistance, points, checkJacProj, calcCov, onlyOneStep, maxStep) ) {
+    if( ! this->RKutta(plane, state7, cov, coveredDistance, points, checkJacProj, onlyOneStep, maxStep) ) {
       GFException exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
     }
 
-    fPos.SetXYZ(fStateJac[0], fStateJac[1], fStateJac[2]);
+    fPos.SetXYZ(state7[0], state7[1], state7[2]);
     if (!fNoMaterial) points.push_back(GFPointPath(fPos, 0)); // add last point
 
     #ifdef DEBUG
@@ -888,7 +882,7 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, boo
       std::cout<<"\n";
     #endif
 
-    fDirectionAfter.SetXYZ(fStateJac[3], fStateJac[4], fStateJac[5]); // direction after propagation
+    fDirectionAfter.SetXYZ(state7[3], state7[4], state7[5]); // direction after propagation
 
     sumDistance+=coveredDistance;
 
@@ -921,27 +915,23 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, boo
     if (!fNoMaterial && nPoints>0){
       // momLoss has a sign - negative loss means momentum gain
       double momLoss = GFMaterialEffects::getInstance()->effects(points,
-                                                                 fabs(fCharge/fStateJac[6]), // momentum
+                                                                 fabs(fCharge/state7[6]), // momentum
                                                                  fPdg,
                                                                  fXX0,
-                                                                 calcCov,
                                                                  fNoise,
-                                                                 &(fStateJac[7]),
+                                                                 (double *)cov,
                                                                  &fDirectionBefore,
                                                                  &fDirectionAfter);
 
       #ifdef DEBUG
-        std::cout << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(fCharge/fStateJac[6]) << "\n";
+        std::cout << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(fCharge/state7[6]) << "\n";
       #endif
 
       // do momLoss only for defined 1/momentum .ne.0
-      if(fabs(fStateJac[6])>1.E-10) fStateJac[6] = fCharge/(fabs(fCharge/fStateJac[6])-momLoss);
+      if(fabs(state7[6])>1.E-10) state7[6] = fCharge/(fabs(fCharge/state7[6])-momLoss);
     } // finished MatFX
 
     if(calcCov){ // propagate cov and add noise
-      memcpy(fOldCov, (*cov), 7*7*sizeof(double));
-      M7x7& cov_ = (*cov);
-
       // numerical check:
       for(unsigned int i=0; i<7*7; ++i){
         if(fabs((*cov)[i]) > 1.E100){
@@ -954,11 +944,11 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, boo
       // cov = Jac^T * oldCov * Jac;
       // last column of jac is [0,0,0,0,0,0,1]
       // cov is symmetric
-      M7x7& J_MM = *((M7x7*) &(fStateJac[7]));
-      RKTools::J_MMTxcov7xJ_MM(J_MM, fOldCov, cov_);
+      RKTools::J_MMTxcov7xJ_MM(*cov, fOldCov);
+      memcpy(cov, fOldCov, 7*7*sizeof(double));
 
       // add noise to cov
-      for (int i=0; i<7*7; ++i) cov_[i] += fNoise[i];
+      for (int i=0; i<7*7; ++i) (*cov)[i] += fNoise[i];
 
     } // finished propagate cov and add noise
 
@@ -981,8 +971,6 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, boo
 
   }
 
-  memcpy(state7, fStateJac, 7*sizeof(double));
-
   return sumDistance;
 }
 
@@ -998,47 +986,45 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, boo
 //    SU[2]  -          -------                    Ez; Ex*Ex+Ey*Ey+Ez*Ez=1          
 //    SU[3]  - distance to surface from (0,0,0) > 0 cm                                 
 //
-//    ND     - number of variables for derivatives calculation
-//    P      - initial parameters (coordinates(cm), direction,
-//             charge/momentum (Gev-1) and derivatives this parameters  (8x7)            
+//    state7 - initial parameters (coordinates(cm), direction,
+//             charge/momentum (Gev-1) 
+//    cov      and derivatives this parameters  (7x7)            
 //         
 //    X        	Y        	Z        	Ax       	Ay       	Az       	q/P                   
-//    P[ 0]   	P[ 1]   	P[ 2]   	P[ 3]   	P[ 4]   	P[ 5]   	P[ 6]  
+//    state7[0] state7[1] state7[2] state7[3] state7[4] state7[5] state7[6]  
 //
 //    dX/dp    	dY/dp    	dZ/dp    	dAx/dp   	dAy/dp   	dAz/dp   	d(q/P)/dp
-//    P[ 7]   	P[ 8]   	P[ 9]   	P[10]   	P[11]   	P[12]   	P[13]   			      d()/dp1  
+//    cov[ 0]   cov[ 1]   cov[ 2]   cov[ 3]   cov[ 4]   cov[ 5]   cov[ 6]   			      d()/dp1  
 //
-//    P[14]   	P[15]   	P[16]   	P[17]   	P[18]   	P[19]   	P[20]   		      	d()/dp2        
+//    cov[ 7]   cov[ 8]   cov[ 9]   cov[10]   cov[11]   cov[12]   cov[13]   		      	d()/dp2        
 //    ............................................................................		d()/dpND       
 //                                                                                  
 // Authors: R.Brun, M.Hansroul, V.Perevoztchikov (Geant3)                           
 //  
 bool RKTrackRep::RKutta (const GFDetPlane& plane,
-                         M8x7& P,
+                         M1x7& state7,
+                         M7x7* cov,
                          double& coveredDistance,
                          std::vector<GFPointPath>& points,
                          bool& checkJacProj,
-                         bool calcCov,
                          bool onlyOneStep,
                          double maxStep) {
 
-  // important fixed numbers
-  static const int    ND     = 56;              // number of variables for derivatives calculation
   // limits, check-values, etc. Can be tuned!
   static const double Wmax   = 3000.;           // max. way allowed [cm]
   static const double AngleMax = 6.3;           // max. total angle change of momentum. Prevents extrapolating a curler round and round if no active plane is found.
   static const double Pmin   = 4.E-3;           // minimum momentum for propagation [GeV]
   static const unsigned int maxNumIt = 1000;    // maximum number of iterations in main loop
   // Aux parameters
-  M1x3&   R           = *((M1x3*) &P[0]);       // Start coordinates  [cm] 	(x,  y,  z)
-  M1x3&   A           = *((M1x3*) &P[3]);       // Start directions 	      (ax, ay, az); 	ax^2+ay^2+az^2=1
+  M1x3&   R           = *((M1x3*) &state7[0]);  // Start coordinates  [cm] 	(x,  y,  z)
+  M1x3&   A           = *((M1x3*) &state7[3]);  // Start directions 	      (ax, ay, az); 	ax^2+ay^2+az^2=1
   M1x3    SA          = {0.,0.,0.};             // Start directions derivatives dA/S
   double  Way         = 0.;                     // Sum of absolute values of all extrapolation steps [cm]
   bool    atPlane = false;                      // stepper thinks that the plane will be reached in that step -> linear extrapolation and projection of jacobian
   bool    momLossExceeded = false;              // stepper had to limit stepsize due to momentum loss -> no next RKutta loop, no linear extrapolation
   fPos.SetXYZ(R[0],R[1],R[2]);                  // position
   fDir.SetXYZ(A[0],A[1],A[2]);                  // direction
-  double   momentum   = fabs(fCharge/P[6]);     // momentum [GeV]
+  double   momentum   = fabs(fCharge/state7[6]);// momentum [GeV]
   double   relMomLoss = 0;                      // relative momentum loss in RKutta
   double   deltaAngle = 0.;                     // total angle by which the momentum has changed during extrapolation
   double   An(0), S(0), Sl(0), CBA(0);
@@ -1058,7 +1044,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   // check momentum
   if(momentum < Pmin){
     std::ostringstream sstream;
-    sstream << "RKTrackRep::RKutta ==> momentum too low: " << fabs(fCharge/P[6])*1000. << " MeV";
+    sstream << "RKTrackRep::RKutta ==> momentum too low: " << momentum*1000. << " MeV";
     GFException exc(sstream.str(),__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
@@ -1066,7 +1052,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   
 
   // make SU vector point away from origin
-  const TVector3 W = plane.getNormal();
+  const TVector3 W(plane.getNormal());
   if(W*plane.getO() > 0){SU[0] =     W.X();  SU[1] =     W.Y();  SU[2] =     W.Z();}
   else                  {SU[0] = -1.*W.X();  SU[1] = -1.*W.Y();  SU[2] = -1.*W.Z();  }
   SU[3] = plane.distance(0., 0., 0.);
@@ -1080,7 +1066,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
     #ifdef DEBUG
       std::cout << " RKutta - step too small -> break \n";
     #endif
-    counter += 1; // skip the main loop, go to linear extrapolation step (will be skipped) and just project jacobian
+    ++counter; // skip the main loop, go to linear extrapolation step (will be skipped) and just project jacobian
   }
 
   //
@@ -1111,7 +1097,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
       throw exc;
     }
 
-    RKPropagate(P, SA, S, calcCov); // the actual Runkge Kutta propagation
+    RKPropagate(state7, cov, SA, S); // the actual Runkge Kutta propagation
     fPos.SetXYZ(R[0],R[1],R[2]);
     fDir.SetXYZ(A[0],A[1],A[2]);
     
@@ -1188,7 +1174,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
       CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);  // 1/|A|
       A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
 
-      R[0] += S*(A[0]-0.5*S*SA[0]);    // P = R + S*(A - 0.5*S*SA); approximation for final point on surface
+      R[0] += S*(A[0]-0.5*S*SA[0]);    // R = R + S*(A - 0.5*S*SA); approximation for final point on surface
       R[1] += S*(A[1]-0.5*S*SA[1]);
       R[2] += S*(A[2]-0.5*S*SA[2]);
     }
@@ -1201,7 +1187,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
     //
     // Project Jacobian of extrapolation onto destination plane
     //
-    if(calcCov){
+    if(cov != NULL){
       if (checkJacProj && points.size()>0){
         GFException exc("RKTrackRep::Extrap ==> covariance is projected onto destination plane again",__LINE__,__FILE__);
         throw exc;
@@ -1213,12 +1199,10 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
       An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
       fabs(An) > 1.E-7 ? An=1./An : An = 0; // 1/A_normal
       double norm;
-      for(int i=7; i<ND; i+=7) {
-        M1x3& dR = *((M1x3*) &P[i]);
-        M1x3& dA = *((M1x3*) &P[i+3]);
-        norm = (dR[0]*SU[0] + dR[1]*SU[1] + dR[2]*SU[2])*An;	// dR_normal / A_normal
-        dR[0] -= norm*A [0];   dR[1] -= norm*A [1];   dR[2] -= norm*A [2];
-        dA[0] -= norm*SA[0];   dA[1] -= norm*SA[1];   dA[2] -= norm*SA[2];
+      for(int i=0; i<49; i+=7) {
+        norm = ((*cov)[i]*SU[0] + (*cov)[i+1]*SU[1] + (*cov)[i+2]*SU[2])*An;	// dR_normal / A_normal
+        (*cov)[i]   -= norm*A [0];   (*cov)[i+1] -= norm*A [1];   (*cov)[i+2] -= norm*A [2];
+        (*cov)[i+3] -= norm*SA[0];   (*cov)[i+4] -= norm*SA[1];   (*cov)[i+5] -= norm*SA[2];
       }
     }
 
@@ -1231,20 +1215,18 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
 
 
 void
-RKTrackRep::RKPropagate(M8x7& P,
+RKTrackRep::RKPropagate(M1x7& state7,
+                        M7x7* cov,
                         M1x3& SA,
                         double S,
-                        bool calcCov,
                         bool varField) const {
 
   // important fixed numbers
   static const double EC     = 0.000149896229;  // c/(2*10^12) resp. c/2Tera
   static const double P3     = 1./3.;           // 1/3
-  static const int    ND     = 56;              // number of variables for derivatives calculation
-  static const int    ND1    = ND-7;            // = 49
   // Aux parameters
-  M1x3&   R           = *((M1x3*) &P[0]);       // Start coordinates  [cm]  (x,  y,  z)
-  M1x3&   A           = *((M1x3*) &P[3]);       // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
+  M1x3&   R           = *((M1x3*) &state7[0]);       // Start coordinates  [cm]  (x,  y,  z)
+  M1x3&   A           = *((M1x3*) &state7[3]);       // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
   double  S3(0), S4(0), PS2(0);
   M1x3     H0 = {0.,0.,0.}, H1 = {0.,0.,0.}, H2 = {0.,0.,0.}, r = {0.,0.,0.};
   // Variables for RKutta main loop
@@ -1252,12 +1234,14 @@ RKTrackRep::RKPropagate(M8x7& P,
   double   B0(0), B1(0), B2(0), B3(0), B4(0), B5(0), B6(0);
   double   C0(0), C1(0), C2(0), C3(0), C4(0), C5(0), C6(0);
 
+  bool calcCov(cov != NULL);
+
   //
   // Runge Kutta Extrapolation
   //
   S3 = P3*S;
   S4 = 0.25*S;
-  PS2 = P[6]*EC * S;
+  PS2 = state7[6]*EC * S;
 
   // First point
   r[0] = R[0];           r[1] = R[1];           r[2]=R[2];
@@ -1305,60 +1289,57 @@ RKTrackRep::RKPropagate(M8x7& P,
     double   dC0(0), dC2(0), dC3(0), dC4(0), dC5(0), dC6(0);
 
     // d(x, y, z)/d(x, y, z) submatrix is unit matrix
-    P[7] = 1;  P[15] = 1;  P[23] = 1;
+    (*cov)[0] = 1;  (*cov)[8] = 1;  (*cov)[16] = 1;
     // d(ax, ay, az)/d(ax, ay, az) submatrix is 0
     // start with d(x, y, z)/d(ax, ay, az)
-    for(int i=4*7; i<ND; i+=7) {        // i = 28, 35, 42, 49;    ND = 56;  ND1 = 49; rows of Jacobian
+    for(int i=3*7; i<49; i+=7) {
 
-      M1x3& dR = *((M1x3*) &P[i]);                      // dR = (dX/dpN,  dY/dpN,  dZ/dpN)
-      M1x3& dA = *((M1x3*) &P[i+3]);                    // dA = (dAx/dpN, dAy/dpN, dAz/dpN); N = X,Y,Z,Ax,Ay,Az,q/p
-
-      if(i==ND1) {dA[0]*=P[6]; dA[1]*=P[6]; dA[2]*=P[6];}
+      if(i==42) {(*cov)[i+3]*=state7[6]; (*cov)[i+4]*=state7[6]; (*cov)[i+5]*=state7[6];}
 
       //first point
-      dA0 = H0[2]*dA[1]-H0[1]*dA[2];    // dA0/dp }
-      dB0 = H0[0]*dA[2]-H0[2]*dA[0];    // dB0/dp  } = dA x H0
-      dC0 = H0[1]*dA[0]-H0[0]*dA[1];    // dC0/dp }
+      dA0 = H0[2]*(*cov)[i+4]-H0[1]*(*cov)[i+5];    // dA0/dp }
+      dB0 = H0[0]*(*cov)[i+5]-H0[2]*(*cov)[i+3];    // dB0/dp  } = dA x H0
+      dC0 = H0[1]*(*cov)[i+3]-H0[0]*(*cov)[i+4];    // dC0/dp }
 
-      if(i==ND1) {dA0+=A0; dB0+=B0; dC0+=C0;}     // if last row: (dA0, dB0, dC0) := (dA0, dB0, dC0) + (A0, B0, C0)
+      if(i==42) {dA0+=A0; dB0+=B0; dC0+=C0;}     // if last row: (dA0, dB0, dC0) := (dA0, dB0, dC0) + (A0, B0, C0)
 
-      dA2 = dA0+dA[0];        // }
-      dB2 = dB0+dA[1];        //  } = (dA0, dB0, dC0) + dA
-      dC2 = dC0+dA[2];        // }
+      dA2 = dA0+(*cov)[i+3];        // }
+      dB2 = dB0+(*cov)[i+4];        //  } = (dA0, dB0, dC0) + dA
+      dC2 = dC0+(*cov)[i+5];        // }
 
       //second point
-      dA3 = dA[0]+dB2*H1[2]-dC2*H1[1];    // dA3/dp }
-      dB3 = dA[1]+dC2*H1[0]-dA2*H1[2];    // dB3/dp  } = dA + (dA2, dB2, dC2) x H1
-      dC3 = dA[2]+dA2*H1[1]-dB2*H1[0];    // dC3/dp }
+      dA3 = (*cov)[i+3]+dB2*H1[2]-dC2*H1[1];    // dA3/dp }
+      dB3 = (*cov)[i+4]+dC2*H1[0]-dA2*H1[2];    // dB3/dp  } = dA + (dA2, dB2, dC2) x H1
+      dC3 = (*cov)[i+5]+dA2*H1[1]-dB2*H1[0];    // dC3/dp }
 
-      if(i==ND1) {dA3+=A3-A[0]; dB3+=B3-A[1]; dC3+=C3-A[2];} // if last row: (dA3, dB3, dC3) := (dA3, dB3, dC3) + (A3, B3, C3) - (ax, ay, az)
+      if(i==42) {dA3+=A3-A[0]; dB3+=B3-A[1]; dC3+=C3-A[2];} // if last row: (dA3, dB3, dC3) := (dA3, dB3, dC3) + (A3, B3, C3) - (ax, ay, az)
 
-      dA4 = dA[0]+dB3*H1[2]-dC3*H1[1];    // dA4/dp }
-      dB4 = dA[1]+dC3*H1[0]-dA3*H1[2];    // dB4/dp  } = dA + (dA3, dB3, dC3) x H1
-      dC4 = dA[2]+dA3*H1[1]-dB3*H1[0];    // dC4/dp }
+      dA4 = (*cov)[i+3]+dB3*H1[2]-dC3*H1[1];    // dA4/dp }
+      dB4 = (*cov)[i+4]+dC3*H1[0]-dA3*H1[2];    // dB4/dp  } = dA + (dA3, dB3, dC3) x H1
+      dC4 = (*cov)[i+5]+dA3*H1[1]-dB3*H1[0];    // dC4/dp }
 
-      if(i==ND1) {dA4+=A4-A[0]; dB4+=B4-A[1]; dC4+=C4-A[2];} // if last row: (dA4, dB4, dC4) := (dA4, dB4, dC4) + (A4, B4, C4) - (ax, ay, az)
+      if(i==42) {dA4+=A4-A[0]; dB4+=B4-A[1]; dC4+=C4-A[2];} // if last row: (dA4, dB4, dC4) := (dA4, dB4, dC4) + (A4, B4, C4) - (ax, ay, az)
 
       //last point
-      dA5 = dA4+dA4-dA[0];      // }
-      dB5 = dB4+dB4-dA[1];      //  } =  2*(dA4, dB4, dC4) - dA
-      dC5 = dC4+dC4-dA[2];      // }
+      dA5 = dA4+dA4-(*cov)[i+3];      // }
+      dB5 = dB4+dB4-(*cov)[i+4];      //  } =  2*(dA4, dB4, dC4) - dA
+      dC5 = dC4+dC4-(*cov)[i+5];      // }
 
       dA6 = dB5*H2[2]-dC5*H2[1];      // dA6/dp }
       dB6 = dC5*H2[0]-dA5*H2[2];      // dB6/dp  } = (dA5, dB5, dC5) x H2
       dC6 = dA5*H2[1]-dB5*H2[0];      // dC6/dp }
 
-      if(i==ND1) {dA6+=A6; dB6+=B6; dC6+=C6;}     // if last row: (dA6, dB6, dC6) := (dA6, dB6, dC6) + (A6, B6, C6)
+      if(i==42) {dA6+=A6; dB6+=B6; dC6+=C6;}     // if last row: (dA6, dB6, dC6) := (dA6, dB6, dC6) + (A6, B6, C6)
 
-      if(i==ND1) {
-        dR[0] += (dA2+dA3+dA4)*S3/P[6];  dA[0] = (dA0+dA3+dA3+dA5+dA6)*P3/P[6]; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
-        dR[1] += (dB2+dB3+dB4)*S3/P[6];  dA[1] = (dB0+dB3+dB3+dB5+dB6)*P3/P[6]; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
-        dR[2] += (dC2+dC3+dC4)*S3/P[6];  dA[2] = (dC0+dC3+dC3+dC5+dC6)*P3/P[6];
+      if(i==42) {
+        (*cov)[i]   += (dA2+dA3+dA4)*S3/state7[6];  (*cov)[i+3] = (dA0+dA3+dA3+dA5+dA6)*P3/state7[6]; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
+        (*cov)[i+1] += (dB2+dB3+dB4)*S3/state7[6];  (*cov)[i+4] = (dB0+dB3+dB3+dB5+dB6)*P3/state7[6]; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
+        (*cov)[i+2] += (dC2+dC3+dC4)*S3/state7[6];  (*cov)[i+5] = (dC0+dC3+dC3+dC5+dC6)*P3/state7[6];
       }
       else {
-        dR[0] += (dA2+dA3+dA4)*S3;  dA[0] = (dA0+dA3+dA3+dA5+dA6)*P3; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
-        dR[1] += (dB2+dB3+dB4)*S3;  dA[1] = (dB0+dB3+dB3+dB5+dB6)*P3; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
-        dR[2] += (dC2+dC3+dC4)*S3;  dA[2] = (dC0+dC3+dC3+dC5+dC6)*P3;
+        (*cov)[i]   += (dA2+dA3+dA4)*S3;  (*cov)[i+3] = (dA0+dA3+dA3+dA5+dA6)*P3; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
+        (*cov)[i+1] += (dB2+dB3+dB4)*S3;  (*cov)[i+4] = (dB0+dB3+dB3+dB5+dB6)*P3; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
+        (*cov)[i+2] += (dC2+dC3+dC4)*S3;  (*cov)[i+5] = (dC0+dC3+dC3+dC5+dC6)*P3;
       }
     }
   }
@@ -1538,22 +1519,22 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
     // improve step estimation to surface according to curvature
     if (Hmag > 1E-5 && fabs(Step) > 0.1*SmaxAngle){
 
-      M8x7 P;
-      P[0] = pos.X();  P[1] = pos.Y(); P[2] = pos.Z();
-      P[3] = dir.X();  P[4] = dir.Y(); P[5] = dir.Z();
-      P[6] = fCharge/momentum;
+      M1x7 state7;
+      state7[0] = pos.X();  state7[1] = pos.Y(); state7[2] = pos.Z();
+      state7[3] = dir.X();  state7[4] = dir.Y(); state7[5] = dir.Z();
+      state7[6] = fCharge/momentum;
       M1x3 SA;
 
-      RKPropagate(P, SA, Step, false, false);
+      RKPropagate(state7, NULL, SA, Step, false);
 
       // calculate distance to surface
-      Dist = SU[3] - (P[0] * SU[0] +
-                      P[1] * SU[1] +
-                      P[2] * SU[2]); // Distance between position and surface
+      Dist = SU[3] - (state7[0] * SU[0] +
+                      state7[1] * SU[1] +
+                      state7[2] * SU[2]); // Distance between position and surface
 
-      An = P[3] * SU[0] +
-           P[4] * SU[1] +
-           P[5] * SU[2];    // An = dir * N;  component of dir normal to surface
+      An = state7[3] * SU[0] +
+           state7[4] * SU[1] +
+           state7[5] * SU[2];    // An = dir * N;  component of dir normal to surface
 
       Step += Dist/An;
 

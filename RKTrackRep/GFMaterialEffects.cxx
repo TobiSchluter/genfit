@@ -110,7 +110,6 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
                                   const double& mom,
                                   const int& pdg,
                                   double& xx0,
-                                  const bool& doNoise,
                                   double* noise,
                                   const double* jacobian,
                                   const TVector3* directionBefore,
@@ -124,6 +123,8 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
   }
 
   if (fNoEffects) return 0.;
+
+  bool doNoise(jacobian!=NULL);
 
   fpdg = pdg;
   getParticleParameters(mom);

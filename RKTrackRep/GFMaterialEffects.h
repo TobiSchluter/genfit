@@ -83,7 +83,6 @@ public:
                  const double& mom,
                  const int& pdg,
                  double& xx0,
-                 const bool& doNoise = false,
                  double* noise7x7 = NULL,
                  const double* jacobian7x7 = NULL,
                  const TVector3* directionBefore = NULL,
