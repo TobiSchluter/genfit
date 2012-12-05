@@ -24,12 +24,12 @@
 #ifndef GFABSRECOHIT_H
 #define GFABSRECOHIT_H
 
-#include "TVectorD.h"
-#include "TMatrixD.h"
-#include "TMatrixDSym.h"
-#include "TObject.h"
+#include <TVectorD.h>
+#include <TMatrixD.h>
+#include <TMatrixDSym.h>
+#include <TObject.h>
 
-#include "GFDetPlane.h"
+#include <GFDetPlane.h>
 
 class GFAbsTrackRep;
 
