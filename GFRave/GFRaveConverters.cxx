@@ -154,7 +154,7 @@ GFRave::RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::string
 
   const GFDetPlane& refPlane(rep->getReferencePlane());
   TVector3 pos, mom;
-  TMatrixTSym<double> cov;
+  TMatrixDSym cov;
 
   rep->getPosMomCov(refPlane, pos, mom, cov);
 
@@ -188,7 +188,7 @@ GFRave::setTrackRepData(const rave::Track & orig, GFAbsTrackRep* rep){
 
   rep->setPosMomCov(TVector3(orig.state().x(), orig.state().y(), orig.state().z()),
                     TVector3(orig.state().px(), orig.state().py(), orig.state().pz()),
-                    Covariance6DToTMatrixTSym(orig.error()));
+                    Covariance6DToTMatrixDSym(orig.error()));
 
 }
 
@@ -244,8 +244,8 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
       trackparams = new GFRaveTrackParameters(IdGFTrackMap->at(id), //track
                                               IdGFTrackRepMap->at(id), //rep
                                               raveWeightedTracks[i].first, //weight
-                                              GFRave::Vector6DToTVectorT(raveSmoothedTracks[i].second.state()), //smoothed state
-                                              GFRave::Covariance6DToTMatrixTSym(raveSmoothedTracks[i].second.error()), //smoothed cov
+                                              GFRave::Vector6DToTVectorD(raveSmoothedTracks[i].second.state()), //smoothed state
+                                              GFRave::Covariance6DToTMatrixDSym(raveSmoothedTracks[i].second.error()), //smoothed cov
                                               true);
     }
     else {
@@ -253,15 +253,15 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
       trackparams = new GFRaveTrackParameters(IdGFTrackMap->at(id), //track
                                               IdGFTrackRepMap->at(id), //rep
                                               raveWeightedTracks[i].first, //weight
-                                              GFRave::Vector6DToTVectorT(raveWeightedTracks[i].second.state()), //state
-                                              GFRave::Covariance6DToTMatrixTSym(raveWeightedTracks[i].second.error()), //cov
+                                              GFRave::Vector6DToTVectorD(raveWeightedTracks[i].second.state()), //state
+                                              GFRave::Covariance6DToTMatrixDSym(raveWeightedTracks[i].second.error()), //cov
                                               false);
     }
     trackParameters.push_back(trackparams);
   }
 
   return new GFRaveVertex(GFRave::Point3DToTVector3(raveVertex.position()),
-                          GFRave::Covariance3DToTMatrixTSym(raveVertex.error()),
+                          GFRave::Covariance3DToTMatrixDSym(raveVertex.error()),
                           trackParameters,
                           raveVertex.ndf(), raveVertex.chiSquared(), raveVertex.id());
 }
@@ -297,9 +297,9 @@ GFRave::Vector3DToTVector3(const rave::Vector3D & v) {
 }
 
 
-TMatrixTSym<double>
-GFRave::Covariance3DToTMatrixTSym(const rave::Covariance3D & ravecov){
-  TMatrixTSym<double> cov(3);
+TMatrixDSym
+GFRave::Covariance3DToTMatrixDSym(const rave::Covariance3D & ravecov){
+  TMatrixDSym cov(3);
 
   cov(0,0) = ravecov.dxx();
   cov(0,1) = ravecov.dxy();
@@ -317,9 +317,9 @@ GFRave::Covariance3DToTMatrixTSym(const rave::Covariance3D & ravecov){
 }
 
 
-TVectorT<double>
-GFRave::Vector6DToTVectorT(const rave::Vector6D & ravevec){
-  TVectorT<double> vec(6);
+TVectorD
+GFRave::Vector6DToTVectorD(const rave::Vector6D & ravevec){
+  TVectorD vec(6);
 
   vec[0] = ravevec.x();
   vec[1] = ravevec.y();
@@ -333,9 +333,9 @@ GFRave::Vector6DToTVectorT(const rave::Vector6D & ravevec){
 }
 
 
-TMatrixTSym<double>
-GFRave::Covariance6DToTMatrixTSym(const rave::Covariance6D & ravecov){
-  TMatrixTSym<double> cov(6);
+TMatrixDSym
+GFRave::Covariance6DToTMatrixDSym(const rave::Covariance6D & ravecov){
+  TMatrixDSym cov(6);
 
   cov(0,0) = ravecov.dxx();
   cov(0,1) = ravecov.dxy();
@@ -390,9 +390,9 @@ GFRave::TVector3ToPoint3D(const TVector3 & vec){
 
 
 rave::Covariance3D
-GFRave::TMatrixTSymToCovariance3D(const TMatrixTSym<double> & matrix){
+GFRave::TMatrixDSymToCovariance3D(const TMatrixDSym & matrix){
   if (matrix.GetNrows()!=3) {
-    GFException exc("TMatrixTToCovariance3D ==> TMatrixT is not 3x3!",__LINE__,__FILE__);
+    GFException exc("TMatrixDSymToCovariance3D ==> TMatrixDSym is not 3x3!",__LINE__,__FILE__);
     throw exc;
   }
 

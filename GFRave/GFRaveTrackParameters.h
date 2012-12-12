@@ -31,8 +31,8 @@
 
 #include "TObject.h"
 #include "TVector3.h"
-#include "TVectorT.h"
-#include "TMatrixTSym.h"
+#include "TVectorD.h"
+#include "TMatrixDSym.h"
 
 #include "GFTrack.h"
 #include "GFAbsTrackRep.h"
@@ -51,7 +51,7 @@ class GFRaveTrackParameters : public TObject
   public:
     // constructors, destructors
     GFRaveTrackParameters();
-    GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight, const TVectorT<double>& state6, const TMatrixTSym<double>& cov6x6, bool isSmoothed);
+    GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight, const TVectorD & state6, const TMatrixDSym & cov6x6, bool isSmoothed);
     GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight);
 
     // Accessors
@@ -64,10 +64,10 @@ class GFRaveTrackParameters : public TObject
     GFAbsTrackRep* getRep() const {return  fOriginalRep;}
 
     bool hasSmoothedData() const {return fHasSmoothedData;}
-    TVectorT<double> getState() const {return fState;}
+    TVectorD getState() const {return fState;}
     TVector3 getPos() const;
     TVector3 getMom() const;
-    const TMatrixTSym<double> & getCov() const {return fCov;}
+    const TMatrixDSym & getCov() const {return fCov;}
 
     double getCharge() const;
     double getPdg() const;
@@ -79,8 +79,8 @@ class GFRaveTrackParameters : public TObject
     GFTrack* fOriginalTrack; // NO ownership
     GFAbsTrackRep* fOriginalRep; // NO ownership
     double fWeight;
-    TVectorT<double> fState; // x, y, z, px, py, pz
-    TMatrixTSym<double> fCov; // 6x6 covariance matrix
+    TVectorD fState; // x, y, z, px, py, pz
+    TMatrixDSym fCov; // 6x6 covariance matrix
     bool fHasSmoothedData;
 
   private:
