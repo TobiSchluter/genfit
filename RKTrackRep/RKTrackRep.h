@@ -65,6 +65,11 @@ class RKTrackRep : public GFAbsTrackRep {
 
   RKTrackRep(const TVector3& pos,
        const TVector3& mom,
+       const TMatrixDSym cov,
+       const int& PDGCode);
+
+  RKTrackRep(const TVector3& pos,
+       const TVector3& mom,
        const int& PDGCode);
 
   RKTrackRep(const GFTrackCand* aGFTrackCandPtr, int pdgcode = 0);

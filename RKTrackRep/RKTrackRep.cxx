@@ -53,7 +53,7 @@ void RKTrackRep::Streamer(TBuffer &R__b)
 }
 
 
-RKTrackRep::RKTrackRep() : GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fPdg(0), fMass(0.), fCharge(-1), fCachePlane(), fCacheSpu(1), fSpu(1), fAuxInfo(1,2) {
+RKTrackRep::RKTrackRep() : GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fPdg(0), fMass(0.), fCharge(0), fCachePlane(), fCacheSpu(1), fSpu(1), fAuxInfo(1,2) {
   initArrays();
 }
 
@@ -69,6 +69,7 @@ RKTrackRep::RKTrackRep(const TVector3& pos,
   setPDG(PDGCode); // also sets charge and mass
   calcStateCov(pos, mom, poserr, momerr);
 }
+
 
 
 RKTrackRep::RKTrackRep(const TVector3& pos,
@@ -115,6 +116,14 @@ RKTrackRep::RKTrackRep(const GFTrackCand* const aGFTrackCandPtr, int pdgCode) :
     fCov(3,3) = value;
     fCov(4,4) = value;
   }
+}
+
+RKTrackRep::RKTrackRep(const TVector3& pos, const TVector3& mom, const TMatrixDSym cov, const int& pdgCode) :
+                       GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fCachePlane(), fCacheSpu(1), fAuxInfo(1,2) {
+
+  setPDG(pdgCode); // also sets charge and mass
+  initArrays();
+  setPosMomCov(pos, mom, cov);
 }
 
 
@@ -583,6 +592,11 @@ void RKTrackRep::setPosMomCov(const TVector3& pos, const TVector3& mom, const TM
 
   if (cov6x6.GetNcols()!=6 || cov6x6.GetNrows()!=6){
     GFException exc("RKTrackRep::setPosMomCov ==> cov has to be 6x6 (x, y, z, px, py, pz)",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  if (fCharge == 0){
+    GFException exc("RKTrackRep::setPosMomCov ==> charge is 0. setPosMomCov cannot work with fCharge == 0 ",__LINE__,__FILE__);
     throw exc;
   }
 
