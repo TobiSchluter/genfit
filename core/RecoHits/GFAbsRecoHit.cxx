@@ -22,16 +22,13 @@
 ClassImp(GFAbsRecoHit)
 
 
-GFAbsRecoHit::GFAbsRecoHit(int NparHit) :
+GFAbsRecoHit::GFAbsRecoHit(unsigned int NparHit) :
   fHitCoord(NparHit),
   fHitCov(NparHit),
   fRho(0.),
   fDetPlane(),
   fNparHit(NparHit)
 {
-}
-
-GFAbsRecoHit::GFAbsRecoHit() : fNparHit(-1) {
 }
 
 GFAbsRecoHit::~GFAbsRecoHit(){;}

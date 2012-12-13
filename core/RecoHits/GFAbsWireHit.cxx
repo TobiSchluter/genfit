@@ -29,20 +29,12 @@
 #include <GFException.h>
 
 
-GFAbsWireHit::GFAbsWireHit() :
-  GFAbsRecoHit(NparHitRep),
-  fMaxdistance(1.E50),
-  fLeftRight(0)
-{
-  ;
-}
-
-GFAbsWireHit::GFAbsWireHit(int dim) :
+GFAbsWireHit::GFAbsWireHit(unsigned int dim) :
   GFAbsRecoHit(dim),
   fMaxdistance(1.E50),
   fLeftRight(0)
 {
-  ;
+  assert(dim >= 7);
 }
 
 

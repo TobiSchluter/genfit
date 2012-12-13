@@ -46,7 +46,7 @@ class GFAbsProlateSpacepointHit : public GFAbsSpacepointHit {
  public:
 
   // Constructors/Destructors ---------
-  GFAbsProlateSpacepointHit();
+  GFAbsProlateSpacepointHit(unsigned int dim = 3);
 
   virtual ~GFAbsProlateSpacepointHit(){;}
   

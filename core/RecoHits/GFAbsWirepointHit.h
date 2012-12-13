@@ -51,10 +51,8 @@ class GFAbsWirepointHit : public GFAbsWireHit {
  public:
 
   // Constructors/Destructors ---------
-  GFAbsWirepointHit();
-
   /** @brief Constructor for inheriting hits with a higher dimensionality (e.g. position along wire, energy loss) */
-  GFAbsWirepointHit(int dim);
+  GFAbsWirepointHit(unsigned int dim = 8) : GFAbsWireHit(dim) {assert(dim >= 8);}
 
   virtual ~GFAbsWirepointHit(){;}
 
@@ -66,8 +64,6 @@ class GFAbsWirepointHit : public GFAbsWireHit {
                               TVectorD& m,
                               TMatrixDSym& V);
 
- private:
-  static const int NparHitRep = 8;
 
  public:
   ClassDef(GFAbsWirepointHit,1);

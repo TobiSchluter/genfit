@@ -23,11 +23,12 @@
 #include "GFAbsTrackRep.h"
 #include <GFException.h>
 
-GFAbsProlateSpacepointHit::GFAbsProlateSpacepointHit() :
-  GFAbsSpacepointHit(),
+
+GFAbsProlateSpacepointHit::GFAbsProlateSpacepointHit(unsigned int dim) :
+  GFAbsSpacepointHit(dim),
   fLargestErrorDirection(0, 0, 1)
 {
-  ;
+  assert(dim >= 3);;
 }
 
 

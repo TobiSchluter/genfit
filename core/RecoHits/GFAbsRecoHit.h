@@ -29,6 +29,8 @@
 #include <TMatrixDSym.h>
 #include <TObject.h>
 
+#include <assert.h>
+
 #include <GFDetPlane.h>
 
 class GFAbsTrackRep;
@@ -69,21 +71,6 @@ class GFAbsTrackRep;
  */
 
 class GFAbsRecoHit : public TObject {
- protected:
-  /// Vector of raw coordinates of hit
-  TVectorD fHitCoord;
-
-  /// Covariance of raw hit coordinates
-  TMatrixDSym fHitCov;
-
-  /// Sorting parameter used in GFTrack::sortHits()
-  double fRho;
-
-  /// Detector plane. Can be a physical or a virtual detector plane. Virtual detector planes are usually constructed in getDetPlane().
-  GFDetPlane fDetPlane;
-
- private:
-  int fNparHit;
 
  public:
   virtual ~GFAbsRecoHit() = 0;
@@ -94,11 +81,7 @@ class GFAbsRecoHit : public TObject {
    * @param NparHit specifies the dimension of this vector. 
    * (e.g. 3 for a spacepoint, 2 for a pixel, 1 for a strip)
    */
-  GFAbsRecoHit(int NparHit);
-
-  /** @brief Default constructor needed for compatibility with ROOT
-   */
-  GFAbsRecoHit();
+  GFAbsRecoHit(unsigned int NparHit = 0);
 
   /** @brief Get transformation matrix. Transformation between hit 
    * coordinates and track representation coordinates.
@@ -185,10 +168,26 @@ class GFAbsRecoHit : public TObject {
    */
   virtual void Print(const Option_t* option = "") const {fHitCoord.Print(option);}
 
-  int getNparHit() const {return fNparHit;}
+  unsigned int getNparHit() const {return fNparHit;}
+
+ protected:
+  /// Vector of raw coordinates of hit
+  TVectorD fHitCoord;
+
+  /// Covariance of raw hit coordinates
+  TMatrixDSym fHitCov;
+
+  /// Sorting parameter used in GFTrack::sortHits()
+  double fRho;
+
+  /// Detector plane. Can be a physical or a virtual detector plane. Virtual detector planes are usually constructed in getDetPlane().
+  GFDetPlane fDetPlane;
+
+ private:
+  unsigned int fNparHit;
 
  public:
-  ClassDef(GFAbsRecoHit,5)
+  ClassDef(GFAbsRecoHit, 5)
 
 };
   

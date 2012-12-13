@@ -49,10 +49,8 @@ class GFAbsWireHit : public GFAbsRecoHit {
  public:
 
   // Constructors/Destructors ---------
-  GFAbsWireHit();
-
   /** @brief Constructor for inheriting hits with a higher dimensionality (e.g. position along wire, energy loss) */
-  GFAbsWireHit(int dim);
+  GFAbsWireHit(unsigned int dim = 7);
 
   virtual ~GFAbsWireHit(){;}
 
@@ -96,9 +94,6 @@ class GFAbsWireHit : public GFAbsRecoHit {
   /** @brief Check if the detector plane is valid
    */
   void checkPlane(const GFDetPlane&);
-
- private:
-  static const int NparHitRep = 7;
 
  public:
   ClassDef(GFAbsWireHit,1);

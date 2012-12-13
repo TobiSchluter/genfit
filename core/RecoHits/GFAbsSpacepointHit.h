@@ -48,10 +48,8 @@ class GFAbsSpacepointHit : public GFAbsRecoHit {
  public:
 
   // Constructors/Destructors ---------
-  GFAbsSpacepointHit() : GFAbsRecoHit(NparHitRep) {}
-
   /** @brief Constructor for inheriting hits with a higher dimensionality (e.g. energy loss) */
-  GFAbsSpacepointHit(int dim) : GFAbsRecoHit(dim) {}
+  GFAbsSpacepointHit(unsigned int dim = 3) : GFAbsRecoHit(dim) {assert(dim >= 3);}
 
   virtual ~GFAbsSpacepointHit(){;}
 
@@ -73,8 +71,6 @@ class GFAbsSpacepointHit : public GFAbsRecoHit {
   virtual const GFDetPlane& getDetPlane(GFAbsTrackRep* rep);
 
  private:
-  // Private Data Members ------------
-  static const int NparHitRep = 3;
 
  public:
   ClassDef(GFAbsSpacepointHit,1);

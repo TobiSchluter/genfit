@@ -44,13 +44,11 @@ class GFAbsPlanarHit : public GFAbsRecoHit {
 public:
 
   // Constructors/Destructors ---------
-  GFAbsPlanarHit(){}
-
-  /** @brief Dimensionality is usually 1 (strip hit) or 2 (pixel hit)
+  /** @brief Dimensionality is usually 1 (strip hit, default) or 2 (pixel hit)
    *  If the dimesionality is higher (e.g. energy loss), getMeasurement() has to be
    *  adapted in the inheriting hit.
    *  */
-  GFAbsPlanarHit(int dim) : GFAbsRecoHit(dim){;}
+  GFAbsPlanarHit(unsigned int dim = 1) : GFAbsRecoHit(dim) {assert(dim >=1);}
   
   virtual ~GFAbsPlanarHit() {}
 

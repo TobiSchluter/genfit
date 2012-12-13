@@ -20,19 +20,6 @@
 #include "GFAbsWirepointHit.h"
 
 
-GFAbsWirepointHit::GFAbsWirepointHit() :
-  GFAbsWireHit(NparHitRep)
-{
-  ;
-}
-
-GFAbsWirepointHit::GFAbsWirepointHit(int dim) :
-  GFAbsWireHit(dim)
-{
-  ;
-}
-
-
 void
 GFAbsWirepointHit::getMeasurement(const GFAbsTrackRep* rep,
                                   const GFDetPlane& pl,
