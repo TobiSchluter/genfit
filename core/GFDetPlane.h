@@ -158,7 +158,11 @@ public:
   // delete fFinitePlane and set O, U, V to default values
   void reset();
 
-private:
+
+ private:
+
+  // Private Methods -----------------
+  void sane(); // ensures orthonormal coordinates
 
   // Private Data Members ------------
   // origin
@@ -168,9 +172,6 @@ private:
   TVector3 fV;
 
   GFAbsFinitePlane* fFinitePlane;
-
-  // Private Methods -----------------
-  void sane(); // ensures orthonormal coordinates
 
 public:
   ClassDef(GFDetPlane,2)
