@@ -43,9 +43,15 @@ void RKTrackRep::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(RKTrackRep::Class(),this);
+
       initArrays();
+
       fCachePlane = fRefPlane;
       fCacheSpu = fSpu;
+
+      fAuxInfo.ResizeTo(1,2);
+      fAuxInfo(0,0) = fCacheSpu;
+      fAuxInfo(0,1) = fDirection;
 
    } else {
       R__b.WriteClassBuffer(RKTrackRep::Class(),this);
@@ -53,7 +59,7 @@ void RKTrackRep::Streamer(TBuffer &R__b)
 }
 
 
-RKTrackRep::RKTrackRep() : GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fPdg(0), fMass(0.), fCharge(0), fCachePlane(), fCacheSpu(1), fSpu(1), fAuxInfo(1,2) {
+RKTrackRep::RKTrackRep() : GFAbsTrackRep(5), fDirection(0), fNoMaterial(false), fPdg(0), fCharge(0), fCachePlane(), fCacheSpu(1), fSpu(1), fAuxInfo(1,2) {
   initArrays();
 }
 
@@ -175,7 +181,6 @@ void RKTrackRep::setPDG(int i){
     GFException exc("RKTrackRep::setPDG ==> particle id not known to TDatabasePDG",__LINE__,__FILE__);
     throw exc;
   }
-  fMass = part->Mass();
   fCharge = part->Charge()/(3.);
 }
 

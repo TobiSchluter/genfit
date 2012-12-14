@@ -341,24 +341,22 @@ class RKTrackRep : public GFAbsTrackRep {
                 bool onlyOneStep = false,
                 double maxStep = 1.E99);
   
-  //RKTrackRep(const RKTrackRep& rhs){};
   
   // data members
   
-  int fDirection;   // (-1,0,1) -> (backward prop,decide myself,forward)
+  int fDirection;   // (-1,0,1) -> (backward prop, decide myself, forward)
   bool fNoMaterial; // don't calculate material effects if true
     
   //! PDG particle code
   int fPdg;
-  //! Mass (in GeV)
-  double fMass;
   //! Charge
   double fCharge;
 
+  double fSpu;
+
   GFDetPlane fCachePlane; //!
   double fCacheSpu; //!
-  double fSpu;
-  TMatrixD fAuxInfo;
+  TMatrixD fAuxInfo; //!
 
   // vectors for getState, transform, Extrap etc. functions. Saves a lot of TVector3 constructions/destructions
   TVector3 fPos, fDir; //!
