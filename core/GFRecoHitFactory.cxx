@@ -29,22 +29,22 @@ GFRecoHitFactory::~GFRecoHitFactory(){
 void GFRecoHitFactory::addProducer(int detID, GFAbsRecoHitProducer* hitProd) {
   std::map<int, GFAbsRecoHitProducer*>::iterator it = fHitProdMap.find(detID);
   if(it == fHitProdMap.end()) {
-	fHitProdMap[detID] = hitProd;
+    fHitProdMap[detID] = hitProd;
   } else {
-	GFException exc("GFRecoHitFactory: detID already in use",__LINE__,__FILE__);
-	exc.setFatal();
-	std::vector<double> numbers;
-	numbers.push_back(detID);
-	exc.setNumbers("detID",numbers);
-	throw exc;
-  }
+    GFException exc("GFRecoHitFactory: detID already in use",__LINE__,__FILE__);
+    exc.setFatal();
+    std::vector<double> numbers;
+    numbers.push_back(detID);
+    exc.setNumbers("detID",numbers);
+    throw exc;
+    }
 }
 
 void GFRecoHitFactory::clear(){
   std::map<int, GFAbsRecoHitProducer*>::iterator it=fHitProdMap.begin();
   while(it!=fHitProdMap.end()){
-	delete it->second;
-	++it;
+    delete it->second;
+    ++it;
   }
   fHitProdMap.clear();
 }
@@ -52,17 +52,17 @@ void GFRecoHitFactory::clear(){
 GFAbsRecoHit* GFRecoHitFactory::createOne(int detID, int index) {
   std::map<int, GFAbsRecoHitProducer*>::iterator it = fHitProdMap.find(detID);
   if(it != fHitProdMap.end()) {
-	return it->second->produce(index);
+    return it->second->produce(index);
   }
 
 
   else {
-	GFException exc("GFRecoHitFactory: no hitProducer for this detID available",__LINE__,__FILE__);
-	exc.setFatal();
-	std::vector<double> numbers;
-	numbers.push_back(detID);
-	exc.setNumbers("detID",numbers);
-	throw exc;
+    GFException exc("GFRecoHitFactory: no hitProducer for this detID available",__LINE__,__FILE__);
+    exc.setFatal();
+    std::vector<double> numbers;
+    numbers.push_back(detID);
+    exc.setNumbers("detID",numbers);
+    throw exc;
   }
 }
 
@@ -70,8 +70,7 @@ std::vector<GFAbsRecoHit*> GFRecoHitFactory::createMany(const GFTrackCand& cand)
   std::vector<GFAbsRecoHit*> hitVec;
   unsigned int nHits=cand.getNHits();
   for(unsigned int i=0;i<nHits;i++) {
-    unsigned int detID;
-    unsigned int index;
+    int detID, index;
     cand.getHit(i,detID,index);
     hitVec.push_back( createOne(detID,index) );
   }

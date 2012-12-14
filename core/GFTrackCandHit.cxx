@@ -25,8 +25,8 @@
 ClassImp(GFTrackCandHit)
 
 
-GFTrackCandHit::GFTrackCandHit(unsigned int detId,
-                               unsigned int hitId,
+GFTrackCandHit::GFTrackCandHit(int detId,
+                               int hitId,
                                int planeId,
                                double rho)
   : fDetId(detId),

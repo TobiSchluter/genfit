@@ -137,8 +137,7 @@ void
 GFTrack::mergeHits(GFTrack* trk){
   unsigned int nhits=trk->getNumHits();
   for(unsigned int i=0;i<nhits;++i){
-    unsigned int detId;
-    unsigned int hitId;
+    int detId, hitId;
     trk->getCand().getHit(i,detId,hitId);
     GFAbsRecoHit* hit=trk->getHit(i);
     addHit(hit,detId,hitId);
@@ -228,7 +227,7 @@ GFTrack::fillGeoTrack(TVirtualGeoTrack* geotrk,unsigned int repid) const
 
 
 void 
-GFTrack::getResiduals(unsigned int detId, // which detector?
+GFTrack::getResiduals(int detId, // which detector?
 		    unsigned int dim,   // which projection?
 		    unsigned int repid,   // which trackrep ?
 		    std::vector<double>& result) const
@@ -239,8 +238,7 @@ GFTrack::getResiduals(unsigned int detId, // which detector?
   GFAbsTrackRep* rep=getTrackRep(repid);//->clone();
   assert(rep->getState()==getTrackRep(repid)->getState());
   for(unsigned int ih=0; ih<nhits; ++ih){// loop over hits
-    unsigned int anid;
-    unsigned int dummy;
+    int anid, dummy;
     fCand.getHit(ih,anid,dummy); // check if this is a hit we want to look at
     if(anid==detId){
       GFAbsRecoHit* hit=getHit(ih);
@@ -307,8 +305,7 @@ bool GFTrack::getHitsByPlane(std::vector< std::vector<int> >& retVal){
   assert(fHits.size() == nHits);
   if(fHits.size() <= 1) return false;
 
-  unsigned int detId, hitId, lastDetId;
-  int planeId, lastPlaneId;
+  int detId, hitId, lastDetId, planeId, lastPlaneId;
 
   // get info for first hit
   fCand.getHitWithPlane(0,detId,hitId,planeId);

@@ -367,7 +367,7 @@ public:
    * @param rep which track representation?
    * @param result results are written to this vector
    */
-  void getResiduals(unsigned int detId, // which detector?
+  void getResiduals(int detId, // which detector?
                     unsigned int dim,   // which projection?
                     unsigned int rep,   // which trackrep ?
                     std::vector<double>& result) const;
