@@ -93,21 +93,21 @@ public:
 
   // Modifiers
   void SetBField(GFAbsBField* b);
-  void setData(const TMatrixT<double>& st, const GFDetPlane& pl, const TMatrixTSym<double>* cov=NULL){
+  void setData(const TVectorD& st, const GFDetPlane& pl, const TMatrixDSym* cov=NULL){
     GFAbsTrackRep::setData(st,pl,cov);
     s=pl.getO().Z();
   }
   void setRungeKuttaAcc(double acc){_acc=acc;}
   void setRungeKuttaAdaptive(bool f){_adaptive=f;}
   // Operations ----------------------
-  virtual double extrapolate(const GFDetPlane&, TMatrixT<double>& statePred);
+  virtual double extrapolate(const GFDetPlane&, TVectorD& statePred);
   //virtual void extrapolate(const GFDetPlane&, 
   //			   const TMatrixT<double>& stateFrom, 
   //			   TMatrixT<double>& stateResult);
 
   virtual double extrapolate(const GFDetPlane&, 
-			     TMatrixT<double>& statePred,
-			     TMatrixTSym<double>& covPred);
+            TVectorD& statePred,
+            TMatrixDSym& covPred);
 
 
   virtual double extrapolateToPoint(const TVector3&,
@@ -123,8 +123,7 @@ public:
   virtual TVectorT<double> getGlobal(); // (x,y,z,px,py,pz)
   virtual TMatrixTSym<double> getGlobalCov(); // covariances
 
-  virtual double getCharge()const {double fact= fInverted ? -1.:1.;
-    return fState[4][0]<0 ? -fact : fact;}
+  virtual double getCharge()const {return fState[4]<0 ? -1 : 1;}
 
   virtual void switchDirection(){};
   
@@ -147,8 +146,8 @@ private:
 
   // calculate jacobian of extrapolation
   void Jacobian(const GFDetPlane& pl,
-		const TMatrixT<double>& statePred,
-		TMatrixT<double>& jacResult);
+		const TVectorD& statePred,
+		TMatrixD& jacResult);
 
  public:
   ClassDef(LSLTrackRep,2)
