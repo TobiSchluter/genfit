@@ -57,48 +57,9 @@ class TVirtualGeoTrack;
  *
  * The GFTRack takes ownership over the GFAbsRecoHit pointers it holds.
  */
-class GFTrack : public TObject {   
-private:
+class GFTrack : public TObject {
   
-  
-  /** @brief Collection of track representations
-   * 
-   * this array is only to be added to in the addTrackRep method
-   * because the synchronized construction of bookkeeping objects
-   * and repAtHit array is ensured there. NEVER delete elements from
-   * this array!
-   * If this functionality will be need, it has to be done synchronized
-   * with bookkeeping!!
-   */
-  TObjArray* fTrackReps; //->
-
-  /** @brief Collection of RecoHits
-   */
-  std::vector<GFAbsRecoHit*> fHits; //!
-  
-  /** @brief Collection of Bookeeping objects for failed hits
-   * in every trackrep
-   */
-  std::vector<GFBookkeeping*> fBookkeeping;
-
-  /** @brief repAtHit keeps track of at which hit index which rep
-   * is currently defined, to avoid null extrapolations
-   */
-  std::vector<int> fRepAtHit;
-
-  /** @brief Helper to store the indices of the hits in the track. 
-   * See GFTrackCand for details.
-   */
-  GFTrackCand fCand; // list of hits
-    
-  static const int fDefNumTrackReps = 10; //!
-  unsigned int fCardinal_rep; // THE selected rep, default=0;
-
-  unsigned int fNextHitToFit;
-
-  bool fSmooth;
-  
-public:
+ public:
   
   /** @brief Default constructor -- needed for compatibility with ROOT */
   GFTrack(); 
@@ -373,19 +334,19 @@ public:
                     std::vector<double>& result) const;
 		    
 
-  /** @brief set the hit index at which plane,state&cov of rep irep is defined
+  /** @brief set the hit index at which plane, state & cov of rep irep is defined
    */
   void setRepAtHit(unsigned int irep,int ihit){
     fRepAtHit.at(irep) = ihit;
   }
 
-  /** @brief get the hit index at which plane,state&cov of rep irep is defined
+  /** @brief get the hit index at which plane, state & cov of rep irep is defined
    */
   int getRepAtHit(unsigned int irep) const {
     return fRepAtHit.at(irep);
   }
 
-  /** @brief clear the hit indices at which plane,state&cov of reps are defined
+  /** @brief clear the hit indices at which plane, state & cov of reps are defined
    */
   void clearRepAtHit(){
     for(unsigned int i=0;i<getNumReps();++i){
@@ -411,9 +372,9 @@ public:
     }
   }
 
-  /** @brief Use planeId information of GFTrackCand and return (by reference)
-   * groups of hit indices (ranging from 0 to getNumHits()) which are in the same planes and in the same detector.
-   * Only hits which are subsequent in the GFTrackCand can be grouped together.
+  /** @brief Use planeId information of #GFTrackCand and return (by reference)
+   * groups of hit indices (ranging from 0 to #getNumHits()) which are in the same planes and in the same detector.
+   * Only hits which are subsequent in the #GFTrackCand can be grouped together.
    * Hits with default planeId -1 will not be grouped together!
    */
   bool getHitsByPlane(std::vector< std::vector<int> >& retVal);
@@ -426,10 +387,49 @@ public:
    */
   bool getSmoothing() const { return fSmooth; }
 
-  /** @brief this is needed to blow up the covariance matrix before a fitting pass
-   * drops off-diagonal elements and blows up diagonal by blowUpFactor
+  /** @brief this is needed to blow up the covariance matrix by #blowUpFactor before a fitting pass
    */
   void blowUpCovs(double blowUpFactor);
+
+
+ private:
+
+  /** @brief Collection of track representations
+   *
+   * this array is only to be added to in the addTrackRep method
+   * because the synchronized construction of bookkeeping objects
+   * and repAtHit array is ensured there. NEVER delete elements from
+   * this array!
+   * If this functionality will be need, it has to be done synchronized
+   * with bookkeeping!!
+   */
+  TObjArray* fTrackReps; //->
+
+  /** @brief Collection of RecoHits
+   */
+  std::vector<GFAbsRecoHit*> fHits; //!
+
+  /** @brief Collection of #GFBookeeping objects for failed hits
+   * in every trackrep
+   */
+  std::vector<GFBookkeeping*> fBookkeeping;
+
+  /** @brief repAtHit keeps track of at which hit index which rep
+   * is currently defined, to avoid null extrapolations
+   */
+  std::vector<int> fRepAtHit;
+
+  /** @brief Helper to store the indices of the hits in the track.
+   * See #GFTrackCand for details.
+   */
+  GFTrackCand fCand; // list of hits
+
+  static const int fDefNumTrackReps = 10; //!
+  unsigned int fCardinal_rep; // THE selected rep, default = 0;
+
+  unsigned int fNextHitToFit;
+
+  bool fSmooth;
 
 
  public:
