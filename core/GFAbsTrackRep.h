@@ -79,40 +79,6 @@ class GFAbsRecoHit;
 
 class GFAbsTrackRep : public TObject{
 
-  /*----- Data members -----*/
- protected:
-  //! Dimensionality of track representation
-  unsigned int fDimension;
-
-  //! The vector of track parameters
-  TVectorD fState;
-  
-  //! The covariance matrix
-  TMatrixDSym fCov;   
-
-  //! chiSqu of the track fit
-  double           fChiSqu;
-  double           fForwardChiSqu;
-  unsigned int     fNdf;
-
-  //! status of track representation: 0 means everything's OK
-  int fStatusFlag; 
-
-  //!state, cov and plane for first and last point in fit
-  TVectorD fFirstState; 
-  TMatrixDSym fFirstCov;
-
-  TVectorD fLastState; 
-  TMatrixDSym fLastCov;
-  GFDetPlane fFirstPlane;  
-  GFDetPlane fLastPlane;  
-
-  // detector plane where the track parameters are given
-  GFDetPlane fRefPlane;
-
-  double fXX0;
-
-
  public:
   virtual GFAbsTrackRep* clone() const = 0;
 
@@ -384,6 +350,40 @@ class GFAbsTrackRep : public TObject{
 
  private:
   void Abort(std::string method);
+
+
+  /*----- Data members -----*/
+ protected:
+  //! Dimensionality of track representation
+  unsigned int fDimension;
+
+  //! The vector of track parameters
+  TVectorD fState;
+
+  //! The covariance matrix
+  TMatrixDSym fCov;
+
+  //! chiSqu of the track fit
+  double       fChiSqu;
+  double       fForwardChiSqu;
+  unsigned int fNdf;
+
+  //! status of track representation: 0 means everything's OK
+  int fStatusFlag;
+
+  //!state, cov and plane for first and last point in fit
+  TVectorD    fFirstState;
+  TMatrixDSym fFirstCov;
+
+  TVectorD    fLastState;
+  TMatrixDSym fLastCov;
+  GFDetPlane  fFirstPlane;
+  GFDetPlane  fLastPlane;
+
+  // detector plane where the track parameters are given
+  GFDetPlane  fRefPlane;
+
+  double fXX0;
 
 
   ClassDef(GFAbsTrackRep,5)
