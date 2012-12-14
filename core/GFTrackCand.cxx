@@ -81,25 +81,25 @@ GFTrackCand::operator=( const GFTrackCand& other ){
 
 
 void 
-GFTrackCand::addHit(unsigned int detId, unsigned int hitId, int planeId, double rho)
+GFTrackCand::addHit(int detId, int hitId, int planeId, double rho)
 {
 	fHits.push_back(new GFTrackCandHit(detId, hitId, planeId, rho));
 }
 
-std::vector<unsigned int> 
+std::vector<int>
 GFTrackCand::getHitIDs(int detId) const {
-  std::vector<unsigned int> result;
+  std::vector<int> result;
   for(unsigned int i=0; i<fHits.size(); ++i){
-    if(detId<0 || fHits[i]->getDetId() == (unsigned int)detId) {
+    if(detId==-2 || fHits[i]->getDetId() == detId) {
       result.push_back(fHits[i]->getHitId());
     }
   }
   return result;
 }
 
-std::vector<unsigned int>
+std::vector<int>
 GFTrackCand::getDetIDs() const {
-  std::vector<unsigned int> result;
+  std::vector<int> result;
   for(unsigned int i=0; i<fHits.size(); ++i){
     result.push_back(fHits[i]->getDetId());
   }
@@ -115,9 +115,9 @@ GFTrackCand::getRhos() const {
   return result;
 }
 
-std::set<unsigned int>
+std::set<int>
 GFTrackCand::getUniqueDetIDs() const {
-  std::set<unsigned int> retVal;
+  std::set<int> retVal;
   for (unsigned int i = 0; i < fHits.size(); ++i) {
     retVal.insert(fHits[i]->getDetId());
   }
@@ -135,7 +135,7 @@ GFTrackCand::reset()
 }
 
 
-bool GFTrackCand::hitInTrack(unsigned int detId, unsigned int hitId) const
+bool GFTrackCand::hitInTrack(int detId, int hitId) const
 {
 	for (unsigned int i = 0; i < fHits.size(); ++i){
 		if (detId == fHits[i]->getDetId() && hitId == fHits[i]->getHitId())

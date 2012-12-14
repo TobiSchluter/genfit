@@ -33,12 +33,10 @@ class GFTrackCandHit : public TObject {
  public:
 
   // Constructors/Destructors ---------
-  GFTrackCandHit();
-
-  GFTrackCandHit(unsigned int detId,
-                 unsigned int hitId,
+  GFTrackCandHit(int detId   = -1,
+                 int hitId   = -1,
                  int planeId = -1,
-                 double rho = 0.);
+                 double rho  =  0.);
 
   ~GFTrackCandHit();
 
@@ -56,10 +54,10 @@ class GFTrackCandHit : public TObject {
   }
 
   // Accessors
-  unsigned int getDetId() const {return fDetId;}
-  unsigned int getHitId() const {return fHitId;}
-  int          getPlaneId() const {return fPlaneId;}
-  double       getRho() const {return fRho;}
+  int    getDetId() const {return fDetId;}
+  int    getHitId() const {return fHitId;}
+  int    getPlaneId() const {return fPlaneId;}
+  double getRho() const {return fRho;}
 
   virtual void Print(Option_t* option = "") const;
 
@@ -68,10 +66,10 @@ class GFTrackCandHit : public TObject {
 
  protected:
   // Private Data Members ------------
-  unsigned int fDetId;
-  unsigned int fHitId;
-  int          fPlaneId; // planeId id is -1 per default
-  double       fRho; // sorting parameter
+  int    fDetId; // detId id is -1 per default
+  int    fHitId; // hitId id is -1 per default
+  int    fPlaneId; // planeId id is -1 per default
+  double fRho; // sorting parameter
 
  public:
   ClassDef(GFTrackCandHit, 1)

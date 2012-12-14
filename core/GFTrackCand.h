@@ -82,7 +82,7 @@ class GFTrackCand : public TObject {
   }
 
   static bool compareTrackCandHits(const GFTrackCandHit* lhs, const GFTrackCandHit* rhs){
-    return (*lhs < *rhs); // < operator defined in GFTrackCandHit.h
+    return (*lhs < *rhs); // operator< defined in GFTrackCandHit.h
   }
 
   // Accessors -----------------------
@@ -91,22 +91,22 @@ class GFTrackCand : public TObject {
     return fHits[i];
   }
 
-  /** @brief Get detector ID and cluster index (hitId) for hit number i
+  /** @brief Get detector Id and hit Id for hit number i
    */
   void getHit(unsigned int i,
-              unsigned int& detId,
-              unsigned int& hitId) const {
+              int& detId,
+              int& hitId) const {
     assert(i < getNHits());
     detId = fHits[i]->getDetId();
     hitId = fHits[i]->getHitId();
   }
 
-  /** @brief Get detector ID and cluster index (hitId) for
-   * hit number i with ordering parameter rho
+  /** @brief Get detector Id, hit Id and ordering
+   * parameter rho for hit number i
    */
   void getHit(unsigned int i,
-              unsigned int& detId,
-              unsigned int& hitId,
+              int& detId,
+              int& hitId,
               double& rho) const {
     assert(i < getNHits());
     detId = fHits[i]->getDetId();
@@ -114,12 +114,12 @@ class GFTrackCand : public TObject {
     rho = fHits[i]->getRho();
   }
 
-  /** @brief Get detector ID and cluster index (hitId) for
-   * hit number i with plane id
+  /** @brief Get detector Id, hit Id and plane id
+   * for hit number i
    */
   void getHitWithPlane(unsigned int i,
-                       unsigned int& detId,
-                       unsigned int& hitId,
+                       int& detId,
+                       int& hitId,
                        int& planeId) const {
     assert(i < getNHits());
     detId = fHits[i]->getDetId();
@@ -129,10 +129,13 @@ class GFTrackCand : public TObject {
 
   unsigned int getNHits() const {return fHits.size();}
 
-  std::vector<unsigned int> getHitIDs(int detId = -1) const;
-  std::vector<unsigned int> getDetIDs() const;
-  std::vector<double>       getRhos() const;
-  std::set<unsigned int>    getUniqueDetIDs() const;
+  /** @brief get hit ids of from a specific detector. DetId -1 gives hitIds of
+   * hits with default detId -1. The default argument -2 gives hit Ids of all hits.
+   */
+  std::vector<int>    getHitIDs(int detId = -2) const;
+  std::vector<int>    getDetIDs() const;
+  std::vector<double> getRhos() const;
+  std::set<int>       getUniqueDetIDs() const;
 
   /** @brief get the MCT track id, for MC simulations - default value -1
    */
@@ -167,11 +170,11 @@ class GFTrackCand : public TObject {
   /** @brief get the PDG code*/
   int getPdgCode() const {return fPdg;}
 
-  bool hitInTrack(unsigned int detId, unsigned int hitId) const;
+  bool hitInTrack(int detId, int hitId) const;
 
   // Modifiers -----------------------
-  void addHit(unsigned int detId,
-              unsigned int hitId,
+  void addHit(int detId,
+              int hitId,
               int planeId = -1,
               double rho = 0);
 

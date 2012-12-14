@@ -309,12 +309,19 @@ public:
   /** @brief Add single hit. Updates the GFTrackCand
    */
   void addHit(GFAbsRecoHit* theHit, 
-	      unsigned int detId,
-	      unsigned int hitId,
-	      int planeId = -1,
-	      double rho = 0.){
+              int detId,
+              int hitId,
+              int planeId = -1,
+              double rho = 0.){
     fHits.push_back(theHit);
     fCand.addHit(detId,hitId,planeId,rho);
+  }
+
+  /** @brief Add single hit. Updates the GFTrackCand with default Ids
+   */
+  void addHit(GFAbsRecoHit* theHit){
+    fHits.push_back(theHit);
+    fCand.addHit(new GFTrackCandHit); // add default TrackCandHit
   }
 
   /** @brief Add collection of hits
@@ -361,9 +368,9 @@ public:
    * @param result results are written to this vector
    */
   void getResiduals(unsigned int detId, // which detector?
-		    unsigned int dim,   // which projection?
-		    unsigned int rep,   // which trackrep ?
-		    std::vector<double>& result) const;
+                    unsigned int dim,   // which projection?
+                    unsigned int rep,   // which trackrep ?
+                    std::vector<double>& result) const;
 		    
 
   /** @brief set the hit index at which plane,state&cov of rep irep is defined
