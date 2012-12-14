@@ -47,7 +47,7 @@
  * The code was taken from the Phast analysis package of the COMPASS experiment
  * (Sergei Gerrassimov @ CERN).
  *
- * The state is 5D: (q/p, u', v', u,v)
+ * The state is 5D: (q/p, u', v', u, v)
  */
 
 
@@ -199,7 +199,7 @@ class RKTrackRep : public GFAbsTrackRep {
 
   int getPDG() {return fPdg;};
 
-  //! Set propagation direction. (-1,0,1) -> (backward prop,decide myself,forward)
+  //! Set propagation direction. (-1, 0, 1) -> (backward prop, decide myself, forward)
   void setPropDir(int dir);
 
   //! Switch propagation direction. Has no effect if propdir is set to 0.
@@ -282,11 +282,11 @@ class RKTrackRep : public GFAbsTrackRep {
 
   //! Propagates the particle through the magnetic field.
   /** If the propagation is successfull and the plane is reached, the function returns true.
-    * Propagated state and the jacobian of the extrapolation are written to state7 and cov.
-    * The jacobian is only calculated if cov != NULL.
-    * In the main loop of the Runge Kutta algorithm, the steppers in  #fEffect are called
+    * Propagated state and the jacobian of the extrapolation are written to #state7 and #cov.
+    * The jacobian is only calculated if #cov != NULL.
+    * In the main loop of the Runge Kutta algorithm, the #estimateStep() is called
     * and may reduce the estimated stepsize so that a maximum momentum loss will not be exceeded.
-    * If this is the case, RKutta() will only propagate the reduced distance and then return. This is to ensure that 
+    * If this is the case, #RKutta() will only propagate the reduced distance and then return. This is to ensure that
     * material effects, which are calculated after the propagation, are taken into account properly.
     */
   bool RKutta (const GFDetPlane& plane,
@@ -299,10 +299,10 @@ class RKTrackRep : public GFAbsTrackRep {
                double maxStep = 1.E99);
 
   //! The actual Runge Kutta propagation
-  /** propagate P with step S. Fills SA (Start directions derivatives dA/S).
-   *  If calcCov is falso, only the first 6 entries of P (pos and dir) are propagated,
-   *  otherwise also the 7x7 jacobian is calculated.
-   *  If varField is false, the magnetic field will only be evaluated at the starting position.
+  /** propagate #state7 with step #S. Fills #SA (Start directions derivatives dA/S).
+   *  If #cov is NULL, only the state is propagated,
+   *  otherwise also the 7x7 jacobian (#cov) is calculated.
+   *  If #varField is false, the magnetic field will only be evaluated at the starting position.
    */
   void RKPropagate(M1x7& state7,
                    M7x7* cov,
@@ -327,13 +327,14 @@ class RKTrackRep : public GFAbsTrackRep {
                      const TVector3& point) const;
     
   //! Handles propagation and material effects
-  /** extrapolate(), extrapolateToPoint() and extrapolateToLine() call this function.
-    * Extrap() needs a plane as an argument, hence extrapolateToPoint() and extrapolateToLine() create virtual detector planes.
-    * In this function, RKutta() is called and the resulting points and point paths are filtered 
-    * so that the direction doesn't change and tiny steps are filtered out. After the propagation the material effects are called via the GFMaterialEffects singleton.
-    * Extrap() will loop until the plane is reached, unless the propagation fails or the maximum number of 
+  /** #extrapolate(), #extrapolateToPoint() and #extrapolateToLine() call this function.
+    * #Extrap() needs a plane as an argument, hence #extrapolateToPoint() and #extrapolateToLine() create virtual detector planes.
+    * In this function, #RKutta() is called and the resulting points and point paths are filtered
+    * so that the direction doesn't change and tiny steps are filtered out.
+    * After the propagation the material effects are called via the #GFMaterialEffects singleton.
+    * #Extrap() will loop until the plane is reached, unless the propagation fails or the maximum number of
     * iterations is exceeded.
-    * fXX0 is also updated here.
+    * #fXX0 is also updated here.
     */
   double Extrap(const GFDetPlane& plane,
                 M1x7& state7,
@@ -344,7 +345,7 @@ class RKTrackRep : public GFAbsTrackRep {
   
   // data members
   
-  int fDirection;   // (-1,0,1) -> (backward prop, decide myself, forward)
+  int fDirection;   // (-1, 0, 1) -> (backward prop, decide myself, forward)
   bool fNoMaterial; // don't calculate material effects if true
     
   //! PDG particle code
