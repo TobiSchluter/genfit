@@ -1422,7 +1422,7 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
 
   // calculate way SmaxAngle after which momentum angle has changed AngleMax
   TVector3 MagField(GFFieldManager::getFieldVal(pos));
-  double Hmag(MagField.Mag()), SmaxAngle(Smax), radius(0);
+  double Hmag(MagField.Mag()), SmaxAngle(maxStep), radius(0);
   if (Hmag > 1E-5){
     double cosAngle = (dir.Dot(MagField))/Hmag;
     radius = momentum/(0.299792458E-3*Hmag) *
@@ -1438,9 +1438,11 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   // Select direction
   //
   // auto select
-  if (fDirection == 0){
+  if (fDirection == 0 || !plane.isFinite()){
     #ifdef DEBUG
-      std::cout << "  auto select direction. \n";
+      std::cout << "  auto select direction";
+      if (!plane.isFinite()) std::cout << ", plane is not finite";
+      std::cout << ".\n";
     #endif
   }
   // see if straight line approximation is ok
@@ -1466,11 +1468,13 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   }
   // fDirection decides!
   else {
-    Step = fabs(Step)*fDirection;
-    improveEstimation = false;
-    #ifdef DEBUG
-      std::cout << "  select direction according to fDirection. \n";
-    #endif
+    if (Step * fDirection < 0){
+      Step *= fDirection*SmaxAngle;
+      improveEstimation = false;
+      #ifdef DEBUG
+        std::cout << "  invert Step according to fDirection and set Step to fDirection*SmaxAngle. \n";
+      #endif
+    }
   }
 
   #ifdef DEBUG
@@ -1484,7 +1488,7 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   //
   // Limit stepsize
   //
-  // reduce maximum stepsize Step to Smax
+  // reduce maximum stepsize Step to Smax and maxStep
   if (fabs(Step) > Smax) {
     Step = StepSign*Smax;
     improveEstimation = false;
