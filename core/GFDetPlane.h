@@ -155,6 +155,11 @@ public:
     return inActive(v.X(),v.Y());
   }
   
+  bool isFinite() const {
+    if (fFinitePlane != NULL) return true;
+    return false;
+  }
+
   // delete fFinitePlane and set O, U, V to default values
   void reset();
 
