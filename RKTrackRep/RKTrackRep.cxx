@@ -1469,7 +1469,7 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   // fDirection decides!
   else {
     if (Step * fDirection < 0){
-      Step *= fDirection*SmaxAngle;
+      Step = fDirection*SmaxAngle;
       improveEstimation = false;
       #ifdef DEBUG
         std::cout << "  invert Step according to fDirection and set Step to fDirection*SmaxAngle. \n";
