@@ -226,13 +226,13 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 	if(drawRawHits){
 		for(unsigned int j=0; j<fHits[id].size(); ++j){
 			// rotate and translate -------------------------------------------------------
-			TGeoMatrix* det_trans = new TGeoGenTrans(fHits[id][j][0], fHits[id][j][1], fHits[id][j][2],
+		  TGeoGenTrans det_trans(fHits[id][j][0], fHits[id][j][1], fHits[id][j][2],
 					1./fHits[id][j][3], 1./fHits[id][j][4], 1./fHits[id][j][5], 0);
 
 			TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
 			det_shape->IncDenyDestroy();
 			det_shape->SetShape(new TGeoSphere(0.,1.));
-			det_shape->SetTransMatrix(*det_trans);
+			det_shape->SetTransMatrix(det_trans);
 			// finished rotating and translating ------------------------------------------
 
 			det_shape->SetMainColor(kYellow);
@@ -420,15 +420,15 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 				  det_shape->SetShape(new TGeoTube(std::max(0., (double)(hit_u-0.0105/2.)), hit_u+0.0105/2., plane_size));
 
 					TVector3 norm = u.Cross(v);
-					TGeoRotation* det_rot = new TGeoRotation("det_rot",	(u.Theta()*180)/TMath::Pi(), (u.Phi()*180)/TMath::Pi(),
+					TGeoRotation det_rot("det_rot",	(u.Theta()*180)/TMath::Pi(), (u.Phi()*180)/TMath::Pi(),
 							(norm.Theta()*180)/TMath::Pi(), (norm.Phi()*180)/TMath::Pi(),
 							(v.Theta()*180)/TMath::Pi(), (v.Phi()*180)/TMath::Pi()); // move the tube to the right place and rotate it correctly
 					TVector3 move = v*(v*(track_pos-o)); // move the tube along the wire until the track goes through it
-					TGeoMatrix* det_trans = new TGeoCombiTrans(o(0) + move.X(),
-                                                     o(1) + move.Y(),
-                                                     o(2) + move.Z(),
-                                                     det_rot);
-					det_shape->SetTransMatrix(*det_trans);
+					TGeoCombiTrans det_trans(o(0) + move.X(),
+                                   o(1) + move.Y(),
+                                   o(2) + move.Z(),
+                                   &det_rot);
+					det_shape->SetTransMatrix(det_trans);
 					det_shape->SetMainColor(kCyan);
 					det_shape->SetMainTransparency(25);
 					if((drawHits && (hit_u+0.0105/2 > 0)) || !drawHits) {
@@ -487,11 +487,11 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 						// finished calculating ---------------------------------------------------
 
 						// rotate and translate everything correctly ------------------------------
-						TGeoRotation* det_rot = new TGeoRotation("det_rot",	(u_semiaxis.Theta()*180)/TMath::Pi(), (u_semiaxis.Phi()*180)/TMath::Pi(),
+						TGeoRotation det_rot("det_rot",	(u_semiaxis.Theta()*180)/TMath::Pi(), (u_semiaxis.Phi()*180)/TMath::Pi(),
 								(v_semiaxis.Theta()*180)/TMath::Pi(), (v_semiaxis.Phi()*180)/TMath::Pi(),
 								(norm.Theta()*180)/TMath::Pi(), (norm.Phi()*180)/TMath::Pi());
-						TGeoMatrix* det_trans = new TGeoCombiTrans(pix_pos(0),pix_pos(1),pix_pos(2),det_rot);
-						det_shape->SetTransMatrix(*det_trans);
+						TGeoCombiTrans det_trans(pix_pos(0),pix_pos(1),pix_pos(2), &det_rot);
+						det_shape->SetTransMatrix(det_trans);
 						// finished rotating and translating --------------------------------------
 
 						det_shape->SetMainColor(kYellow);
@@ -518,7 +518,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					// got everything we need -----------------------------------------------------
 
 
-					TGeoRotation* det_rot = new TGeoRotation("det_rot",	(eVec1.Theta()*180)/TMath::Pi(), (eVec1.Phi()*180)/TMath::Pi(),
+					TGeoRotation det_rot("det_rot",	(eVec1.Theta()*180)/TMath::Pi(), (eVec1.Phi()*180)/TMath::Pi(),
 							(eVec2.Theta()*180)/TMath::Pi(), (eVec2.Phi()*180)/TMath::Pi(),
 							(eVec3.Theta()*180)/TMath::Pi(), (eVec3.Phi()*180)/TMath::Pi()); // the rotation is already clear
 
@@ -553,11 +553,11 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					// finished autoscaling -------------------------------------------------------
 
 					// rotate and translate -------------------------------------------------------
-					TGeoMatrix* det_trans = new TGeoGenTrans(o(0),o(1),o(2),
-					                                         std::sqrt(pseudo_res_0/pseudo_res_1/pseudo_res_2), std::sqrt(pseudo_res_1/pseudo_res_0/pseudo_res_2), std::sqrt(pseudo_res_2/pseudo_res_0/pseudo_res_1), // this workaround is necessary due to the "normalization" performed in  TGeoGenTrans::SetScale
-					                                         //1/(pseudo_res_0),1/(pseudo_res_1),1/(pseudo_res_2),
-					                                         det_rot);
-					det_shape->SetTransMatrix(*det_trans);
+					TGeoGenTrans det_trans(o(0),o(1),o(2),
+					                       std::sqrt(pseudo_res_0/pseudo_res_1/pseudo_res_2), std::sqrt(pseudo_res_1/pseudo_res_0/pseudo_res_2), std::sqrt(pseudo_res_2/pseudo_res_0/pseudo_res_1), // this workaround is necessary due to the "normalization" performed in  TGeoGenTrans::SetScale
+					                       //1/(pseudo_res_0),1/(pseudo_res_1),1/(pseudo_res_2),
+					                       &det_rot);
+					det_shape->SetTransMatrix(det_trans);
 					// finished rotating and translating ------------------------------------------
 
 					det_shape->SetMainColor(kYellow);
@@ -606,14 +606,14 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					TVector3 norm = u.Cross(v);
 
 					// rotate and translate -------------------------------------------------------
-					TGeoRotation* det_rot = new TGeoRotation("det_rot",	(u.Theta()*180)/TMath::Pi(), (u.Phi()*180)/TMath::Pi(),
+					TGeoRotation det_rot("det_rot",	(u.Theta()*180)/TMath::Pi(), (u.Phi()*180)/TMath::Pi(),
 							(norm.Theta()*180)/TMath::Pi(), (norm.Phi()*180)/TMath::Pi(),
 							(v.Theta()*180)/TMath::Pi(), (v.Phi()*180)/TMath::Pi());
-					TGeoMatrix* det_trans = new TGeoCombiTrans(o(0) + hit_v*v.X(),
-                                                     o(1) + hit_v*v.Y(),
-                                                     o(2) + hit_v*v.Z(),
-                                                     det_rot);
-					det_shape->SetTransMatrix(*det_trans);
+					TGeoCombiTrans det_trans(o(0) + hit_v*v.X(),
+                                   o(1) + hit_v*v.Y(),
+                                   o(2) + hit_v*v.Z(),
+                                   &det_rot);
+					det_shape->SetTransMatrix(det_trans);
 					// finished rotating and translating ------------------------------------------
 
 					det_shape->SetMainColor(kYellow);
