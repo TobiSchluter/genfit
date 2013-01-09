@@ -1,6 +1,6 @@
 #include <cmath>
 
-#include "PointHit.h"
+#include "SpacepointHit.h"
 #include "PixHit.h"
 #include "StripHit.h"
 
@@ -13,6 +13,7 @@
 #include <GFFieldManager.h>
 #include <GFKalman.h>
 #include <GFTrack.h>
+#include <GFException.h>
 
 #include <RKTrackRep.h>
 
@@ -64,7 +65,7 @@ int main() {
 	std::vector<GFTrack*> true_tracks;
 	std::vector<std::vector<int> > noise_hits;
 
-	std::vector<TMatrixT<double> > true_states;
+	std::vector<TVectorT<double> > true_states;
 
 	for(int i = 0; i < nevs; i++) { //loop over events (one track events) to generate Tracks
 
@@ -120,8 +121,8 @@ int main() {
 
 			GFDetPlane goal_pl(pos+mom,mom);
 
-			TMatrixT<double> state(6,1);
-			TMatrixT<double> cov(6,6);
+			TVectorT<double> state(6,1);
+			TMatrixTSym<double> cov(6);
 
 			try{
 				hitGenerator->extrapolate(goal_pl,state,cov);
@@ -140,7 +141,7 @@ int main() {
 			TVector3 res(x_res,y_res,z_res);
 
 			if(j < point_end) {
-				PointHit* pt_hit = new PointHit(hit_pos, res);
+				SpacepointHit* pt_hit = new SpacepointHit(hit_pos, res);
 				trk->addHit(pt_hit, 0, j, hit_pos.Mag(), j);
 				true_trk->addHit(pt_hit, 0, j, hit_pos.Mag(), j);
 				noise_vector.push_back(0);
@@ -151,7 +152,7 @@ int main() {
 							gRandom->Uniform(hit_pos.Y()-2,hit_pos.Y()+2),
 							gRandom->Uniform(hit_pos.Z()-2,hit_pos.Z()+2)
 							);
-					trk->addHit(new PointHit(noise_pos, res), 0, j, hit_pos.Mag(), j);
+					trk->addHit(new SpacepointHit(noise_pos, res), 0, j, hit_pos.Mag(), j);
 					noise_vector.push_back(1);
 				}
 			} else if (j < strip_end && strip_hits) {
@@ -280,30 +281,30 @@ int main() {
 
 //			std::cout<<"Noise hits found: " << noise_hits_found << ". Real hits found: " << real_hits_found <<std::endl;
 
-			daf_x1_ratio->Fill( ((track->getTrackRep(j)->getState())[0][0]) - ((true_states.at(i))[0][0]));
-			daf_x2_ratio->Fill( ((track->getTrackRep(j)->getState())[1][0]) - ((true_states.at(i))[1][0]));
-			daf_x3_ratio->Fill( ((track->getTrackRep(j)->getState())[2][0]) - ((true_states.at(i))[2][0]));
-			daf_x4_ratio->Fill( ((track->getTrackRep(j)->getState())[3][0]) - ((true_states.at(i))[3][0]));
-			daf_x5_ratio->Fill( ((track->getTrackRep(j)->getState())[4][0]) - ((true_states.at(i))[4][0]));
+			daf_x1_ratio->Fill( ((track->getTrackRep(j)->getState())[0]) - ((true_states.at(i))[0]));
+			daf_x2_ratio->Fill( ((track->getTrackRep(j)->getState())[1]) - ((true_states.at(i))[1]));
+			daf_x3_ratio->Fill( ((track->getTrackRep(j)->getState())[2]) - ((true_states.at(i))[2]));
+			daf_x4_ratio->Fill( ((track->getTrackRep(j)->getState())[3]) - ((true_states.at(i))[3]));
+			daf_x5_ratio->Fill( ((track->getTrackRep(j)->getState())[4]) - ((true_states.at(i))[4]));
 
-			kal_x1_ratio->Fill( ((true_track->getTrackRep(j)->getState())[0][0]) - ((true_states.at(i))[0][0]));
-			kal_x2_ratio->Fill( ((true_track->getTrackRep(j)->getState())[1][0]) - ((true_states.at(i))[1][0]));
-			kal_x3_ratio->Fill( ((true_track->getTrackRep(j)->getState())[2][0]) - ((true_states.at(i))[2][0]));
-			kal_x4_ratio->Fill( ((true_track->getTrackRep(j)->getState())[3][0]) - ((true_states.at(i))[3][0]));
-			kal_x5_ratio->Fill( ((true_track->getTrackRep(j)->getState())[4][0]) - ((true_states.at(i))[4][0]));
+			kal_x1_ratio->Fill( ((true_track->getTrackRep(j)->getState())[0]) - ((true_states.at(i))[0]));
+			kal_x2_ratio->Fill( ((true_track->getTrackRep(j)->getState())[1]) - ((true_states.at(i))[1]));
+			kal_x3_ratio->Fill( ((true_track->getTrackRep(j)->getState())[2]) - ((true_states.at(i))[2]));
+			kal_x4_ratio->Fill( ((true_track->getTrackRep(j)->getState())[3]) - ((true_states.at(i))[3]));
+			kal_x5_ratio->Fill( ((true_track->getTrackRep(j)->getState())[4]) - ((true_states.at(i))[4]));
 
-			daf_kal_x1_ratio->Fill( ((track->getTrackRep(j)->getState())[0][0]) - ((true_track->getTrackRep(j)->getState())[0][0]));
-			daf_kal_x2_ratio->Fill( ((track->getTrackRep(j)->getState())[1][0]) - ((true_track->getTrackRep(j)->getState())[1][0]));
-			daf_kal_x3_ratio->Fill( ((track->getTrackRep(j)->getState())[2][0]) - ((true_track->getTrackRep(j)->getState())[2][0]));
-			daf_kal_x4_ratio->Fill( ((track->getTrackRep(j)->getState())[3][0]) - ((true_track->getTrackRep(j)->getState())[3][0]));
-			daf_kal_x5_ratio->Fill( ((track->getTrackRep(j)->getState())[4][0]) - ((true_track->getTrackRep(j)->getState())[4][0]));
+			daf_kal_x1_ratio->Fill( ((track->getTrackRep(j)->getState())[0]) - ((true_track->getTrackRep(j)->getState())[0]));
+			daf_kal_x2_ratio->Fill( ((track->getTrackRep(j)->getState())[1]) - ((true_track->getTrackRep(j)->getState())[1]));
+			daf_kal_x3_ratio->Fill( ((track->getTrackRep(j)->getState())[2]) - ((true_track->getTrackRep(j)->getState())[2]));
+			daf_kal_x4_ratio->Fill( ((track->getTrackRep(j)->getState())[3]) - ((true_track->getTrackRep(j)->getState())[3]));
+			daf_kal_x5_ratio->Fill( ((track->getTrackRep(j)->getState())[4]) - ((true_track->getTrackRep(j)->getState())[4]));
 
 			for(int m=0;m<5;m++) {
 
-				if((((track->getTrackRep(j)->getState())[m][0]) - ((true_track->getTrackRep(j)->getState())[m][0])) > 0.01) {
+				if((((track->getTrackRep(j)->getState())[m]) - ((true_track->getTrackRep(j)->getState())[m])) > 0.01) {
 
-					if((std::abs(((track->getTrackRep(j)->getState())[m][0]) - ((true_states.at(i))[m][0]))) >
-					   (std::abs(((true_track->getTrackRep(j)->getState())[m][0]) - ((true_states.at(i))[m][0])))) {
+					if((std::abs(((track->getTrackRep(j)->getState())[m]) - ((true_states.at(i))[m]))) >
+					   (std::abs(((true_track->getTrackRep(j)->getState())[m]) - ((true_states.at(i))[m])))) {
 						std::cout<<"The winner is DAF!"<<std::flush;
 						if(i == missident_event) {
 							std::cout<<" And there was a misidentified hit."<<std::endl;
