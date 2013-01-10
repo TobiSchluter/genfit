@@ -1513,13 +1513,25 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   if (!fNoMaterial){
 
     if(fabs(Step) > MINSTEP){ // only call stepper if step estimation big enough
-      double StepMat = GFMaterialEffects::getInstance()->stepper(fabs(Step),
+
+      M1x7 state7;
+      state7[0] = pos.X();
+      state7[1] = pos.Y();
+      state7[2] = pos.Z();
+
+      state7[3] = StepSign*dir.X();
+      state7[4] = StepSign*dir.Y();
+      state7[5] = StepSign*dir.Z();
+
+      state7[6] = fCharge/momentum;
+
+      double StepMat = GFMaterialEffects::getInstance()->stepper(this,
+                                                                 state7,
                                                                  SmaxAngle,
-                                                                 pos,
-                                                                 StepSign*dir,
                                                                  momentum,
                                                                  relMomLoss,
-                                                                 fPdg);
+                                                                 fPdg,
+                                                                 true);
       if (fabs(Step) > StepMat) {
         Step = StepSign*StepMat;
         momLossExceeded = true;

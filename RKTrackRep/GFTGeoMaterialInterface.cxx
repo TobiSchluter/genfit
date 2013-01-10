@@ -18,12 +18,15 @@
 */
 
 #include "GFTGeoMaterialInterface.h"
+#include <GFException.h>
 
 #include <TGeoMedium.h>
 #include <TGeoMaterial.h>
 #include <TGeoManager.h>
 #include <assert.h>
 #include <math.h>
+
+//#define DEBUG
 
 
 double MeanExcEnergy_get(int Z);
@@ -59,9 +62,88 @@ GFTGeoMaterialInterface::getMaterialParameters(double& density,
 
 
 double
-GFTGeoMaterialInterface::findNextBoundaryAndStep(double maxStep){
+GFTGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
+                                          M1x7& state7,
+                                          double sMax,
+                                          bool varField){
 
-  gGeoManager->FindNextBoundaryAndStep(maxStep);
+  const double delta(1.E-3);
+  double s(0), safety(0), lastSafety(0), slDist(0), lastSlDist(0);
+  M1x3 SA;
+  M1x7 stateOrig;
+  memcpy(stateOrig, state7, sizeof(state7));
+
+  unsigned int maxIt(300), it(0);
+
+  while (s < sMax) {
+
+    if (++it > maxIt){
+      GFException exc("GFTGeoMaterialInterface::findNextBoundaryAndStep ==> maximum number of iterations exceeded",__LINE__,__FILE__);
+      throw exc;
+    }
+
+    safety = gGeoManager->Safety(); // distance to closest boundary
+    gGeoManager->FindNextBoundary();
+    slDist = gGeoManager->GetStep(); // straight line distance to next boundary along track direction
+
+
+#ifdef DEBUG
+    std::cout << "   GFTGeoMaterialInterface::findNextBoundaryAndStep: Iteration " << it << ". Safety = " << safety << ". slDist = " << slDist << ". Step so far = " << s << "\n";
+    std::cout << "   Material before step: " << gGeoManager->GetCurrentVolume()->GetMedium()->GetName() << "\n";
+#endif
+
+    if (s + safety > sMax) { // next boundary is further away than sMax -> \return sMax
+#ifdef DEBUG
+      std::cout << "   next boundary is further away than sMax \n";
+#endif
+      return sMax;
+    }
+
+    if (slDist < delta) { // very near the boundary
+#ifdef DEBUG
+      std::cout << "   very near the boundary -> return s + slDist \n";
+#endif
+      return s + slDist;
+    }
+    else if (safety < delta) {
+#ifdef DEBUG
+       std::cout << "   make straight line step \n";
+#endif
+      gGeoManager->FindNextBoundaryAndStep(delta); // make a minimum step of delta
+      s += delta;
+    }
+    else {
+#ifdef DEBUG
+       std::cout << "   make RKutta step \n";
+#endif
+      s += safety;
+      memcpy(state7, stateOrig, sizeof(state7)); // state7 = stateOrig; // propagate complete way from original start
+      rep->RKPropagate(state7, NULL, SA, s, varField);
+      initTrack(state7[0], state7[1], state7[2],  state7[3], state7[4], state7[5]);
+    }
+
+
+#ifdef DEBUG
+    std::cout << "   Material after step: " << gGeoManager->GetCurrentVolume()->GetMedium()->GetName() << "\n";
+#endif
+
+    lastSafety = safety;
+    lastSlDist = slDist;
+
+  }
+
+#ifdef DEBUG
+  std::cout << "   return sMax \n";
+#endif
+  return sMax;
+
+}
+
+
+double
+GFTGeoMaterialInterface::findNextBoundaryAndStepStraight(double sMax) {
+
+  gGeoManager->FindNextBoundaryAndStep(sMax);
   return gGeoManager->GetStep();
 
 }

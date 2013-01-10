@@ -24,6 +24,8 @@
 #ifndef GFABSMATERIALINTERFACE_H
 #define GFABSMATERIALINTERFACE_H
 
+#include "RKTrackRep.h"
+
 #include <TObject.h>
 #include <TVector3.h>
 
@@ -51,7 +53,12 @@ class GFAbsMaterialInterface : public TObject {
    * i.e. in the current material has to be that beyond the boundary.
    * The actual step made is returned.
    */
-  virtual double findNextBoundaryAndStep(double maxStep) = 0;
+  virtual double findNextBoundary(const RKTrackRep* rep,
+                                  M1x7& state7,
+                                  double sMax,
+                                  bool varField = true) = 0;
+
+  virtual double findNextBoundaryAndStepStraight(double sMax) = 0;
 
 public:
   ClassDef(GFAbsMaterialInterface, 1);

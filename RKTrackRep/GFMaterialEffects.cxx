@@ -156,7 +156,7 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
         }
 
         fMaterialInterface->getMaterialParameters(fmatDensity, fmatZ, fmatA, fradiationLength, fmEE);
-        step = fMaterialInterface->findNextBoundaryAndStep(dist - X);
+        step = fMaterialInterface->findNextBoundaryAndStepStraight(dist - X);
         fstep = fabs(step * realPath / dist); // the actual path is curved, not straight!
         if (fstep <= 0.) continue;
         
@@ -189,13 +189,13 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
 }
 
 
-double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
-                                  const double& maxAngleStep,
-                                  const TVector3& pos,
-                                  const TVector3& dir,
-                                  const double& mom,
-                                  double& relMomLoss,
-                                  const int& pdg)
+double GFMaterialEffects::stepper(const RKTrackRep* rep,
+                                  M1x7& state7,
+                                  double sMax, // maximum step. unsigned!
+                                  const double& mom, // momentum
+                                  double& relMomLoss, // relative momloss for the step will be added
+                                  const int& pdg,
+                                  bool varField)
 {
 
   if (fMaterialInterface == NULL) {
@@ -207,56 +207,45 @@ double GFMaterialEffects::stepper(const double& maxStep, // unsigned!
   static const double maxRelMomLoss = .005; // maximum relative momentum loss allowed
   static const double minStep = 1.E-4; // 1 µm
 
-  if (fNoEffects) return maxStep;
+  if (fNoEffects) return sMax;
   if (relMomLoss > maxRelMomLoss) return 0;
-  if (maxStep < minStep) return minStep;
+  if (sMax < minStep) return minStep;
 
   fpdg = pdg;
   double X(minStep);
   double relMomLossStep(0);
   getParticleParameters(mom);
 
-  fMaterialInterface->initTrack(pos.X()+minStep*dir.X(), pos.Y()+minStep*dir.Y(), pos.Z()+minStep*dir.Z(),
-                                dir.X(), dir.Y(), dir.Z());
+  fMaterialInterface->initTrack(state7[0]+minStep*state7[3], state7[1]+minStep*state7[4], state7[2]+minStep*state7[5],
+                                state7[3],                   state7[4],                   state7[5]);
 
-  unsigned int nIter(0);
-  static unsigned int maxIt(300);
+  fMaterialInterface->getMaterialParameters(fmatDensity, fmatZ, fmatA, fradiationLength, fmEE);
 
-  while (X < maxStep){
+  fstep = fMaterialInterface->findNextBoundary(rep, state7, sMax, varField);
 
-    if (++nIter > maxIt){
-      GFException exc("GFMaterialEffects::stepper ==> maximum number of iterations exceeded",__LINE__,__FILE__);
-      throw exc;
-    }
+  #ifdef DEBUG
+    std::cout<<"     gGeoManager->GetStep() = " << gGeoManager->GetStep() << "       fstep = " << fstep << "\n";
+  #endif
 
-    relMomLossStep = 0;
-    fMaterialInterface->getMaterialParameters(fmatDensity, fmatZ, fmatA, fradiationLength, fmEE);
-    fstep = fMaterialInterface->findNextBoundaryAndStep(maxStep-X);
+  if (fstep <= 0.) return minStep; // should not happen
 
-    #ifdef DEBUG
-      std::cout<<"     gGeoManager->GetStep() = " << gGeoManager->GetStep() << "       fstep = " << fstep << "\n";
-    #endif
+  if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
 
-    if (fstep <= 0.) continue;
-
-    if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
-
-      if (fEnergyLossBetheBloch) relMomLossStep += this->energyLossBetheBloch(mom) / mom;
-      if (fEnergyLossBrems)      relMomLossStep += this->energyLossBrems(mom) / mom;
-    }
-
-    if (relMomLoss + relMomLossStep > maxRelMomLoss) {
-      double fraction = (maxRelMomLoss - relMomLoss) / relMomLossStep;
-      X += fraction * fstep;
-      #ifdef DEBUG
-        std::cout<<"     momLoss exceeded \n";
-      #endif
-      break;
-    }
-
-    relMomLoss += relMomLossStep;
-    X += fstep;
+    if (fEnergyLossBetheBloch) relMomLossStep += this->energyLossBetheBloch(mom) / mom;
+    if (fEnergyLossBrems)      relMomLossStep += this->energyLossBrems(mom) / mom;
   }
+
+  if (relMomLoss + relMomLossStep > maxRelMomLoss) {
+    double fraction = (maxRelMomLoss - relMomLoss) / relMomLossStep;
+    X += fraction * fstep;
+    #ifdef DEBUG
+      std::cout<<"     momLoss exceeded \n";
+    #endif
+  }
+
+  relMomLoss += relMomLossStep;
+  X += fstep;
+
 
   return X;
 }

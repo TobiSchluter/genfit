@@ -45,12 +45,17 @@ class GFTGeoMaterialInterface : public GFAbsMaterialInterface {
                              double& radiationLength,
                              double& mEE);
 
-  /** @brief Make a step until maxStep or the next boundary is reached.
+  /** @brief Make a step (following the curvature) until maxStep or the next boundary is reached.
    * After making a step to a boundary, the position has to be beyond the boundary,
    * i.e. in the current material has to be that beyond the boundary.
    * The actual step made is returned.
    */
-  double findNextBoundaryAndStep(double maxStep);
+  double findNextBoundary(const RKTrackRep* rep,
+                          M1x7& state7,
+                          double sMax,
+                          bool varField = true);
+
+  double findNextBoundaryAndStepStraight(double sMax);
 
 public:
   ClassDef(GFTGeoMaterialInterface, 1);
