@@ -1080,7 +1080,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
   unsigned int counter(0);
 
   // Step estimation (signed)
-  S = estimateStep(points, fPos, fDir, SU, plane, momentum, relMomLoss, deltaAngle, momLossExceeded, atPlane, maxStep);
+  S = estimateStep(points, fPos, fDir, SU, plane, momentum, relMomLoss, momLossExceeded, atPlane, maxStep);
   if (fabs(S) < 0.001*MINSTEP) {
     #ifdef DEBUG
       std::cout << " RKutta - step too small -> break \n";
@@ -1116,8 +1116,9 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
       throw exc;
     }
 
-    RKPropagate(state7, cov, SA, S); // the actual Runkge Kutta propagation
+    RKPropagate(state7, cov, SA, S); // the actual Runge Kutta propagation
     fPos.SetXYZ(R[0],R[1],R[2]);
+    deltaAngle += acos(fDir.X()*A[0] + fDir.Y()*A[1] + fDir.Z()*A[2]);
     fDir.SetXYZ(A[0],A[1],A[2]);
     
     if (onlyOneStep) return(true);
@@ -1132,7 +1133,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
 
     // estimate Step for next loop or linear extrapolation
     Sl = S;	// last S used
-    S = estimateStep(points, fPos, fDir, SU, plane, momentum, relMomLoss, deltaAngle, momLossExceeded, atPlane, maxStep);
+    S = estimateStep(points, fPos, fDir, SU, plane, momentum, relMomLoss, momLossExceeded, atPlane, maxStep);
 
     if (atPlane && fabs(S) < MINSTEP) {
       #ifdef DEBUG
@@ -1233,7 +1234,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
 }
 
 
-void
+double
 RKTrackRep::RKPropagate(M1x7& state7,
                         M7x7* cov,
                         M1x3& SA,
@@ -1243,6 +1244,8 @@ RKTrackRep::RKPropagate(M1x7& state7,
   // important fixed numbers
   static const double EC     = 0.000149896229;  // c/(2*10^12) resp. c/2Tera
   static const double P3     = 1./3.;           // 1/3
+  static const double DLT    = .0002;           // max. deviation for approximation-quality test
+  static const double par = 1./3.081615;
   // Aux parameters
   M1x3&   R           = *((M1x3*) &state7[0]);       // Start coordinates  [cm]  (x,  y,  z)
   M1x3&   A           = *((M1x3*) &state7[3]);       // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
@@ -1269,9 +1272,7 @@ RKTrackRep::RKPropagate(M1x7& state7,
   H0[0] = PS2*field.X(); H0[1] = PS2*field.Y(); H0[2] = PS2*field.Z();     // H0 is PS2*(Hx, Hy, Hz) @ R0
   A0 = A[1]*H0[2]-A[2]*H0[1]; B0 = A[2]*H0[0]-A[0]*H0[2]; C0 = A[0]*H0[1]-A[1]*H0[0]; // (ax, ay, az) x H0
   A2 = A[0]+A0              ; B2 = A[1]+B0              ; C2 = A[2]+C0              ; // (A0, B0, C0) + (ax, ay, az)
-  if (varField) {
-    A1 = A2+A[0]            ; B1 = B2+A[1]              ; C1 = C2+A[2]              ; // (A0, B0, C0) + 2*(ax, ay, az)
-  }
+  A1 = A2+A[0]              ; B1 = B2+A[1]              ; C1 = C2+A[2]              ; // (A0, B0, C0) + 2*(ax, ay, az)
 
   // Second point
   if (varField) {
@@ -1294,6 +1295,7 @@ RKTrackRep::RKPropagate(M1x7& state7,
   }
   else if (calcCov) memcpy(H2, H0, 3*sizeof(double));
   A6 = B5*H2[2]-C5*H2[1]; B6 = C5*H2[0]-A5*H2[2]; C6 = A5*H2[1]-B5*H2[0]; // (A5, B5, C5) x H2
+
 
   //
   // Derivatives of track parameters
@@ -1369,6 +1371,14 @@ RKTrackRep::RKPropagate(M1x7& state7,
   // normalize A
   double CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]); // 1/|A|
   A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
+
+
+  // Test approximation quality on given step
+  double EST = fabs((A1+A6)-(A3+A4))+fabs((B1+B6)-(B3+B4))+fabs((C1+C6)-(C3+C4));  // EST = ||(ABC1+ABC6)-(ABC3+ABC4)||_1  =  ||(axzy x H0 + ABC5 x H2) - (ABC2 x H1 + ABC3 x H1)||_1
+#ifdef DEBUG
+   std::cout << "   RKTrackRep::RKPropagate quality EST " << EST  << " \n";
+#endif
+  return pow(DLT/EST, par);
 }
 
 
@@ -1379,14 +1389,12 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
                                 const GFDetPlane& plane,
                                 const double& momentum,
                                 double& relMomLoss,
-                                double& deltaAngle,
                                 bool& momLossExceeded,
                                 bool& atPlane,
                                 double maxStep) const {
 
-  static const double Smax      = 10.;          // max. step allowed [cm]
-  static const double dAngleMax = 0.05;         // max. deviation of angle between direction before and after the step [rad]
-  double Step;
+  static const double Smax = 25.; // max. step allowed [cm]
+  double Step(0);
   bool improveEstimation (true);
 
   momLossExceeded = false;
@@ -1398,6 +1406,9 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
     std::cout << "  direction: "; dir.Print();
   #endif
 
+  // check and limit maxStep argument
+  if (maxStep < 0) maxStep *= -1;
+  if (maxStep > Smax) maxStep = Smax;
 
   // calculate distance to surface
   double Dist = SU[3] - (pos.X()*SU[0] + pos.Y()*SU[1] + pos.Z()*SU[2]);  // Distance between start coordinates and surface
@@ -1420,17 +1431,38 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
     else  std::cout << "  Direction is pointing away from surface.\n";
   #endif
 
-  // calculate way SmaxAngle after which momentum angle has changed AngleMax
-  TVector3 MagField(GFFieldManager::getFieldVal(pos));
-  double Hmag(MagField.Mag()), SmaxAngle(maxStep), radius(0);
-  if (Hmag > 1E-5){
-    double cosAngle = (dir.Dot(MagField))/Hmag;
-    radius = momentum/(0.299792458E-3*Hmag) *
-             sqrt( pow(dir.X() - cosAngle/Hmag * MagField.X(), 2) +
-                   pow(dir.Y() - cosAngle/Hmag * MagField.Y(), 2) +
-                   pow(dir.Z() - cosAngle/Hmag * MagField.Z(), 2)); // [cm]
-    double sinAngle = sqrt(1 - cosAngle*cosAngle);
-    if (sinAngle > 1E-10) SmaxAngle = fabs(dAngleMax * radius / sinAngle); // [cm]
+
+  //
+  // Limit maxStep according to curvature and magnetic field inhomogenities
+  //
+  // limit maxStep to the straight line distance to plane times some margin
+  if (maxStep > fabs(2*Step)) maxStep = fabs(1.5*Step);
+  while (maxStep > MINSTEP) {
+    M1x7 state7;
+    state7[0] = pos.X();    state7[1] = pos.Y();    state7[2] = pos.Z();
+    state7[3] = dir.X();    state7[4] = dir.Y();    state7[5] = dir.Z();
+    state7[6] = fCharge/momentum;
+
+    M1x3 SA;
+
+    double q = RKPropagate(state7, NULL, SA, StepSign*maxStep, true);
+#ifdef DEBUG
+    std::cout << "  maxStep = " << maxStep << "; q = " << q  << " \n";
+#endif
+    maxStep *= q;
+
+    if (q >= 1) break;
+    if (maxStep > 2*MINSTEP) maxStep -= MINSTEP; // make it converge faster
+  }
+
+#ifdef DEBUG
+  std::cout << "  limit from curvature and magnetic field inhomogeneities: " << maxStep << "\n";
+#endif
+
+  // limit Step to maxStep
+  if (fabs(Step) > maxStep) {
+    Step = StepSign*maxStep;
+    improveEstimation = false;
   }
 
 
@@ -1446,9 +1478,9 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
     #endif
   }
   // see if straight line approximation is ok
-  else if ( fabs(Step) < 0.2*SmaxAngle ){
+  else if ( fabs(Step) < 0.2*maxStep ){
     #ifdef DEBUG
-      std::cout << "  straight line approximation is fine. Delta angle until surface is reached is approx " << Step/SmaxAngle * dAngleMax * 180 / TMath::Pi()  << " deg \n";
+      std::cout << "  straight line approximation is fine.\n";
     #endif
 
     // if direction is pointing to active part of surface
@@ -1459,7 +1491,7 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
     }
     // if we are near the plane, but not pointing to the active area, make a big step!
     else {
-      Step = fDirection*SmaxAngle;
+      Step = fDirection*maxStep;
       improveEstimation = false;
       #ifdef DEBUG
         std::cout << "  we are near the plane, but not pointing to the active area. make a big step! \n";
@@ -1469,10 +1501,10 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   // fDirection decides!
   else {
     if (Step * fDirection < 0){
-      Step = fDirection*SmaxAngle;
+      Step = fDirection*maxStep;
       improveEstimation = false;
       #ifdef DEBUG
-        std::cout << "  invert Step according to fDirection and set Step to fDirection*SmaxAngle. \n";
+        std::cout << "  invert Step according to fDirection and set Step to fDirection*maxStep. \n";
       #endif
     }
   }
@@ -1485,28 +1517,6 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
   if (Step>=0) StepSign = 1;
   else StepSign = -1;
 
-  //
-  // Limit stepsize
-  //
-  // reduce maximum stepsize Step to Smax and maxStep
-  if (fabs(Step) > Smax) {
-    Step = StepSign*Smax;
-    improveEstimation = false;
-  }
-  if (fabs(Step) > maxStep) {
-    Step = StepSign*maxStep;
-    improveEstimation = false;
-  }
-
-  // also limit stepsize according to the change of the momentum direction!
-  if (fabs(Step) > SmaxAngle) {
-    Step = StepSign*SmaxAngle;
-    improveEstimation = false;
-  }
-
-  #ifdef DEBUG
-    std::cout << "  limit from maxangle: " << SmaxAngle << ", radius: " << radius << "\n";
-  #endif
 
 
   // call stepper and reduce stepsize if step not too small
@@ -1515,19 +1525,13 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
     if(fabs(Step) > MINSTEP){ // only call stepper if step estimation big enough
 
       M1x7 state7;
-      state7[0] = pos.X();
-      state7[1] = pos.Y();
-      state7[2] = pos.Z();
-
-      state7[3] = StepSign*dir.X();
-      state7[4] = StepSign*dir.Y();
-      state7[5] = StepSign*dir.Z();
-
+      state7[0] = pos.X();           state7[1] = pos.Y();           state7[2] = pos.Z();
+      state7[3] = StepSign*dir.X();  state7[4] = StepSign*dir.Y();  state7[5] = StepSign*dir.Z();
       state7[6] = fCharge/momentum;
 
       double StepMat = GFMaterialEffects::getInstance()->stepper(this,
                                                                  state7,
-                                                                 SmaxAngle,
+                                                                 maxStep,
                                                                  momentum,
                                                                  relMomLoss,
                                                                  fPdg,
@@ -1548,15 +1552,16 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
     atPlane = true;
     
     // improve step estimation to surface according to curvature
-    if (Hmag > 1E-5 && fabs(Step) > 0.1*SmaxAngle){
+    if (fabs(Step) > 0.1*maxStep && fabs(Step) > MINSTEP){
 
       M1x7 state7;
-      state7[0] = pos.X();  state7[1] = pos.Y(); state7[2] = pos.Z();
-      state7[3] = dir.X();  state7[4] = dir.Y(); state7[5] = dir.Z();
+      state7[0] = pos.X();    state7[1] = pos.Y();    state7[2] = pos.Z();
+      state7[3] = dir.X();    state7[4] = dir.Y();    state7[5] = dir.Z();
       state7[6] = fCharge/momentum;
+
       M1x3 SA;
 
-      RKPropagate(state7, NULL, SA, Step, false);
+      RKPropagate(state7, NULL, SA, Step, true);
 
       // calculate distance to surface
       Dist = SU[3] - (state7[0] * SU[0] +
@@ -1576,7 +1581,6 @@ double RKTrackRep::estimateStep(std::vector<GFPointPath>& points,
 
   }
 
-  deltaAngle += Step/SmaxAngle * dAngleMax;
   points.push_back(GFPointPath(pos, Step));
 
   #ifdef DEBUG

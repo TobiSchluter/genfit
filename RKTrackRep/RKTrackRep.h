@@ -238,12 +238,14 @@ class RKTrackRep : public GFAbsTrackRep {
    *  If #cov is NULL, only the state is propagated,
    *  otherwise also the 7x7 jacobian (#cov) is calculated.
    *  If #varField is false, the magnetic field will only be evaluated at the starting position.
+   *  The return value is an estimation on how good the extrapolation is, and it is usually fine if it is > 1.
+   *  It gives a suggestion how you must scale #S so that the quality will be sufficient.
    */
-  void RKPropagate(M1x7& state7,
-                   M7x7* cov,
-                   M1x3& SA,
-                   double S,
-                   bool varField = true) const;
+  double RKPropagate(M1x7& state7,
+                     M7x7* cov,
+                     M1x3& SA,
+                     double S,
+                     bool varField = true) const;
 
  private:
 
@@ -317,7 +319,6 @@ class RKTrackRep : public GFAbsTrackRep {
                       const GFDetPlane& plane,
                       const double& mom,
                       double& relMomLoss,
-                      double& deltaAngle,
                       bool& momLossExceeded,
                       bool& atPlane,
                       double maxStep = 1.E99) const;
