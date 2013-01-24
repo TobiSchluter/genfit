@@ -146,8 +146,6 @@ void RKTrackRep::initArrays(){
 
 void RKTrackRep::setData(const TVectorD& st, const GFDetPlane& pl, const TMatrixDSym* cov, const TMatrixD* aux){
   if(aux != NULL) {
-    assert(aux->GetNrows()==1);
-    assert(aux->GetNcols()==2);
     fCacheSpu = (*aux)(0,0);
     fDirection = (*aux)(0,1);
   }
