@@ -79,6 +79,7 @@ GFTGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 
     if (++it > maxIt){
       GFException exc("GFTGeoMaterialInterface::findNextBoundaryAndStep ==> maximum number of iterations exceeded",__LINE__,__FILE__);
+      exc.setFatal();
       throw exc;
     }
 
