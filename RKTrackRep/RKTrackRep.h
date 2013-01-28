@@ -242,7 +242,7 @@ class RKTrackRep : public GFAbsTrackRep {
    *  It gives a suggestion how you must scale #S so that the quality will be sufficient.
    */
   double RKPropagate(M1x7& state7,
-                     M7x7* cov,
+                     M7x7* jac,
                      M1x3& SA,
                      double S,
                      bool varField = true) const;
@@ -305,7 +305,7 @@ class RKTrackRep : public GFAbsTrackRep {
     */
   bool RKutta (const GFDetPlane& plane,
                M1x7& state7,
-               M7x7* cov,
+               M7x7* jac,
                double& coveredDistance,
                std::vector<GFPointPath>& points,
                bool& checkJacProj,

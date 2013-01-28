@@ -32,13 +32,13 @@
 #ifndef GFDETPLANE_H
 #define GFDETPLANE_H
 
+#include <memory>
+
 #include "GFAbsFinitePlane.h"
 
-#include "TObject.h"
-#include "TVector3.h"
+#include <TObject.h>
+#include <TVector3.h>
 
-class TPolyMarker3D;
-class TPolyLine3D;
 
 /** @brief Detector plane genfit geometry class
  *
@@ -124,9 +124,6 @@ public:
 
   void Print(const Option_t* = "") const;
 
-  //! for poor attempts of making an event display. There is a lot of room for improvements.
-  void getGraphics(double mesh, double length, TPolyMarker3D **pl, TPolyLine3D **plLine,TPolyLine3D **u, TPolyLine3D **v, TPolyLine3D **n=NULL) const;
-
   //! this operator is called very often in Kalman filtering. It checks equality of planes
   //! by comparing the 9 double values that define them.
   friend bool operator== (const GFDetPlane& lhs, const GFDetPlane& rhs);
@@ -176,7 +173,7 @@ public:
   TVector3 fU;
   TVector3 fV;
 
-  GFAbsFinitePlane* fFinitePlane;
+  GFAbsFinitePlane* fFinitePlane; // Todo: replace with unique_ptr
 
 public:
   ClassDef(GFDetPlane,2)

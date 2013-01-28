@@ -172,7 +172,6 @@ class GFAbsTrackRep : public TObject{
   double getStateElem(int i) const {return fState(i);}
   double getCovElem(int i, int j) const {return fCov(i,j);}
 
-  
 
   virtual TVector3 getPos(const GFDetPlane& pl)=0; 
   virtual TVector3 getMom(const GFDetPlane& pl)=0; 
@@ -185,7 +184,7 @@ class GFAbsTrackRep : public TObject{
    */
   virtual void getPosMomCov(const GFDetPlane& pl, TVector3& pos, TVector3& mom, TMatrixDSym& cov);
 
-  virtual double getCharge()const =0;
+  virtual double getCharge()const = 0;
 
   //! method which gets pdg particle code
   /*!
@@ -200,29 +199,8 @@ class GFAbsTrackRep : public TObject{
     getPosMomCov(fRefPlane,pos,mom,c);
   }
 
-  inline const TVectorD& getFirstState() const {
-    return fFirstState;
-  }
-  inline const TMatrixDSym& getFirstCov() const {
-    return fFirstCov;
-  }
-  inline GFDetPlane getFirstPlane() const {
-    return fFirstPlane;
-  }
-  inline const TVectorD& getLastState() const {
-    return fLastState;
-  }
-  inline const TMatrixDSym& getLastCov() const {
-    return fLastCov;
-  }
-  inline GFDetPlane getLastPlane() const {
-    return fLastPlane;
-  }
   inline double getChiSqu() const {
     return fChiSqu;
-  }
-  inline double getForwardChiSqu() const {
-    return fForwardChiSqu;
   }
   //! returns chi2/ndf
   inline double getRedChiSqu() const {
@@ -244,12 +222,7 @@ class GFAbsTrackRep : public TObject{
       return 0;
     }
   }
-  /** @brief  X/X0 (total fraction of radiation length passed), cumulated during last extrapolation.
-   *  The fitter has to reset XX0 via resetXX0()
-   */
-  inline double getXX0() const {
-    return fXX0;
-  }
+
   /** @brief Puts the track representation in a given state.
    * 
    * This is used to update the track representation after the update of the 
@@ -270,24 +243,6 @@ class GFAbsTrackRep : public TObject{
   inline void setCov(const TMatrixDSym& aCov) {
     fCov=aCov;
   }
-  inline void setFirstState(const TVectorD& aState) {
-    fFirstState = aState;
-  }
-  inline void setFirstCov(const TMatrixDSym& aCov) {
-    fFirstCov = aCov;
-  }
-  inline void setFirstPlane(const GFDetPlane& aPlane) {
-    fFirstPlane = aPlane;
-  }
-  inline void setLastState(const TVectorD& aState) {
-    fLastState = aState;
-  }
-  inline void setLastCov(const TMatrixDSym& aCov) {
-    fLastCov = aCov;
-  }
-  inline void setLastPlane(const GFDetPlane& aPlane) {
-    fLastPlane = aPlane;;
-  }
 
   //! method which sets position, momentum and 6x6 covariance matrix
   /*!
@@ -301,17 +256,11 @@ class GFAbsTrackRep : public TObject{
   inline void setChiSqu(double aChiSqu) {
     fChiSqu = aChiSqu;
   }
-  inline void setForwardChiSqu(double aChiSqu) {
-    fForwardChiSqu = aChiSqu;
-  }
   inline void setNDF(double n) {
     fNdf = n;
   }
   inline void addChiSqu(double aChiSqu) {
     fChiSqu += aChiSqu;
-  }
-  inline void addForwardChiSqu(double aChiSqu) {
-    fForwardChiSqu += aChiSqu;
   }
   inline void addNDF(double n) {
     fNdf += n;
@@ -351,10 +300,6 @@ class GFAbsTrackRep : public TObject{
   }
 
 
-  void resetXX0() {
-    fXX0 = 0.;
-  }
-
  private:
   void Abort(std::string method);
 
@@ -362,7 +307,7 @@ class GFAbsTrackRep : public TObject{
   /*----- Data members -----*/
  protected:
   //! Dimensionality of track representation
-  unsigned int fDimension;
+  Byte_t fDimension;
 
   //! The vector of track parameters
   TVectorD fState;
@@ -371,29 +316,17 @@ class GFAbsTrackRep : public TObject{
   TMatrixDSym fCov;
 
   //! chiSqu of the track fit
-  double       fChiSqu;
-  double       fForwardChiSqu;
-  double	   fNdf; // DAF needs non integer ndf
+  double fChiSqu;
+  double fNdf; // DAF needs non integer ndf
 
   //! status of track representation: 0 means everything's OK
-  int fStatusFlag;
-
-  //!state, cov and plane for first and last point in fit
-  TVectorD    fFirstState;
-  TMatrixDSym fFirstCov;
-
-  TVectorD    fLastState;
-  TMatrixDSym fLastCov;
-  GFDetPlane  fFirstPlane;
-  GFDetPlane  fLastPlane;
+  Char_t fStatusFlag;
 
   // detector plane where the track parameters are given
   GFDetPlane  fRefPlane;
 
-  double fXX0;
 
-
-  ClassDef(GFAbsTrackRep,5)
+  ClassDef(GFAbsTrackRep,6)
 
 };
 

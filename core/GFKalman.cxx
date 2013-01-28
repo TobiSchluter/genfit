@@ -50,21 +50,11 @@ void GFKalman::processTrack(GFTrack* trk){
   int direction=fInitialDirection;
   assert(direction==1 || direction==-1);
 
-  int nreps = trk->getNumReps();
-
   /*why is there a factor of two here (in the for statement)?
     Because we consider one full iteration to be one back and
     one forth fitting pass */
   for(int ipass=0; ipass<2*fNumIt; ipass++){
     if(ipass>0) blowUpCovs(trk);
-
-    // reset X/X0 before last fitting pass
-    if(ipass==(2*fNumIt)-1) {
-      for(int i=0; i<nreps; ++i) {
-        trk->getTrackRep(i)->resetXX0();
-      }
-    }
-
 
     if(direction==1){
       trk->setNextHitToFit(0);
@@ -74,24 +64,6 @@ void GFKalman::processTrack(GFTrack* trk){
     }
 
     fittingPass(trk,direction);
-    
-    //save first and last plane, state and cov after the fitting pass
-    if(direction==1){
-      for(int i=0; i<nreps; ++i){
-        GFAbsTrackRep* rep = trk->getTrackRep(i);
-        rep->setLastPlane( rep->getReferencePlane() );
-        rep->setLastState( rep->getState() );
-        rep->setLastCov( rep->getCov() );
-      }
-    }
-    else{
-      for(int i=0; i<nreps; ++i){
-        GFAbsTrackRep* rep = trk->getTrackRep(i);
-        rep->setFirstPlane( rep->getReferencePlane() );
-        rep->setFirstState( rep->getState() );
-        rep->setFirstCov( rep->getCov() );
-      }
-    }
 
     //switch direction of fitting and also inside all the reps
     direction *= -1;
@@ -123,12 +95,7 @@ GFKalman::fittingPass(GFTrack* trk, int direction){
     GFAbsTrackRep* arep=trk->getTrackRep(irep);
     if(arep->getStatusFlag()==0) {
       //clear chi2 sum and ndf sum in track reps
-        if (direction == -1){
-          arep->setChiSqu(0.);
-        }
-        if (direction == 1){
-          arep->setForwardChiSqu(0.);
-        }
+      arep->setChiSqu(0.);
       arep->setNDF(0);
       //clear failedHits and outliers
       trk->getBK(irep)->clearFailedHits();
@@ -251,12 +218,7 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
   // calculate chisq increment from prediction
   double chi2 = chi2Increment(res,H,cov,V);
   int ndf = res.GetNrows();
-  if (direction == -1) {
-    rep->addChiSqu( chi2 );
-  }
-  if (direction == 1) {
-    rep->addForwardChiSqu( chi2 );
-  }
+  rep->addChiSqu( chi2 );
   rep->addNDF( ndf );
   // calculate kalman gain ------------------------------
   // calculate covsum (V + HCH^T)

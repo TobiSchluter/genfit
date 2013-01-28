@@ -30,6 +30,8 @@
 #include <GFFieldManager.h>
 #include <GFMaterialEffects.h>
 
+#include <TMath.h>
+
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
 //#define DEBUG
 
@@ -932,12 +934,13 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, boo
 
     // call MatFX
     unsigned int nPoints(points.size());
+    double XX0(0);
     if (!fNoMaterial && nPoints>0){
       // momLoss has a sign - negative loss means momentum gain
       double momLoss = GFMaterialEffects::getInstance()->effects(points,
                                                                  fabs(fCharge/state7[6]), // momentum
                                                                  fPdg,
-                                                                 fXX0,
+                                                                 XX0,
                                                                  fNoise,
                                                                  (double *)cov,
                                                                  &fDirectionBefore,
@@ -1033,7 +1036,7 @@ double RKTrackRep::Extrap( const GFDetPlane& plane, M1x7& state7, M7x7* cov, boo
 //  
 bool RKTrackRep::RKutta (const GFDetPlane& plane,
                          M1x7& state7,
-                         M7x7* cov,
+                         M7x7* jac,
                          double& coveredDistance,
                          std::vector<GFPointPath>& points,
                          bool& checkJacProj,
@@ -1126,7 +1129,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
       throw exc;
     }
 
-    RKPropagate(state7, cov, SA, S); // the actual Runge Kutta propagation
+    RKPropagate(state7, jac, SA, S); // the actual Runge Kutta propagation
     fPos.SetXYZ(R[0],R[1],R[2]);
     deltaAngle += acos(fDir.X()*A[0] + fDir.Y()*A[1] + fDir.Z()*A[2]);
     fDir.SetXYZ(A[0],A[1],A[2]);
@@ -1217,7 +1220,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
     //
     // Project Jacobian of extrapolation onto destination plane
     //
-    if(cov != NULL){
+    if(jac != NULL){
       if (checkJacProj && points.size()>0){
         GFException exc("RKTrackRep::Extrap ==> covariance is projected onto destination plane again",__LINE__,__FILE__);
         throw exc;
@@ -1230,9 +1233,9 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
       fabs(An) > 1.E-7 ? An=1./An : An = 0; // 1/A_normal
       double norm;
       for(int i=0; i<49; i+=7) {
-        norm = ((*cov)[i]*SU[0] + (*cov)[i+1]*SU[1] + (*cov)[i+2]*SU[2])*An;	// dR_normal / A_normal
-        (*cov)[i]   -= norm*A [0];   (*cov)[i+1] -= norm*A [1];   (*cov)[i+2] -= norm*A [2];
-        (*cov)[i+3] -= norm*SA[0];   (*cov)[i+4] -= norm*SA[1];   (*cov)[i+5] -= norm*SA[2];
+        norm = ((*jac)[i]*SU[0] + (*jac)[i+1]*SU[1] + (*jac)[i+2]*SU[2])*An;	// dR_normal / A_normal
+        (*jac)[i]   -= norm*A [0];   (*jac)[i+1] -= norm*A [1];   (*jac)[i+2] -= norm*A [2];
+        (*jac)[i+3] -= norm*SA[0];   (*jac)[i+4] -= norm*SA[1];   (*jac)[i+5] -= norm*SA[2];
       }
     }
 
@@ -1246,7 +1249,7 @@ bool RKTrackRep::RKutta (const GFDetPlane& plane,
 
 double
 RKTrackRep::RKPropagate(M1x7& state7,
-                        M7x7* cov,
+                        M7x7* jac,
                         M1x3& SA,
                         double S,
                         bool varField) const {
@@ -1266,7 +1269,7 @@ RKTrackRep::RKPropagate(M1x7& state7,
   double   B0(0), B1(0), B2(0), B3(0), B4(0), B5(0), B6(0);
   double   C0(0), C1(0), C2(0), C3(0), C4(0), C5(0), C6(0);
 
-  bool calcCov(cov != NULL);
+  bool calcCov(jac != NULL);
 
   //
   // Runge Kutta Extrapolation
@@ -1316,41 +1319,41 @@ RKTrackRep::RKPropagate(M1x7& state7,
     double   dC0(0), dC2(0), dC3(0), dC4(0), dC5(0), dC6(0);
 
     // d(x, y, z)/d(x, y, z) submatrix is unit matrix
-    (*cov)[0] = 1;  (*cov)[8] = 1;  (*cov)[16] = 1;
+    (*jac)[0] = 1;  (*jac)[8] = 1;  (*jac)[16] = 1;
     // d(ax, ay, az)/d(ax, ay, az) submatrix is 0
     // start with d(x, y, z)/d(ax, ay, az)
     for(int i=3*7; i<49; i+=7) {
 
-      if(i==42) {(*cov)[i+3]*=state7[6]; (*cov)[i+4]*=state7[6]; (*cov)[i+5]*=state7[6];}
+      if(i==42) {(*jac)[i+3]*=state7[6]; (*jac)[i+4]*=state7[6]; (*jac)[i+5]*=state7[6];}
 
       //first point
-      dA0 = H0[2]*(*cov)[i+4]-H0[1]*(*cov)[i+5];    // dA0/dp }
-      dB0 = H0[0]*(*cov)[i+5]-H0[2]*(*cov)[i+3];    // dB0/dp  } = dA x H0
-      dC0 = H0[1]*(*cov)[i+3]-H0[0]*(*cov)[i+4];    // dC0/dp }
+      dA0 = H0[2]*(*jac)[i+4]-H0[1]*(*jac)[i+5];    // dA0/dp }
+      dB0 = H0[0]*(*jac)[i+5]-H0[2]*(*jac)[i+3];    // dB0/dp  } = dA x H0
+      dC0 = H0[1]*(*jac)[i+3]-H0[0]*(*jac)[i+4];    // dC0/dp }
 
       if(i==42) {dA0+=A0; dB0+=B0; dC0+=C0;}     // if last row: (dA0, dB0, dC0) := (dA0, dB0, dC0) + (A0, B0, C0)
 
-      dA2 = dA0+(*cov)[i+3];        // }
-      dB2 = dB0+(*cov)[i+4];        //  } = (dA0, dB0, dC0) + dA
-      dC2 = dC0+(*cov)[i+5];        // }
+      dA2 = dA0+(*jac)[i+3];        // }
+      dB2 = dB0+(*jac)[i+4];        //  } = (dA0, dB0, dC0) + dA
+      dC2 = dC0+(*jac)[i+5];        // }
 
       //second point
-      dA3 = (*cov)[i+3]+dB2*H1[2]-dC2*H1[1];    // dA3/dp }
-      dB3 = (*cov)[i+4]+dC2*H1[0]-dA2*H1[2];    // dB3/dp  } = dA + (dA2, dB2, dC2) x H1
-      dC3 = (*cov)[i+5]+dA2*H1[1]-dB2*H1[0];    // dC3/dp }
+      dA3 = (*jac)[i+3]+dB2*H1[2]-dC2*H1[1];    // dA3/dp }
+      dB3 = (*jac)[i+4]+dC2*H1[0]-dA2*H1[2];    // dB3/dp  } = dA + (dA2, dB2, dC2) x H1
+      dC3 = (*jac)[i+5]+dA2*H1[1]-dB2*H1[0];    // dC3/dp }
 
       if(i==42) {dA3+=A3-A[0]; dB3+=B3-A[1]; dC3+=C3-A[2];} // if last row: (dA3, dB3, dC3) := (dA3, dB3, dC3) + (A3, B3, C3) - (ax, ay, az)
 
-      dA4 = (*cov)[i+3]+dB3*H1[2]-dC3*H1[1];    // dA4/dp }
-      dB4 = (*cov)[i+4]+dC3*H1[0]-dA3*H1[2];    // dB4/dp  } = dA + (dA3, dB3, dC3) x H1
-      dC4 = (*cov)[i+5]+dA3*H1[1]-dB3*H1[0];    // dC4/dp }
+      dA4 = (*jac)[i+3]+dB3*H1[2]-dC3*H1[1];    // dA4/dp }
+      dB4 = (*jac)[i+4]+dC3*H1[0]-dA3*H1[2];    // dB4/dp  } = dA + (dA3, dB3, dC3) x H1
+      dC4 = (*jac)[i+5]+dA3*H1[1]-dB3*H1[0];    // dC4/dp }
 
       if(i==42) {dA4+=A4-A[0]; dB4+=B4-A[1]; dC4+=C4-A[2];} // if last row: (dA4, dB4, dC4) := (dA4, dB4, dC4) + (A4, B4, C4) - (ax, ay, az)
 
       //last point
-      dA5 = dA4+dA4-(*cov)[i+3];      // }
-      dB5 = dB4+dB4-(*cov)[i+4];      //  } =  2*(dA4, dB4, dC4) - dA
-      dC5 = dC4+dC4-(*cov)[i+5];      // }
+      dA5 = dA4+dA4-(*jac)[i+3];      // }
+      dB5 = dB4+dB4-(*jac)[i+4];      //  } =  2*(dA4, dB4, dC4) - dA
+      dC5 = dC4+dC4-(*jac)[i+5];      // }
 
       dA6 = dB5*H2[2]-dC5*H2[1];      // dA6/dp }
       dB6 = dC5*H2[0]-dA5*H2[2];      // dB6/dp  } = (dA5, dB5, dC5) x H2
@@ -1359,14 +1362,14 @@ RKTrackRep::RKPropagate(M1x7& state7,
       if(i==42) {dA6+=A6; dB6+=B6; dC6+=C6;}     // if last row: (dA6, dB6, dC6) := (dA6, dB6, dC6) + (A6, B6, C6)
 
       if(i==42) {
-        (*cov)[i]   += (dA2+dA3+dA4)*S3/state7[6];  (*cov)[i+3] = (dA0+dA3+dA3+dA5+dA6)*P3/state7[6]; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
-        (*cov)[i+1] += (dB2+dB3+dB4)*S3/state7[6];  (*cov)[i+4] = (dB0+dB3+dB3+dB5+dB6)*P3/state7[6]; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
-        (*cov)[i+2] += (dC2+dC3+dC4)*S3/state7[6];  (*cov)[i+5] = (dC0+dC3+dC3+dC5+dC6)*P3/state7[6];
+        (*jac)[i]   += (dA2+dA3+dA4)*S3/state7[6];  (*jac)[i+3] = (dA0+dA3+dA3+dA5+dA6)*P3/state7[6]; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
+        (*jac)[i+1] += (dB2+dB3+dB4)*S3/state7[6];  (*jac)[i+4] = (dB0+dB3+dB3+dB5+dB6)*P3/state7[6]; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
+        (*jac)[i+2] += (dC2+dC3+dC4)*S3/state7[6];  (*jac)[i+5] = (dC0+dC3+dC3+dC5+dC6)*P3/state7[6];
       }
       else {
-        (*cov)[i]   += (dA2+dA3+dA4)*S3;  (*cov)[i+3] = (dA0+dA3+dA3+dA5+dA6)*P3; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
-        (*cov)[i+1] += (dB2+dB3+dB4)*S3;  (*cov)[i+4] = (dB0+dB3+dB3+dB5+dB6)*P3; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
-        (*cov)[i+2] += (dC2+dC3+dC4)*S3;  (*cov)[i+5] = (dC0+dC3+dC3+dC5+dC6)*P3;
+        (*jac)[i]   += (dA2+dA3+dA4)*S3;  (*jac)[i+3] = (dA0+dA3+dA3+dA5+dA6)*P3; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
+        (*jac)[i+1] += (dB2+dB3+dB4)*S3;  (*jac)[i+4] = (dB0+dB3+dB3+dB5+dB6)*P3; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
+        (*jac)[i+2] += (dC2+dC3+dC4)*S3;  (*jac)[i+5] = (dC0+dC3+dC3+dC5+dC6)*P3;
       }
     }
   }

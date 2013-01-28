@@ -227,12 +227,6 @@ class GFTrack : public TObject {
    */
   double getChiSqu() const {return getCardinalRep()->getChiSqu();}
 
-  /** @brief Get chi2 from forward filter
-   *
-   * Cardinal representation is used.
-   */
-  double getForwardChiSqu() const {return getCardinalRep()->getForwardChiSqu();}
-
   /** @brief Get NDF
    *
    * Cardinal representation is used.

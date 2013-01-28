@@ -184,7 +184,6 @@ void GFDaf::processTrack(GFTrack* trk) {
 		}
 		aTrkRep->setNDF(ndf);
 		aTrkRep->setChiSqu(totalChi2);
-		aTrkRep->setForwardChiSqu(forwardTotalChi2);
 	}
 
 	delete mini_trk;
