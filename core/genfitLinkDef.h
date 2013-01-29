@@ -1,5 +1,5 @@
 /* Copyright 2008-2010, Technische Universitaet Muenchen,
-   Authors: Christian Hoeppner & Sebastian Neubert
+   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
 
    This file is part of GENFIT.
 
@@ -34,6 +34,7 @@
 #pragma link C++ class GFAbsWireHit+;
 #pragma link C++ class GFAbsWirepointHit+;
 #pragma link C++ class GFAbsRecoHit+;
+#pragma link C++ class GFStateOnPlane+;
 #pragma link C++ class GFTrackCand+;
 #pragma link C++ class GFTrackCandHit+;
 #pragma link C++ class GFTrack+;

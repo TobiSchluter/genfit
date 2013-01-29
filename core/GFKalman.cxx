@@ -1,5 +1,5 @@
 /* Copyright 2008-2010, Technische Universitaet Muenchen,
-   Authors: Christian Hoeppner & Sebastian Neubert
+   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
 
    This file is part of GENFIT.
 
@@ -266,7 +266,7 @@ GFKalman::processHit(GFTrack* tr, int ihit, int irep,int direction){
 
 
   // update TrackRep
-  rep->setData(state,pl,&cov);
+  rep->setData(state, pl, cov);
   tr->setRepAtHit(irep,ihit);
 
 #ifdef DEBUG

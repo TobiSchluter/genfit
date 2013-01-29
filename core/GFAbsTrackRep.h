@@ -1,5 +1,5 @@
 /* Copyright 2008-2010, Technische Universitaet Muenchen,
-   Authors: Christian Hoeppner & Sebastian Neubert
+   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
 
    This file is part of GENFIT.
 
@@ -234,12 +234,23 @@ class GFAbsTrackRep : public TObject{
    * to be handed over via the "aux" Matrix. GFAbsTrackRep::getAuxInfo() should
    * return the appropriate information. This is mandatory if smoothing is used.
    */
-  virtual void setData(const TVectorD& st, const GFDetPlane& pl, const TMatrixDSym* cov=NULL, const TMatrixD* aux=NULL){
+  virtual void setData(const TVectorD& st, const GFDetPlane& pl){
     fState = st;
     if (&fRefPlane != &pl) fRefPlane = pl; // Copy reference plane only if it changed.
-    if(cov!=NULL) fCov = *cov;
-    static_cast<void>(aux);
   }
+
+  virtual void setData(const TVectorD& st, const GFDetPlane& pl, const TMatrixDSym& cov){
+    fState = st;
+    if (&fRefPlane != &pl) fRefPlane = pl; // Copy reference plane only if it changed.
+    fCov = cov;
+  }
+
+  virtual void setData(const TVectorD& st, const GFDetPlane& pl, const TMatrixDSym& cov, const TMatrixD& aux){
+    fState = st;
+    if (&fRefPlane != &pl) fRefPlane = pl; // Copy reference plane only if it changed.
+    fCov = cov;
+  }
+
   inline void setCov(const TMatrixDSym& aCov) {
     fCov=aCov;
   }

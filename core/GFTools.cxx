@@ -39,9 +39,9 @@ TVector3 GFTools::getSmoothedPosXYZ(const GFTrack* trk, unsigned int irep, unsig
   getSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
 
   if(rep->hasAuxInfo()) {
-    rep->setData(smoothed_state, smoothing_plane, &smoothed_cov, &auxInfo);
+    rep->setData(smoothed_state, smoothing_plane, smoothed_cov, auxInfo);
   } else {
-    rep->setData(smoothed_state, smoothing_plane, &smoothed_cov);
+    rep->setData(smoothed_state, smoothing_plane, smoothed_cov);
   }
 
   return rep->getPos(smoothing_plane);
@@ -59,9 +59,9 @@ TVector3 GFTools::getBiasedSmoothedPosXYZ(const GFTrack* trk, unsigned int irep,
   getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
 
   if(rep->hasAuxInfo()) {
-    rep->setData(smoothed_state, smoothing_plane, &smoothed_cov, &auxInfo);
+    rep->setData(smoothed_state, smoothing_plane, smoothed_cov, auxInfo);
   } else {
-    rep->setData(smoothed_state, smoothing_plane, &smoothed_cov);
+    rep->setData(smoothed_state, smoothing_plane, smoothed_cov);
   }
 
   return rep->getPos(smoothing_plane);
@@ -80,9 +80,9 @@ TVector3 GFTools::getSmoothedMomXYZ(const GFTrack* trk, unsigned int irep, unsig
   getSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
 
   if(rep->hasAuxInfo()) {
-    rep->setData(smoothed_state, smoothing_plane, &smoothed_cov, &auxInfo);
+    rep->setData(smoothed_state, smoothing_plane, smoothed_cov, auxInfo);
   } else {
-    rep->setData(smoothed_state, smoothing_plane, &smoothed_cov);
+    rep->setData(smoothed_state, smoothing_plane, smoothed_cov);
   }
 
   return rep->getMom(smoothing_plane);
@@ -100,9 +100,9 @@ TVector3 GFTools::getBiasedSmoothedMomXYZ(const GFTrack* trk, unsigned int irep,
   getBiasedSmoothedData(trk, irep, ihit, smoothed_state, smoothed_cov, smoothing_plane, auxInfo);
 
   if(rep->hasAuxInfo()) {
-    rep->setData(smoothed_state, smoothing_plane, &smoothed_cov, &auxInfo);
+    rep->setData(smoothed_state, smoothing_plane, smoothed_cov, auxInfo);
   } else {
-    rep->setData(smoothed_state, smoothing_plane, &smoothed_cov);
+    rep->setData(smoothed_state, smoothing_plane, smoothed_cov);
   }
 
   return rep->getMom(smoothing_plane);
@@ -243,17 +243,14 @@ bool GFTools::getSmoothedData(const GFTrack* trk, unsigned int irep, unsigned in
     // Eventually, if a backwards propagation is done, the covariance can be a bit too large.
     // But it should be much faster this way.
 
-    const TMatrixD* bAuxInfoP;
-
     std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
 
     if(trk->getTrackRep(irep)->hasAuxInfo()) {
-      bAuxInfoP = &(trk->getBK(irep)->getMatrix(GFBKKey_bAuxInfo, ihit));
+      rep->setData(bSt, bPl, bCov, (trk->getBK(irep)->getMatrix(GFBKKey_bAuxInfo, ihit)));
     } else {
-      bAuxInfoP = NULL;
+      rep->setData(bSt, bPl, bCov);
     }
 
-    rep->setData(bSt, bPl, &bCov, bAuxInfoP);
     rep->extrapolate(smoothing_plane, bSt, bCov);
   }
 
@@ -329,17 +326,14 @@ bool GFTools::getBiasedSmoothedData(const GFTrack* trk, unsigned int irep, unsig
     // Eventually, if a backwards propagation is done, the covariance can be a bit too large.
     // But it should be much faster this way.
 
-    const TMatrixD* bAuxInfoP;
-
     std::auto_ptr<GFAbsTrackRep> rep(trk->getTrackRep(irep)->clone());
 
     if(trk->getTrackRep(irep)->hasAuxInfo()) {
-      bAuxInfoP = &(trk->getBK(irep)->getMatrix(GFBKKey_bAuxInfo, ihit));
+      rep->setData(bSt, bPl, bCov, (trk->getBK(irep)->getMatrix(GFBKKey_bAuxInfo, ihit)));
     } else {
-      bAuxInfoP = NULL;
+      rep->setData(bSt, bPl, bCov);
     }
 
-    rep->setData(bSt, bPl, &bCov, bAuxInfoP);
     rep->extrapolate(smoothing_plane, bSt, bCov);
 
 	}
@@ -513,9 +507,9 @@ void GFTools::updateRepSmoothed(GFTrack* trk, unsigned int irep, unsigned int ih
 
 	GFAbsTrackRep* rep = trk->getTrackRep(irep);
 	if(rep->hasAuxInfo()) {
-		rep->setData(smoothed_state, smoothing_plane, &smoothed_cov, &auxInfo);
+		rep->setData(smoothed_state, smoothing_plane, smoothed_cov, auxInfo);
 	} else {
-		rep->setData(smoothed_state, smoothing_plane, &smoothed_cov);
+		rep->setData(smoothed_state, smoothing_plane, smoothed_cov);
 	}
 
 	trk->setRepAtHit(irep, ihit);

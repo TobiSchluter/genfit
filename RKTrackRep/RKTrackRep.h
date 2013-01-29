@@ -1,5 +1,5 @@
 /* Copyright 2008-2009, Technische Universitaet Muenchen,
-   Authors: Christian Hoeppner & Sebastian Neubert
+   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
 
    This file is part of GENFIT.
 

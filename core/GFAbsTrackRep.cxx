@@ -1,5 +1,5 @@
 /* Copyright 2008-2010, Technische Universitaet Muenchen,
-   Authors: Christian Hoeppner & Sebastian Neubert
+   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
 
    This file is part of GENFIT.
 
@@ -32,15 +32,15 @@ GFAbsTrackRep::~GFAbsTrackRep() {}
 double GFAbsTrackRep::extrapolate(const GFDetPlane& plane){
   TVectorD statePred(fDimension);
   TMatrixDSym covPred(fDimension);
-  double retVal = extrapolate(plane,statePred,covPred);
-  setData(statePred,plane,&covPred);
+  double retVal = extrapolate(plane, statePred, covPred);
+  setData(statePred, plane, covPred);
   return retVal;
 }
 
 //default implentation might be overwritten, please see the doxy docu
 double GFAbsTrackRep::extrapolate(const GFDetPlane& plane, TVectorD& statePred){
   TMatrixDSym cov(fDimension);
-  return extrapolate(plane,statePred,cov);
+  return extrapolate(plane, statePred, cov);
 }
 
 void GFAbsTrackRep::Abort(std::string method){
