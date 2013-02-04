@@ -25,6 +25,8 @@ INCLUDE_DIRECTORIES(${GENFIT}/core)
 
 set(GENFIT_SRCS 
 	GFAbsFitter.cxx
+	GFAbsStateOnPlane.cxx
+	GFAbsMeasuredStateOnPlane.cxx  
 	GFAbsTrackRep.cxx 
 	GFBookkeeping.cxx
 	GFDetPlane.cxx 
@@ -32,7 +34,6 @@ set(GENFIT_SRCS
 	GFKalman.cxx 
 	GFRecoHitFactory.cxx 
 	GFRecoHitProducer.cxx 
-	GFStateOnPlane.cxx 
 	GFTools.cxx 
 	GFTrackCand.cxx 
 	GFTrackCandHit.cxx  

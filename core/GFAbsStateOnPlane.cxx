@@ -17,33 +17,38 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/** @addtogroup genfit
- * @{
- */
+#include "GFAbsStateOnPlane.h"
 
-#ifndef GFSMARTPOINTERS_H
-#define GFSMARTPOINTERS_H
+#include <assert.h>
+#include <iostream>
+#include <limits>
 
-#if defined (__CINT__)
-#  define UNIQUE_PTR(T) T*
-#  define SHARED_PTR(T) T*
-#else
-#  ifdef __GLIBCXX__
-#    include <tr1/memory>
-#  else
-#    ifdef __IBMCPP__
-#      define __IBMCPP_TR1__
-#    endif
-#    include <memory>
-#  endif
-//#  define UNIQUE_PTR(T) std::tr1::unique_ptr<T> // won't work with root 5.* and CINT
-//#  define SHARED_PTR(T) std::tr1::shared_ptr<T>
-#  define UNIQUE_PTR(T) T*
-#  define SHARED_PTR(T) T*
-#endif
 
-/** @brief ROOT CINT compatible C++ 11 smart pointers
- *
- */
+GFAbsStateOnPlane::GFAbsStateOnPlane(unsigned int dim)
+  : fPlane(), fState(dim)
+{
+  ;
+}
 
-#endif
+GFAbsStateOnPlane::GFAbsStateOnPlane(SHARED_PTR(GFDetPlane) plane, const TVectorD& state)
+  : fPlane(plane), fState(state)
+{
+  ;
+}
+
+
+void GFAbsStateOnPlane::setData(SHARED_PTR(GFDetPlane) plane, const TVectorD& state) {
+  fPlane = plane;
+  setState(state);
+}
+
+void GFAbsStateOnPlane::setState(const TVectorD& state) {
+  assert(state.GetNrows() == fState.GetNrows());
+  fState = state;
+}
+
+
+void GFAbsStateOnPlane::Print(const Option_t*) const {
+  std::cout << "GFAbsStateOnPlane defined in plane:"; fPlane->Print();
+  std::cout << "state vector: "; fState.Print();
+}
