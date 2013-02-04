@@ -34,6 +34,7 @@ set(GENFIT_SRCS
 	GFKalman.cxx 
 	GFRecoHitFactory.cxx 
 	GFRecoHitProducer.cxx 
+	GFStateOnPlane5D.cxx
 	GFTools.cxx 
 	GFTrackCand.cxx 
 	GFTrackCandHit.cxx  

@@ -24,14 +24,23 @@
 #include <limits>
 
 
+GFAbsMeasuredStateOnPlane::GFAbsMeasuredStateOnPlane(unsigned int dim)
+  : GFAbsStateOnPlane(dim),
+    fCov(dim)
+{
+  ;
+}
+
 GFAbsMeasuredStateOnPlane::GFAbsMeasuredStateOnPlane(SHARED_PTR(GFDetPlane) plane, const TVectorD& state, const TMatrixDSym& cov)
-  : GFAbsStateOnPlane(plane, state), fCov(cov)
+  : GFAbsStateOnPlane(plane, state),
+    fCov(cov)
 {
   checkDim();
 }
 
 GFAbsMeasuredStateOnPlane::GFAbsMeasuredStateOnPlane(const GFAbsStateOnPlane& state, const TMatrixDSym& cov)
-  : GFAbsStateOnPlane(state), fCov(cov)
+  : GFAbsStateOnPlane(state),
+    fCov(cov)
 {
   checkDim();
 }

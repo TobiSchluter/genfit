@@ -25,13 +25,15 @@
 
 
 GFAbsStateOnPlane::GFAbsStateOnPlane(unsigned int dim)
-  : fPlane(), fState(dim)
+  : fPlane(new GFDetPlane()),
+    fState(dim)
 {
   ;
 }
 
 GFAbsStateOnPlane::GFAbsStateOnPlane(SHARED_PTR(GFDetPlane) plane, const TVectorD& state)
-  : fPlane(plane), fState(state)
+  : fPlane(plane),
+    fState(state)
 {
   ;
 }

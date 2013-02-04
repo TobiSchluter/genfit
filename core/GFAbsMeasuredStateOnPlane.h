@@ -27,10 +27,11 @@
 #include "GFAbsStateOnPlane.h"
 
 
-class GFAbsMeasuredStateOnPlane : public GFAbsStateOnPlane {
+class GFAbsMeasuredStateOnPlane : virtual public GFAbsStateOnPlane {
 
  public:
 
+  GFAbsMeasuredStateOnPlane(unsigned int dim = 0);
   GFAbsMeasuredStateOnPlane(SHARED_PTR(GFDetPlane) plane, const TVectorD& state, const TMatrixDSym& cov);
   GFAbsMeasuredStateOnPlane(const GFAbsStateOnPlane& state, const TMatrixDSym& cov);
 
@@ -40,7 +41,7 @@ class GFAbsMeasuredStateOnPlane : public GFAbsStateOnPlane {
 
 
   //! method which gets position, momentum and 6x6 covariance matrix. Needed for #GFRave.
-  virtual void getPosMomCov(TVector3& pos, TVector3& mom, TMatrixDSym& cov) = 0;
+  //virtual void getPosMomCov(TVector3& pos, TVector3& mom, TMatrixDSym& cov) = 0;
 
 
   void setData(SHARED_PTR(GFDetPlane) plane, const TVectorD& state, const TMatrixDSym& cov);
@@ -48,7 +49,7 @@ class GFAbsMeasuredStateOnPlane : public GFAbsStateOnPlane {
   void setCov(const TMatrixDSym& cov);
 
   //! method which sets position, momentum and 6x6 covariance matrix. Needed for #GFRave.
-  virtual void setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov) = 0;
+  //virtual void setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov) const = 0;
 
   virtual void Print(const Option_t* = "") const;
 
