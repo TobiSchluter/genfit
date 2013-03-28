@@ -25,55 +25,57 @@ INCLUDE_DIRECTORIES(
 )
 
 set(GENFIT_SRCS 
-	AbsFinitePlane.cpp            
-	KalmanFitterInfo.cpp        
-	ProlateSpacePointMeasurement.cpp  
-	TrackCandHit.cpp
-	AbsFitterInfo.cpp             
-	MaterialInfo.cpp            
-	RectangularFinitePlane.cpp        
-	Track.cpp
-	AbsMeasurement.cpp            
-	MeasuredStateOnPlane.cpp    	
-	ReferenceStateOnPlane.cpp         
-	TrackPoint.cpp
-	AbsTrackRep.cpp               
-	PlanarMeasurement.cpp       
-	SpacePointMeasurement.cpp         
-	WireMeasurement.cpp
-	DetPlane.cpp                  
-	PlanarPixelMeasurement.cpp  
-	StateOnPlane.cpp                  
-	WirePointMeasurement.cpp
-	KalmanFittedStateOnPlane.cpp  
-	PlanarStripMeasurement.cpp  
+	AbsFinitePlane.cpp
+	AbsFitterInfo.cpp
+	AbsMeasurement.cpp
+	AbsTrackRep.cpp
+	DetPlane.cpp
+	KalmanFittedStateOnPlane.cpp
+	KalmanFitterInfo.cpp
+	MaterialInfo.cpp
+	MeasuredStateOnPlane.cpp
+	MeasurementOnPlane.cpp
+	PlanarMeasurement.cpp
+	PlanarPixelMeasurement.cpp
+	PlanarStripMeasurement.cpp
+	ProlateSpacePointMeasurement.cpp
+	RectangularFinitePlane.cpp
+	ReferenceStateOnPlane.cpp
+	SpacePointMeasurement.cpp
+	StateOnPlane.cpp
 	TrackCand.cpp
+	TrackCandHit.cpp
+	Track.cpp
+	TrackPoint.cpp
+	WireMeasurement.cpp
+	WirePointMeasurement.cpp
 )
 
 set(GENFIT_HEADERS 
-	../include/AbsFinitePlane.h            
-	../include/KalmanFitterInfo.h        
-	../include/ProlateSpacePointMeasurement.h  
-	../include/TrackCandHit.h
-	../include/AbsFitterInfo.h             
-	../include/MaterialInfo.h            
-	../include/RectangularFinitePlane.h        
-	../include/Track.h
-	../include/AbsMeasurement.h            
-	../include/MeasuredStateOnPlane.h    	
-	../include/ReferenceStateOnPlane.h         
-	../include/TrackPoint.h
-	../include/AbsTrackRep.h               
-	../include/PlanarMeasurement.h       
-	../include/SpacePointMeasurement.h         
-	../include/WireMeasurement.h
-	../include/DetPlane.h                  
-	../include/PlanarPixelMeasurement.h  
-	../include/StateOnPlane.h                  
-	../include/WirePointMeasurement.h
-	../include/KalmanFittedStateOnPlane.h  
-	../include/PlanarStripMeasurement.h  
-	../include/TrackCand.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/AbsFinitePlane.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/AbsFitterInfo.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/AbsMeasurement.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/AbsTrackRep.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/DetPlane.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/KalmanFittedStateOnPlane.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/KalmanFitterInfo.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/MaterialInfo.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/MeasuredStateOnPlane.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/MeasurementOnPlane.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/PlanarMeasurement.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/PlanarPixelMeasurement.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/PlanarStripMeasurement.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/ProlateSpacePointMeasurement.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/RectangularFinitePlane.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/ReferenceStateOnPlane.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/SpacePointMeasurement.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/StateOnPlane.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/TrackCand.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/TrackCandHit.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/Track.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/TrackPoint.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/WireMeasurement.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/WirePointMeasurement.h
 )
 
 #string (REPLACE ".cpp" ".h" GENFIT_HEADERS "${GENFIT_SRCS}")
@@ -89,7 +91,7 @@ FIND_PROGRAM(ROOT_CINT_EXECUTABLE
 ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY}
 	COMMAND ${ROOT_CINT_EXECUTABLE}
       	ARGS -f ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY} -c -p -DHAVE_CONFIG_H
-      	-I${GENFIT}/core ${GENFIT_HEADERS} ${GENFIT_LINKDEF}
+      	-I${GENFIT}/core/include ${GENFIT_HEADERS} ${GENFIT_LINKDEF}
       	DEPENDS ${GENFIT_HEADERS} ${GENFIT_LINKDEF})
       	
 SET(GENFIT_SRCS ${GENFIT_SRCS} ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY})

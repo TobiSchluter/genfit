@@ -20,11 +20,11 @@ class Track {
 
  public:
 
-  virtual insertPoint(int i, TrackPoint point);
+  virtual void insertPoint(int i, TrackPoint point);
 
-  virtual removePoint(int i);
+  virtual void removePoint(int i);
 
-  virtual mergeTrack(int i, Track other);
+  virtual void mergeTrack(int i, Track other);
 
  public:
 

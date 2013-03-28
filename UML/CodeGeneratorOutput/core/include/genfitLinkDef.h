@@ -26,28 +26,29 @@
 
 
 #pragma link C++ class genfit::AbsFinitePlane+;
-#pragma link C++ class genfit::KalmanFitterInfo+;
-#pragma link C++ class genfit::ProlateSpacePointMeasurement+;
-#pragma link C++ class genfit::TrackCandHit+;
 #pragma link C++ class genfit::AbsFitterInfo+;
-#pragma link C++ class genfit::MaterialInfo+;
-#pragma link C++ class genfit::RectangularFinitePlane+;
-#pragma link C++ class genfit::Track+;
 #pragma link C++ class genfit::AbsMeasurement+;
-#pragma link C++ class genfit::MeasuredStateOnPlane+;
-#pragma link C++ class genfit::ReferenceStateOnPlane+;
-#pragma link C++ class genfit::TrackPoint+;
 #pragma link C++ class genfit::AbsTrackRep+;
-#pragma link C++ class genfit::PlanarMeasurement+;
-#pragma link C++ class genfit::SpacePointMeasurement+;
-#pragma link C++ class genfit::WireMeasurement+;
 #pragma link C++ class genfit::DetPlane+;
-#pragma link C++ class genfit::PlanarPixelMeasurement+;
-#pragma link C++ class genfit::StateOnPlane+;
-#pragma link C++ class genfit::WirePointMeasurement+;
 #pragma link C++ class genfit::KalmanFittedStateOnPlane+;
+#pragma link C++ class genfit::KalmanFitterInfo+;
+#pragma link C++ class genfit::MaterialInfo+;
+#pragma link C++ class genfit::MeasuredStateOnPlane+;
+#pragma link C++ class genfit::MeasurementOnPlane+;
+#pragma link C++ class genfit::PlanarMeasurement+;
+#pragma link C++ class genfit::PlanarPixelMeasurement+;
 #pragma link C++ class genfit::PlanarStripMeasurement+;
+#pragma link C++ class genfit::ProlateSpacePointMeasurement+;
+#pragma link C++ class genfit::RectangularFinitePlane+;
+#pragma link C++ class genfit::ReferenceStateOnPlane+;
+#pragma link C++ class genfit::SpacePointMeasurement+;
+#pragma link C++ class genfit::StateOnPlane+;
 #pragma link C++ class genfit::TrackCand+;
+#pragma link C++ class genfit::TrackCandHit+;
+#pragma link C++ class genfit::Track+;
+#pragma link C++ class genfit::TrackPoint+;
+#pragma link C++ class genfit::WireMeasurement+;
+#pragma link C++ class genfit::WirePointMeasurement+;
 
 
 #endif

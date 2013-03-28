@@ -22,7 +22,8 @@ class StateOnPlane {
 
  public:
 
-  StateOnPlane(DetPlane plane, TVectorD state);
+  StateOnPlane();
+  StateOnPlane(DetPlane* plane, const TVectorD& state);
 
 
  protected:

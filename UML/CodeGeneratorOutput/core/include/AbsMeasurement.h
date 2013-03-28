@@ -18,7 +18,7 @@ class AbsMeasurement {
 
  public:
 
-  virtual  ::MeasurementOnPlane constructMeasurementOnPlane();
+  virtual MeasurementOnPlane constructMeasurementOnPlane();
 
 
  protected:
@@ -33,7 +33,7 @@ class AbsMeasurement {
    *  Can be more than one, e.g. multiple measurements in the same Si detector, left and right measurements of a wire detector etc.
    * @element-type TrackPoint
    */
-  TrackPoint *rawMeasurements_;
+  TrackPoint* rawMeasurements_;
 };
 
 } /* End of namespace genfit */

@@ -23,20 +23,20 @@ class TrackPoint {
   /**
    * @element-type Track
    */
-  Track *trackPoints_;
+  genfit::Track* track_;
 
   /** 
    *  Can be more than one, e.g. multiple measurements in the same Si detector, left and right measurements of a wire detector etc.
    * @element-type AbsMeasurement
    */
-  std::vector< AbsMeasurement* > rawMeasurements_;
+  std::vector< genfit::AbsMeasurement > rawMeasurements_;
 
   /**
    * @element-type KalmanFitterInfo
    */
-  std::vector< KalmanFitterInfo > fitterInfos_;
+  std::vector< genfit::KalmanFitterInfo > fitterInfos_;
 
-  MaterialInfo * material_;
+  genfit::MaterialInfo* material_;
 };
 
 } /* End of namespace genfit */

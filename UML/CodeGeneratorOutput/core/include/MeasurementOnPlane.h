@@ -7,9 +7,9 @@
 
 
 
-namespace   {
+namespace genfit {
 
-class MeasurementOnPlane : public genfit::MeasuredStateOnPlane {
+class MeasurementOnPlane : public MeasuredStateOnPlane {
 
  public:
   TMatrixD hMatrix_;

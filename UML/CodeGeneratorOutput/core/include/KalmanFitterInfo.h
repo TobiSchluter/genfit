@@ -35,24 +35,24 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
  public:
 
-  ReferenceStateOnPlane * referenceState_;
+  ReferenceStateOnPlane* referenceState_;
 
-  MeasuredStateOnPlane * forwardPrediction_;
+  MeasuredStateOnPlane* forwardPrediction_;
 
-  KalmanFittedStateOnPlane * forwardUpdate_;
+  KalmanFittedStateOnPlane* forwardUpdate_;
 
-  MeasuredStateOnPlane * backwardPrediction_;
+  MeasuredStateOnPlane* backwardPrediction_;
 
-  KalmanFittedStateOnPlane * backwardUpdate_;
+  KalmanFittedStateOnPlane* backwardUpdate_;
 
 
   /** 
    *  Number of measurements must be equal to size of #fRawMeasurements in #GFTrackPoint.
    * @element-type MeasurementOnPlane
    */
-  std::vector<  ::MeasurementOnPlane > measurementsOnPlane_;
+  std::vector< MeasurementOnPlane > measurementsOnPlane_;
 
-  AbsTrackRep *rep_;
+  AbsTrackRep* rep_;
 };
 
 } /* End of namespace genfit */
