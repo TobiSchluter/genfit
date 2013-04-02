@@ -37,8 +37,13 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
  public:
 
   MeasurementOnPlane();
-  //MeasurementOnPlane();
+  MeasurementOnPlane(const TVectorD& state, const TMatrixDSym& cov, DetPlane* plane, AbsTrackRep* rep, const TMatrixD& hMatrix, double weight = 1.);
 
+  const TMatrixD& getHMatrix() const {return hMatrix_;}
+  double getWeight() const {return weight_;}
+
+  void setHMatrix(const TMatrixD& hMatrix) {hMatrix_ = hMatrix;}
+  void setWeight(double weight) {weight_ = weight;}
 
  protected:
 
