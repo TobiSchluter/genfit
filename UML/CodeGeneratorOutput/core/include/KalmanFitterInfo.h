@@ -50,7 +50,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
    *  Number of measurements must be equal to size of #fRawMeasurements in #GFTrackPoint.
    * @element-type MeasurementOnPlane
    */
-  std::vector< MeasurementOnPlane > measurementsOnPlane_;
+  std::vector< genfit::MeasurementOnPlane > measurementsOnPlane_;
 
   AbsTrackRep* rep_;
 };

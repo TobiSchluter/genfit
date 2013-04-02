@@ -21,17 +21,16 @@
 
 namespace genfit {
 
-  MeasurementOnPlane::MeasurementOnPlane() :
-    MeasuredStateOnPlane(), hMatrix_(0,0), weight_(0)
-  {
-    ;
-  }
+MeasurementOnPlane::MeasurementOnPlane() :
+  MeasuredStateOnPlane(), hMatrix_(0,0), weight_(0)
+{
+  ;
+}
 
-  MeasurementOnPlane::MeasurementOnPlane(const TVectorD& state, const TMatrixDSym& cov, DetPlane* plane, AbsTrackRep* rep, const TMatrixD& hMatrix, double weight) :
-    MeasuredStateOnPlane(state, cov, plane, rep), hMatrix_(hMatrix), weight_(weight)
-  {
-    ;
-  }
-
+MeasurementOnPlane::MeasurementOnPlane(const TVectorD& state, const TMatrixDSym& cov, DetPlane* plane, AbsTrackRep* rep, const TMatrixD& hMatrix, double weight) :
+  MeasuredStateOnPlane(state, cov, plane, rep), hMatrix_(hMatrix), weight_(weight)
+{
+  ;
+}
 
 } /* End of namespace   */

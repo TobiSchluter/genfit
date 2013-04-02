@@ -24,6 +24,7 @@
 #ifndef genfit_StateOnPlane_h
 #define genfit_StateOnPlane_h
 
+#include <TObject.h>
 #include <TVectorD.h>
 
 #include "DetPlane.h"
@@ -40,7 +41,7 @@ namespace genfit {
    *  
    *  The definition of the state is bound to the TrackRep. Therefore, the #GFStateOnPlane contains a pointer to a #GFAbsTrackRep. It will provide functionality to extrapolate it and translate the state it into cartesian coordinates. 
    */
-class StateOnPlane {
+class StateOnPlane : public TObject {
 
  public:
 
@@ -63,6 +64,9 @@ class StateOnPlane {
   TVectorD state_;
   DetPlane* sharedPlane_; // Ownership. TODO: Change to std::shared_ptr when changing to ROOT 6
   AbsTrackRep* rep_; // No ownership
+
+
+  ClassDef(StateOnPlane,1)
 
 };
 

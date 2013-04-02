@@ -50,6 +50,9 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
   TMatrixD hMatrix_; // projection matrix
   double weight_;
 
+
+  ClassDef(MeasurementOnPlane,1)
+
 };
 
 } /* End of namespace   */

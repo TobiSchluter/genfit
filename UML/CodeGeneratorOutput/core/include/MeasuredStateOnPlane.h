@@ -52,6 +52,9 @@ class MeasuredStateOnPlane : public StateOnPlane {
 
   TMatrixDSym cov_;
 
+
+  ClassDef(MeasuredStateOnPlane,1)
+
 };
 
 } /* End of namespace genfit */
