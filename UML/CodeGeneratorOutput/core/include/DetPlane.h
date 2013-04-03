@@ -64,16 +64,16 @@ class DetPlane : public TObject {
  public:
 
   // Constructors/Destructors ---------
-  DetPlane(AbsFinitePlane* finite=NULL);
+  DetPlane(AbsFinitePlane* finite = nullptr);
 
   DetPlane(const TVector3& o,
              const TVector3& u,
              const TVector3& v,
-             AbsFinitePlane* finite=NULL);
+             AbsFinitePlane* finite = nullptr);
 
   DetPlane(const TVector3& o,
              const TVector3& n,
-             AbsFinitePlane* finite=NULL);
+             AbsFinitePlane* finite = nullptr);
 
   virtual ~DetPlane();
 
@@ -141,13 +141,13 @@ class DetPlane : public TObject {
 
   //! intersect in the active area? C.f. AbsFinitePlane
   bool isInActive(const TVector3& point, const TVector3& dir) const {
-    if(finitePlane_ == NULL) return true;
+    if(finitePlane_ == nullptr) return true;
     return this->isInActive( this->straightLineToPlane(point,dir));
   }
 
   //! isInActive methods refer to finite plane. C.f. AbsFinitePlane
   bool isInActive(double u, double v) const{
-    if(finitePlane_==NULL) return true;
+    if(finitePlane_==nullptr) return true;
     return finitePlane_->isInActive(u,v);
   }
 
@@ -157,7 +157,7 @@ class DetPlane : public TObject {
   }
 
   bool isFinite() const {
-    if (finitePlane_ != NULL) return true;
+    if (finitePlane_ != nullptr) return true;
     return false;
   }
 

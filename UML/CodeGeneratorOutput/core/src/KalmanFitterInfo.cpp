@@ -24,37 +24,37 @@
 namespace genfit {
 
 KalmanFitterInfo::KalmanFitterInfo() :
-  referenceState_(NULL),
-  forwardPrediction_(NULL),
-  forwardUpdate_(NULL),
-  backwardPrediction_(NULL),
-  backwardUpdate_(NULL),
-  rep_(NULL)
+  referenceState_(nullptr),
+  forwardPrediction_(nullptr),
+  forwardUpdate_(nullptr),
+  backwardPrediction_(nullptr),
+  backwardUpdate_(nullptr),
+  rep_(nullptr)
 {
   ;
 }
 
 KalmanFitterInfo::KalmanFitterInfo(AbsTrackRep* rep)  :
-  referenceState_(NULL),
-  forwardPrediction_(NULL),
-  forwardUpdate_(NULL),
-  backwardPrediction_(NULL),
-  backwardUpdate_(NULL),
+  referenceState_(nullptr),
+  forwardPrediction_(nullptr),
+  forwardUpdate_(nullptr),
+  backwardPrediction_(nullptr),
+  backwardUpdate_(nullptr),
   rep_(rep)
 {
   ;
 }
 
 KalmanFitterInfo::~KalmanFitterInfo() {
-  if (referenceState_ != NULL)
+  if (referenceState_ != nullptr)
     delete referenceState_;
-  if (forwardPrediction_ != NULL)
+  if (forwardPrediction_ != nullptr)
     delete forwardPrediction_;
-  if (forwardUpdate_ != NULL)
+  if (forwardUpdate_ != nullptr)
     delete forwardUpdate_;
-  if (backwardPrediction_ != NULL)
+  if (backwardPrediction_ != nullptr)
     delete backwardPrediction_;
-  if (backwardUpdate_ != NULL)
+  if (backwardUpdate_ != nullptr)
     delete backwardUpdate_;
 }
 
@@ -89,31 +89,31 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeas
 
 
 void KalmanFitterInfo::setReferenceState(ReferenceStateOnPlane* referenceState) {
-  if (referenceState_ != NULL)
+  if (referenceState_ != nullptr)
     delete referenceState_;
   referenceState_ = referenceState;
 }
 
 void KalmanFitterInfo::setForwardPrediction(MeasuredStateOnPlane* forwardPrediction) {
-  if (forwardPrediction_ != NULL)
+  if (forwardPrediction_ != nullptr)
     delete forwardPrediction_;
   forwardPrediction_ = forwardPrediction;
 }
 
 void KalmanFitterInfo::setForwardUpdate(KalmanFittedStateOnPlane* forwardUpdate) {
-  if (forwardUpdate_ != NULL)
+  if (forwardUpdate_ != nullptr)
     delete forwardUpdate_;
   forwardUpdate_ = forwardUpdate;
 }
 
 void KalmanFitterInfo::setBackwardPrediction(MeasuredStateOnPlane* backwardPrediction) {
-  if (backwardPrediction_ != NULL)
+  if (backwardPrediction_ != nullptr)
     delete backwardPrediction_;
   backwardPrediction_ = backwardPrediction;
 }
 
 void KalmanFitterInfo::setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate) {
-  if (backwardUpdate_ != NULL)
+  if (backwardUpdate_ != nullptr)
     delete backwardUpdate_;
   backwardUpdate_ = backwardUpdate;
 }

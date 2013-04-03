@@ -22,7 +22,7 @@
 namespace genfit {
 
 StateOnPlane::StateOnPlane() :
-  state_(0), sharedPlane_(NULL), rep_(NULL)
+  state_(0), sharedPlane_(nullptr), rep_(nullptr)
 {
   ;
 }
@@ -35,7 +35,7 @@ StateOnPlane::StateOnPlane(const TVectorD& state, const DetPlane* plane, const A
 
 
 StateOnPlane::~StateOnPlane() {
-  if (sharedPlane_ != NULL)
+  if (sharedPlane_ != nullptr)
     delete sharedPlane_;
 }
 
@@ -43,7 +43,7 @@ StateOnPlane::~StateOnPlane() {
 void
 StateOnPlane::setStatePlane(const TVectorD& state, const DetPlane* plane) {
   state_ = state;
-  if (sharedPlane_ != NULL)
+  if (sharedPlane_ != nullptr)
     delete sharedPlane_;
   sharedPlane_ = plane;
 }

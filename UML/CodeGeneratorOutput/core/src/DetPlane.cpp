@@ -56,13 +56,15 @@ DetPlane::DetPlane(const TVector3& o,
 
 
 DetPlane::~DetPlane(){
-  if(finitePlane_!=NULL) delete finitePlane_;
+  if(finitePlane_ != nullptr)
+    delete finitePlane_;
 }
 
 
 DetPlane::DetPlane(const DetPlane& rhs) {
-  if(rhs.finitePlane_ != NULL) finitePlane_ = rhs.finitePlane_->clone();
-  else finitePlane_ = NULL;
+  if(rhs.finitePlane_ != nullptr)
+    finitePlane_ = rhs.finitePlane_->clone();
+  else finitePlane_ = nullptr;
   o_ = rhs.o_;
   u_ = rhs.u_;
   v_ = rhs.v_;
@@ -72,14 +74,14 @@ DetPlane::DetPlane(const DetPlane& rhs) {
 DetPlane& DetPlane::operator=(const DetPlane& rhs) {
   if (this == &rhs)
     return *this;
-  if(finitePlane_ != NULL) {
+  if(finitePlane_ != nullptr) {
     delete finitePlane_;
   }
-  if(rhs.finitePlane_ != NULL){
+  if(rhs.finitePlane_ != nullptr){
     finitePlane_ = rhs.finitePlane_->clone();
   }
   else{
-    finitePlane_ = NULL;
+    finitePlane_ = nullptr;
   }
   o_ = rhs.o_;
   u_ = rhs.u_;
@@ -240,7 +242,8 @@ DetPlane::Print(const Option_t* option) const
      <<"n("<<getNormal().X()<<","<<getNormal().Y()<<","<<getNormal().Z()<<") "
        <<std::endl;
   std::cout << finitePlane_ << std::endl;
-  if(finitePlane_!=NULL) finitePlane_->Print(option);
+  if(finitePlane_ != nullptr)
+    finitePlane_->Print(option);
 
 }
 
@@ -309,9 +312,9 @@ void DetPlane::reset() {
   o_.SetXYZ(0.,0.,0.);
   u_.SetXYZ(1.,0.,0.);
   v_.SetXYZ(0.,1.,0.);
-  if(finitePlane_!=NULL) {
+  if(finitePlane_ != nullptr) {
     delete finitePlane_;
-    finitePlane_ = NULL;
+    finitePlane_ = nullptr;
   }
 }
 
