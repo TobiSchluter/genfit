@@ -17,6 +17,8 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <assert.h>
+
 #include "KalmanFitterInfo.h"
 
 namespace genfit {
@@ -57,20 +59,32 @@ KalmanFitterInfo::~KalmanFitterInfo() {
 }
 
 
-MeasuredStateOnPlane KalmanFitterInfo::getBiasedSmoothedState() const {
+MeasuredStateOnPlane KalmanFitterInfo::getSmoothedState(bool biased) const {
   // TODO: implement
+  return MeasuredStateOnPlane();
 }
 
-MeasuredStateOnPlane KalmanFitterInfo::getUnbiasedSmoothedState() const {
-  // TODO: implement
-}
 
-StateOnPlane KalmanFitterInfo::getBiasedResidual() const {
-  // TODO: implement
-}
+MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeasurement) const {
+  // TODO: Test
 
-StateOnPlane KalmanFitterInfo::getUnbiasedResidual() const {
-  // TODO: implement
+  MeasuredStateOnPlane smoothedState = getSmoothedState(biased);
+  const MeasurementOnPlane& measurement = measurementsOnPlane_.at(iMeasurement);
+  const DetPlane* plane = measurement.getPlane();
+
+  // check equality of planes and reps
+  assert(*(smoothedState.getPlane()) == *plane); // TODO: replace assertion
+  assert(smoothedState.getRep() == measurement.getRep()); // TODO: replace assertion
+
+  const TMatrixD& H = measurement.getHMatrix();
+
+  TVectorD res = measurement.getState() - (H * smoothedState.getState());
+
+  TMatrixDSym cov(smoothedState.getCov());
+  cov.Similarity(H);
+  cov += measurement.getCov();
+
+  return MeasurementOnPlane(res, cov, plane, smoothedState.getRep(), H, measurement.getWeight());
 }
 
 

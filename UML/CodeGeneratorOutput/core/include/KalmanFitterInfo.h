@@ -67,10 +67,12 @@ class KalmanFitterInfo : public AbsFitterInfo {
   bool hasBackwardUpdate() const {return (backwardUpdate_ != NULL);}
   unsigned int getNumMeasurements() {return measurementsOnPlane_.size();}
 
-  MeasuredStateOnPlane getBiasedSmoothedState() const;
-  MeasuredStateOnPlane getUnbiasedSmoothedState() const;
-  StateOnPlane getBiasedResidual() const;
-  StateOnPlane getUnbiasedResidual() const;
+  /** Get unbiased (default) or biased smoothed state
+   */
+  MeasuredStateOnPlane getSmoothedState(bool biased = false) const;
+  /** Get unbiased (default) or biased residual from ith measurement
+   */
+  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const; // also calculates covariance of the residual
 
   void setReferenceState(ReferenceStateOnPlane* referenceState);
   void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction);

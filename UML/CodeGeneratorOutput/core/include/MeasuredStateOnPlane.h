@@ -40,13 +40,13 @@ class MeasuredStateOnPlane : public StateOnPlane {
  public:
 
   MeasuredStateOnPlane();
-  MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, DetPlane* plane, AbsTrackRep* rep);
+  MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const DetPlane* plane, const AbsTrackRep* rep);
   MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov);
 
   const TMatrixDSym& getCov() const {return cov_;}
 
   void setStateCov(const TVectorD& state, const TMatrixDSym& cov) {state_ = state; cov_ = cov;}
-  void setStateCovPlane(const TVectorD& state, const TMatrixDSym& cov, DetPlane* plane) {setStatePlane(state, plane); cov_ = cov;}
+  void setStateCovPlane(const TVectorD& state, const TMatrixDSym& cov, const DetPlane* plane) {setStatePlane(state, plane); cov_ = cov;}
 
  protected:
 

@@ -46,7 +46,7 @@ class StateOnPlane : public TObject {
  public:
 
   StateOnPlane();
-  StateOnPlane(const TVectorD& state, DetPlane* plane, AbsTrackRep* rep);
+  StateOnPlane(const TVectorD& state, const DetPlane* plane, const AbsTrackRep* rep);
 
   ~StateOnPlane();
 
@@ -57,13 +57,13 @@ class StateOnPlane : public TObject {
  protected:
 
   void setState(const TVectorD& state) {state_ = state;}
-  void setStatePlane(const TVectorD& state, DetPlane* plane);
+  void setStatePlane(const TVectorD& state, const DetPlane* plane);
 
  protected:
 
   TVectorD state_;
-  DetPlane* sharedPlane_; // Ownership. TODO: Change to std::shared_ptr when changing to ROOT 6
-  AbsTrackRep* rep_; // No ownership
+  DetPlane const* sharedPlane_; // Ownership. TODO: Change to std::shared_ptr when changing to ROOT 6
+  AbsTrackRep const* rep_; // No ownership
 
 
   ClassDef(StateOnPlane,1)

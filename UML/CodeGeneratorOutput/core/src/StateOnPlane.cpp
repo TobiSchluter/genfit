@@ -27,7 +27,7 @@ StateOnPlane::StateOnPlane() :
   ;
 }
 
-StateOnPlane::StateOnPlane(const TVectorD& state, DetPlane* plane, AbsTrackRep* rep) :
+StateOnPlane::StateOnPlane(const TVectorD& state, const DetPlane* plane, const AbsTrackRep* rep) :
   state_(state), sharedPlane_(plane), rep_(rep)
 {
   ;
@@ -41,7 +41,7 @@ StateOnPlane::~StateOnPlane() {
 
 
 void
-StateOnPlane::setStatePlane(const TVectorD& state, DetPlane* plane) {
+StateOnPlane::setStatePlane(const TVectorD& state, const DetPlane* plane) {
   state_ = state;
   if (sharedPlane_ != NULL)
     delete sharedPlane_;

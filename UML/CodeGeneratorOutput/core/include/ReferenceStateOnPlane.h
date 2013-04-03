@@ -39,8 +39,8 @@ class ReferenceStateOnPlane : public StateOnPlane {
 
   ReferenceStateOnPlane();
   ReferenceStateOnPlane(const TVectorD& state,
-      DetPlane* plane,
-      AbsTrackRep* rep,
+      const DetPlane* plane,
+      const AbsTrackRep* rep,
       double forwardSegmentLength,
       double backwardSegmentLength,
       const TMatrixD& forwardTransportMatrix,
@@ -61,8 +61,6 @@ class ReferenceStateOnPlane : public StateOnPlane {
   const TMatrixD& getBackwardTransportMatrix() const {return backwardTransportMatrix_;}
   const TMatrixDSym& getForwardNoiseMatrix() const {return forwardNoiseMatrix_;}
   const TMatrixDSym& getBackwardNoiseMatrix() const {return backwardNoiseMatrix_;}
-
-
 
 
  protected:
