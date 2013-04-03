@@ -1,3 +1,25 @@
+/* Copyright 2008-2010, Technische Universitaet Muenchen,
+   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
+
+   This file is part of GENFIT.
+
+   GENFIT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as published
+   by the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   GENFIT is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public License
+   along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/** @addtogroup genfit
+ * @{
+ */
+
 #ifndef genfit_KalmanFitterInfo_h
 #define genfit_KalmanFitterInfo_h
 
@@ -25,26 +47,45 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
  public:
 
-  virtual MeasuredStateOnPlane getBiasedSmoothedState();
+  KalmanFitterInfo();
+  KalmanFitterInfo(AbsTrackRep* rep);
+  ~KalmanFitterInfo();
 
-  virtual MeasuredStateOnPlane getUnbiasedSmoothedState();
+  const ReferenceStateOnPlane* getReferenceState() const {return referenceState_;}
+  const MeasuredStateOnPlane* getForwardPrediction() const {return forwardPrediction_;}
+  const KalmanFittedStateOnPlane* getForwardUpdate() const {return forwardUpdate_;}
+  const MeasuredStateOnPlane* getBackwardPrediction() const {return backwardPrediction_;}
+  const KalmanFittedStateOnPlane* getBackwardUpdate() const {return backwardUpdate_;}
+  const std::vector< genfit::MeasurementOnPlane >& getMeasurementsOnPlane() const {return measurementsOnPlane_;}
+  const MeasurementOnPlane& getMeasurementOnPlane(unsigned int i) const {return measurementsOnPlane_.at(i);}
+  const AbsTrackRep* getRep() {return rep_;}
 
-  virtual StateOnPlane getBiasedResidual();
+  bool hasReferenceState() const {return (referenceState_ != NULL);}
+  bool hasForwardPrediction() const {return (forwardPrediction_ != NULL);}
+  bool hasForwardUpdate() const {return (forwardUpdate_ != NULL);}
+  bool hasBackwardPrediction() const {return (backwardPrediction_ != NULL);}
+  bool hasBackwardUpdate() const {return (backwardUpdate_ != NULL);}
+  unsigned int getNumMeasurements() {return measurementsOnPlane_.size();}
 
-  virtual StateOnPlane getUnbiasedResidual();
+  MeasuredStateOnPlane getBiasedSmoothedState() const;
+  MeasuredStateOnPlane getUnbiasedSmoothedState() const;
+  StateOnPlane getBiasedResidual() const;
+  StateOnPlane getUnbiasedResidual() const;
 
- public:
+  void setReferenceState(ReferenceStateOnPlane* referenceState);
+  void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction);
+  void setForwardUpdate(KalmanFittedStateOnPlane* forwardUpdate);
+  void setBackwardPrediction(MeasuredStateOnPlane* backwardPrediction);
+  void setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate);
+  void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane >& measurementsOnPlane) {measurementsOnPlane_ = measurementsOnPlane;}
 
-  ReferenceStateOnPlane* referenceState_;
+ private:
 
-  MeasuredStateOnPlane* forwardPrediction_;
-
-  KalmanFittedStateOnPlane* forwardUpdate_;
-
-  MeasuredStateOnPlane* backwardPrediction_;
-
-  KalmanFittedStateOnPlane* backwardUpdate_;
-
+  ReferenceStateOnPlane* referenceState_; // Ownership, TODO: replace with std::unique_ptr
+  MeasuredStateOnPlane* forwardPrediction_; // Ownership, TODO: replace with std::unique_ptr
+  KalmanFittedStateOnPlane* forwardUpdate_; // Ownership, TODO: replace with std::unique_ptr
+  MeasuredStateOnPlane* backwardPrediction_; // Ownership, TODO: replace with std::unique_ptr
+  KalmanFittedStateOnPlane* backwardUpdate_; // Ownership, TODO: replace with std::unique_ptr
 
   /** 
    *  Number of measurements must be equal to size of #fRawMeasurements in #GFTrackPoint.
@@ -52,7 +93,11 @@ class KalmanFitterInfo : public AbsFitterInfo {
    */
   std::vector< genfit::MeasurementOnPlane > measurementsOnPlane_;
 
-  AbsTrackRep* rep_;
+  AbsTrackRep* rep_; // No ownership
+
+
+  ClassDef(KalmanFitterInfo,1)
+
 };
 
 } /* End of namespace genfit */
