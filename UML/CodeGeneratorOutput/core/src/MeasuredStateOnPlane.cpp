@@ -27,7 +27,7 @@ MeasuredStateOnPlane::MeasuredStateOnPlane() :
   ;
 }
 
-MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const DetPlane* plane, const AbsTrackRep* rep) :
+MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, sharedPlanePtr plane, const AbsTrackRep* rep) :
   StateOnPlane(state, plane, rep), cov_(cov)
 {
   ;

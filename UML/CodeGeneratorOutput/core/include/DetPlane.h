@@ -32,9 +32,6 @@
 #ifndef genfit_DetPlane_h
 #define genfit_DetPlane_h
 
-
-#include <memory>
-
 #include <TObject.h>
 #include <TVector3.h>
 
@@ -59,6 +56,7 @@ namespace genfit {
  * and two plane-spanning directions u and v.
  */
 
+
 class DetPlane : public TObject {
 
  public:
@@ -78,7 +76,6 @@ class DetPlane : public TObject {
   virtual ~DetPlane();
 
   DetPlane(const DetPlane&);
-
   DetPlane& operator=(const DetPlane&);
 
   // Accessors -----------------------
@@ -173,7 +170,7 @@ class DetPlane : public TObject {
   TVector3 u_;
   TVector3 v_;
 
-  AbsFinitePlane* finitePlane_; // Todo: replace with std::unique_ptr
+  AbsFinitePlane* finitePlane_; // Ownership
 
 
   ClassDef(DetPlane,1)

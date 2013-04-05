@@ -16,51 +16,28 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
- *
- */
-
 
 /** @addtogroup genfit
  * @{
  */
 
-#ifndef genfit_AbsFinitePlane_h
-#define genfit_AbsFinitePlane_h
+#ifndef genfit_Tools_h
+#define genfit_Tools_h
 
-
-#include "TObject.h"
-
+#include <TMatrixDSym.h>
 
 namespace genfit {
+namespace tools {
 
-class AbsFinitePlane : public TObject {
+  /** @brief Invert a matrix, throwing GFException when inversion fails.
+   * Optional calculation of determinant.
+   */
+  void invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* determinant = NULL);
+  /** @brief Same, replacing its argument.
+   */
+  void invertMatrix(TMatrixDSym& mat, double* determinant = NULL);
 
- public:
-
-  AbsFinitePlane();
-  virtual ~AbsFinitePlane();
-
-  //! Returns whether a u,v point is in the active plane or not. Needs to be implemented
-  //! in child class.
-  virtual bool isInActive(double u, double v) const = 0;
-
-  //! Deep copy ctor for polymorphic class.
-  virtual AbsFinitePlane* clone() const = 0;
-
-
- protected:
-
-  // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
-  AbsFinitePlane(const AbsFinitePlane&) = default;
-  AbsFinitePlane& operator=(const AbsFinitePlane&) = default;
-
-
-  ClassDef(AbsFinitePlane,1)
-
-};
-
+} /* End of namespace tools */
 } /* End of namespace genfit */
 
-#endif // genfit_AbsFinitePlane_h
+#endif // genfit_Tools_h

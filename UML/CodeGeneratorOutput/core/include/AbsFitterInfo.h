@@ -36,7 +36,19 @@ class AbsFitterInfo : public TObject {
 
  public:
 
-  AbsFitterInfo();
+  AbsFitterInfo() {};
+  virtual ~AbsFitterInfo();
+
+  //! Deep copy ctor for polymorphic class.
+  virtual AbsFitterInfo* clone() const = 0;
+
+ private:
+
+  AbsFitterInfo(const AbsFitterInfo&) = default;
+  AbsFitterInfo(AbsFitterInfo&&) = default;
+  AbsFitterInfo& operator=(const AbsFitterInfo&) = default;
+  AbsFitterInfo& operator=(AbsFitterInfo&&) = default;
+
 
   ClassDef(AbsFitterInfo,1)
 

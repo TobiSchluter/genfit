@@ -30,6 +30,7 @@ set(GENFIT_SRCS
 	AbsMeasurement.cpp
 	AbsTrackRep.cpp
 	DetPlane.cpp
+	Exception.cpp
 	KalmanFittedStateOnPlane.cpp
 	KalmanFitterInfo.cpp
 	MaterialInfo.cpp
@@ -43,6 +44,7 @@ set(GENFIT_SRCS
 	ReferenceStateOnPlane.cpp
 	SpacePointMeasurement.cpp
 	StateOnPlane.cpp
+	Tools.cpp
 	TrackCand.cpp
 	TrackCandHit.cpp
 	Track.cpp
@@ -51,50 +53,6 @@ set(GENFIT_SRCS
 	WirePointMeasurement.cpp
 )
 
-set(GENFIT_HEADERS 
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/AbsFinitePlane.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/AbsFitterInfo.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/AbsMeasurement.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/AbsTrackRep.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/DetPlane.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/KalmanFittedStateOnPlane.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/KalmanFitterInfo.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/MaterialInfo.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/MeasuredStateOnPlane.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/MeasurementOnPlane.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/PlanarMeasurement.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/PlanarPixelMeasurement.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/PlanarStripMeasurement.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/ProlateSpacePointMeasurement.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/RectangularFinitePlane.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/ReferenceStateOnPlane.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/SpacePointMeasurement.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/StateOnPlane.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/TrackCand.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/TrackCandHit.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/Track.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/TrackPoint.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/WireMeasurement.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/WirePointMeasurement.h
-)
-
-#string (REPLACE ".cpp" ".h" GENFIT_HEADERS "${GENFIT_SRCS}")
-
-
-set(GENFIT_LINKDEF ../include/genfitLinkDef.h)
-set(GENFIT_DICTIONARY genfitDict.cpp) 
-
-FIND_PROGRAM(ROOT_CINT_EXECUTABLE
-	NAMES rootcint
-	PATHS $ENV{ROOTSYS}/bin)
-
-ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY}
-	COMMAND ${ROOT_CINT_EXECUTABLE}
-      	ARGS -f ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY} -c -p -DHAVE_CONFIG_H
-      	-I${GENFIT}/core/include ${GENFIT_HEADERS} ${GENFIT_LINKDEF}
-      	DEPENDS ${GENFIT_HEADERS} ${GENFIT_LINKDEF})
-      	
-SET(GENFIT_SRCS ${GENFIT_SRCS} ${CMAKE_BINARY_DIR}/${GENFIT_DICTIONARY})
 
 ################ install ###################
 

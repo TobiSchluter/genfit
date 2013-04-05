@@ -41,7 +41,7 @@ RectangularFinitePlane::~RectangularFinitePlane(){
 
 }
 
-bool RectangularFinitePlane::inActive(const double& u,const double& v) const{
+bool RectangularFinitePlane::isInActive(double u, double v) const{
   if(u>=uMin_ && u<=uMax_ && v>=vMin_ && v<=vMax_) return true;
   return false;
 }
@@ -49,6 +49,6 @@ bool RectangularFinitePlane::inActive(const double& u,const double& v) const{
 void RectangularFinitePlane::Print(const Option_t* option) const{
   std::cout << "Rectangular Finite Plane Umin=" << uMin_ << ", Umax="
       << uMax_ << ", Vmin=" << vMin_ << ", Vmax=" << vMax_ << std::endl;
-};
+}
 
 } /* End of namespace genfit */

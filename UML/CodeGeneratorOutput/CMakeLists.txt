@@ -18,8 +18,8 @@ Execute_process(COMMAND ${ROOT_CONFIG} --cflags
 
 #SET(CMAKE_VERBOSE_MAKEFILE ON)
 
-SET(CMAKE_CXX_FLAGS "-g  -O2 -Wall -Wshadow -ftree-vectorize -ffast-math -ftree-vectorizer-verbose=0 ${ROOT_CFLAGS}")
-# -std=c++11 -pedantic
+SET(CMAKE_CXX_FLAGS "-g  -O2 -Wall -Wshadow -std=c++11 -pedantic -ftree-vectorize -ffast-math -ftree-vectorizer-verbose=0 ${ROOT_CFLAGS}")
+
 
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-march=native HAS_MARCH_NATIVE)

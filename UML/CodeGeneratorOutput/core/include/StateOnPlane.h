@@ -27,14 +27,12 @@
 #include <TObject.h>
 #include <TVectorD.h>
 
-#include "DetPlane.h"
+#include "SharedPlanePtr.h"
+
 
 namespace genfit {
+
 class AbsTrackRep;
-} /* End of namespace genfit */
-
-namespace genfit {
-
 
   /** 
    *  A state with arbitrary dimension defined in a #GFDetPlane. #fSharedPlane is a shared_pointer, the ownership over that plane is shared between all #GFStateOnPlane objects defined in that plane.
@@ -46,23 +44,21 @@ class StateOnPlane : public TObject {
  public:
 
   StateOnPlane();
-  StateOnPlane(const TVectorD& state, const DetPlane* plane, const AbsTrackRep* rep);
-
-  ~StateOnPlane();
+  StateOnPlane(const TVectorD& state, sharedPlanePtr plane, const AbsTrackRep* rep);
 
   const TVectorD& getState() const {return state_;}
-  const DetPlane* getPlane() const {return sharedPlane_;}
+  sharedPlanePtr getPlane() const {return sharedPlane_;}
   const AbsTrackRep* getRep() const {return rep_;}
 
  protected:
 
   void setState(const TVectorD& state) {state_ = state;}
-  void setStatePlane(const TVectorD& state, const DetPlane* plane);
+  void setStatePlane(const TVectorD& state, sharedPlanePtr plane) {state_ = state; sharedPlane_ = plane;}
 
  protected:
 
   TVectorD state_;
-  DetPlane const* sharedPlane_; // Ownership. TODO: Change to std::shared_ptr when changing to ROOT 6
+  sharedPlanePtr sharedPlane_; // Shared ownership.
   AbsTrackRep const* rep_; // No ownership
 
 

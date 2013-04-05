@@ -20,6 +20,7 @@
 #include <assert.h>
 
 #include "KalmanFitterInfo.h"
+#include "Tools.h"
 
 namespace genfit {
 
@@ -59,9 +60,43 @@ KalmanFitterInfo::~KalmanFitterInfo() {
 }
 
 
+KalmanFitterInfo* KalmanFitterInfo::clone() const {
+  KalmanFitterInfo* retVal = new KalmanFitterInfo(this->rep_);
+  if (this->referenceState_ != nullptr)
+    retVal->referenceState_ = new ReferenceStateOnPlane(*(this->referenceState_));
+  if (this->forwardPrediction_ != nullptr)
+    retVal->forwardPrediction_ = new MeasuredStateOnPlane(*(this->forwardPrediction_));
+  if (this->forwardUpdate_ != nullptr)
+    retVal->forwardUpdate_ = new KalmanFittedStateOnPlane(*(this->forwardUpdate_));
+  if (this->backwardPrediction_ != nullptr)
+    retVal->backwardPrediction_ = new MeasuredStateOnPlane(*(this->backwardPrediction_));
+  if (this->backwardUpdate_ != nullptr)
+    retVal->backwardUpdate_ = new KalmanFittedStateOnPlane(*(this->backwardUpdate_));
+
+  return retVal;
+}
+
+
 MeasuredStateOnPlane KalmanFitterInfo::getSmoothedState(bool biased) const {
-  // TODO: implement
-  return MeasuredStateOnPlane();
+  // TODO: Test
+
+  if (biased) {
+    if (forwardUpdate_ != nullptr && backwardPrediction_ == nullptr && backwardUpdate_ == nullptr) // last measurement
+      return MeasuredStateOnPlane(*forwardUpdate_);
+    else if (backwardUpdate_ != nullptr && forwardPrediction_ == nullptr && forwardUpdate_ == nullptr) // first measurement
+      return MeasuredStateOnPlane(*backwardUpdate_);
+
+    return calcSmoothedState(forwardUpdate_, backwardPrediction_);
+  }
+  else { // unbiased
+    if (forwardPrediction_ != nullptr && backwardPrediction_ == nullptr && backwardUpdate_ == nullptr) // last measurement
+      return MeasuredStateOnPlane(*forwardPrediction_);
+    else if (backwardPrediction_ != nullptr && forwardPrediction_ == nullptr && forwardUpdate_ == nullptr) // first measurement
+      return MeasuredStateOnPlane(*backwardPrediction_);
+
+    return calcSmoothedState(forwardPrediction_, backwardPrediction_);
+  }
+
 }
 
 
@@ -70,7 +105,7 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeas
 
   MeasuredStateOnPlane smoothedState = getSmoothedState(biased);
   const MeasurementOnPlane& measurement = measurementsOnPlane_.at(iMeasurement);
-  const DetPlane* plane = measurement.getPlane();
+  sharedPlanePtr plane = measurement.getPlane();
 
   // check equality of planes and reps
   assert(*(smoothedState.getPlane()) == *plane); // TODO: replace assertion
@@ -116,6 +151,32 @@ void KalmanFitterInfo::setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdat
   if (backwardUpdate_ != nullptr)
     delete backwardUpdate_;
   backwardUpdate_ = backwardUpdate;
+}
+
+
+MeasuredStateOnPlane KalmanFitterInfo::calcSmoothedState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const {
+  if (forwardState == nullptr || backwardState == nullptr) {
+    // TODO: raise error
+  }
+  // check if both states are defined in the same plane
+  if (forwardState->getPlane() != backwardState->getPlane()) {
+    // TODO: raise error
+  }
+
+  TMatrixDSym fCovInv, bCovInv, smoothed_cov;
+
+  const TMatrixDSym& fCov = forwardState->getCov();
+  tools::invertMatrix(fCov, fCovInv);
+
+  const TMatrixDSym& bCov = backwardState->getCov();
+  tools::invertMatrix(bCov, bCovInv);
+
+  tools::invertMatrix(fCovInv + bCovInv, smoothed_cov);
+
+  return MeasuredStateOnPlane(smoothed_cov * (fCovInv*forwardState->getState() + bCovInv*backwardState->getState()), // smoothed state
+                              smoothed_cov,
+                              forwardUpdate_->getPlane(),
+                              forwardUpdate_->getRep());
 }
 
 

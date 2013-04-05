@@ -51,6 +51,8 @@ class KalmanFitterInfo : public AbsFitterInfo {
   KalmanFitterInfo(AbsTrackRep* rep);
   ~KalmanFitterInfo();
 
+  virtual KalmanFitterInfo* clone() const override;
+
   const ReferenceStateOnPlane* getReferenceState() const {return referenceState_;}
   const MeasuredStateOnPlane* getForwardPrediction() const {return forwardPrediction_;}
   const KalmanFittedStateOnPlane* getForwardUpdate() const {return forwardUpdate_;}
@@ -83,11 +85,13 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
  private:
 
-  ReferenceStateOnPlane* referenceState_; // Ownership, TODO: replace with std::unique_ptr
-  MeasuredStateOnPlane* forwardPrediction_; // Ownership, TODO: replace with std::unique_ptr
-  KalmanFittedStateOnPlane* forwardUpdate_; // Ownership, TODO: replace with std::unique_ptr
-  MeasuredStateOnPlane* backwardPrediction_; // Ownership, TODO: replace with std::unique_ptr
-  KalmanFittedStateOnPlane* backwardUpdate_; // Ownership, TODO: replace with std::unique_ptr
+  MeasuredStateOnPlane calcSmoothedState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const;
+
+  ReferenceStateOnPlane* referenceState_; // Ownership
+  MeasuredStateOnPlane* forwardPrediction_; // Ownership
+  KalmanFittedStateOnPlane* forwardUpdate_; // Ownership
+  MeasuredStateOnPlane* backwardPrediction_; // Ownership
+  KalmanFittedStateOnPlane* backwardUpdate_; // Ownership
 
   /** 
    *  Number of measurements must be equal to size of #fRawMeasurements in #GFTrackPoint.

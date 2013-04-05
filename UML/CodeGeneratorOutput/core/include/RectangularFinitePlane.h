@@ -10,17 +10,16 @@ class RectangularFinitePlane : public AbsFinitePlane {
 
  public:
 
-  //override inActive & Print methods
-  bool inActive(const double& u, const double& v) const;
-  void Print(const Option_t* = "") const;
-
   //! give dimensions of finite rectangle: u1,u2,v1,v2
   RectangularFinitePlane(const double&, const double&, const double&, const double&);
   RectangularFinitePlane();
+  virtual ~RectangularFinitePlane() override;
 
-  virtual ~RectangularFinitePlane();
+  //override inActive & Print methods
+  bool isInActive(double u, double v) const override;
+  void Print(const Option_t* = "") const override;
 
-  AbsFinitePlane* clone() const {
+  AbsFinitePlane* clone() const override {
     return new RectangularFinitePlane(*this);
   }
 
