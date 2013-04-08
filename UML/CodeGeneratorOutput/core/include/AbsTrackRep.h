@@ -15,38 +15,41 @@ class AbsTrackRep {
  public:
 
   virtual double extrapolateToPlane(const StateOnPlane* stateInput,
-      sharedPlanePtr plane,
       StateOnPlane* statePrediction,
+      sharedPlanePtr plane,
       bool stopAtBoundary = false) const;
 
   virtual double extrapolateToLine(const StateOnPlane* stateInput,
+      StateOnPlane* statePrediction,
       const TVector3& linePoint,
       const TVector3& lineDirection,
-      StateOnPlane* statePrediction,
       bool stopAtBoundary = false) const;
 
   virtual double extrapolateToPoint(const StateOnPlane* stateInput,
-      const TVector3& point,
       StateOnPlane* statePrediction,
+      const TVector3& point,
       bool stopAtBoundary = false) const;
 
   virtual double extrapolateToCylinder(const StateOnPlane* stateInput,
+      StateOnPlane* statePrediction,
       const TVector3& linePoint,
       const TVector3& lineDirection,
       double radius,
-      StateOnPlane* statePrediction,
       bool stopAtBoundary = false) const;
 
   virtual double extrapolateToSphere(const StateOnPlane* stateInput,
+      StateOnPlane* statePrediction,
       const TVector3& point,
       double radius,
-      StateOnPlane* statePrediction,
       bool stopAtBoundary = false) const;
 
   virtual TVector3 getPos(const StateOnPlane* stateInput) const;
 
   virtual TVector3 getMom(const StateOnPlane* stateInput) const;
 
+  /**
+   * Use the Material information stored in the #TrackPoints
+   */
   virtual double extrapolateToTrackPoint() const;
 
 

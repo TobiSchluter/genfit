@@ -1,24 +1,52 @@
+/* Copyright 2008-2010, Technische Universitaet Muenchen,
+   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
+
+   This file is part of GENFIT.
+
+   GENFIT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as published
+   by the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   GENFIT is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public License
+   along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/** @addtogroup genfit
+ * @{
+ */
+
 #ifndef genfit_AbsMeasurement_h
 #define genfit_AbsMeasurement_h
 
 #include "MeasurementOnPlane.h"
 
+#include <TObject.h>
+
 
 namespace genfit {
+
 class TrackPoint;
-} /* End of namespace genfit */
-
-namespace genfit {
-
 
   /** 
    *  Contains the measurement and covariance in detector coordinates. Detector and hit ids can be used to point back to the original detector hits (clusters etc.).
    */
-class AbsMeasurement {
+class AbsMeasurement : public TObject {
+
 
  public:
 
-  virtual MeasurementOnPlane constructMeasurementOnPlane();
+  AbsMeasurement();
+  AbsMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, const TrackPoint* trackPoint);
+
+  virtual ~AbsMeasurement();
+
+
+  virtual MeasurementOnPlane constructMeasurementOnPlane() = 0;
 
 
  protected:
@@ -27,13 +55,14 @@ class AbsMeasurement {
   int detId_;
   int hitId_;
 
- public:
-
   /** 
-   *  Can be more than one, e.g. multiple measurements in the same Si detector, left and right measurements of a wire detector etc.
-   * @element-type TrackPoint
+   *  Pointer to #TrackPoint where the measurement belongs to
    */
-  TrackPoint* rawMeasurements_;
+  TrackPoint const* trackPoint_; // No ownership
+
+
+  ClassDef(AbsMeasurement,1)
+
 };
 
 } /* End of namespace genfit */

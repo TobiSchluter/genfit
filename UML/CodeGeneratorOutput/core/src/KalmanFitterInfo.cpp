@@ -19,6 +19,7 @@
 
 #include <assert.h>
 
+#include "Exception.h"
 #include "KalmanFitterInfo.h"
 #include "Tools.h"
 
@@ -108,8 +109,14 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeas
   sharedPlanePtr plane = measurement.getPlane();
 
   // check equality of planes and reps
-  assert(*(smoothedState.getPlane()) == *plane); // TODO: replace assertion
-  assert(smoothedState.getRep() == measurement.getRep()); // TODO: replace assertion
+  if(*(smoothedState.getPlane()) != *plane) {
+    Exception e("KalmanFitterInfo::getResidual: smoothedState and measurement are not defined in the same plane.", __LINE__,__FILE__);
+    throw e;
+  }
+  if(smoothedState.getRep() != measurement.getRep()) {
+    Exception e("KalmanFitterInfo::getResidual: smoothedState and measurement are not defined wrt the same TrackRep.", __LINE__,__FILE__);
+    throw e;
+  }
 
   const TMatrixD& H = measurement.getHMatrix();
 
@@ -156,11 +163,13 @@ void KalmanFitterInfo::setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdat
 
 MeasuredStateOnPlane KalmanFitterInfo::calcSmoothedState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const {
   if (forwardState == nullptr || backwardState == nullptr) {
-    // TODO: raise error
+    Exception e("KalmanFitterInfo::calcSmoothedState: forwardState or backwardState is NULL.", __LINE__,__FILE__);
+    throw e;
   }
   // check if both states are defined in the same plane
   if (forwardState->getPlane() != backwardState->getPlane()) {
-    // TODO: raise error
+    Exception e("KalmanFitterInfo::calcSmoothedState: forwardState and backwardState are not defined in the same plane.", __LINE__,__FILE__);
+    throw e;
   }
 
   TMatrixDSym fCovInv, bCovInv, smoothed_cov;

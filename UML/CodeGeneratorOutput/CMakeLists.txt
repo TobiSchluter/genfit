@@ -4,6 +4,10 @@ IF(NOT DEFINED ENV{ROOTSYS})
    MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
 ENDIF(NOT DEFINED ENV{ROOTSYS})
 
+IF(NOT DEFINED ENV{GLOGPATH})
+   MESSAGE(FATAL_ERROR "You did not set the environment variable GLOGPATH. Please install the Google Logging Library (glog) and set GLOGPATH.") 
+ENDIF(NOT DEFINED ENV{GLOGPATH})
+
 FIND_PROGRAM(ROOT_CONFIG root-config $ENV{ROOTSYS}/bin)
 
 IF(ROOT_CONFIG MATCHES "ROOT_CONFIG-NOTFOUND")

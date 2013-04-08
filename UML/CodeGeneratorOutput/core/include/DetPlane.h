@@ -123,7 +123,7 @@ class DetPlane : public TObject {
   TVector2 straightLineToPlane(const TVector3& point,const TVector3& dir) const;
 
 
-  void Print(const Option_t* = "") const;
+  void Print(const Option_t* = "") const override;
 
   //! this operator is called very often in Kalman filtering. It checks equality of planes
   //! by comparing the 9 double values that define them.
