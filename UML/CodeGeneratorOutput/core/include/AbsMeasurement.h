@@ -41,9 +41,12 @@ class AbsMeasurement : public TObject {
  public:
 
   AbsMeasurement();
-  AbsMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, const TrackPoint* trackPoint);
+  AbsMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
 
   virtual ~AbsMeasurement();
+
+  TrackPoint* const getTrackPoint() const {return trackPoint_;}
+
 
 
   virtual MeasurementOnPlane constructMeasurementOnPlane() = 0;
@@ -58,7 +61,7 @@ class AbsMeasurement : public TObject {
   /** 
    *  Pointer to #TrackPoint where the measurement belongs to
    */
-  TrackPoint const* trackPoint_; // No ownership
+  TrackPoint* trackPoint_; // No ownership
 
 
   ClassDef(AbsMeasurement,1)

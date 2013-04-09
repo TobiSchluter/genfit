@@ -62,7 +62,7 @@ KalmanFitterInfo::~KalmanFitterInfo() {
 
 
 KalmanFitterInfo* KalmanFitterInfo::clone() const {
-  KalmanFitterInfo* retVal = new KalmanFitterInfo(this->rep_);
+  KalmanFitterInfo* retVal = new KalmanFitterInfo(this->getRep());
   if (this->referenceState_ != nullptr)
     retVal->referenceState_ = new ReferenceStateOnPlane(*(this->referenceState_));
   if (this->forwardPrediction_ != nullptr)

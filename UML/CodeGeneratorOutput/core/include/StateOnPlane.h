@@ -44,11 +44,12 @@ class StateOnPlane : public TObject {
  public:
 
   StateOnPlane();
-  StateOnPlane(const TVectorD& state, sharedPlanePtr plane, const AbsTrackRep* rep);
+  StateOnPlane(const TVectorD& state, sharedPlanePtr plane, AbsTrackRep* rep);
+
 
   const TVectorD& getState() const {return state_;}
   sharedPlanePtr getPlane() const {return sharedPlane_;}
-  const AbsTrackRep* getRep() const {return rep_;}
+  AbsTrackRep* const getRep() const {return rep_;}
 
  protected:
 
@@ -59,7 +60,12 @@ class StateOnPlane : public TObject {
 
   TVectorD state_;
   sharedPlanePtr sharedPlane_; // Shared ownership.
-  AbsTrackRep const* rep_; // No ownership
+
+ private:
+
+  /** Pointer to TrackRep with respect to which StateOnPlane is defined
+   */
+  AbsTrackRep* rep_; // No ownership
 
 
   ClassDef(StateOnPlane,1)

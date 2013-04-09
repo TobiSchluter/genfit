@@ -35,7 +35,7 @@ ReferenceStateOnPlane::ReferenceStateOnPlane() :
 
 ReferenceStateOnPlane::ReferenceStateOnPlane(const TVectorD& state,
     sharedPlanePtr plane,
-    const AbsTrackRep* rep,
+    AbsTrackRep* rep,
     double forwardSegmentLength,
     double backwardSegmentLength,
     const TMatrixD& forwardTransportMatrix,

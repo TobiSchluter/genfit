@@ -48,15 +48,17 @@ class AbsFitterInfo : public TObject {
 
   virtual ~AbsFitterInfo();
 
-  virtual AbsTrackRep* const getRep() {return rep_;}
+  AbsTrackRep* const getRep() const {return rep_;}
 
   //! Deep copy ctor for polymorphic class.
   virtual AbsFitterInfo* clone() const = 0;
 
 
- protected:
+ private:
 
-  AbsTrackRep* const rep_; // No ownership
+  /** Pointer to #TrackRep with respect to which the FitterInfo is defined
+   */
+  AbsTrackRep* rep_; // No ownership
 
 
   ClassDef(AbsFitterInfo,1)

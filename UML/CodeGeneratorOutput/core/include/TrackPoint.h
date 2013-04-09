@@ -50,18 +50,20 @@ class TrackPoint : public TObject {
 
   double getSortingParameter() {return sortingParameter_;}
 
-  Track* getTrack() const {return track_;}
+  Track* const getTrack() const {return track_;}
 
   const std::vector< genfit::AbsMeasurement* >& getRawMeasurements() {return rawMeasurements_;}
   const AbsMeasurement* getRawMeasurement(unsigned int i) {return rawMeasurements_.at(i);}
   unsigned int getNumRawMeasurements() {return rawMeasurements_.size();}
+  bool hasRawMeasurements() {return (rawMeasurements_.size() > 0);}
 
   const std::vector< genfit::AbsFitterInfo* >& getFitterInfos() {return fitterInfos_;}
   const AbsFitterInfo* getFitterInfo(unsigned int i) {return fitterInfos_.at(i);}
   unsigned int getNumFitterInfos() {return fitterInfos_.size();}
+  bool hasFitterInfos() {return (fitterInfos_.size() > 0);}
 
-  bool hasMaterialInfo() {return material_ != nullptr;}
   const MaterialInfo* getMaterialInfo() {return material_;}
+  bool hasMaterialInfo() {return material_ != nullptr;}
 
 
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}

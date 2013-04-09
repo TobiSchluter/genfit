@@ -27,7 +27,7 @@ StateOnPlane::StateOnPlane() :
   ;
 }
 
-StateOnPlane::StateOnPlane(const TVectorD& state, sharedPlanePtr plane, const AbsTrackRep* rep) :
+StateOnPlane::StateOnPlane(const TVectorD& state, sharedPlanePtr plane, AbsTrackRep* rep) :
   state_(state), sharedPlane_(plane), rep_(rep)
 {
   ;
