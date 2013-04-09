@@ -26,8 +26,10 @@
 
 #include "TObject.h"
 
+
 namespace genfit {
 
+class AbsTrackRep;
 
   /** 
    *  This class collects all information needed and produced by a specific fitter and is specific to one #GFAbsTrackRep of the #GFTrack.
@@ -36,18 +38,25 @@ class AbsFitterInfo : public TObject {
 
  public:
 
-  AbsFitterInfo() {};
+  AbsFitterInfo();
+  AbsFitterInfo(AbsTrackRep* rep);
+
+  AbsFitterInfo(const AbsFitterInfo&) = delete; // copy constructor
+  AbsFitterInfo(AbsFitterInfo&&) = default; // move constructor
+  AbsFitterInfo& operator=(const AbsFitterInfo&) = delete; // assignment operator
+  AbsFitterInfo& operator=(AbsFitterInfo&&) = default; // move assignment operator
+
   virtual ~AbsFitterInfo();
+
+  virtual AbsTrackRep* const getRep() {return rep_;}
 
   //! Deep copy ctor for polymorphic class.
   virtual AbsFitterInfo* clone() const = 0;
 
- private:
 
-  AbsFitterInfo(const AbsFitterInfo&) = default;
-  AbsFitterInfo(AbsFitterInfo&&) = default;
-  AbsFitterInfo& operator=(const AbsFitterInfo&) = default;
-  AbsFitterInfo& operator=(AbsFitterInfo&&) = default;
+ protected:
+
+  AbsTrackRep* const rep_; // No ownership
 
 
   ClassDef(AbsFitterInfo,1)

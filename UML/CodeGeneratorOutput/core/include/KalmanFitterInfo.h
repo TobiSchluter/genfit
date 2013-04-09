@@ -33,9 +33,6 @@
 #include "ReferenceStateOnPlane.h"
 #include "StateOnPlane.h"
 
-namespace genfit {
-class AbsTrackRep;
-} /* End of namespace genfit */
 
 namespace genfit {
 
@@ -60,7 +57,6 @@ class KalmanFitterInfo : public AbsFitterInfo {
   const KalmanFittedStateOnPlane* getBackwardUpdate() const {return backwardUpdate_;}
   const std::vector< genfit::MeasurementOnPlane >& getMeasurementsOnPlane() const {return measurementsOnPlane_;}
   const MeasurementOnPlane& getMeasurementOnPlane(unsigned int i) const {return measurementsOnPlane_.at(i);}
-  const AbsTrackRep* getRep() {return rep_;}
 
   bool hasReferenceState() const {return (referenceState_ != nullptr);}
   bool hasForwardPrediction() const {return (forwardPrediction_ != nullptr);}
@@ -98,8 +94,6 @@ class KalmanFitterInfo : public AbsFitterInfo {
    * @element-type MeasurementOnPlane
    */
   std::vector< genfit::MeasurementOnPlane > measurementsOnPlane_;
-
-  AbsTrackRep* rep_; // No ownership
 
 
   ClassDef(KalmanFitterInfo,1)

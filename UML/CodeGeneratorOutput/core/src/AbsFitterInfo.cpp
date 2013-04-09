@@ -21,9 +21,16 @@
 
 namespace genfit {
 
+AbsFitterInfo::AbsFitterInfo() :
+  rep_(nullptr)
+{
+  ;
+}
 
-  /** 
-   *  This class collects all information needed and produced by a specific fitter and is specific to one #GFAbsTrackRep of the #GFTrack.
-   */
+AbsFitterInfo::AbsFitterInfo(AbsTrackRep* rep) :
+  rep_(rep)
+{
+  ;
+}
 
 } /* End of namespace genfit */
