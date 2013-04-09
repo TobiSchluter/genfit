@@ -161,6 +161,40 @@ void KalmanFitterInfo::setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdat
 }
 
 
+void KalmanFitterInfo::deleteForwardInfo() {
+  if (forwardPrediction_ != nullptr) {
+    delete forwardPrediction_;
+    forwardPrediction_ = nullptr;
+  }
+  if (forwardUpdate_ != nullptr) {
+    delete forwardUpdate_;
+    forwardUpdate_ = nullptr;
+  }
+}
+
+void KalmanFitterInfo::deleteBackwardInfo() {
+  if (backwardPrediction_ != nullptr) {
+    delete backwardPrediction_;
+    backwardPrediction_ = nullptr;
+  }
+  if (backwardUpdate_ != nullptr) {
+    delete backwardUpdate_;
+    backwardUpdate_ = nullptr;
+  }
+}
+
+void KalmanFitterInfo::deleteReferenceInfo() {
+  if (referenceState_ != nullptr) {
+    delete referenceState_;
+    referenceState_ = nullptr;
+  }
+}
+
+void KalmanFitterInfo::deleteMeasurementInfo() {
+  measurementsOnPlane_.clear();
+}
+
+
 MeasuredStateOnPlane KalmanFitterInfo::calcSmoothedState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const {
   if (forwardState == nullptr || backwardState == nullptr) {
     Exception e("KalmanFitterInfo::calcSmoothedState: forwardState or backwardState is NULL.", __LINE__,__FILE__);

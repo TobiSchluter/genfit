@@ -51,19 +51,24 @@ class Track {
 
   void insertPoint(TrackPoint* point, int i = -1);
 
-  void removePoint(unsigned int i);
+  void deletePoint(int id);
 
   void mergeTrack(int i, Track other);
 
   void addTrackRep(AbsTrackRep* trackRep);
-  /** Remove a #TrackRep and all corresponding #FitterInfos in the #TrackPoints
+  /** Delete a #TrackRep and all corresponding #FitterInfos in the #TrackPoints
    */
-  void removeTrackRep(unsigned int i);
+  void deleteTrackRep(int id);
   void setCardinalRep(unsigned int id);
 
   /** Sort #TrackPoints and according to their sorting parameters.
    */
   void sortHits();
+
+  void deleteForwardInfo(int startId, int endId);
+  void deleteBackwardInfo(int startId, int endId);
+  void deleteReferenceInfo(int startId, int endId);
+  void deleteMeasurementInfo(int startId, int endId);
 
  private:
 

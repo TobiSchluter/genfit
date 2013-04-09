@@ -48,11 +48,15 @@ class AbsFitterInfo : public TObject {
 
   virtual ~AbsFitterInfo();
 
-  AbsTrackRep* const getRep() const {return rep_;}
-
   //! Deep copy ctor for polymorphic class.
   virtual AbsFitterInfo* clone() const = 0;
 
+  AbsTrackRep* const getRep() const {return rep_;}
+
+  virtual void deleteForwardInfo() = 0;
+  virtual void deleteBackwardInfo() = 0;
+  virtual void deleteReferenceInfo() = 0;
+  virtual void deleteMeasurementInfo() = 0;
 
  private:
 

@@ -79,6 +79,11 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate);
   void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane >& measurementsOnPlane) {measurementsOnPlane_ = measurementsOnPlane;}
 
+  void deleteForwardInfo() override;
+  void deleteBackwardInfo() override;
+  void deleteReferenceInfo() override;
+  void deleteMeasurementInfo() override;
+
  private:
 
   MeasuredStateOnPlane calcSmoothedState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const;

@@ -97,8 +97,15 @@ void Track::insertPoint(TrackPoint* point, int i) {
 }
 
 
-void Track::removePoint(unsigned int i) {
-  // TODO: implement
+void Track::deletePoint(int id) {
+  if (id < 0)
+    id = trackPoints_.size() + id;
+
+  if (trackPoints_.at(id) != nullptr)
+    delete trackPoints_[id];
+  trackPoints_.erase (trackPoints_.begin()+id);
+
+
 }
 
 
@@ -112,7 +119,7 @@ void Track::addTrackRep(AbsTrackRep* trackRep) {
 }
 
 
-void Track::removeTrackRep(unsigned int i) {
+void Track::deleteTrackRep(int id) {
   // TODO: implement
 }
 
@@ -124,6 +131,67 @@ void Track::setCardinalRep(unsigned int id) {
 
 void Track::sortHits() {
   // TODO: implement
+}
+
+
+void Track::deleteForwardInfo(int startId, int endId) {
+  // TODO: test
+  if (startId < 0)
+    startId = trackPoints_.size() + startId;
+  if (endId < 0)
+    endId = trackPoints_.size() + endId + 1;
+
+  for (auto pointIt = begin(trackPoints_) + startId; pointIt != begin(trackPoints_) + endId; ++pointIt) {
+    auto fitterInfos = (*pointIt)->getFitterInfos();
+    for (auto fitterInfoIt = begin(fitterInfos); fitterInfoIt != begin(fitterInfos); ++fitterInfoIt) {
+      (*fitterInfoIt)->deleteForwardInfo();
+    }
+  }
+}
+
+void Track::deleteBackwardInfo(int startId, int endId) {
+  // TODO: test
+  if (startId < 0)
+    startId = trackPoints_.size() + startId;
+  if (endId < 0)
+    endId = trackPoints_.size() + endId + 1;
+
+  for (auto pointIt = begin(trackPoints_) + startId; pointIt != begin(trackPoints_) + endId; ++pointIt) {
+    auto fitterInfos = (*pointIt)->getFitterInfos();
+    for (auto fitterInfoIt = begin(fitterInfos); fitterInfoIt != begin(fitterInfos); ++fitterInfoIt) {
+      (*fitterInfoIt)->deleteBackwardInfo();
+    }
+  }
+}
+
+void Track::deleteReferenceInfo(int startId, int endId) {
+  // TODO: test
+  if (startId < 0)
+    startId = trackPoints_.size() + startId;
+  if (endId < 0)
+    endId = trackPoints_.size() + endId + 1;
+
+  for (auto pointIt = begin(trackPoints_) + startId; pointIt != begin(trackPoints_) + endId; ++pointIt) {
+    auto fitterInfos = (*pointIt)->getFitterInfos();
+    for (auto fitterInfoIt = begin(fitterInfos); fitterInfoIt != begin(fitterInfos); ++fitterInfoIt) {
+      (*fitterInfoIt)->deleteReferenceInfo();
+    }
+  }
+}
+
+void Track::deleteMeasurementInfo(int startId, int endId) {
+  // TODO: test
+  if (startId < 0)
+    startId = trackPoints_.size() + startId;
+  if (endId < 0)
+    endId = trackPoints_.size() + endId + 1;
+
+  for (auto pointIt = begin(trackPoints_) + startId; pointIt != begin(trackPoints_) + endId; ++pointIt) {
+    auto fitterInfos = (*pointIt)->getFitterInfos();
+    for (auto fitterInfoIt = begin(fitterInfos); fitterInfoIt != begin(fitterInfos); ++fitterInfoIt) {
+      (*fitterInfoIt)->deleteMeasurementInfo();
+    }
+  }
 }
 
 
