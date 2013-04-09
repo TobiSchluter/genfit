@@ -24,7 +24,11 @@
 #ifndef genfit_MaterialInfo_h
 #define genfit_MaterialInfo_h
 
+#include <memory>
+
 #include "SharedPlanePtr.h"
+
+//typedef std::shared_ptr<const genfit::DetPlane> sharedPlanePtr;
 
 namespace genfit {
 
@@ -32,7 +36,8 @@ class MaterialInfo {
 
  private:
 
-  sharedPlanePtr sharedPlane_;
+  sharedPlanePtr sharedPlane_; // Material boundary
+
 
 };
 
