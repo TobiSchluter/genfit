@@ -14,6 +14,12 @@ class AbsTrackRep {
 
  public:
 
+  AbsTrackRep();
+
+  virtual ~AbsTrackRep() = 0;
+
+  virtual AbsTrackRep* clone() const = 0;
+
   virtual double extrapolateToPlane(const StateOnPlane* stateInput,
       StateOnPlane* statePrediction,
       sharedPlanePtr plane,
@@ -54,6 +60,12 @@ class AbsTrackRep {
 
 
  protected:
+
+  // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
+  AbsTrackRep(const AbsTrackRep&) = default; // copy constructor
+  AbsTrackRep& operator=(const AbsTrackRep&) = default; // assignment operator
+
+
   int pdgCode_;
 
 };

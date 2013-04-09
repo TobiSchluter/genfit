@@ -45,6 +45,11 @@ class TrackPoint : public TObject {
   TrackPoint(Track* track);
   TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurements, Track* track);
 
+  TrackPoint(const TrackPoint&); // copy constructor
+  TrackPoint(TrackPoint&&) = default; // move constructor
+  TrackPoint& operator=(const TrackPoint&); // assignment operator
+  TrackPoint& operator=(TrackPoint&&) = default; // move assignment operator
+
   ~TrackPoint();
 
 
@@ -84,9 +89,9 @@ class TrackPoint : public TObject {
    *  Can be more than one, e.g. multiple measurements in the same Si detector, left and right measurements of a wire detector etc.
    * @element-type AbsMeasurement
    */
-  std::vector< genfit::AbsMeasurement* > rawMeasurements_; // Ownership
+  std::vector< AbsMeasurement* > rawMeasurements_; // Ownership
 
-  std::vector< genfit::AbsFitterInfo* > fitterInfos_; // Ownership
+  std::vector< AbsFitterInfo* > fitterInfos_; // Ownership
 
   MaterialInfo* material_; // Ownership
 

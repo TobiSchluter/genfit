@@ -40,6 +40,50 @@ TrackPoint::TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurem
 }
 
 
+TrackPoint::TrackPoint(const TrackPoint& rhs) {
+  track_ = rhs.track_;
+
+  for (AbsMeasurement* rhsMeasurement : rhs.rawMeasurements_) {
+    rawMeasurements_.push_back(rhsMeasurement->clone());
+  }
+
+  for (AbsFitterInfo* rhsFitterInfo : rhs.fitterInfos_) {
+    fitterInfos_.push_back(rhsFitterInfo->clone());
+  }
+
+  material_ = new MaterialInfo(*(rhs.material_));
+}
+
+TrackPoint& TrackPoint::operator=(const TrackPoint& rhs) {
+  track_ = rhs.track_;
+
+  for (AbsMeasurement* measurement : rawMeasurements_) {
+    if (measurement != nullptr)
+      delete measurement;
+  }
+  rawMeasurements_.clear();
+
+  for (AbsMeasurement* rhsMeasurement : rhs.rawMeasurements_) {
+    rawMeasurements_.push_back(rhsMeasurement->clone());
+  }
+
+  for (AbsFitterInfo* fitterInfo : fitterInfos_) {
+    if (fitterInfo != nullptr)
+      delete fitterInfo;
+  }
+  fitterInfos_.clear();
+
+  for (AbsFitterInfo* rhsFitterInfo : rhs.fitterInfos_) {
+    fitterInfos_.push_back(rhsFitterInfo->clone());
+  }
+
+  if (material_ != nullptr)
+    delete material_;
+
+  return *this;
+}
+
+
 TrackPoint::~TrackPoint() {
   for (AbsMeasurement* measurement : rawMeasurements_) {
     if (measurement != nullptr)

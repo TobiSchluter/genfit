@@ -45,6 +45,9 @@ class AbsMeasurement : public TObject {
 
   virtual ~AbsMeasurement();
 
+  //! Deep copy ctor for polymorphic class.
+  virtual AbsMeasurement* clone() const = 0;
+
   TrackPoint* const getTrackPoint() const {return trackPoint_;}
 
 
@@ -53,6 +56,11 @@ class AbsMeasurement : public TObject {
 
 
  protected:
+
+  // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
+  AbsMeasurement(const AbsMeasurement&) = default;
+  AbsMeasurement& operator=(const AbsMeasurement&) = default;
+
   TVectorD rawHitCoords_;
   TMatrixDSym rawHitCov_;
   int detId_;
