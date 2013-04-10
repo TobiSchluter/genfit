@@ -97,7 +97,6 @@ TrackPoint::~TrackPoint() {
 
   if (material_ != nullptr)
     delete material_;
-
 }
 
 
@@ -105,6 +104,42 @@ void TrackPoint::setMaterial(MaterialInfo* material) {
   if (material_ != nullptr)
     delete material_;
   material_ = material;
+}
+
+
+AbsMeasurement* TrackPoint::getRawMeasurement(int i) {
+  if (i < 0)
+    i += rawMeasurements_.size();
+
+  return rawMeasurements_.at(i);
+}
+
+
+AbsFitterInfo* TrackPoint::getFitterInfo(int i) {
+  if (i < 0)
+    i += fitterInfos_.size();
+
+  return fitterInfos_.at(i);
+}
+
+
+void TrackPoint::deleteFitterInfo(int i) {
+  if (i < 0)
+    i += fitterInfos_.size();
+
+  if (fitterInfos_.at(i) != nullptr) {
+    delete fitterInfos_[i];
+  }
+  fitterInfos_.erase(begin(fitterInfos_) + i);
+}
+
+void TrackPoint::deleteFitterInfo(const AbsTrackRep* rep) {
+  for (unsigned int i=0; i<fitterInfos_.size(); ++i){
+    if (fitterInfos_[i]->getRep() == rep) {
+      deleteFitterInfo(i);
+      --i;
+    }
+  }
 }
 
 } /* End of namespace genfit */

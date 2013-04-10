@@ -19,6 +19,9 @@
 
 #include "Track.h"
 
+#include <glog/logging.h>
+
+
 namespace genfit {
 
 Track::Track() :
@@ -92,20 +95,43 @@ Track::~Track() {
 }
 
 
-void Track::insertPoint(TrackPoint* point, int i) {
-  // TODO: implement
+TrackPoint* Track::getPoint(int id) const {
+  if (id < 0)
+    id += trackPoints_.size();
+
+  return trackPoints_.at(id);
+}
+
+
+void Track::insertPoint(TrackPoint* point, int id) {
+  // TODO: test
+  if (id < 0)
+    id += trackPoints_.size();
+
+  // delete fitter infos if inserted point has a measurement
+  if (point->hasRawMeasurements()) {
+    deleteForwardInfo(id, -1);
+    deleteBackwardInfo(0, id-1);
+  }
+
+  trackPoints_.insert(trackPoints_.begin() + id, point);
 }
 
 
 void Track::deletePoint(int id) {
+  // TODO: test
   if (id < 0)
-    id = trackPoints_.size() + id;
+    id += trackPoints_.size();
 
-  if (trackPoints_.at(id) != nullptr)
+  if (trackPoints_.at(id) != nullptr) {
+    // delete fitter infos if deleted point has a measurement
+    if (trackPoints_[id]->hasRawMeasurements()) {
+      deleteForwardInfo(id, -1);
+      deleteBackwardInfo(0, id-1);
+    }
     delete trackPoints_[id];
+  }
   trackPoints_.erase (trackPoints_.begin()+id);
-
-
 }
 
 
@@ -115,17 +141,44 @@ void Track::mergeTrack(int i, Track other) {
 
 
 void Track::addTrackRep(AbsTrackRep* trackRep) {
-  // TODO: implement
+  // TODO: Test
+  trackReps_.push_back(trackRep);
+
+  // the fitter has to take care of adding fitterInfos
 }
 
 
 void Track::deleteTrackRep(int id) {
-  // TODO: implement
+  // TODO: test
+  if (id < 0)
+    id += trackReps_.size();
+
+  AbsTrackRep* rep = trackReps_.at(id);
+
+  // update cardinalRep_
+  if (int(cardinalRep_) == id)
+    cardinalRep_ = 0; // reset
+  else if (int(cardinalRep_) > id)
+    --cardinalRep_; // make cardinalRep_ point to the same TrackRep before and after deletion
+
+  // delete FitterInfos related to the deleted TrackRep
+  for (auto pointIt = begin(trackPoints_); pointIt != end(trackPoints_); ++pointIt) {
+    (*pointIt)->deleteFitterInfo(rep);
+  }
 }
 
 
-void Track::setCardinalRep(unsigned int id) {
-  // TODO: implement
+void Track::setCardinalRep(int id) {
+  // TODO: Test
+  if (id < 0)
+    id += trackReps_.size();
+
+  if (id >= 0 && (unsigned int)id < trackReps_.size())
+    cardinalRep_ = id;
+  else {
+    cardinalRep_ = 0;
+    LOG(WARNING) << "Track::setCardinalRep: Attempted to set cardinalRep_ to a value out of bounds. Resetting  cardinalRep_ to 0.";
+  }
 }
 
 
@@ -137,13 +190,13 @@ void Track::sortHits() {
 void Track::deleteForwardInfo(int startId, int endId) {
   // TODO: test
   if (startId < 0)
-    startId = trackPoints_.size() + startId;
+    startId += trackPoints_.size();
   if (endId < 0)
-    endId = trackPoints_.size() + endId + 1;
+    endId += trackPoints_.size() + 1;
 
   for (auto pointIt = begin(trackPoints_) + startId; pointIt != begin(trackPoints_) + endId; ++pointIt) {
     auto fitterInfos = (*pointIt)->getFitterInfos();
-    for (auto fitterInfoIt = begin(fitterInfos); fitterInfoIt != begin(fitterInfos); ++fitterInfoIt) {
+    for (auto fitterInfoIt = begin(fitterInfos); fitterInfoIt != end(fitterInfos); ++fitterInfoIt) {
       (*fitterInfoIt)->deleteForwardInfo();
     }
   }
@@ -152,13 +205,13 @@ void Track::deleteForwardInfo(int startId, int endId) {
 void Track::deleteBackwardInfo(int startId, int endId) {
   // TODO: test
   if (startId < 0)
-    startId = trackPoints_.size() + startId;
+    startId += trackPoints_.size();
   if (endId < 0)
-    endId = trackPoints_.size() + endId + 1;
+    endId += trackPoints_.size() + 1;
 
   for (auto pointIt = begin(trackPoints_) + startId; pointIt != begin(trackPoints_) + endId; ++pointIt) {
     auto fitterInfos = (*pointIt)->getFitterInfos();
-    for (auto fitterInfoIt = begin(fitterInfos); fitterInfoIt != begin(fitterInfos); ++fitterInfoIt) {
+    for (auto fitterInfoIt = begin(fitterInfos); fitterInfoIt != end(fitterInfos); ++fitterInfoIt) {
       (*fitterInfoIt)->deleteBackwardInfo();
     }
   }
@@ -167,28 +220,28 @@ void Track::deleteBackwardInfo(int startId, int endId) {
 void Track::deleteReferenceInfo(int startId, int endId) {
   // TODO: test
   if (startId < 0)
-    startId = trackPoints_.size() + startId;
+    startId += trackPoints_.size();
   if (endId < 0)
-    endId = trackPoints_.size() + endId + 1;
+    endId += trackPoints_.size() + 1;
 
   for (auto pointIt = begin(trackPoints_) + startId; pointIt != begin(trackPoints_) + endId; ++pointIt) {
     auto fitterInfos = (*pointIt)->getFitterInfos();
-    for (auto fitterInfoIt = begin(fitterInfos); fitterInfoIt != begin(fitterInfos); ++fitterInfoIt) {
+    for (auto fitterInfoIt = begin(fitterInfos); fitterInfoIt != end(fitterInfos); ++fitterInfoIt) {
       (*fitterInfoIt)->deleteReferenceInfo();
     }
   }
 }
 
 void Track::deleteMeasurementInfo(int startId, int endId) {
-  // TODO: test
+  // TODO: test. Do we also have to delete forward- and backward info if measurements are removed?
   if (startId < 0)
-    startId = trackPoints_.size() + startId;
+    startId += trackPoints_.size();
   if (endId < 0)
-    endId = trackPoints_.size() + endId + 1;
+    endId += trackPoints_.size() + 1;
 
   for (auto pointIt = begin(trackPoints_) + startId; pointIt != begin(trackPoints_) + endId; ++pointIt) {
     auto fitterInfos = (*pointIt)->getFitterInfos();
-    for (auto fitterInfoIt = begin(fitterInfos); fitterInfoIt != begin(fitterInfos); ++fitterInfoIt) {
+    for (auto fitterInfoIt = begin(fitterInfos); fitterInfoIt != end(fitterInfos); ++fitterInfoIt) {
       (*fitterInfoIt)->deleteMeasurementInfo();
     }
   }

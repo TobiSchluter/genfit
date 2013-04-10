@@ -33,7 +33,7 @@ class Track {
   ~Track();
 
 
-  TrackPoint* getPoint(unsigned int id) const {return trackPoints_.at(id);}
+  TrackPoint* getPoint(int id) const;
   unsigned int getNumTrackPoints() const {return trackPoints_.size();}
 
   AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id);}
@@ -48,8 +48,10 @@ class Track {
   AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_);}
   unsigned int getCardinalRepID() const {return cardinalRep_;}
 
-
-  void insertPoint(TrackPoint* point, int i = -1);
+  /** Insert TrackPoint before TrackPoint with position id.
+   * Id -1 means after last TrackPoint.
+   */
+  void insertPoint(TrackPoint* point, int id = -1);
 
   void deletePoint(int id);
 
@@ -59,13 +61,13 @@ class Track {
   /** Delete a #TrackRep and all corresponding #FitterInfos in the #TrackPoints
    */
   void deleteTrackRep(int id);
-  void setCardinalRep(unsigned int id);
+  void setCardinalRep(int id);
 
   /** Sort #TrackPoints and according to their sorting parameters.
    */
   void sortHits();
 
-  void deleteForwardInfo(int startId, int endId);
+  void deleteForwardInfo(int startId, int endId); // delete in range [startId, endId]
   void deleteBackwardInfo(int startId, int endId);
   void deleteReferenceInfo(int startId, int endId);
   void deleteMeasurementInfo(int startId, int endId);

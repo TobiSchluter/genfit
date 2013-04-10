@@ -58,12 +58,12 @@ class TrackPoint : public TObject {
   Track* const getTrack() const {return track_;}
 
   std::vector< genfit::AbsMeasurement* >& getRawMeasurements() {return rawMeasurements_;}
-  AbsMeasurement* getRawMeasurement(unsigned int i) {return rawMeasurements_.at(i);}
+  AbsMeasurement* getRawMeasurement(int i);
   unsigned int getNumRawMeasurements() {return rawMeasurements_.size();}
   bool hasRawMeasurements() {return (rawMeasurements_.size() > 0);}
 
   std::vector< genfit::AbsFitterInfo* >& getFitterInfos() {return fitterInfos_;}
-  AbsFitterInfo* getFitterInfo(unsigned int i) {return fitterInfos_.at(i);}
+  AbsFitterInfo* getFitterInfo(int i);
   unsigned int getNumFitterInfos() {return fitterInfos_.size();}
   bool hasFitterInfos() {return (fitterInfos_.size() > 0);}
 
@@ -74,6 +74,8 @@ class TrackPoint : public TObject {
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
   void addRawMeasurement(AbsMeasurement* rawMeasurement) {rawMeasurements_.push_back(rawMeasurement);}
   void addFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_.push_back(fitterInfo);}
+  void deleteFitterInfo(int i);
+  void deleteFitterInfo(const AbsTrackRep* rep);
   void setMaterial(MaterialInfo* material);
 
 
