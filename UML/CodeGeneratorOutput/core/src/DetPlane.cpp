@@ -90,8 +90,7 @@ DetPlane& DetPlane::operator=(const DetPlane& rhs) {
 }
 
 
-void
-DetPlane::set(const TVector3& o,
+void DetPlane::set(const TVector3& o,
                 const TVector3& u,
                 const TVector3& v)
 {
@@ -102,34 +101,29 @@ DetPlane::set(const TVector3& o,
 }
 
 
-void
-DetPlane::setO(const TVector3& o)
+void DetPlane::setO(const TVector3& o)
 {
   o_ = o;
 }
 
-void
-DetPlane::setO(double X,double Y,double Z)
+void DetPlane::setO(double X,double Y,double Z)
 {
   o_.SetXYZ(X,Y,Z);
 }
 
-void
-DetPlane::setU(const TVector3& u)
+void DetPlane::setU(const TVector3& u)
 {
   u_ = u;
   sane(); // sets v_ perpendicular to u_
 }
 
-void
-DetPlane::setU(double X,double Y,double Z)
+void DetPlane::setU(double X,double Y,double Z)
 {
   u_.SetXYZ(X,Y,Z);
   sane(); // sets v_ perpendicular to u_
 }
 
-void
-DetPlane::setV(const TVector3& v)
+void DetPlane::setV(const TVector3& v)
 {
   v_ = v;
   u_ = getNormal().Cross(v_);
@@ -137,8 +131,7 @@ DetPlane::setV(const TVector3& v)
   sane();
 }
 
-void
-DetPlane::setV(double X,double Y,double Z)
+void DetPlane::setV(double X,double Y,double Z)
 {
   v_.SetXYZ(X,Y,Z);
   u_ = getNormal().Cross(v_);
@@ -146,34 +139,29 @@ DetPlane::setV(double X,double Y,double Z)
   sane();
 }
 
-void
-DetPlane::setUV(const TVector3& u,const TVector3& v)
+void DetPlane::setUV(const TVector3& u,const TVector3& v)
 {
   u_ = u;
   v_ = v;
   sane();
 }
 
-void
-DetPlane::setON(const TVector3& o,const TVector3& n){
+void DetPlane::setON(const TVector3& o,const TVector3& n){
   o_ = o;
   setNormal(n);
 }
 
 
-TVector3
-DetPlane::getNormal() const
+TVector3 DetPlane::getNormal() const
 {
   return u_.Cross(v_);
 }
 
-void
-DetPlane::setNormal(double X,double Y,double Z){
+void DetPlane::setNormal(double X,double Y,double Z){
   setNormal( TVector3(X,Y,Z) );
 }
 
-void
-DetPlane::setNormal(const TVector3& n){
+void DetPlane::setNormal(const TVector3& n){
   u_ = n.Orthogonal();
   u_.SetMag(1.);
   v_ = n.Cross(u_);
@@ -185,22 +173,19 @@ void DetPlane::setNormal(const double& theta, const double& phi){
 }
 
 
-TVector2
-DetPlane::project(const TVector3& x)const
+TVector2 DetPlane::project(const TVector3& x)const
 {
   return TVector2(u_*x, v_*x);
 }
 
 
-TVector2
-DetPlane::LabToPlane(const TVector3& x)const
+TVector2 DetPlane::LabToPlane(const TVector3& x)const
 {
   return project(x-o_);
 }
 
 
-TVector3
-DetPlane::toLab(const TVector2& x)const
+TVector3 DetPlane::toLab(const TVector2& x)const
 {
   TVector3 d(o_);
   d += x.X()*u_;
@@ -209,15 +194,13 @@ DetPlane::toLab(const TVector2& x)const
 }
 
 
-TVector3
-DetPlane::dist(const TVector3& x)const
+TVector3 DetPlane::dist(const TVector3& x)const
 {
   return toLab(LabToPlane(x)) - x;
 }
 
 
-void
-DetPlane::sane(){
+void DetPlane::sane(){
   assert(u_!=v_);
 
   // ensure unit vectors
@@ -232,8 +215,7 @@ DetPlane::sane(){
 }
 
 
-void
-DetPlane::Print(const Option_t* option) const
+void DetPlane::Print(const Option_t* option) const
 {
   std::cout<<"DetPlane: "
      <<"O("<<o_.X()<<","<<o_.Y()<<","<<o_.Z()<<") "
