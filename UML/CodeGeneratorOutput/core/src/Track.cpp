@@ -105,6 +105,50 @@ TrackPoint* Track::getPoint(int id) const {
 }
 
 
+TrackPoint* Track::getPointWithMeasurement(int id) const {
+  if (id < 0)
+    id += trackPoints_.size();
+
+  int idMeas(0);
+
+  for (unsigned int i=0; i<trackPoints_.size(); ++i) {
+    if (trackPoints_[i]->hasRawMeasurements()) {
+      if (id == idMeas)
+        return trackPoints_.at(i);
+      ++idMeas;
+    }
+  }
+
+  return nullptr;
+}
+
+
+std::vector<TrackPoint*> Track::getPointsWithMeasurement() const {
+  std::vector<TrackPoint*> retVal;
+
+  for (unsigned int i=0; i<trackPoints_.size(); ++i) {
+    if (trackPoints_[i]->hasRawMeasurements()) {
+      retVal.push_back(trackPoints_[i]);
+    }
+  }
+
+  return retVal;
+}
+
+
+unsigned int Track::getNumPointsWithMeasurement() const {
+  unsigned int retVal(0);
+
+  for (unsigned int i=0; i<trackPoints_.size(); ++i) {
+    if (trackPoints_[i]->hasRawMeasurements()) {
+      ++retVal;
+    }
+  }
+
+  return retVal;
+}
+
+
 void Track::insertPoint(TrackPoint* point, int id) {
   // TODO: test
   if (id < 0)

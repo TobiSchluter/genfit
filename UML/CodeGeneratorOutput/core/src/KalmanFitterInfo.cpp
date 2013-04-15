@@ -22,6 +22,8 @@
 #include "Exception.h"
 #include "KalmanFitterInfo.h"
 #include "Tools.h"
+#include "Track.h"
+#include "TrackPoint.h"
 
 namespace genfit {
 
@@ -82,20 +84,20 @@ MeasuredStateOnPlane KalmanFitterInfo::getSmoothedState(bool biased) const {
   // TODO: Test
 
   if (biased) {
-    if (forwardUpdate_ != nullptr && backwardPrediction_ == nullptr && backwardUpdate_ == nullptr) // last measurement
+    if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(-1) == this->getTrackPoint()) // last measurement
       return MeasuredStateOnPlane(*forwardUpdate_);
-    else if (backwardUpdate_ != nullptr && forwardPrediction_ == nullptr && forwardUpdate_ == nullptr) // first measurement
+    else if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(0) == this->getTrackPoint()) // first measurement
       return MeasuredStateOnPlane(*backwardUpdate_);
 
-    return calcSmoothedState(forwardUpdate_, backwardPrediction_);
+    return calcAverageState(forwardUpdate_, backwardPrediction_);
   }
   else { // unbiased
-    if (forwardPrediction_ != nullptr && backwardPrediction_ == nullptr && backwardUpdate_ == nullptr) // last measurement
+    if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(-1) == this->getTrackPoint()) // last measurement
       return MeasuredStateOnPlane(*forwardPrediction_);
-    else if (backwardPrediction_ != nullptr && forwardPrediction_ == nullptr && forwardUpdate_ == nullptr) // first measurement
+    else if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(0) == this->getTrackPoint()) // first measurement
       return MeasuredStateOnPlane(*backwardPrediction_);
 
-    return calcSmoothedState(forwardPrediction_, backwardPrediction_);
+    return calcAverageState(forwardPrediction_, backwardPrediction_);
   }
 
 }
@@ -195,14 +197,14 @@ void KalmanFitterInfo::deleteMeasurementInfo() {
 }
 
 
-MeasuredStateOnPlane KalmanFitterInfo::calcSmoothedState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const {
+MeasuredStateOnPlane KalmanFitterInfo::calcAverageState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const {
   if (forwardState == nullptr || backwardState == nullptr) {
-    Exception e("KalmanFitterInfo::calcSmoothedState: forwardState or backwardState is NULL.", __LINE__,__FILE__);
+    Exception e("KalmanFitterInfo::calcAverageState: forwardState or backwardState is NULL.", __LINE__,__FILE__);
     throw e;
   }
   // check if both states are defined in the same plane
   if (forwardState->getPlane() != backwardState->getPlane()) {
-    Exception e("KalmanFitterInfo::calcSmoothedState: forwardState and backwardState are not defined in the same plane.", __LINE__,__FILE__);
+    Exception e("KalmanFitterInfo::calcAverageState: forwardState and backwardState are not defined in the same plane.", __LINE__,__FILE__);
     throw e;
   }
 

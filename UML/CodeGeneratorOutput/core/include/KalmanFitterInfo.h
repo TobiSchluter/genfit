@@ -86,7 +86,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
  private:
 
-  MeasuredStateOnPlane calcSmoothedState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const;
+  MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const;
 
   ReferenceStateOnPlane* referenceState_; // Ownership
   MeasuredStateOnPlane* forwardPrediction_; // Ownership

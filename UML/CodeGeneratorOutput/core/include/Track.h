@@ -34,7 +34,12 @@ class Track {
 
 
   TrackPoint* getPoint(int id) const;
-  unsigned int getNumTrackPoints() const {return trackPoints_.size();}
+  const std::vector< TrackPoint* >& getPoints() {return trackPoints_;}
+  unsigned int getNumPoints() const {return trackPoints_.size();}
+
+  TrackPoint* getPointWithMeasurement(int id) const;
+  std::vector< TrackPoint* > getPointsWithMeasurement() const;
+  unsigned int getNumPointsWithMeasurement() const;
 
   AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id);}
   unsigned int getNumReps() const {return trackReps_.size();}
