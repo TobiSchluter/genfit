@@ -173,7 +173,7 @@ class DetPlane : public TObject {
   AbsFinitePlane* finitePlane_; // Ownership
 
 
-  ClassDef(DetPlane,1)
+  //ClassDef(DetPlane,1)
 
 };
 

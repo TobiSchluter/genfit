@@ -30,6 +30,7 @@
 namespace genfit {
 
 class AbsTrackRep;
+class TrackPoint;
 
   /** 
    *  This class collects all information needed and produced by a specific fitter and is specific to one #GFAbsTrackRep of the #GFTrack.
@@ -39,18 +40,19 @@ class AbsFitterInfo : public TObject {
  public:
 
   AbsFitterInfo();
-  AbsFitterInfo(AbsTrackRep* rep);
+  AbsFitterInfo(TrackPoint* trackPoint, AbsTrackRep* rep);
 
   AbsFitterInfo(const AbsFitterInfo&) = delete; // copy constructor
   AbsFitterInfo(AbsFitterInfo&&) = default; // move constructor
   AbsFitterInfo& operator=(const AbsFitterInfo&) = delete; // assignment operator
   AbsFitterInfo& operator=(AbsFitterInfo&&) = default; // move assignment operator
 
-  virtual ~AbsFitterInfo();
+  virtual ~AbsFitterInfo() {};
 
   //! Deep copy ctor for polymorphic class.
   virtual AbsFitterInfo* clone() const = 0;
 
+  TrackPoint* const getTrackPoint() const {return trackPoint_;}
   AbsTrackRep* const getRep() const {return rep_;}
 
   virtual void deleteForwardInfo() = 0;
@@ -64,8 +66,11 @@ class AbsFitterInfo : public TObject {
    */
   AbsTrackRep* rep_; // No ownership
 
+  /** Pointer to #TrackPoint where the FitterInfo belongs to
+   */
+  TrackPoint* trackPoint_; // No ownership
 
-  ClassDef(AbsFitterInfo,1)
+  //ClassDef(AbsFitterInfo,1)
 
 };
 

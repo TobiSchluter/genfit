@@ -214,7 +214,7 @@ class TrackCand : public TObject {
   double q_; /**< the charge of the particle in units of elementary charge */
 
 
-  ClassDef(TrackCand,1)
+  //ClassDef(TrackCand,1)
 
 };
 

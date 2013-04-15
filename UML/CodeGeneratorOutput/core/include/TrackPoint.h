@@ -98,7 +98,7 @@ class TrackPoint : public TObject {
   MaterialInfo* material_; // Ownership
 
 
-  ClassDef(TrackPoint,1)
+  //ClassDef(TrackPoint,1)
 
 };
 

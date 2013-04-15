@@ -21,8 +21,4 @@
 
 namespace genfit {
 
-AbsFinitePlane::~AbsFinitePlane(){
-  ;
-}
-
 } /* End of namespace genfit */

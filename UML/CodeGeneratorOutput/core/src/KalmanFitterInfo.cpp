@@ -36,8 +36,8 @@ KalmanFitterInfo::KalmanFitterInfo() :
   ;
 }
 
-KalmanFitterInfo::KalmanFitterInfo(AbsTrackRep* rep)  :
-  AbsFitterInfo(rep),
+KalmanFitterInfo::KalmanFitterInfo(TrackPoint* trackPoint, AbsTrackRep* rep)  :
+  AbsFitterInfo(trackPoint, rep),
   referenceState_(nullptr),
   forwardPrediction_(nullptr),
   forwardUpdate_(nullptr),
@@ -62,7 +62,7 @@ KalmanFitterInfo::~KalmanFitterInfo() {
 
 
 KalmanFitterInfo* KalmanFitterInfo::clone() const {
-  KalmanFitterInfo* retVal = new KalmanFitterInfo(this->getRep());
+  KalmanFitterInfo* retVal = new KalmanFitterInfo(this->getTrackPoint(), this->getRep());
   if (this->referenceState_ != nullptr)
     retVal->referenceState_ = new ReferenceStateOnPlane(*(this->referenceState_));
   if (this->forwardPrediction_ != nullptr)

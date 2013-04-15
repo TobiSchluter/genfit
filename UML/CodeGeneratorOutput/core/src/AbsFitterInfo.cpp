@@ -22,12 +22,14 @@
 namespace genfit {
 
 AbsFitterInfo::AbsFitterInfo() :
+  trackPoint_(nullptr),
   rep_(nullptr)
 {
   ;
 }
 
-AbsFitterInfo::AbsFitterInfo(AbsTrackRep* rep) :
+AbsFitterInfo::AbsFitterInfo(TrackPoint* trackPoint, AbsTrackRep* rep) :
+  trackPoint_(trackPoint),
   rep_(rep)
 {
   ;

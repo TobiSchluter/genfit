@@ -72,7 +72,7 @@ class AbsMeasurement : public TObject {
   TrackPoint* trackPoint_; // No ownership
 
 
-  ClassDef(AbsMeasurement,1)
+  //ClassDef(AbsMeasurement,1)
 
 };
 

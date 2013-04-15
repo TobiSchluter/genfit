@@ -45,7 +45,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
  public:
 
   KalmanFitterInfo();
-  KalmanFitterInfo(AbsTrackRep* rep);
+  KalmanFitterInfo(TrackPoint* trackPoint, AbsTrackRep* rep);
   ~KalmanFitterInfo();
 
   virtual KalmanFitterInfo* clone() const override;
@@ -101,7 +101,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   std::vector< genfit::MeasurementOnPlane > measurementsOnPlane_;
 
 
-  ClassDef(KalmanFitterInfo,1)
+  //ClassDef(KalmanFitterInfo,1)
 
 };
 

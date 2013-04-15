@@ -39,8 +39,8 @@ class AbsFinitePlane : public TObject {
 
  public:
 
-  AbsFinitePlane();
-  virtual ~AbsFinitePlane();
+  AbsFinitePlane() {};
+  virtual ~AbsFinitePlane() {};
 
   //! Returns whether a u,v point is in the active plane or not. Needs to be implemented
   //! in child class.
@@ -57,7 +57,7 @@ class AbsFinitePlane : public TObject {
   AbsFinitePlane& operator=(const AbsFinitePlane&) = default;
 
 
-  ClassDef(AbsFinitePlane,1)
+  //ClassDef(AbsFinitePlane,1)
 
 };
 

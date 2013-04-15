@@ -80,7 +80,7 @@ class Track {
   unsigned int cardinalRep_; // THE selected rep, default = 0;
 
 
-  ClassDef(Track,1)
+  //ClassDef(Track,1)
 
 };
 

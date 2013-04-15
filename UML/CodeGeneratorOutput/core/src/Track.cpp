@@ -19,7 +19,9 @@
 
 #include "Track.h"
 
-#include <glog/logging.h>
+#include <iostream>
+
+//#include <glog/logging.h>
 
 
 namespace genfit {
@@ -177,7 +179,7 @@ void Track::setCardinalRep(int id) {
     cardinalRep_ = id;
   else {
     cardinalRep_ = 0;
-    LOG(WARNING) << "Track::setCardinalRep: Attempted to set cardinalRep_ to a value out of bounds. Resetting  cardinalRep_ to 0.";
+    std::cerr << "Track::setCardinalRep: Attempted to set cardinalRep_ to a value out of bounds. Resetting  cardinalRep_ to 0." << std::endl;
   }
 }
 

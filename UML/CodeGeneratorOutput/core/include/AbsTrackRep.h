@@ -20,11 +20,11 @@ class AbsTrackRep {
 
   virtual AbsTrackRep* clone() const = 0;
 
-  virtual double extrapolateToPlane(const StateOnPlane& stateInput,
+ /* virtual double extrapolateToPlane(const StateOnPlane& stateInput,
       StateOnPlane& statePrediction,
       sharedPlanePtr plane,
       enum stopAtBoundary = false,
-      std::vector< MaterialInfo* > * = nullptr) const;
+      std::vector< MaterialInfo* > * = nullptr) const;*/
 
   virtual double extrapolateToLine(const StateOnPlane* stateInput,
       StateOnPlane* statePrediction,

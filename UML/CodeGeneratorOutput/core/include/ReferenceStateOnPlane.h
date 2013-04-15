@@ -73,7 +73,7 @@ class ReferenceStateOnPlane : public StateOnPlane {
   TMatrixDSym backwardNoiseMatrix_;
 
 
-  ClassDef(ReferenceStateOnPlane,0)
+  //ClassDef(ReferenceStateOnPlane,0)
 
 };
 
