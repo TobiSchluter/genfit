@@ -8,6 +8,7 @@
 #include "TrackCand.h"
 #include "TrackPoint.h"
 
+#include "TObject.h"
 
 namespace genfit {
 
@@ -17,7 +18,7 @@ namespace genfit {
    *  
    *  Can be created from a TrackCand, then all the information from the TrackCand will go into the Track.
    */
-class Track {
+class Track : public TObject {
 
  public:
 

@@ -17,25 +17,30 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "MaterialInfo.h"
+#include "MaterialProperties.h"
 
 namespace genfit {
 
-MaterialInfo::MaterialInfo() :
-  sharedPlane_(),
-  materialBefore_(),
-  materialAfter_()
+MaterialProperties::MaterialProperties() :
+  density_(0),
+  Z_(0),
+  A_(0),
+  radiationLength_(0),
+  mEE_(0)
 {
   ;
 }
 
-
-MaterialInfo::MaterialInfo(sharedPlanePtr sharedPlane,
-                           sharedMaterialPropertiesPtr materialBefore,
-                           sharedMaterialPropertiesPtr materialAfter) :
-  sharedPlane_(sharedPlane),
-  materialBefore_(materialBefore),
-  materialAfter_(materialAfter)
+MaterialProperties::MaterialProperties(const double& density,
+                   const double& Z,
+                   const double& A,
+                   const double& radiationLength,
+                   const double& mEE) :
+  density_(density),
+  Z_(Z),
+  A_(A),
+  radiationLength_(radiationLength),
+  mEE_(mEE)
 {
   ;
 }

@@ -1,4 +1,4 @@
-/* Copyright 2008-2009, Technische Universitaet Muenchen,
+/* Copyright 2008-2010, Technische Universitaet Muenchen,
    Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
 
    This file is part of GENFIT.
@@ -17,28 +17,17 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "MaterialInfo.h"
+/** @addtogroup genfit
+ * @{
+ */
 
-namespace genfit {
+#ifndef genfit_SharedMaterialPropertiesPtr_h
+#define genfit_SharedMaterialPropertiesPtr_h
 
-MaterialInfo::MaterialInfo() :
-  sharedPlane_(),
-  materialBefore_(),
-  materialAfter_()
-{
-  ;
-}
+#include <memory>
 
+#include "MaterialProperties.h"
 
-MaterialInfo::MaterialInfo(sharedPlanePtr sharedPlane,
-                           sharedMaterialPropertiesPtr materialBefore,
-                           sharedMaterialPropertiesPtr materialAfter) :
-  sharedPlane_(sharedPlane),
-  materialBefore_(materialBefore),
-  materialAfter_(materialAfter)
-{
-  ;
-}
+typedef std::shared_ptr< const genfit::MaterialProperties > sharedMaterialPropertiesPtr;
 
-
-} /* End of namespace genfit */
+#endif // genfit_SharedMaterialPropertiesPtr_h

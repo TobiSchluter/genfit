@@ -21,38 +21,40 @@
  * @{
  */
 
-#ifndef genfit_MaterialInfo_h
-#define genfit_MaterialInfo_h
-
-#include "SharedPlanePtr.h"
-#include "SharedMaterialPropertiesPtr.h"
+#ifndef genfit_MaterialProperties_h
+#define genfit_MaterialProperties_h
 
 #include "TObject.h"
 
 namespace genfit {
 
-class MaterialInfo : public TObject {
+class MaterialProperties : public TObject {
 
  public:
 
-  MaterialInfo();
-  MaterialInfo(sharedPlanePtr sharedPlane,
-               sharedMaterialPropertiesPtr materialBefore,
-               sharedMaterialPropertiesPtr materialAfter);
+  MaterialProperties();
+  MaterialProperties(const double& density,
+                     const double& Z,
+                     const double& A,
+                     const double& radiationLength,
+                     const double& mEE);
 
-  sharedPlanePtr getPlane() const {return sharedPlane_;}
-  sharedMaterialPropertiesPtr getMaterialBefore() const {return materialBefore_;}
-  sharedMaterialPropertiesPtr getMaterialAfter() const {return materialAfter_;}
+  double getDensity() const {return density_;}
+  double getZ() const {return Z_;}
+  double getA() const {return A_;}
+  double getRadLen() const {return radiationLength_;}
+  double getMEE() const {return mEE_;}
 
  private:
 
-  sharedPlanePtr sharedPlane_; // Material boundary
-  sharedMaterialPropertiesPtr materialBefore_; // Material properties before the boundary
-  sharedMaterialPropertiesPtr materialAfter_; // Material properties after the boundary
-  //sharedMaterialPropertiesPtr materialAt_; // Material properties at the boundary (thin scatterer)
+  double density_; // density of material
+  double Z_; // Atomic number Z of material
+  double A_; // Mass number A of material
+  double radiationLength_; // radiation length
+  double mEE_; // mean excitation energy [eV]
 
 };
 
 } /* End of namespace genfit */
 
-#endif // genfit_MaterialInfo_h
+#endif // genfit_MaterialProperties_h

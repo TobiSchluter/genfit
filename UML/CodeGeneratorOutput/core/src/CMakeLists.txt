@@ -35,6 +35,7 @@ set(GENFIT_SRCS
 	KalmanFittedStateOnPlane.cpp
 	KalmanFitterInfo.cpp
 	MaterialInfo.cpp
+	MaterialProperties.cpp
 	MeasuredStateOnPlane.cpp
 	MeasurementOnPlane.cpp
 	PlanarMeasurement.cpp
