@@ -67,8 +67,8 @@ class TrackPoint : public TObject {
   unsigned int getNumFitterInfos() {return fitterInfos_.size();}
   bool hasFitterInfos() {return (fitterInfos_.size() > 0);}
 
-  MaterialInfo* getMaterialInfo() {return material_;}
-  bool hasMaterialInfo() {return material_ != nullptr;}
+  //MaterialInfo* getMaterialInfo() {return material_;}
+  //bool hasMaterialInfo() {return material_ != nullptr;}
 
 
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
@@ -76,7 +76,7 @@ class TrackPoint : public TObject {
   void addFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_.push_back(fitterInfo);}
   void deleteFitterInfo(int i);
   void deleteFitterInfo(const AbsTrackRep* rep);
-  void setMaterial(MaterialInfo* material);
+  //void setMaterial(MaterialInfo* material);
 
 
  private:
@@ -95,7 +95,7 @@ class TrackPoint : public TObject {
 
   std::vector< AbsFitterInfo* > fitterInfos_; // Ownership
 
-  MaterialInfo* material_; // Ownership
+  //MaterialInfo* material_; // Ownership
 
 
   //ClassDef(TrackPoint,1)

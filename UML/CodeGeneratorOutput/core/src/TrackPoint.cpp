@@ -22,19 +22,19 @@
 namespace genfit {
 
 TrackPoint::TrackPoint() :
-  sortingParameter_(0), track_(nullptr), material_(nullptr)
+  sortingParameter_(0), track_(nullptr)//, material_(nullptr)
 {
   ;
 }
 
 TrackPoint::TrackPoint(Track* track) :
-  sortingParameter_(0), track_(track), material_(nullptr)
+  sortingParameter_(0), track_(track)//, material_(nullptr)
 {
   ;
 }
 
 TrackPoint::TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurements, Track* track) :
-  sortingParameter_(0), track_(track), rawMeasurements_(rawMeasurements), material_(nullptr)
+  sortingParameter_(0), track_(track), rawMeasurements_(rawMeasurements)//, material_(nullptr)
 {
   ;
 }
@@ -51,7 +51,7 @@ TrackPoint::TrackPoint(const TrackPoint& rhs) {
     fitterInfos_.push_back(rhsFitterInfo->clone());
   }
 
-  material_ = new MaterialInfo(*(rhs.material_));
+  //material_ = new MaterialInfo(*(rhs.material_));
 }
 
 TrackPoint& TrackPoint::operator=(const TrackPoint& rhs) {
@@ -77,8 +77,8 @@ TrackPoint& TrackPoint::operator=(const TrackPoint& rhs) {
     fitterInfos_.push_back(rhsFitterInfo->clone());
   }
 
-  if (material_ != nullptr)
-    delete material_;
+  //if (material_ != nullptr)
+  //  delete material_;
 
   return *this;
 }
@@ -95,16 +95,16 @@ TrackPoint::~TrackPoint() {
       delete fitterInfo;
   }
 
-  if (material_ != nullptr)
-    delete material_;
+  //if (material_ != nullptr)
+  //  delete material_;
 }
 
 
-void TrackPoint::setMaterial(MaterialInfo* material) {
+/*void TrackPoint::setMaterial(MaterialInfo* material) {
   if (material_ != nullptr)
     delete material_;
   material_ = material;
-}
+}*/
 
 
 AbsMeasurement* TrackPoint::getRawMeasurement(int i) {

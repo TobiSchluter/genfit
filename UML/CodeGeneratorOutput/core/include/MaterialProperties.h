@@ -37,21 +37,27 @@ class MaterialProperties : public TObject {
                      const double& Z,
                      const double& A,
                      const double& radiationLength,
-                     const double& mEE);
+                     const double& mEE,
+                     const double& segmentLength);
 
   double getDensity() const {return density_;}
   double getZ() const {return Z_;}
   double getA() const {return A_;}
   double getRadLen() const {return radiationLength_;}
   double getMEE() const {return mEE_;}
+  double getSegmentLength() const {return segmentLength_;}
 
  private:
 
+  // material variables
   double density_; // density of material
   double Z_; // Atomic number Z of material
   double A_; // Mass number A of material
   double radiationLength_; // radiation length
   double mEE_; // mean excitation energy [eV]
+
+  // aux variables
+  double segmentLength_; // approximate track segment length in the material
 
 };
 

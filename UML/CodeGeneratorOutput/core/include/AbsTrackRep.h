@@ -3,6 +3,7 @@
 
 #include <TVector3.h>
 
+#include "MaterialInfo.h"
 #include "StateOnPlane.h"
 
 namespace genfit {
@@ -20,11 +21,18 @@ class AbsTrackRep {
 
   virtual AbsTrackRep* clone() const = 0;
 
- /* virtual double extrapolateToPlane(const StateOnPlane& stateInput,
+  /** Extrapolates the stateInput to plane, and returns the extrapolation length
+   * and, via reference, the extrapolated statePrediction.
+   * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
+   * If an empty vector of MaterialInfo pointers is given, the TrackRep fills it with the material info
+   * obtained during propagation.
+   * If the vector is filled, this information is used for the propagation, and no additional material lookup is done.
+   */
+  virtual double extrapolateToPlane(const StateOnPlane& stateInput,
       StateOnPlane& statePrediction,
       sharedPlanePtr plane,
-      enum stopAtBoundary = false,
-      std::vector< MaterialInfo* > * = nullptr) const;*/
+      bool stopAtBoundary = false,
+      std::vector< MaterialInfo* > * = nullptr) const;
 
   virtual double extrapolateToLine(const StateOnPlane* stateInput,
       StateOnPlane* statePrediction,

@@ -26,7 +26,8 @@ MaterialProperties::MaterialProperties() :
   Z_(0),
   A_(0),
   radiationLength_(0),
-  mEE_(0)
+  mEE_(0),
+  segmentLength_(0)
 {
   ;
 }
@@ -35,12 +36,14 @@ MaterialProperties::MaterialProperties(const double& density,
                    const double& Z,
                    const double& A,
                    const double& radiationLength,
-                   const double& mEE) :
+                   const double& mEE,
+                   const double& segmentLength) :
   density_(density),
   Z_(Z),
   A_(A),
   radiationLength_(radiationLength),
-  mEE_(mEE)
+  mEE_(mEE),
+  segmentLength_(segmentLength)
 {
   ;
 }
