@@ -22,7 +22,7 @@
 namespace genfit {
 
 StateOnPlane::StateOnPlane() :
-  state_(0), sharedPlane_(), rep_(nullptr)
+  state_(0), auxInfo_(0), sharedPlane_(), rep_(nullptr)
 {
   ;
 }

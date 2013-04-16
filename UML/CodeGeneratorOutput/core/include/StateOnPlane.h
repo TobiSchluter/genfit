@@ -48,6 +48,7 @@ class StateOnPlane : public TObject {
 
 
   const TVectorD& getState() const {return state_;}
+  const TVectorD& getAuxInfo() const {return auxInfo_;}
   sharedPlanePtr getPlane() const {return sharedPlane_;}
   AbsTrackRep* const getRep() const {return rep_;}
 
@@ -55,10 +56,12 @@ class StateOnPlane : public TObject {
 
   void setState(const TVectorD& state) {state_ = state;}
   void setStatePlane(const TVectorD& state, sharedPlanePtr plane) {state_ = state; sharedPlane_ = plane;}
+  void setAuxInfo(const TVectorD& auxInfo) {auxInfo_ = auxInfo;}
 
  protected:
 
-  TVectorD state_;
+  TVectorD state_; // state vector
+  TVectorD auxInfo_; // auxiliary information (e.g. charge, flight direction etc.)
   sharedPlanePtr sharedPlane_; // Shared ownership.
 
  private:

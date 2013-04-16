@@ -4,6 +4,7 @@
 #include <TVector3.h>
 
 #include "MaterialInfo.h"
+#include "MeasuredStateOnPlane.h"
 #include "StateOnPlane.h"
 
 namespace genfit {
@@ -24,48 +25,54 @@ class AbsTrackRep {
   /** Extrapolates the stateInput to plane, and returns the extrapolation length
    * and, via reference, the extrapolated statePrediction.
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   * If an empty vector of MaterialInfo pointers is given, the TrackRep fills it with the material info
-   * obtained during propagation.
-   * If the vector is filled, this information is used for the propagation, and no additional material lookup is done.
    */
   virtual double extrapolateToPlane(const StateOnPlane& stateInput,
       StateOnPlane& statePrediction,
       sharedPlanePtr plane,
-      bool stopAtBoundary = false,
-      std::vector< MaterialInfo* > * = nullptr) const;
+      bool stopAtBoundary = false) const = 0;
 
   virtual double extrapolateToLine(const StateOnPlane* stateInput,
       StateOnPlane* statePrediction,
       const TVector3& linePoint,
       const TVector3& lineDirection,
-      bool stopAtBoundary = false) const;
+      bool stopAtBoundary = false) const = 0;
 
   virtual double extrapolateToPoint(const StateOnPlane* stateInput,
       StateOnPlane* statePrediction,
       const TVector3& point,
-      bool stopAtBoundary = false) const;
+      bool stopAtBoundary = false) const = 0;
 
   virtual double extrapolateToCylinder(const StateOnPlane* stateInput,
       StateOnPlane* statePrediction,
       const TVector3& linePoint,
       const TVector3& lineDirection,
       double radius,
-      bool stopAtBoundary = false) const;
+      bool stopAtBoundary = false) const = 0;
 
   virtual double extrapolateToSphere(const StateOnPlane* stateInput,
       StateOnPlane* statePrediction,
       const TVector3& point,
       double radius,
-      bool stopAtBoundary = false) const;
+      bool stopAtBoundary = false) const = 0;
 
-  virtual TVector3 getPos(const StateOnPlane* stateInput) const;
+  virtual TVector3 getPos(const StateOnPlane* stateInput) const = 0;
 
-  virtual TVector3 getMom(const StateOnPlane* stateInput) const;
+  virtual TVector3 getMom(const StateOnPlane* stateInput) const = 0;
+  virtual void getPosMom(const StateOnPlane* stateInput, TVector3& pos, TVector3& mom) const = 0;
+
+  /**
+   * Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance
+   */
+  virtual void getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const = 0;
+
+
+  int getPDG() const {return pdgCode_;}
+  virtual double getCharge() const = 0;
 
   /**
    * Use the Material information stored in the #TrackPoints
    */
-  virtual double extrapolateToTrackPoint() const;
+  //virtual double extrapolateToTrackPoint() const;
 
 
  protected:
