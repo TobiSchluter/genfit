@@ -17,8 +17,8 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "GFTGeoMaterialInterface.h"
-#include <GFException.h>
+#include <TGeoMaterialInterface.h>
+#include <Exception.h>
 
 #include <TGeoMedium.h>
 #include <TGeoMaterial.h>
@@ -29,12 +29,14 @@
 //#define DEBUG
 
 
+namespace genfit {
+
 double MeanExcEnergy_get(int Z);
 double MeanExcEnergy_get(TGeoMaterial*);
 
 
 void
-GFTGeoMaterialInterface::initTrack(double posX, double posY, double posZ,
+TGeoMaterialInterface::initTrack(double posX, double posY, double posZ,
                                    double dirX, double dirY, double dirZ){
 
   gGeoManager->InitTrack(posX, posY, posZ,
@@ -44,7 +46,7 @@ GFTGeoMaterialInterface::initTrack(double posX, double posY, double posZ,
 
 
 void
-GFTGeoMaterialInterface::getMaterialParameters(double& density,
+TGeoMaterialInterface::getMaterialParameters(double& density,
                                                double& Z,
                                                double& A,
                                                double& radiationLength,
@@ -62,7 +64,7 @@ GFTGeoMaterialInterface::getMaterialParameters(double& density,
 
 
 double
-GFTGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
+TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
                                           M1x7& state7,
                                           double sMax,
                                           bool varField){
@@ -78,7 +80,7 @@ GFTGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
   while (s < sMax) {
 
     if (++it > maxIt){
-      GFException exc("GFTGeoMaterialInterface::findNextBoundaryAndStep ==> maximum number of iterations exceeded",__LINE__,__FILE__);
+      Exception exc("TGeoMaterialInterface::findNextBoundaryAndStep ==> maximum number of iterations exceeded",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
     }
@@ -89,7 +91,7 @@ GFTGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 
 
 #ifdef DEBUG
-    std::cout << "   GFTGeoMaterialInterface::findNextBoundaryAndStep: Iteration " << it << ". Safety = " << safety << ". slDist = " << slDist << ". Step so far = " << s << "\n";
+    std::cout << "   TGeoMaterialInterface::findNextBoundaryAndStep: Iteration " << it << ". Safety = " << safety << ". slDist = " << slDist << ". Step so far = " << s << "\n";
     std::cout << "   Material before step: " << gGeoManager->GetCurrentVolume()->GetMedium()->GetName() << "\n";
 #endif
 
@@ -142,7 +144,7 @@ GFTGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 
 
 double
-GFTGeoMaterialInterface::findNextBoundaryAndStepStraight(double sMax) {
+TGeoMaterialInterface::findNextBoundaryAndStepStraight(double sMax) {
 
   gGeoManager->FindNextBoundaryAndStep(sMax);
   return gGeoManager->GetStep();
@@ -150,14 +152,13 @@ GFTGeoMaterialInterface::findNextBoundaryAndStepStraight(double sMax) {
 }
 
 
-ClassImp(GFTGeoMaterialInterface)
-
-
 
 
 /*
 Reference for elemental mean excitation energies at:
 http://physics.nist.gov/PhysRefData/XrayMassCoef/tab1.html
+
+Code ported from GEANT 3
 */
 
 const int MeanExcEnergy_NELEMENTS = 93; // 0 = vacuum, 1 = hydrogen, 92 = uranium
@@ -189,3 +190,6 @@ MeanExcEnergy_get(TGeoMaterial* mat) {
     return MeanExcEnergy_get(index);
   }
 }
+
+
+} /* End of namespace genfit */

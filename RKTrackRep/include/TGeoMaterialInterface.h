@@ -21,16 +21,21 @@
  * @{
  */
 
-#ifndef GFTGEOMATERIALINTERFACE_H
-#define GFTGEOMATERIALINTERFACE_H
+#ifndef genfit_TGeoMaterialInterface_h
+#define genfit_TGeoMaterialInterface_h
 
-#include "GFAbsMaterialInterface.h"
+#include "AbsMaterialInterface.h"
 
 
-class GFTGeoMaterialInterface : public GFAbsMaterialInterface {
+namespace genfit {
+
+
+class TGeoMaterialInterface : public AbsMaterialInterface {
+
  public:
-  GFTGeoMaterialInterface(){;};
-  ~GFTGeoMaterialInterface(){;};
+
+  TGeoMaterialInterface(){;};
+  ~TGeoMaterialInterface(){;};
 
   /** @brief Initialize the navigator at given position and with given direction
    */
@@ -57,11 +62,13 @@ class GFTGeoMaterialInterface : public GFAbsMaterialInterface {
 
   double findNextBoundaryAndStepStraight(double sMax);
 
-public:
-  ClassDef(GFTGeoMaterialInterface, 1);
+
+  // ClassDef(TGeoMaterialInterface, 1);
 
 };
 
-#endif
+} /* End of namespace genfit */
+
+#endif // genfit_TGeoMaterialInterface_h
 
 /** @} */

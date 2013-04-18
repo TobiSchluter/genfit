@@ -1,5 +1,5 @@
 /* Copyright 2008-2009, Technische Universitaet Muenchen,
-   Authors: Christian Hoeppner & Sebastian Neubert
+   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
 
    This file is part of GENFIT.
 
@@ -21,12 +21,11 @@
  * @{
  */
 
-#ifndef GFMATERIALEFFECTS_H
-#define GFMATERIALEFFECTS_H
+#ifndef genfit_MaterialEffects_h
+#define genfit_MaterialEffects_h
 
 #include "RKTools.h"
-#include "GFPointPath.h"
-#include <GFAbsMaterialInterface.h>
+#include "AbsMaterialInterface.h"
 
 #include <iostream>
 #include <vector>
@@ -34,6 +33,8 @@
 #include <TObject.h>
 #include <TVector3.h>
 
+
+namespace genfit {
 
 /** @brief  Contains stepper and energy loss/noise matrix calculation
  *
@@ -49,27 +50,31 @@
  *  At the moment, per default all energy loss and noise options are ON.
  */
 
-class GFMaterialEffects : public TObject {
-private:
-  GFMaterialEffects();
-  virtual ~GFMaterialEffects();
+class MaterialEffects : public TObject {
 
-  static GFMaterialEffects* finstance;
+ private:
+
+  MaterialEffects();
+  virtual ~MaterialEffects();
+
+  static MaterialEffects* instance_;
+
 
 public:
-  static GFMaterialEffects* getInstance();
+
+  static MaterialEffects* getInstance();
   static void destruct();
 
-  //! set the material interface here. Material interface classes must be derived from GFAbsMaterialInterface.
-  void init(GFAbsMaterialInterface* matIfc);
+  //! set the material interface here. Material interface classes must be derived from AbsMaterialInterface.
+  void init(AbsMaterialInterface* matIfc);
 
-  void setNoEffects(bool opt = true) {fNoEffects = opt;}
+  void setNoEffects(bool opt = true) {noEffects_ = opt;}
 
-  void setEnergyLossBetheBloch(bool opt = true) {fEnergyLossBetheBloch = opt; fNoEffects = false;}
-  void setNoiseBetheBloch(bool opt = true) {fNoiseBetheBloch = opt; fNoEffects = false;}
-  void setNoiseCoulomb(bool opt = true) {fNoiseCoulomb = opt; fNoEffects = false;}
-  void setEnergyLossBrems(bool opt = true) {fEnergyLossBrems = opt; fNoEffects = false;}
-  void setNoiseBrems(bool opt = true) {fNoiseBrems = opt; fNoEffects = false;}
+  void setEnergyLossBetheBloch(bool opt = true) {energyLossBetheBloch_ = opt; noEffects_ = false;}
+  void setNoiseBetheBloch(bool opt = true) {noiseBetheBloch_ = opt; noEffects_ = false;}
+  void setNoiseCoulomb(bool opt = true) {noiseCoulomb_ = opt; noEffects_ = false;}
+  void setEnergyLossBrems(bool opt = true) {energyLossBrems_ = opt; noEffects_ = false;}
+  void setNoiseBrems(bool opt = true) {noiseBrems_ = opt; noEffects_ = false;}
 
   /** @brief Select the multiple scattering model that will be used during track fit.
    *  At the moment two model are available GEANE and Highland. GEANE is the model was was present in Genfit first.
@@ -79,7 +84,7 @@ public:
 
 
   //! Calculates energy loss in the traveled path, optional calculation of noise matrix
-  double effects(const std::vector<GFPointPath>& points,
+  double effects(const std::vector<MaterialProperties>& points,
                  const double& mom,
                  const int& pdg,
                  double& xx0,
@@ -101,13 +106,14 @@ public:
                  bool varField = true);
 
 
-private:
-  //! sets fcharge, fmass and calculates fbeta, fgamma, fgammasquare;
+ private:
+
+  //! sets charge_, mass_ and calculates beta_, gamma_, fgammasquare;
   void getParticleParameters(double mom);
 
   //! Returns energy loss
   /**  Uses Bethe Bloch formula to calculate energy loss.
-    *  Calcuates and sets fdedx which needed also for noiseBetheBloch.
+    *  Calcuates and sets dEdx_ which needed also for noiseBetheBloch.
     *  Therefore it is not a const function!
     *
   */
@@ -120,7 +126,7 @@ private:
     *  - truncated Landau distribution
     *  - Urban model
     *
-    *  Needs fdedx, which is calculated in energyLossBetheBloch, so it has to be called afterwards!
+    *  Needs dEdx_, which is calculated in energyLossBetheBloch, so it has to be called afterwards!
     */
   void noiseBetheBloch(const double& mom,
                        double* noise) const;
@@ -152,43 +158,43 @@ private:
                   double* noise) const;
 
 
-  bool fNoEffects;
+  bool noEffects_;
 
-  bool fEnergyLossBetheBloch;
-  bool fNoiseBetheBloch;
-  bool fNoiseCoulomb;
-  bool fEnergyLossBrems;
-  bool fNoiseBrems;
+  bool energyLossBetheBloch_;
+  bool noiseBetheBloch_;
+  bool noiseCoulomb_;
+  bool energyLossBrems_;
+  bool noiseBrems_;
 
-  const double me; // electron mass (GeV)
+  const double me_; // electron mass (GeV)
 
-  double fstep; // stepsize
+  double stepSize_; // stepsize
 
   // cached values for energy loss and noise calculations
-  double fbeta;
-  double fdedx;
-  double fgamma;
-  double fgammaSquare;
+  double beta_;
+  double dEdx_;
+  double gamma_;
+  double gammaSquare_;
 
-  double fmatDensity;
-  double fmatZ;
-  double fmatA;
-  double fradiationLength;
-  double fmEE; // mean excitation energy
+  double matDensity_;
+  double matZ_;
+  double matA_;
+  double radiationLength_;
+  double mEE_; // mean excitation energy
 
-  int fpdg;
-  double fcharge;
-  double fmass;
+  int pdg_;
+  double charge_;
+  double mass_;
 
-  int fMscModelCode; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.
+  int mscModelCode_; /// depending on this number a specific msc model is chosen in the noiseCoulomb function.
 
-  GFAbsMaterialInterface* fMaterialInterface;
+  AbsMaterialInterface* materialInterface_;
 
-public:
-  ClassDef(GFMaterialEffects, 4);
+
+  // ClassDef(MaterialEffects, 4);
 
 };
 
-#endif
+} /* End of namespace genfit */
 
-/** @} */
+#endif // genfit_MaterialEffects_h

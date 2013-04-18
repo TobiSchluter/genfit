@@ -17,8 +17,8 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "GFMaterialEffects.h"
-#include "GFException.h"
+#include "MaterialEffects.h"
+#include "Exception.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -33,101 +33,101 @@
 
 //#define DEBUG
 
+namespace genfit {
 
-GFMaterialEffects* GFMaterialEffects::finstance = NULL;
+MaterialEffects* MaterialEffects::instance_ = nullptr;
 
 
-
-GFMaterialEffects::GFMaterialEffects():
-  fNoEffects(false),
-  fEnergyLossBetheBloch(true), fNoiseBetheBloch(true),
-  fNoiseCoulomb(true),
-  fEnergyLossBrems(true), fNoiseBrems(true),
-  me(0.510998910E-3),
-  fstep(0),
-  fbeta(0),
-  fdedx(0),
-  fgamma(0),
-  fgammaSquare(0),
-  fmatDensity(0),
-  fmatZ(0),
-  fmatA(0),
-  fradiationLength(0),
-  fmEE(0),
-  fpdg(0),
-  fcharge(0),
-  fmass(0),
-  fMscModelCode(0),
-  fMaterialInterface(NULL)
+MaterialEffects::MaterialEffects():
+  noEffects_(false),
+  energyLossBetheBloch_(true), noiseBetheBloch_(true),
+  noiseCoulomb_(true),
+  energyLossBrems_(true), noiseBrems_(true),
+  me_(0.510998910E-3),
+  stepSize_(0),
+  beta_(0),
+  dEdx_(0),
+  gamma_(0),
+  gammaSquare_(0),
+  matDensity_(0),
+  matZ_(0),
+  matA_(0),
+  radiationLength_(0),
+  mEE_(0),
+  pdg_(0),
+  charge_(0),
+  mass_(0),
+  mscModelCode_(0),
+  materialInterface_(nullptr)
 {
 }
 
-GFMaterialEffects::~GFMaterialEffects()
+MaterialEffects::~MaterialEffects()
 {
-  if (fMaterialInterface != NULL) delete fMaterialInterface;
+  if (materialInterface_ != nullptr) delete materialInterface_;
 }
 
-GFMaterialEffects* GFMaterialEffects::getInstance()
+MaterialEffects* MaterialEffects::getInstance()
 {
-  if (finstance == NULL) finstance = new GFMaterialEffects();
-  return finstance;
+  if (instance_ == nullptr) instance_ = new MaterialEffects();
+  return instance_;
 }
 
-void GFMaterialEffects::destruct()
+void MaterialEffects::destruct()
 {
-  if (finstance != NULL) {
-    delete finstance;
-    finstance = NULL;
+  if (instance_ != nullptr) {
+    delete instance_;
+    instance_ = nullptr;
   }
 }
 
-void GFMaterialEffects::init(GFAbsMaterialInterface* matIfc)
+void MaterialEffects::init(AbsMaterialInterface* matIfc)
 {
-  if (fMaterialInterface != NULL) {
-    std::string msg("GFMaterialEffects::initMaterialInterface(): Already initialized! ");
+  if (materialInterface_ != nullptr) {
+    std::string msg("MaterialEffects::initMaterialInterface(): Already initialized! ");
     std::runtime_error err(msg);
   }
-  fMaterialInterface = matIfc;
+  materialInterface_ = matIfc;
 }
 
 
 
-void GFMaterialEffects::setMscModel(const std::string& modelName)
+void MaterialEffects::setMscModel(const std::string& modelName)
 {
   if (modelName == std::string("GEANE")) {
-    fMscModelCode = 0;
+    mscModelCode_ = 0;
   } else if (modelName == std::string("Highland")) {
-    fMscModelCode = 1;
+    mscModelCode_ = 1;
   } else {// throw exception
     std::string errorMsg = std::string("There is no MSC model called \"") + modelName + "\". Maybe it is not implemented or you misspelled the model name";
-    GFException exc(errorMsg, __LINE__, __FILE__);
+    Exception exc(errorMsg, __LINE__, __FILE__);
     exc.setFatal();
     throw exc;
   }
 }
 
 
-double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
-                                  const double& mom,
-                                  const int& pdg,
-                                  double& xx0,
-                                  double* noise,
-                                  const double* jacobian,
-                                  const TVector3* directionBefore,
-                                  const TVector3* directionAfter)
+double MaterialEffects::effects(const std::vector<MaterialProperties>& points,
+                                const double& mom,
+                                const int& pdg,
+                                double& xx0,
+                                double* noise,
+                                const double* jacobian,
+                                const TVector3* directionBefore,
+                                const TVector3* directionAfter)
 {
-
-  if (fMaterialInterface == NULL) {
-    std::string msg("GFMaterialEffects hasn't been initialized with a correct GFAbsMaterialInterface pointer!");
+/*
+  if (materialInterface_ == nullptr) {
+    std::string msg("MaterialEffects hasn't been initialized with a correct AbsMaterialInterface pointer!");
     std::runtime_error err(msg);
     throw err;
   }
 
-  if (fNoEffects) return 0.;
+  if (noEffects_) return 0.;
 
-  bool doNoise(jacobian != NULL);
+  bool doNoise(jacobian != nullptr);
 
-  fpdg = pdg;
+  pdg_ = pdg;
   getParticleParameters(mom);
 
   double momLoss = 0.;
@@ -141,9 +141,9 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
 
       double X(0.); // path already gone through material (straight line)
       double step(0); // straight line step
-      double realPath = points[i].getPath(); // real (curved) distance, signed
+      double realPath = points[i].getSegmentLength(); // real (curved) distance, signed
 
-      fMaterialInterface->initTrack(points[i].X(),  points[i].Y(),  points[i].Z(),
+      materialInterface_->initTrack(points[i].X(),  points[i].Y(),  points[i].Z(),
                                     (points[i + 1].X() - points[i].X()) / dist, (points[i + 1].Y() - points[i].Y()) / dist, (points[i + 1].Z() - points[i].Z()) / dist);
 
       unsigned int nIter(0);
@@ -152,45 +152,45 @@ double GFMaterialEffects::effects(const std::vector<GFPointPath>& points,
       while (X < dist) {
 
         if (++nIter > maxIt) {
-          GFException exc("GFMaterialEffects::effects ==> maximum number of iterations exceeded", __LINE__, __FILE__);
+          Exception exc("MaterialEffects::effects ==> maximum number of iterations exceeded", __LINE__, __FILE__);
           throw exc;
         }
 
-        fMaterialInterface->getMaterialParameters(fmatDensity, fmatZ, fmatA, fradiationLength, fmEE);
-        step = fMaterialInterface->findNextBoundaryAndStepStraight(dist - X);
-        fstep = fabs(step * realPath / dist); // the actual path is curved, not straight!
-        if (fstep <= 0.) continue;
+        materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
+        step = materialInterface_->findNextBoundaryAndStepStraight(dist - X);
+        stepSize_ = fabs(step * realPath / dist); // the actual path is curved, not straight!
+        if (stepSize_ <= 0.) continue;
 
         double stepSign(1.);
         if (realPath < 0) stepSign = -1.;
 
-        if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
+        if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
 
-          if (fEnergyLossBetheBloch)
+          if (energyLossBetheBloch_)
             momLoss += stepSign * this->energyLossBetheBloch(mom);
-          if (doNoise && fEnergyLossBetheBloch && fNoiseBetheBloch)
+          if (doNoise && energyLossBetheBloch_ && noiseBetheBloch_)
             this->noiseBetheBloch(mom, noise);
 
-          if (doNoise && fNoiseCoulomb)
+          if (doNoise && noiseCoulomb_)
             this->noiseCoulomb(mom, noise, 0.5*((*directionBefore) + (*directionAfter)) );
 
-          if (fEnergyLossBrems)
+          if (energyLossBrems_)
             momLoss += stepSign * this->energyLossBrems(mom);
-          if (doNoise && fEnergyLossBrems && fNoiseBrems)
+          if (doNoise && energyLossBrems_ && noiseBrems_)
             this->noiseBrems(mom, noise);
 
-          xx0 += fstep / fradiationLength;
+          xx0 += stepSize_ / radiationLength_;
         }
         X += step;
       }
     }
   } // end loop over points
 
-  return momLoss;
+  return momLoss;*/
 }
 
 
-double GFMaterialEffects::stepper(const RKTrackRep* rep,
+double MaterialEffects::stepper(const RKTrackRep* rep,
                                   M1x7& state7,
                                   double sMax, // maximum step. unsigned!
                                   const double& mom, // momentum
@@ -199,8 +199,8 @@ double GFMaterialEffects::stepper(const RKTrackRep* rep,
                                   bool varField)
 {
 
-  if (fMaterialInterface == NULL) {
-    std::string msg("GFMaterialEffects hasn't been initialized with a correct GFAbsMaterialInterface pointer!");
+  if (materialInterface_ == nullptr) {
+    std::string msg("MaterialEffects hasn't been initialized with a correct AbsMaterialInterface pointer!");
     std::runtime_error err(msg);
     throw err;
   }
@@ -208,87 +208,87 @@ double GFMaterialEffects::stepper(const RKTrackRep* rep,
   static const double maxRelMomLoss = .005; // maximum relative momentum loss allowed
   static const double minStep = 1.E-4; // 1 µm
 
-  if (fNoEffects) return sMax;
+  if (noEffects_) return sMax;
   if (relMomLoss > maxRelMomLoss) return 0;
   if (sMax < minStep) return minStep;
 
-  fpdg = pdg;
+  pdg_ = pdg;
   double X(minStep);
   double relMomLossStep(0);
   getParticleParameters(mom);
 
-  fMaterialInterface->initTrack(state7[0] + minStep * state7[3], state7[1] + minStep * state7[4], state7[2] + minStep * state7[5],
+  materialInterface_->initTrack(state7[0] + minStep * state7[3], state7[1] + minStep * state7[4], state7[2] + minStep * state7[5],
                                 state7[3],                   state7[4],                   state7[5]);
 
-  fMaterialInterface->getMaterialParameters(fmatDensity, fmatZ, fmatA, fradiationLength, fmEE);
+  materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
 
-  fstep = fMaterialInterface->findNextBoundary(rep, state7, sMax, varField);
+  stepSize_ = materialInterface_->findNextBoundary(rep, state7, sMax, varField);
   ;
 #ifdef DEBUG
-  std::cerr << "in material: " << fmatZ << std::endl;
-  std::cerr << "       fstep = " << fstep << std::endl;
+  std::cerr << "in material: " << matZ_ << std::endl;
+  std::cerr << "       stepSize_ = " << stepSize_ << std::endl;
 #endif
 
-  if (fstep <= 0.) return minStep; // should not happen
+  if (stepSize_ <= 0.) return minStep; // should not happen
 
-  if (fmatZ > 1.E-3) { // don't calculate energy loss for vacuum
+  if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
 
-    if (fEnergyLossBetheBloch) relMomLossStep += this->energyLossBetheBloch(mom) / mom;
-    if (fEnergyLossBrems)      relMomLossStep += this->energyLossBrems(mom) / mom;
+    if (energyLossBetheBloch_) relMomLossStep += this->energyLossBetheBloch(mom) / mom;
+    if (energyLossBrems_)      relMomLossStep += this->energyLossBrems(mom) / mom;
   }
 
   if (relMomLoss + relMomLossStep > maxRelMomLoss) {
     double fraction = (maxRelMomLoss - relMomLoss) / relMomLossStep;
-    X += fraction * fstep;
+    X += fraction * stepSize_;
 #ifdef DEBUG
     std::cerr << "     momLoss exceeded \n";
 #endif
   }
 
   relMomLoss += relMomLossStep;
-  X += fstep;
+  X += stepSize_;
 
 
   return X;
 }
 
 
-void GFMaterialEffects::getParticleParameters(double mom)
+void MaterialEffects::getParticleParameters(double mom)
 {
-  TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(fpdg);
-  fcharge = part->Charge() / (3.);
-  fmass = part->Mass();
+  TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(pdg_);
+  charge_ = part->Charge() / (3.);
+  mass_ = part->Mass();
 
-  fbeta = mom / sqrt(fmass * fmass + mom * mom);
+  beta_ = mom / sqrt(mass_ * mass_ + mom * mom);
 
   //for numerical stability
-  fgammaSquare = 1. - fbeta * fbeta;
-  if (fgammaSquare > 1.E-10) fgammaSquare = 1. / fgammaSquare;
-  else fgammaSquare = 1.E10;
-  fgamma = sqrt(fgammaSquare);
+  gammaSquare_ = 1. - beta_ * beta_;
+  if (gammaSquare_ > 1.E-10) gammaSquare_ = 1. / gammaSquare_;
+  else gammaSquare_ = 1.E10;
+  gamma_ = sqrt(gammaSquare_);
 }
 
 
 
 //---- Energy-loss and Noise calculations -----------------------------------------
 
-double GFMaterialEffects::energyLossBetheBloch(const double& mom)
+double MaterialEffects::energyLossBetheBloch(const double& mom)
 {
 
-  // calc fdedx, also needed in noiseBetheBloch!
-  fdedx = 0.307075 * fmatZ / fmatA * fmatDensity / (fbeta * fbeta) * fcharge * fcharge;
-  double massRatio = me / fmass;
-  double argument = fgammaSquare * fbeta * fbeta * me * 1.E3 * 2. / ((1.E-6 * fmEE) * sqrt(1 + 2 * sqrt(fgammaSquare) * massRatio + massRatio * massRatio));
-  if (argument <= exp(fbeta * fbeta))
-    fdedx = 0.;
+  // calc dEdx_, also needed in noiseBetheBloch!
+  dEdx_ = 0.307075 * matZ_ / matA_ * matDensity_ / (beta_ * beta_) * charge_ * charge_;
+  double massRatio = me_ / mass_;
+  double argument = gammaSquare_ * beta_ * beta_ * me_ * 1.E3 * 2. / ((1.E-6 * mEE_) * sqrt(1 + 2 * sqrt(gammaSquare_) * massRatio + massRatio * massRatio));
+  if (argument <= exp(beta_ * beta_))
+    dEdx_ = 0.;
   else {
-    fdedx *= (log(argument) - fbeta * fbeta); // Bethe-Bloch [MeV/cm]
-    fdedx *= 1.E-3;  // in GeV/cm, hence 1.e-3
-    if (fdedx < 0.) fdedx = 0;
+    dEdx_ *= (log(argument) - beta_ * beta_); // Bethe-Bloch [MeV/cm]
+    dEdx_ *= 1.E-3;  // in GeV/cm, hence 1.e-3
+    if (dEdx_ < 0.) dEdx_ = 0;
   }
 
-  double DE = fabs(fstep) * fdedx; //always positive
-  double momLoss = sqrt(mom * mom + 2.*sqrt(mom * mom + fmass * fmass) * DE + DE * DE) - mom; //always positive
+  double DE = fabs(stepSize_) * dEdx_; //always positive
+  double momLoss = sqrt(mom * mom + 2.*sqrt(mom * mom + mass_ * mass_) * DE + DE * DE) - mom; //always positive
 
   //in vacuum it can numerically happen that momLoss becomes a small negative number.
   if (momLoss < 0.) return 0.;
@@ -296,39 +296,40 @@ double GFMaterialEffects::energyLossBetheBloch(const double& mom)
 }
 
 
-void GFMaterialEffects::noiseBetheBloch(const double& mom,
+void MaterialEffects::noiseBetheBloch(const double& mom,
                                         double* noise) const
 {
 
+  // Code ported from GEANT 3
 
   // ENERGY LOSS FLUCTUATIONS; calculate sigma^2(E);
   double sigma2E = 0.;
-  double zeta  = 153.4E3 * fcharge * fcharge / (fbeta * fbeta) * fmatZ / fmatA * fmatDensity * fabs(fstep); // eV
-  double Emax  = 2.E9 * me * fbeta * fbeta * fgammaSquare / (1. + 2.*fgamma * me / fmass + (me / fmass) * (me / fmass)); // eV
+  double zeta  = 153.4E3 * charge_ * charge_ / (beta_ * beta_) * matZ_ / matA_ * matDensity_ * fabs(stepSize_); // eV
+  double Emax  = 2.E9 * me_ * beta_ * beta_ * gammaSquare_ / (1. + 2.*gamma_ * me_ / mass_ + (me_ / mass_) * (me_ / mass_)); // eV
   double kappa = zeta / Emax;
 
   if (kappa > 0.01) { // Vavilov-Gaussian regime
-    sigma2E += zeta * Emax * (1. - fbeta * fbeta / 2.); // eV^2
+    sigma2E += zeta * Emax * (1. - beta_ * beta_ / 2.); // eV^2
   } else { // Urban/Landau approximation
     // calculate number of collisions Nc
-    double I = 16. * pow(fmatZ, 0.9); // eV
+    double I = 16. * pow(matZ_, 0.9); // eV
     double f2 = 0.;
-    if (fmatZ > 2.) f2 = 2. / fmatZ;
+    if (matZ_ > 2.) f2 = 2. / matZ_;
     double f1 = 1. - f2;
-    double e2 = 10.*fmatZ * fmatZ; // eV
+    double e2 = 10.*matZ_ * matZ_; // eV
     double e1 = pow((I / pow(e2, f2)), 1. / f1); // eV
 
-    double mbbgg2 = 2.E9 * fmass * fbeta * fbeta * fgammaSquare; // eV
-    double Sigma1 = fdedx * 1.0E9 * f1 / e1 * (log(mbbgg2 / e1) - fbeta * fbeta) / (log(mbbgg2 / I) - fbeta * fbeta) * 0.6; // 1/cm
-    double Sigma2 = fdedx * 1.0E9 * f2 / e2 * (log(mbbgg2 / e2) - fbeta * fbeta) / (log(mbbgg2 / I) - fbeta * fbeta) * 0.6; // 1/cm
-    double Sigma3 = fdedx * 1.0E9 * Emax / (I * (Emax + I) * log((Emax + I) / I)) * 0.4; // 1/cm
+    double mbbgg2 = 2.E9 * mass_ * beta_ * beta_ * gammaSquare_; // eV
+    double Sigma1 = dEdx_ * 1.0E9 * f1 / e1 * (log(mbbgg2 / e1) - beta_ * beta_) / (log(mbbgg2 / I) - beta_ * beta_) * 0.6; // 1/cm
+    double Sigma2 = dEdx_ * 1.0E9 * f2 / e2 * (log(mbbgg2 / e2) - beta_ * beta_) / (log(mbbgg2 / I) - beta_ * beta_) * 0.6; // 1/cm
+    double Sigma3 = dEdx_ * 1.0E9 * Emax / (I * (Emax + I) * log((Emax + I) / I)) * 0.4; // 1/cm
 
-    double Nc = (Sigma1 + Sigma2 + Sigma3) * fabs(fstep);
+    double Nc = (Sigma1 + Sigma2 + Sigma3) * fabs(stepSize_);
 
     if (Nc > 50.) { // truncated Landau distribution
       double sigmaalpha = 15.76;
       // calculate sigmaalpha  (see GEANT3 manual W5013)
-      double RLAMED = -0.422784 - fbeta * fbeta - log(zeta / Emax);
+      double RLAMED = -0.422784 - beta_ * beta_ - log(zeta / Emax);
       double RLAMAX =  0.60715 + 1.1934 * RLAMED + (0.67794 + 0.052382 * RLAMED) * exp(0.94753 + 0.74442 * RLAMED);
       // from lambda max to sigmaalpha=sigma (empirical polynomial)
       if (RLAMAX <= 1010.) {
@@ -346,39 +347,39 @@ void GFMaterialEffects::noiseBetheBloch(const double& mom,
       static const double alpha = 0.996;
       double Ealpha  = I / (1. - (alpha * Emax / (Emax + I))); // eV
       double meanE32 = I * (Emax + I) / Emax * (Ealpha - I); // eV^2
-      sigma2E += fabs(fstep) * (Sigma1 * e1 * e1 + Sigma2 * e2 * e2 + Sigma3 * meanE32); // eV^2
+      sigma2E += fabs(stepSize_) * (Sigma1 * e1 * e1 + Sigma2 * e2 * e2 + Sigma3 * meanE32); // eV^2
     }
   }
 
   sigma2E *= 1.E-18; // eV -> GeV
 
   // update noise matrix
-  noise[6 * 7 + 6] += (mom * mom + fmass * fmass) / pow(mom, 6.) * sigma2E;
+  noise[6 * 7 + 6] += (mom * mom + mass_ * mass_) / pow(mom, 6.) * sigma2E;
 }
 
 
-void GFMaterialEffects::noiseCoulomb(const double& mom,
+void MaterialEffects::noiseCoulomb(const double& mom,
                                      double* noise,
                                      const TVector3& direction) const
 {
 
-//std::cerr << "GFMaterialEffects::noiseCoulomb" << std::endl;
+//std::cerr << "MaterialEffects::noiseCoulomb" << std::endl;
 //RKTools::printDim(jacobian,7,7);
   //double momTrue = 0.07;
   // MULTIPLE SCATTERING; calculate sigma^2
   double sigma2 = 0;
-  assert(fMscModelCode == 0 || fMscModelCode == 1);
-  const double step2 = fstep * fstep;
-  if (fMscModelCode == 0) {// PANDA report PV/01-07 eq(43); linear in step length
-    sigma2 = 225.E-6 * fcharge * fcharge / (fbeta * fbeta * mom * mom) * fabs(fstep) / fradiationLength * fmatZ / (fmatZ + 1) * log(159.*pow(fmatZ, -1. / 3.)) / log(287.*pow(fmatZ, -0.5)); // sigma^2 = 225E-6*z^2/mom^2 * XX0/fbeta^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
+  assert(mscModelCode_ == 0 || mscModelCode_ == 1);
+  const double step2 = stepSize_ * stepSize_;
+  if (mscModelCode_ == 0) {// PANDA report PV/01-07 eq(43); linear in step length
+    sigma2 = 225.E-6 * charge_ * charge_ / (beta_ * beta_ * mom * mom) * fabs(stepSize_) / radiationLength_ * matZ_ / (matZ_ + 1) * log(159.*pow(matZ_, -1. / 3.)) / log(287.*pow(matZ_, -0.5)); // sigma^2 = 225E-6*z^2/mom^2 * XX0/beta_^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
 
-  } else if (fMscModelCode == 1) { //Highland not linear in step length formula taken from PDG book 2011 edition
-    double stepOverRadLength = fabs(fstep) / fradiationLength;
+  } else if (mscModelCode_ == 1) { //Highland not linear in step length formula taken from PDG book 2011 edition
+    double stepOverRadLength = fabs(stepSize_) / radiationLength_;
     double logCor = (1 + 0.038 * log(stepOverRadLength));
-    sigma2 = 0.0136 * 0.0136 * fcharge * fcharge / (fbeta * fbeta * mom * mom) * stepOverRadLength * logCor * logCor;
+    sigma2 = 0.0136 * 0.0136 * charge_ * charge_ / (beta_ * beta_ * mom * mom) * stepOverRadLength * logCor * logCor;
   }
   assert(sigma2 > 0.0);
-  //XXX std::cerr << "GFMaterialEffects::noiseCoulomb the MSC variance is " << sigma2 << std::endl;
+  //XXX std::cerr << "MaterialEffects::noiseCoulomb the MSC variance is " << sigma2 << std::endl;
 
   double noiseAfter[7 * 7]; // will holde the new MSC noise to cause by the current fStep length
   memset(noiseAfter, 0x00, 7 * 7 * sizeof(double));
@@ -397,21 +398,21 @@ void GFMaterialEffects::noiseCoulomb(const double& mom,
   noiseAfter[0 * 7 + 0] =  sigma2 * step2 / 3.0 * (cosTheta2 + (cosPhi2 - 1.0) * (cosTheta2 - 1.0));
   noiseAfter[1 * 7 + 0] = -sigma2 * step2 / 3.0 * sinPhi * cosPhi * sinTheta2;
   noiseAfter[2 * 7 + 0] = -sigma2 * step2 / 3.0 * cosPhi * cosTheta * sinTheta;
-  noiseAfter[3 * 7 + 0] =  sigma2 * fstep * 0.5 * (cosTheta2 + (cosPhi2 - 1.0) * (cosTheta2 - 1.0));
-  noiseAfter[4 * 7 + 0] = -sigma2 * fstep * 0.5 * sinPhi * cosPhi * sinTheta2;
-  noiseAfter[5 * 7 + 0] = -sigma2 * fstep * 0.5 * cosPhi * cosTheta * sinTheta;
+  noiseAfter[3 * 7 + 0] =  sigma2 * stepSize_ * 0.5 * (cosTheta2 + (cosPhi2 - 1.0) * (cosTheta2 - 1.0));
+  noiseAfter[4 * 7 + 0] = -sigma2 * stepSize_ * 0.5 * sinPhi * cosPhi * sinTheta2;
+  noiseAfter[5 * 7 + 0] = -sigma2 * stepSize_ * 0.5 * cosPhi * cosTheta * sinTheta;
   noiseAfter[0 * 7 + 1] = noiseAfter[1 * 7 + 0];
   noiseAfter[1 * 7 + 1] = -sigma2 * step2 / 3.0 * (sinPhi2 * sinTheta2 - 1.0);
   noiseAfter[2 * 7 + 1] = -sigma2 * step2 / 3.0 * cosTheta * sinPhi * sinTheta;
   noiseAfter[3 * 7 + 1] = noiseAfter[4 * 7 + 0]; // Cov(x,a_y) = Cov(y,a_x)
-  noiseAfter[4 * 7 + 1] = -sigma2 * fstep * 0.5 * (sinPhi2 * sinTheta2 - 1.0);
-  noiseAfter[5 * 7 + 1] = -sigma2 * fstep * 0.5 * cosTheta * sinPhi * sinTheta;
+  noiseAfter[4 * 7 + 1] = -sigma2 * stepSize_ * 0.5 * (sinPhi2 * sinTheta2 - 1.0);
+  noiseAfter[5 * 7 + 1] = -sigma2 * stepSize_ * 0.5 * cosTheta * sinPhi * sinTheta;
   noiseAfter[0 * 7 + 2] = noiseAfter[2 * 7 + 0];
   noiseAfter[1 * 7 + 2] = noiseAfter[2 * 7 + 1];
   noiseAfter[2 * 7 + 2] =  sigma2 * step2 / 3.0 * sinTheta2;
   noiseAfter[3 * 7 + 2] = noiseAfter[5 * 7 + 0]; // Cov(z,a_x) = Cov(x,a_z)
   noiseAfter[4 * 7 + 2] = noiseAfter[5 * 7 + 1]; // Cov(y,a_z) = Cov(z,a_y)
-  noiseAfter[5 * 7 + 2] =  sigma2 * fstep * 0.5 * sinTheta2;
+  noiseAfter[5 * 7 + 2] =  sigma2 * stepSize_ * 0.5 * sinTheta2;
   noiseAfter[0 * 7 + 3] = noiseAfter[3 * 7 + 0];
   noiseAfter[1 * 7 + 3] = noiseAfter[3 * 7 + 1];
   noiseAfter[2 * 7 + 3] = noiseAfter[3 * 7 + 2];
@@ -438,10 +439,12 @@ void GFMaterialEffects::noiseCoulomb(const double& mom,
 }
 
 
-double GFMaterialEffects::energyLossBrems(const double& mom) const
+double MaterialEffects::energyLossBrems(const double& mom) const
 {
 
-  if (abs(fpdg) != 11) return 0; // only for electrons and positrons
+  // Code ported from GEANT 3
+
+  if (abs(pdg_) != 11) return 0; // only for electrons and positrons
 
 #if !defined(BETHE)
   static const double C[101] = { 0.0, -0.960613E-01, 0.631029E-01, -0.142819E-01, 0.150437E-02, -0.733286E-04, 0.131404E-05, 0.859343E-01, -0.529023E-01, 0.131899E-01, -0.159201E-02, 0.926958E-04, -0.208439E-05, -0.684096E+01, 0.370364E+01, -0.786752E+00, 0.822670E-01, -0.424710E-02, 0.867980E-04, -0.200856E+01, 0.129573E+01, -0.306533E+00, 0.343682E-01, -0.185931E-02, 0.392432E-04, 0.127538E+01, -0.515705E+00, 0.820644E-01, -0.641997E-02, 0.245913E-03, -0.365789E-05, 0.115792E+00, -0.463143E-01, 0.725442E-02, -0.556266E-03, 0.208049E-04, -0.300895E-06, -0.271082E-01, 0.173949E-01, -0.452531E-02, 0.569405E-03, -0.344856E-04, 0.803964E-06, 0.419855E-02, -0.277188E-02, 0.737658E-03, -0.939463E-04, 0.569748E-05, -0.131737E-06, -0.318752E-03, 0.215144E-03, -0.579787E-04, 0.737972E-05, -0.441485E-06, 0.994726E-08, 0.938233E-05, -0.651642E-05, 0.177303E-05, -0.224680E-06, 0.132080E-07, -0.288593E-09, -0.245667E-03, 0.833406E-04, -0.129217E-04, 0.915099E-06, -0.247179E-07, 0.147696E-03, -0.498793E-04, 0.402375E-05, 0.989281E-07, -0.133378E-07, -0.737702E-02, 0.333057E-02, -0.553141E-03, 0.402464E-04, -0.107977E-05, -0.641533E-02, 0.290113E-02, -0.477641E-03, 0.342008E-04, -0.900582E-06, 0.574303E-05, 0.908521E-04, -0.256900E-04, 0.239921E-05, -0.741271E-07, -0.341260E-04, 0.971711E-05, -0.172031E-06, -0.119455E-06, 0.704166E-08, 0.341740E-05, -0.775867E-06, -0.653231E-07, 0.225605E-07, -0.114860E-08, -0.119391E-06, 0.194885E-07, 0.588959E-08, -0.127589E-08, 0.608247E-10};
@@ -449,7 +452,7 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
 #endif
 #if defined(BETHE) // no MIGDAL corrections
   static const double C[101] = { 0.0, 0.834459E-02, 0.443979E-02, -0.101420E-02, 0.963240E-04, -0.409769E-05, 0.642589E-07, 0.464473E-02, -0.290378E-02, 0.547457E-03, -0.426949E-04, 0.137760E-05, -0.131050E-07, -0.547866E-02, 0.156218E-02, -0.167352E-03, 0.101026E-04, -0.427518E-06, 0.949555E-08, -0.406862E-02, 0.208317E-02, -0.374766E-03, 0.317610E-04, -0.130533E-05, 0.211051E-07, 0.158941E-02, -0.385362E-03, 0.315564E-04, -0.734968E-06, -0.230387E-07, 0.971174E-09, 0.467219E-03, -0.154047E-03, 0.202400E-04, -0.132438E-05, 0.431474E-07, -0.559750E-09, -0.220958E-02, 0.100698E-02, -0.596464E-04, -0.124653E-04, 0.142999E-05, -0.394378E-07, 0.477447E-03, -0.184952E-03, -0.152614E-04, 0.848418E-05, -0.736136E-06, 0.190192E-07, -0.552930E-04, 0.209858E-04, 0.290001E-05, -0.133254E-05, 0.116971E-06, -0.309716E-08, 0.212117E-05, -0.103884E-05, -0.110912E-06, 0.655143E-07, -0.613013E-08, 0.169207E-09, 0.301125E-04, -0.461920E-04, 0.871485E-05, -0.622331E-06, 0.151800E-07, -0.478023E-04, 0.247530E-04, -0.381763E-05, 0.232819E-06, -0.494487E-08, -0.336230E-04, 0.223822E-04, -0.384583E-05, 0.252867E-06, -0.572599E-08, 0.105335E-04, -0.567074E-06, -0.216564E-06, 0.237268E-07, -0.658131E-09, 0.282025E-05, -0.671965E-06, 0.565858E-07, -0.193843E-08, 0.211839E-10, 0.157544E-04, -0.304104E-05, -0.624410E-06, 0.120124E-06, -0.457445E-08, -0.188222E-05, -0.407118E-06, 0.375106E-06, -0.466881E-07, 0.158312E-08, 0.945037E-07, 0.564718E-07, -0.319231E-07, 0.371926E-08, -0.123111E-09};
-  static const double xi = 2.10, fbeta = 1.00, vl = 0.001;
+  static const double xi = 2.10, beta_ = 1.00, vl = 0.001;
 #endif
 
   double BCUT = 10000.; // energy up to which soft bremsstrahlung energy loss is calculated
@@ -473,10 +476,10 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
       kc = BCUT;
     }
 
-    double E = T + me; // total electron energy
+    double E = T + me_; // total electron energy
     if (BCUT > T) kc = T;
 
-    double X = log(T / me);
+    double X = log(T / me_);
     double Y = log(kc / (E * vl));
 
     double XX;
@@ -528,15 +531,15 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
       YY = YY * Y;
     }
 
-    S = S + fmatZ * SS;
+    S = S + matZ_ * SS;
 
     if (S > 0.) {
       double CORR = 1.;
 #if !defined(BETHE)
-      CORR = 1. / (1. + 0.805485E-10 * fmatDensity * fmatZ * E * E / (fmatA * kc * kc)); // MIGDAL correction factor
+      CORR = 1. / (1. + 0.805485E-10 * matDensity_ * matZ_ * E * E / (matA_ * kc * kc)); // MIGDAL correction factor
 #endif
 
-      double FAC = fmatZ * (fmatZ + xi) * E * E * pow((kc * CORR / T), beta) / (E + me);
+      double FAC = matZ_ * (matZ_ + xi) * E * E * pow((kc * CORR / T), beta) / (E + me_);
       if (FAC <= 0.) return 0.;
       dedxBrems = FAC * S;
 
@@ -557,7 +560,7 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
         dedxBrems = dedxBrems * S; // GeV barn
       }
 
-      dedxBrems = 0.60221367 * fmatDensity * dedxBrems / fmatA; // energy loss dE/dx [GeV/cm]
+      dedxBrems = 0.60221367 * matDensity_ * dedxBrems / matA_; // energy loss dE/dx [GeV/cm]
     }
   }
 
@@ -565,12 +568,12 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
 
   double factor = 1.; // positron correction factor
 
-  if (fpdg == -11) {
+  if (pdg_ == -11) {
     static const double AA = 7522100., A1 = 0.415, A3 = 0.0021, A5 = 0.00054;
 
     double ETA = 0.;
-    if (fmatZ > 0.) {
-      double X = log(AA * mom / fmatZ * fmatZ);
+    if (matZ_ > 0.) {
+      double X = log(AA * mom / matZ_ * matZ_);
       if (X > -8.) {
         if (X >= +9.) ETA = 1.;
         else {
@@ -590,44 +593,28 @@ double GFMaterialEffects::energyLossBrems(const double& mom) const
     }
   }
 
-  double DE = fabs(fstep) * factor * dedxBrems; //always positive
-  double momLoss = sqrt(mom * mom + 2.*sqrt(mom * mom + fmass * fmass) * DE + DE * DE) - mom; //always positive
+  double DE = fabs(stepSize_) * factor * dedxBrems; //always positive
+  double momLoss = sqrt(mom * mom + 2.*sqrt(mom * mom + mass_ * mass_) * DE + DE * DE) - mom; //always positive
 
   return momLoss;
 }
 
-// old noiseBrems is doing exacltly the same as the current noiseBrems but with less lines of code
-// void GFMaterialEffects::noiseBrems(const double& mom,
-//                                    double* noise) const
-// {
-//
-//   if (abs(fpdg) != 11) return; // only for electrons and positrons
-//
-//   double LX  = 1.442695 * fabs(fstep) / fradiationLength;
-//   double S2B = mom * mom * (1. / pow(3., LX) - 1. / pow(4., LX));
-//   double DEDXB  = pow(fabs(S2B), 0.5);
-//   DEDXB = 1.2E9 * DEDXB; //eV
-//   double sigma2E = DEDXB * DEDXB; //eV^2
-//   sigma2E *= 1.E-18; // eV -> GeV
-//
-//   noise[6*7+6] += (mom * mom + fmass * fmass) / pow(mom, 6.) * sigma2E;
-//   std::cout << "noise added by bremsstrahlung: " << (mom * mom + fmass * fmass) / pow(mom, 6.) * sigma2E << std::endl;
-// }
 
-void GFMaterialEffects::noiseBrems(const double& mom,
-                                   double* noise) const
+void MaterialEffects::noiseBrems(const double& mom,
+                                 double* noise) const
 {
 
-  if (abs(fpdg) != 11) return; // only for electrons and positrons
+  // Code ported from GEANT 3
 
-  double minusXOverLn2  = -1.442695 * fabs(fstep) / fradiationLength;
+  if (abs(pdg_) != 11) return; // only for electrons and positrons
+
+  double minusXOverLn2  = -1.442695 * fabs(stepSize_) / radiationLength_;
   double sigma2E = 1.44 * mom * mom * (pow(3., minusXOverLn2) - pow(4., minusXOverLn2));
   assert(sigma2E > 0.0);
-  noise[6 * 7 + 6] += (mom * mom + fmass * fmass) / pow(mom, 6.) * sigma2E;
+  noise[6 * 7 + 6] += (mom * mom + mass_ * mass_) / pow(mom, 6.) * sigma2E;
 
 }
 
-//---------------------------------------------------------------------------------
+} /* End of namespace genfit */
 
-ClassImp(GFMaterialEffects)
 

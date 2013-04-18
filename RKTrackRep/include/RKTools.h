@@ -17,17 +17,15 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
- */
-
 /** @addtogroup RKTrackRep
  * @{
  */
 
 
-#ifndef RKTOOLS_H
-#define RKTOOLS_H
+#ifndef genfit_RKTools_h
+#define genfit_RKTools_h
 
+namespace genfit {
 
 // Array Matrix typedefs. They are needed for SSE optimization:
 // gcc can vectorize loops only if the array sizes are known.
@@ -60,6 +58,8 @@ namespace RKTools {
 
 }
 
-#endif
+} /* End of namespace genfit */
+
+#endif // genfit_RKTools_h
 
 /** @} */

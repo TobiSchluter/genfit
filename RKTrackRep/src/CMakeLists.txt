@@ -27,7 +27,10 @@ INCLUDE_DIRECTORIES(
 )
 
 set(GENFIT_SRCS 
-	RKTrackRep.cpp
+	MaterialEffects.cpp  
+	RKTools.cpp  
+	RKTrackRep.cpp  
+	TGeoMaterialInterface.cpp
 )
 
 
