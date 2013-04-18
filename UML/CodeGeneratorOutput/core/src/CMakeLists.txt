@@ -30,8 +30,10 @@ set(GENFIT_SRCS
 	AbsFitterInfo.cpp
 	AbsMeasurement.cpp
 	AbsTrackRep.cpp
+	ConstField.cpp
 	DetPlane.cpp
 	Exception.cpp
+	FieldManager.cpp
 	KalmanFittedStateOnPlane.cpp
 	KalmanFitterInfo.cpp
 	MaterialInfo.cpp

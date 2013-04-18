@@ -153,6 +153,7 @@ class TrackCand : public TObject {
    */
   void setPdgCode(int pdgCode);
 
+  // TODO: make two functions: one that copies the hits from the other cand, and one that transferes ownership form the other cand
   void append(const TrackCand&);
 
   /** @brief sort the hits that were already added to the trackCand using the rho parameter.

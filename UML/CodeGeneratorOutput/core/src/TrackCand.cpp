@@ -207,7 +207,7 @@ void TrackCand::Print(const Option_t* option) const {
 
 void TrackCand::append(const TrackCand& rhs){
   for(unsigned int i=0; i<rhs.getNHits(); ++i){
-    addHit(rhs.getHit(i));
+    addHit(rhs.getHit(i)->clone());
   }
 }
 
