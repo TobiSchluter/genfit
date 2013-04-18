@@ -17,6 +17,7 @@ class AbsTrackRep {
  public:
 
   AbsTrackRep();
+  AbsTrackRep(int pdgCode, char propDir = 0);
 
   virtual ~AbsTrackRep() = 0;
 
@@ -55,24 +56,49 @@ class AbsTrackRep {
       double radius,
       bool stopAtBoundary = false) const = 0;
 
+  /**
+   * Use the Material information stored in the #TrackPoints
+   */
+  //virtual double extrapolateToTrackPoint() const;
+
+
   virtual TVector3 getPos(const StateOnPlane* stateInput) const = 0;
 
   virtual TVector3 getMom(const StateOnPlane* stateInput) const = 0;
   virtual void getPosMom(const StateOnPlane* stateInput, TVector3& pos, TVector3& mom) const = 0;
 
-  /**
-   * Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance
-   */
+  /** Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance */
   virtual void getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const = 0;
-
 
   int getPDG() const {return pdgCode_;}
   virtual double getCharge() const = 0;
+  char getPropDir() const {return propDir_;}
 
-  /**
-   * Use the Material information stored in the #TrackPoints
-   */
-  //virtual double extrapolateToTrackPoint() const;
+  /** Get the jacobian of the last extrapolation  */
+  virtual TMatrixD getForwardJacobian() const = 0;
+
+  /** Get the jacobian of the last extrapolation if it would have been done in opposite direction  */
+  virtual TMatrixD getBackwardJacobian() const = 0;
+
+  /** Get the noise matrix of the last extrapolation  */
+  virtual TMatrixDSym getForwardNoise() const = 0;
+
+  /** Get the noise matrix of the last extrapolation if it would have been done in opposite direction  */
+  virtual TMatrixDSym getBackwardNoise() const = 0;
+
+
+  virtual void setPosMom(StateOnPlane* stateInput, const TVector3& pos, const TVector3& mom) const = 0;
+  virtual void setPosMomCov(MeasuredStateOnPlane* stateInput, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov) const = 0;
+
+  //! Set propagation direction. (-1, 0, 1) -> (backward, auto, forward)
+  void setPropDir(int dir) {
+    if (dir>0) propDir_ = 1;
+    else if (dir<0) propDir_ = -1;
+    else propDir_ = 0;
+  };
+
+  //! Switch propagation direction. Has no effect if propDir_ is set to 0.
+  void switchPropDir(){propDir_ = -1*propDir_;}
 
 
  protected:
@@ -83,6 +109,7 @@ class AbsTrackRep {
 
 
   int pdgCode_;
+  char propDir_;  // propagation direction (-1, 0, 1) -> (backward, auto, forward)
 
 };
 

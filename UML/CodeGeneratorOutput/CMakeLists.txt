@@ -4,6 +4,10 @@ IF(NOT DEFINED ENV{ROOTSYS})
    MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
 ENDIF(NOT DEFINED ENV{ROOTSYS})
 
+IF(NOT DEFINED ENV{GENFIT})
+   MESSAGE(FATAL_ERROR "You did not set the environment variable GENFIT.") 
+ENDIF(NOT DEFINED ENV{GENFIT})
+
 IF(NOT DEFINED ENV{GLOGPATH})
    MESSAGE(FATAL_ERROR "You did not set the environment variable GLOGPATH. Please install the Google Logging Library (glog) and set GLOGPATH.") 
 ENDIF(NOT DEFINED ENV{GLOGPATH})
@@ -42,6 +46,6 @@ SET(LIBRARY_OUTPUT_PATH ${GENFITLIBDIR})
 
 
 add_subdirectory(core)
-#add_subdirectory(RKTrackRep)
+add_subdirectory(RKTrackRep)
 #add_subdirectory(GFRave)
 #add_subdirectory(RecoHitExamples)

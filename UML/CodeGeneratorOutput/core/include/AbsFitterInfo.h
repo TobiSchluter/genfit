@@ -62,13 +62,14 @@ class AbsFitterInfo : public TObject {
 
  private:
 
+  /** Pointer to #TrackPoint where the FitterInfo belongs to
+   */
+  TrackPoint* trackPoint_; // No ownership
+
   /** Pointer to #TrackRep with respect to which the FitterInfo is defined
    */
   AbsTrackRep* rep_; // No ownership
 
-  /** Pointer to #TrackPoint where the FitterInfo belongs to
-   */
-  TrackPoint* trackPoint_; // No ownership
 
   //ClassDef(AbsFitterInfo,1)
 
