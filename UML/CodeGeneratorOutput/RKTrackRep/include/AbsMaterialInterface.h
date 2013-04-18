@@ -21,19 +21,22 @@
  * @{
  */
 
-#ifndef GFABSMATERIALINTERFACE_H
-#define GFABSMATERIALINTERFACE_H
+#ifndef genfit_AbsMaterialInterface_h
+#define genfit_AbsMaterialInterface_h
 
 #include "RKTrackRep.h"
 
 #include <TObject.h>
 #include <TVector3.h>
 
+namespace genfit {
 
-class GFAbsMaterialInterface : public TObject {
+class AbsMaterialInterface : public TObject {
+
  public:
-  GFAbsMaterialInterface(){;};
-  virtual ~GFAbsMaterialInterface(){;};
+
+  AbsMaterialInterface(){;};
+  virtual ~AbsMaterialInterface(){;};
 
   /** @brief Initialize the navigator at given position and with given direction
    */
@@ -60,11 +63,11 @@ class GFAbsMaterialInterface : public TObject {
 
   virtual double findNextBoundaryAndStepStraight(double sMax) = 0;
 
-public:
-  ClassDef(GFAbsMaterialInterface, 1);
+
+  //ClassDef(AbsMaterialInterface, 1);
 
 };
 
-#endif
+} /* End of namespace genfit */
 
-/** @} */
+#endif // genfit_AbsMaterialInterface_h
