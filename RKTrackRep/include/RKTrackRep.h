@@ -1,3 +1,26 @@
+/* Copyright 2008-2010, Technische Universitaet Muenchen,
+   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
+
+   This file is part of GENFIT.
+
+   GENFIT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as published
+   by the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   GENFIT is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public License
+   along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+/** @addtogroup genfit
+ * @{
+ */
+
 #ifndef genfit_RKTrackRep_h
 #define genfit_RKTrackRep_h
 
@@ -66,7 +89,8 @@ class RKTrackRep : public AbsTrackRep {
   /** Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance */
   virtual void getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const override;
 
-  virtual double getCharge() const override;
+  virtual double getCharge(const StateOnPlane* state) const override {return (state->getAuxInfo())(0);}
+  double getSpu(const StateOnPlane* state) const {return (state->getAuxInfo())(1);}
 
   /** Get the jacobian of the last extrapolation  */
   virtual TMatrixD getForwardJacobian() const override;
@@ -81,9 +105,13 @@ class RKTrackRep : public AbsTrackRep {
   virtual TMatrixDSym getBackwardNoise() const override;
 
 
-  virtual void setPosMom(StateOnPlane* stateInput, const TVector3& pos, const TVector3& mom) const override;
-  virtual void setPosMomCov(MeasuredStateOnPlane* stateInput, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov) const override;
+  virtual void setPosMom(StateOnPlane* state, const TVector3& pos, const TVector3& mom) const override;
+  virtual void setPosMomErr(MeasuredStateOnPlane* state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const override;
+  virtual void setPosMomCov(MeasuredStateOnPlane* state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const override;
 
+
+  void setCharge(StateOnPlane* state, double charge) const {(state->getAuxInfo())(0) = charge;}
+  void setSpu(StateOnPlane* state, double spu) const {(state->getAuxInfo())(1) = spu;}
 
   //! The actual Runge Kutta propagation
   /** propagate #state7 with step #S. Fills #SA (Start directions derivatives dA/S).
@@ -105,40 +133,39 @@ class RKTrackRep : public AbsTrackRep {
   void calcStateCov(const TVector3& pos,
                     const TVector3& mom,
                     const TVector3& poserr,
-                    const TVector3& momerr);
+                    const TVector3& momerr) const;
 
   void calcState(const TVector3& pos,
-                 const TVector3& mom);
+                 const TVector3& mom) const;
 
-  void getState7(M1x7& state7);
-  void getState7(M1x7& state7, const TVectorD& state5, const DetPlane& pl, const double& spu);
-  TVectorD getState5(const M1x7& state7, const DetPlane& pl, double& spu);
+  void getState7(const StateOnPlane* state, M1x7& state7) const;
+  void getState5(StateOnPlane* state, const M1x7& state7) const;
 
   void transformPM7(const TMatrixD& in5x5,
                     M7x7& out7x7,
                     const DetPlane& pl,
                     const TVectorD& state5,
                     const double& spu,
-                    TMatrixD* Jac = NULL);
+                    TMatrixD* Jac = NULL) const;
 
   void transformPM6(const TMatrixDSym& in5x5,
                     M6x6& out6x6,
                     const DetPlane& pl,
                     const TVectorD& state5,
                     const double& spu,
-                    TMatrixD* Jac = NULL);
+                    TMatrixD* Jac = NULL) const;
 
   void transformM7P(const M7x7& in7x7,
                     TMatrixDSym& out5x5,
                     const DetPlane& pl,
                     const M1x7& state7,
-                    TMatrixD* Jac = NULL);
+                    TMatrixD* Jac = NULL) const;
 
   void transformM6P(const M6x6& in6x6,
                     TMatrixDSym& out5x5,
                     const DetPlane& pl,
                     const M1x7& state7,
-                    TMatrixD* Jac = NULL);
+                    TMatrixD* Jac = NULL) const;
 
   //! Propagates the particle through the magnetic field.
   /** If the propagation is successfull and the plane is reached, the function returns true.
@@ -157,7 +184,7 @@ class RKTrackRep : public AbsTrackRep {
                bool& checkJacProj,
                TMatrixD& noiseProjection,
                bool onlyOneStep = false,
-               double maxStep = 1.E99);
+               double maxStep = 1.E99) const;
 
   double estimateStep(std::vector<MaterialProperties>& points,
                       const TVector3& pos,
@@ -188,7 +215,7 @@ class RKTrackRep : public AbsTrackRep {
                 M1x7& state7,
                 M7x7* cov=NULL,
                 bool onlyOneStep = false,
-                double maxStep = 1.E99);
+                double maxStep = 1.E99) const;
 
 
 

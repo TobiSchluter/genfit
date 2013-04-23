@@ -71,7 +71,7 @@ class AbsTrackRep {
   virtual void getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const = 0;
 
   int getPDG() const {return pdgCode_;}
-  virtual double getCharge() const = 0;
+  virtual double getCharge(const StateOnPlane* state) const = 0;
   char getPropDir() const {return propDir_;}
 
   /** Get the jacobian of the last extrapolation  */
@@ -88,7 +88,8 @@ class AbsTrackRep {
 
 
   virtual void setPosMom(StateOnPlane* stateInput, const TVector3& pos, const TVector3& mom) const = 0;
-  virtual void setPosMomCov(MeasuredStateOnPlane* stateInput, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov) const = 0;
+  virtual void setPosMomErr(MeasuredStateOnPlane* stateInput, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const = 0;
+  virtual void setPosMomCov(MeasuredStateOnPlane* stateInput, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const = 0;
 
   //! Set propagation direction. (-1, 0, 1) -> (backward, auto, forward)
   void setPropDir(int dir) {
