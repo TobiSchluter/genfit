@@ -36,13 +36,13 @@ namespace genfit {
 
 
 void RKTrackRep::initArrays(){
-  memset(fNoise,0x00,7*7*sizeof(double));
-  memset(fOldCov,0x00,7*7*sizeof(double));
+  fNoise.fill(0);
+  fOldCov.fill(0);
 
-  memset(fJ_pM_5x7,0x00,5*7*sizeof(double));
-  memset(fJ_pM_5x6,0x00,5*6*sizeof(double));
-  memset(fJ_Mp_7x5,0x00,7*5*sizeof(double));
-  memset(fJ_Mp_6x5,0x00,6*5*sizeof(double));
+  fJ_pM_5x7.fill(0);
+  fJ_pM_5x6.fill(0);
+  fJ_Mp_7x5.fill(0);
+  fJ_Mp_6x5.fill(0);
 }
 
 
@@ -210,7 +210,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
     field = FieldManager::getFieldVal(pos);
     H1[0] = field.X()*PS2; H1[1] = field.Y()*PS2; H1[2] = field.Z()*PS2; // H1 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * [(A0, B0, C0) + 2*(ax, ay, az)]
   }
-  else if (calcJacobian) memcpy(H1, H0, 3*sizeof(double));
+  else if (calcJacobian) H1 = H0;
   A3 = B2*H1[2]-C2*H1[1]+A[0]; B3 = C2*H1[0]-A2*H1[2]+A[1]; C3 = A2*H1[1]-B2*H1[0]+A[2]; // (A2, B2, C2) x H1 + (ax, ay, az)
   A4 = B3*H1[2]-C3*H1[1]+A[0]; B4 = C3*H1[0]-A3*H1[2]+A[1]; C4 = A3*H1[1]-B3*H1[0]+A[2]; // (A3, B3, C3) x H1 + (ax, ay, az)
   A5 = A4-A[0]+A4            ; B5 = B4-A[1]+B4            ; C5 = C4-A[2]+C4            ; //    2*(A4, B4, C4) - (ax, ay, az)
@@ -222,7 +222,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
     field = FieldManager::getFieldVal(pos);
     H2[0] = field.X()*PS2;  H2[1] = field.Y()*PS2;  H2[2] = field.Z()*PS2; // H2 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * (A4, B4, C4)
   }
-  else if (calcJacobian) memcpy(H2, H0, 3*sizeof(double));
+  else if (calcJacobian) H2 = H0;
   A6 = B5*H2[2]-C5*H2[1]; B6 = C5*H2[0]-A5*H2[2]; C6 = A5*H2[1]-B5*H2[0]; // (A5, B5, C5) x H2
 
 
@@ -780,9 +780,9 @@ bool RKTrackRep::RKutta (const DetPlane& plane,
 
     // check if we went back and forth multiple times -> we don't come closer to the plane!
     if (counter > 3){
-      if (S                                       *materials_[counter-1].getSegmentLength() < 0 &&
-          materials_[counter-1].getSegmentLength()*materials_[counter-2].getSegmentLength() < 0 &&
-          materials_[counter-2].getSegmentLength()*materials_[counter-3].getSegmentLength() < 0){
+      if (S                                             *materials_[counter-1].first.getSegmentLength() < 0 &&
+          materials_[counter-1].first.getSegmentLength()*materials_[counter-2].first.getSegmentLength() < 0 &&
+          materials_[counter-2].first.getSegmentLength()*materials_[counter-3].first.getSegmentLength() < 0){
         Exception exc("RKTrackRep::RKutta ==> Do not get closer to plane!",__LINE__,__FILE__);
         exc.setFatal();
         throw exc;
@@ -939,8 +939,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   if (!plane.isFinite() && maxStepArg > fabs(margin*Step)) maxStepArg = fabs(margin*Step);
 
   while (maxStepArg > MINSTEP) {
-    M1x7 state7_temp;
-    memcpy(state7_temp, state7, sizeof(state7));
+    M1x7 state7_temp(state7);
     M1x3 SA;
 
     double q = RKPropagate(state7_temp, nullptr, SA, StepSign*maxStepArg, true);
@@ -1024,19 +1023,18 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
     if(fabs(Step) > MINSTEP){ // only call stepper if step estimation big enough
 
-      M1x7 state7_temp;
-      memcpy(state7_temp, state7, sizeof(state7));
+      M1x7 state7_temp(state7);
       for (unsigned int i=3; i<6; ++i)
         state7_temp[i] *= StepSign;
 
-      materials_.push_back(MaterialProperties());
+      materials_.push_back( std::make_pair(MaterialProperties(), M1x7(state7)) );
       double StepMat = MaterialEffects::getInstance()->stepper(this,
                                                                state7_temp,
                                                                maxStepArg,
                                                                charge/state7[6], // |p|
                                                                relMomLoss,
                                                                pdgCode_,
-                                                               materials_.back(),
+                                                               materials_.back().first,
                                                                true);
       if (fabs(Step) > StepMat) {
         Step = StepSign*StepMat;
@@ -1059,8 +1057,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
     // improve step estimation to surface according to curvature
     if (fabs(Step) > 0.1*maxStepArg && fabs(Step) > MINSTEP){
 
-      M1x7 state7_temp;
-      memcpy(state7_temp, state7, sizeof(state7));
+      M1x7 state7_temp(state7);
       M1x3 SA;
 
       RKPropagate(state7_temp, nullptr, SA, Step, true);
@@ -1083,7 +1080,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
   }
 
-  materials_.back().setSegmentLength(Step);
+  materials_.back().first.setSegmentLength(Step);
 
   #ifdef DEBUG
     std::cout << "  --> Step to be used: " << Step << "\n";
@@ -1136,8 +1133,8 @@ double RKTrackRep::Extrap(const DetPlane& plane, double charge, M1x7& state7, M7
 
     // initialize cov with unit matrix
     if(calcCov){
-      memcpy(fOldCov, cov, 7*7*sizeof(double));
-      memset(cov,0x00,49*sizeof(double));
+      fOldCov = *cov;
+      cov->fill(0);
       for(int i=0; i<7; ++i) (*cov)[8*i] = 1.;
     }
 
@@ -1164,10 +1161,10 @@ double RKTrackRep::Extrap(const DetPlane& plane, double charge, M1x7& state7, M7
     if (/*!fNoMaterial*/ true) { // points are only filled if mat fx are on
       if(materials_.size() > 2){ // check if there are at least three points
         for (unsigned int i=materials_.size()-1; i>0; --i){
-          if (materials_[i] == materials_[i-1] &&
-              (fabs(materials_[i].getSegmentLength()) < MINSTEP ||
-               fabs(materials_[i-1].getSegmentLength()) < MINSTEP) ){
-            materials_[i-1].addToSegmentLength(materials_[i].getSegmentLength());
+          if (materials_[i].first == materials_[i-1].first &&
+              (fabs(materials_[i].first.getSegmentLength()) < MINSTEP ||
+               fabs(materials_[i-1].first.getSegmentLength()) < MINSTEP) ){
+            materials_[i-1].first.addToSegmentLength(materials_[i].first.getSegmentLength());
             materials_.erase(materials_.begin()+i);
           }
         }
@@ -1175,14 +1172,14 @@ double RKTrackRep::Extrap(const DetPlane& plane, double charge, M1x7& state7, M7
       #ifdef DEBUG
         std::cout<<"Filtered materials_ \n";
         for (unsigned int i=0; i<materials_.size(); ++i){
-          materials_[i].Print();
+          materials_[i].first.Print();
         }
         std::cout<<"\n";
       #endif
     }
 
 
-    if(calcCov) memset(fNoise,0x00,7*7*sizeof(double)); // set fNoise to 0
+    if(calcCov) fNoise.fill(0); // set fNoise to 0
 
 
     // call MatFX
@@ -1192,8 +1189,8 @@ double RKTrackRep::Extrap(const DetPlane& plane, double charge, M1x7& state7, M7
       double momLoss = MaterialEffects::getInstance()->effects(materials_,
                                                                fabs(charge/state7[6]), // momentum
                                                                pdgCode_,
-                                                               fNoise,
-                                                               (double *)cov);
+                                                               &fNoise,
+                                                               cov);
 
       #ifdef DEBUG
         std::cout << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6]) << "\n";
@@ -1217,7 +1214,7 @@ double RKTrackRep::Extrap(const DetPlane& plane, double charge, M1x7& state7, M7
       // last column of jac is [0,0,0,0,0,0,1]
       // cov is symmetric
       RKTools::J_MMTxcov7xJ_MM(*cov, fOldCov);
-      memcpy(cov, fOldCov, 7*7*sizeof(double));
+      *cov = fOldCov;
       if( checkJacProj == true ){
 
   // XXX std::cerr << "noise in 7D before it gets added" << std::endl;
@@ -1230,7 +1227,7 @@ double RKTrackRep::Extrap(const DetPlane& plane, double charge, M1x7& state7, M7
          //std::cerr << "the current noise is " << std::endl;
          //RKTools::printDim(fNoise,7,7);
   TMatrixDSym projectedNoise(7);
-  projectedNoise.SetMatrixArray(fNoise);
+  projectedNoise.SetMatrixArray(fNoise.data());
   //std::cerr << "projectedNoise is filled with the current noise: " << std::endl;
   //projectedNoise.Print();
   // XXX std::cerr << "projection matrix for noise:" << std::endl;

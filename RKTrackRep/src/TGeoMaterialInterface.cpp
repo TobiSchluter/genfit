@@ -72,8 +72,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
   const double delta(1.E-2); // cm
   double s(0), safety(0), lastSafety(0), slDist(0), lastSlDist(0);
   M1x3 SA;
-  M1x7 stateOrig;
-  memcpy(stateOrig, state7, sizeof(state7));
+  M1x7 stateOrig(state7);
 
   unsigned int maxIt(300), it(0);
 
@@ -120,7 +119,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
        std::cout << "   make RKutta step \n";
 #endif
       s += safety;
-      memcpy(state7, stateOrig, sizeof(state7)); // state7 = stateOrig; // propagate complete way from original start
+      state7 = stateOrig; // propagate complete way from original start
       rep->RKPropagate(state7, NULL, SA, s, varField);
       initTrack(state7[0], state7[1], state7[2],  state7[3], state7[4], state7[5]);
     }

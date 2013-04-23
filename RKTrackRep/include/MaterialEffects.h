@@ -84,13 +84,11 @@ public:
 
 
   //! Calculates energy loss in the traveled path, optional calculation of noise matrix
-  double effects(const std::vector<MaterialProperties>& points,
+  double effects(const std::vector< std::pair< MaterialProperties, M1x7 > >& points,
                  const double& mom,
                  const int& pdg,
-                 double* noise7x7 = NULL,
-                 const double* jacobian7x7 = NULL,
-                 const double* directionBefore = NULL,
-                 const double* directionAfter = NULL);
+                 M7x7* noise = nullptr,
+                 const M7x7* jacobian = nullptr);
 
   //! Returns maximum length so that a specified momentum loss will not be exceeded
   /**  The stepper returns the maximum length that the particle may travel, so that a specified relative momentum loss will not be exceeded,
@@ -129,7 +127,7 @@ public:
     *  Needs dEdx_, which is calculated in energyLossBetheBloch, so it has to be called afterwards!
     */
   void noiseBetheBloch(const double& mom,
-                       double* noise) const;
+                       M7x7& noise) const;
 
   //! calculation of multiple scattering
   /**  This function first calcuates a MSC variance based on the current material and step length
@@ -140,7 +138,7 @@ public:
    * 
     */
   void noiseCoulomb(const double& mom,
-                    double* noise,
+                    M7x7& noise,
                     const M1x3& direction) const;
 
   //! Returns energy loss
@@ -155,7 +153,7 @@ public:
    *
    */
   void noiseBrems(const double& mom,
-                  double* noise) const;
+                  M7x7& noise) const;
 
 
   bool noEffects_;

@@ -107,13 +107,11 @@ void MaterialEffects::setMscModel(const std::string& modelName)
 }
 
 
-double MaterialEffects::effects(const std::vector<MaterialProperties>& points,
+double MaterialEffects::effects(const std::vector< std::pair< MaterialProperties, M1x7 > >& points,
                                 const double& mom,
                                 const int& pdg,
-                                double* noise,
-                                const double* jacobian,
-                                const double* directionBefore,
-                                const double* directionAfter)
+                                M7x7* noise,
+                                const M7x7* jacobian)
 {
 
   if (materialInterface_ == nullptr) {
@@ -124,7 +122,7 @@ double MaterialEffects::effects(const std::vector<MaterialProperties>& points,
 
   if (noEffects_) return 0.;
 
-  bool doNoise(jacobian != nullptr);
+  bool doNoise(noise != nullptr);
 
   pdg_ = pdg;
   getParticleParameters(mom);
@@ -134,7 +132,7 @@ double MaterialEffects::effects(const std::vector<MaterialProperties>& points,
 
   for (unsigned int i = 0; i < nPoints; ++i) { // loop over points
 
-    double realPath = points[i].getSegmentLength();
+    double realPath = points[i].first.getSegmentLength();
     double stepSign(1.);
     if (realPath < 0)
       stepSign = -1.;
@@ -143,24 +141,22 @@ double MaterialEffects::effects(const std::vector<MaterialProperties>& points,
     if (realPath > 1.E-8) { // do material effects only if distance is not too small
 
 
-      points[i].getMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
+      points[i].first.getMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
 
       if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
 
         if (energyLossBetheBloch_)
           momLoss += stepSign * this->energyLossBetheBloch(mom);
         if (doNoise && energyLossBetheBloch_ && noiseBetheBloch_)
-          this->noiseBetheBloch(mom, noise);
+          this->noiseBetheBloch(mom, *noise);
 
         if (doNoise && noiseCoulomb_)
-          this->noiseCoulomb(mom, noise, M1x3{ 0.5*(directionBefore[0]+directionAfter[0]),
-                                               0.5*(directionBefore[1]+directionAfter[1]),
-                                               0.5*(directionBefore[2]+directionAfter[2]) } );
+          this->noiseCoulomb(mom, *noise, *((M1x3*) &points[i].second[3]) );
 
         if (energyLossBrems_)
           momLoss += stepSign * this->energyLossBrems(mom);
         if (doNoise && energyLossBrems_ && noiseBrems_)
-          this->noiseBrems(mom, noise);
+          this->noiseBrems(mom, *noise);
 
       }
     }
@@ -279,7 +275,7 @@ double MaterialEffects::energyLossBetheBloch(const double& mom)
 
 
 void MaterialEffects::noiseBetheBloch(const double& mom,
-                                        double* noise) const
+                                      M7x7& noise) const
 {
 
   // Code ported from GEANT 3
@@ -341,8 +337,8 @@ void MaterialEffects::noiseBetheBloch(const double& mom,
 
 
 void MaterialEffects::noiseCoulomb(const double& mom,
-                                     double* noise,
-                                     const M1x3& direction) const
+                                   M7x7& noise,
+                                   const M1x3& direction) const
 {
 
 //std::cerr << "MaterialEffects::noiseCoulomb" << std::endl;
@@ -583,7 +579,7 @@ double MaterialEffects::energyLossBrems(const double& mom) const
 
 
 void MaterialEffects::noiseBrems(const double& mom,
-                                 double* noise) const
+                                 M7x7& noise) const
 {
 
   // Code ported from GEANT 3

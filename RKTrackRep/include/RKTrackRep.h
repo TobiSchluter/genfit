@@ -215,7 +215,7 @@ class RKTrackRep : public AbsTrackRep {
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
   mutable TMatrixD jacobian_; //! jacobian of the last extrapolation
   mutable TMatrixDSym noise_; //! noise matrix of the last extrapolation
-  mutable std::vector< MaterialProperties > materials_; //! materials crossed in the last extrapolation
+  mutable std::vector< std::pair< MaterialProperties, M1x7 > > materials_; //! materials crossed in the last extrapolation, together with 7D states at start of each step
 
 
   // auxiliary variables and arrays

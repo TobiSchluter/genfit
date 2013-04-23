@@ -379,8 +379,7 @@ void RKTools::J_MMxJ_MM(M7x7& J_MM, const M7x7& J_MM_old){
   // x x x x x x 0
   // x x x x x x x
 
-  M7x7 J_MM_temp;
-  memcpy(J_MM_temp, J_MM, 7*7*sizeof(double));
+  M7x7 J_MM_temp(J_MM);
 
   /*J_MM[0] = 1;
   J_MM[1] = 0;
