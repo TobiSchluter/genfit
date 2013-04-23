@@ -130,6 +130,8 @@ class RKTrackRep : public AbsTrackRep {
 
  private:
 
+  void initArrays();
+
   void calcStateCov(const TVector3& pos,
                     const TVector3& mom,
                     const TVector3& poserr,
@@ -141,30 +143,22 @@ class RKTrackRep : public AbsTrackRep {
   void getState7(const StateOnPlane* state, M1x7& state7) const;
   void getState5(StateOnPlane* state, const M1x7& state7) const;
 
-  void transformPM7(const TMatrixD& in5x5,
+  void transformPM7(const MeasuredStateOnPlane* state,
                     M7x7& out7x7,
-                    const DetPlane& pl,
-                    const TVectorD& state5,
-                    const double& spu,
                     TMatrixD* Jac = NULL) const;
 
-  void transformPM6(const TMatrixDSym& in5x5,
+  void transformPM6(const MeasuredStateOnPlane* state,
                     M6x6& out6x6,
-                    const DetPlane& pl,
-                    const TVectorD& state5,
-                    const double& spu,
                     TMatrixD* Jac = NULL) const;
 
   void transformM7P(const M7x7& in7x7,
-                    TMatrixDSym& out5x5,
-                    const DetPlane& pl,
                     const M1x7& state7,
+                    MeasuredStateOnPlane* state, // plane must already be set!
                     TMatrixD* Jac = NULL) const;
 
   void transformM6P(const M6x6& in6x6,
-                    TMatrixDSym& out5x5,
-                    const DetPlane& pl,
                     const M1x7& state7,
+                    MeasuredStateOnPlane* state, // plane and charge must already be set!
                     TMatrixD* Jac = NULL) const;
 
   //! Propagates the particle through the magnetic field.
@@ -223,6 +217,13 @@ class RKTrackRep : public AbsTrackRep {
   mutable TMatrixD jacobian_; // jacobian of the last extrapolation
   mutable TMatrixDSym noise_; // noise matrix of the last extrapolation
   mutable std::vector< MaterialProperties > materials_; // materials crossed in the last extrapolation
+
+
+  // needed in transform...
+  mutable M5x7 fJ_pM_5x7; //!
+  mutable M5x6 fJ_pM_5x6; //!
+  mutable M7x5 fJ_Mp_7x5; //!
+  mutable M6x5 fJ_Mp_6x5; //!
 
 };
 

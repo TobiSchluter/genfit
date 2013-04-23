@@ -34,6 +34,13 @@
 namespace genfit {
 
 
+void RKTrackRep::initArrays(){
+  memset(fJ_pM_5x7,0x00,5*7*sizeof(double));
+  memset(fJ_pM_5x6,0x00,5*6*sizeof(double));
+  memset(fJ_Mp_7x5,0x00,7*5*sizeof(double));
+  memset(fJ_Mp_6x5,0x00,6*5*sizeof(double));
+}
+
 
 void RKTrackRep::setPosMom(StateOnPlane* state, const TVector3& pos, const TVector3& mom) const {
 
@@ -147,7 +154,7 @@ void RKTrackRep::setPosMomCov(MeasuredStateOnPlane* state, const TVector3& pos, 
 
   const M6x6& cov6x6_( *((M6x6*) cov6x6.GetMatrixArray()) );
 
-  transformM6P(cov6x6_, state->getCov(), *(state->getPlane()), state7);
+  transformM6P(cov6x6_, state7, state);
 
 }
 
@@ -371,25 +378,28 @@ void RKTrackRep::getState5(StateOnPlane* state, const M1x7& state7) const {
 
 
 
-void RKTrackRep::transformPM7(const TMatrixD& in5x5, M7x7& out7x7,
-                              const DetPlane& pl, const TVectorD& state5, const double&  spu,
+void RKTrackRep::transformPM7(const MeasuredStateOnPlane* state,
+                              M7x7& out7x7,
                               TMatrixD* Jac) const {
 
   // get vectors and aux variables
-  const TVector3& U(pl.getU());
-  const TVector3& V(pl.getV());
-  TVector3 W(pl.getNormal());
+  const TVector3& U(state->getPlane()->getU());
+  const TVector3& V(state->getPlane()->getV());
+  TVector3 W(state->getPlane()->getNormal());
 
-  fpTilde.SetXYZ(spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()), // a_x
-                 spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()), // a_y
-                 spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()));// a_z
+  const TVectorD& state5(state->getState());
+  double spu(getSpu(state));
 
+  M1x3 pTilde;
+  pTilde[0] = spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()); // a_x
+  pTilde[1] = spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()); // a_y
+  pTilde[2] = spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()); // a_z
 
-  const double pTildeMag = fpTilde.Mag();
+  const double pTildeMag = sqrt(pTilde[0]*pTilde[0] + pTilde[1]*pTilde[1] + pTilde[2]*pTilde[2]);
   const double pTildeMag2 = pTildeMag*pTildeMag;
 
-  const double utpTildeOverpTildeMag2 = U*fpTilde / pTildeMag2;
-  const double vtpTildeOverpTildeMag2 = V*fpTilde / pTildeMag2;
+  const double utpTildeOverpTildeMag2 = (U.X()*pTilde[0] + U.Y()*pTilde[1] + U.Z()*pTilde[2]) / pTildeMag2;
+  const double vtpTildeOverpTildeMag2 = (V.X()*pTilde[0] + V.Y()*pTilde[1] + V.Z()*pTilde[2]) / pTildeMag2;
 
   //J_pM matrix is d(x,y,z,ax,ay,az,q/p) / d(q/p,u',v',u,v)   (out is 7x7)
 
@@ -405,19 +415,19 @@ void RKTrackRep::transformPM7(const TMatrixD& in5x5, M7x7& out7x7,
   fJ_pM_5x7[6] = 1.; // not needed for array matrix multiplication
   // d(ax,ay,az)/d(u')
   double fact = spu / pTildeMag;
-  fJ_pM_5x7[10] = fact * ( U.X() - fpTilde.X()*utpTildeOverpTildeMag2 ); // [1][3]
-  fJ_pM_5x7[11] = fact * ( U.Y() - fpTilde.Y()*utpTildeOverpTildeMag2 ); // [1][4]
-  fJ_pM_5x7[12] = fact * ( U.Z() - fpTilde.Z()*utpTildeOverpTildeMag2 ); // [1][5]
+  fJ_pM_5x7[10] = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 ); // [1][3]
+  fJ_pM_5x7[11] = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 ); // [1][4]
+  fJ_pM_5x7[12] = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 ); // [1][5]
   // d(ax,ay,az)/d(v')
-  fJ_pM_5x7[17] = fact * ( V.X() - fpTilde.X()*vtpTildeOverpTildeMag2 ); // [2][3]
-  fJ_pM_5x7[18] = fact * ( V.Y() - fpTilde.Y()*vtpTildeOverpTildeMag2 ); // [2][4]
-  fJ_pM_5x7[19] = fact * ( V.Z() - fpTilde.Z()*vtpTildeOverpTildeMag2 ); // [2][5]
+  fJ_pM_5x7[17] = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 ); // [2][3]
+  fJ_pM_5x7[18] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
+  fJ_pM_5x7[19] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
 
 
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
   // the multiplication can be done much faster directly on array level
   // out = J_pM^T * in5x5 * J_pM
-  const M5x5& in5x5_ = *((M5x5*) in5x5.GetMatrixArray());
+  const M5x5& in5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
   RKTools::J_pMTxcov5xJ_pM(fJ_pM_5x7, in5x5_, out7x7);
 
   if (Jac!=NULL){
@@ -427,44 +437,48 @@ void RKTrackRep::transformPM7(const TMatrixD& in5x5, M7x7& out7x7,
 }
 
 
-void RKTrackRep::transformPM6(const TMatrixDSym& in5x5, M6x6& out6x6,
-                              const DetPlane& pl, const TVectorD& state5, const double&  spu,
+void RKTrackRep::transformPM6(const MeasuredStateOnPlane* state,
+                              M6x6& out6x6,
                               TMatrixD* Jac) const {
 
   // get vectors and aux variables
-  const TVector3& U(pl.getU());
-  const TVector3& V(pl.getV());
-  TVector3 W(pl.getNormal());
+  const TVector3& U(state->getPlane()->getU());
+  const TVector3& V(state->getPlane()->getV());
+  TVector3 W(state->getPlane()->getNormal());
 
-  fpTilde.SetXYZ(spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()), // a_x
-                 spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()), // a_y
-                 spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()));// a_z
+  const TVectorD& state5(state->getState());
+  double spu(getSpu(state));
 
-  const double pTildeMag = fpTilde.Mag();
+  M1x3 pTilde;
+  pTilde[0] = spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()); // a_x
+  pTilde[1] = spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()); // a_y
+  pTilde[2] = spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()); // a_z
+
+  const double pTildeMag = sqrt(pTilde[0]*pTilde[0] + pTilde[1]*pTilde[1] + pTilde[2]*pTilde[2]);
   const double pTildeMag2 = pTildeMag*pTildeMag;
 
-  const double utpTildeOverpTildeMag2 = U*fpTilde / pTildeMag2;
-  const double vtpTildeOverpTildeMag2 = V*fpTilde / pTildeMag2;
+  const double utpTildeOverpTildeMag2 = (U.X()*pTilde[0] + U.Y()*pTilde[1] + U.Z()*pTilde[2]) / pTildeMag2;
+  const double vtpTildeOverpTildeMag2 = (V.X()*pTilde[0] + V.Y()*pTilde[1] + V.Z()*pTilde[2]) / pTildeMag2;
 
   //J_pM matrix is d(x,y,z,px,py,pz) / d(q/p,u',v',u,v)       (out is 6x6)
 
   const double qop = state5(0);
-  const double p = fCharge/qop; // momentum
+  const double p = getCharge(state)/qop; // momentum
 
   // d(px,py,pz)/d(q/p)
   double fact = -1. * p / (pTildeMag * qop);
-  fJ_pM_5x6[3] = fact * fpTilde.X(); // [0][3]
-  fJ_pM_5x6[4] = fact * fpTilde.Y(); // [0][4]
-  fJ_pM_5x6[5] = fact * fpTilde.Z(); // [0][5]
+  fJ_pM_5x6[3] = fact * pTilde[0]; // [0][3]
+  fJ_pM_5x6[4] = fact * pTilde[1]; // [0][4]
+  fJ_pM_5x6[5] = fact * pTilde[2]; // [0][5]
   // d(px,py,pz)/d(u')
   fact = p * spu / pTildeMag;
-  fJ_pM_5x6[9]  = fact * ( U.X() - fpTilde.X()*utpTildeOverpTildeMag2 ); // [1][3]
-  fJ_pM_5x6[10] = fact * ( U.Y() - fpTilde.Y()*utpTildeOverpTildeMag2 ); // [1][4]
-  fJ_pM_5x6[11] = fact * ( U.Z() - fpTilde.Z()*utpTildeOverpTildeMag2 ); // [1][5]
+  fJ_pM_5x6[9]  = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 ); // [1][3]
+  fJ_pM_5x6[10] = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 ); // [1][4]
+  fJ_pM_5x6[11] = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 ); // [1][5]
   // d(px,py,pz)/d(v')
-  fJ_pM_5x6[15] = fact * ( V.X() - fpTilde.X()*vtpTildeOverpTildeMag2 ); // [2][3]
-  fJ_pM_5x6[16] = fact * ( V.Y() - fpTilde.Y()*vtpTildeOverpTildeMag2 ); // [2][4]
-  fJ_pM_5x6[17] = fact * ( V.Z() - fpTilde.Z()*vtpTildeOverpTildeMag2 ); // [2][5]
+  fJ_pM_5x6[15] = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 ); // [2][3]
+  fJ_pM_5x6[16] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
+  fJ_pM_5x6[17] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
   // d(x,y,z)/d(u)
   fJ_pM_5x6[18] = U.X(); // [3][0]
   fJ_pM_5x6[19] = U.Y(); // [3][1]
@@ -477,7 +491,7 @@ void RKTrackRep::transformPM6(const TMatrixDSym& in5x5, M6x6& out6x6,
 
   // do the transformation
   // out = J_pM^T * in5x5 * J_pM
-  const M5x5& in5x5_ = *((M5x5*) in5x5.GetMatrixArray());
+  const M5x5& in5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
   RKTools::J_pMTxcov5xJ_pM(fJ_pM_5x6, in5x5_, out6x6);
 
   if (Jac!=NULL){
@@ -487,22 +501,19 @@ void RKTrackRep::transformPM6(const TMatrixDSym& in5x5, M6x6& out6x6,
 }
 
 
-void RKTrackRep::transformM7P(const M7x7& in7x7, TMatrixDSym& out5x5,
-                              const DetPlane& pl, const M1x7& state7,
+void RKTrackRep::transformM7P(const M7x7& in7x7,
+                              const M1x7& state7,
+                              MeasuredStateOnPlane* state, // plane must already be set!
                               TMatrixD* Jac) const {
 
-  out5x5.ResizeTo(5, 5);
-
   // get vectors and aux variables
-  const TVector3& U(pl.getU());
-  const TVector3& V(pl.getV());
-  TVector3 W(pl.getNormal());
+  const TVector3& U(state->getPlane()->getU());
+  const TVector3& V(state->getPlane()->getV());
+  TVector3 W(state->getPlane()->getNormal());
 
-  fDir.SetXYZ(state7[3], state7[4], state7[5]);
-
-  const double AtU = fDir*U;
-  const double AtV = fDir*V;
-  const double AtW = fDir*W;
+  const double AtU = state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z();
+  const double AtV = state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z();
+  const double AtW = state7[3]*W.X() + state7[4]*W.Y() + state7[5]*W.Z();
 
   // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)   (in is 7x7)
 
@@ -530,7 +541,7 @@ void RKTrackRep::transformM7P(const M7x7& in7x7, TMatrixDSym& out5x5,
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
   // the multiplication can be done much faster directly on array level
   // out5x5 = J_Mp^T * in * J_Mp
-  M5x5& out5x5_ = *((M5x5*) out5x5.GetMatrixArray());
+  M5x5& out5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
   RKTools::J_MpTxcov7xJ_Mp(fJ_Mp_7x5, in7x7, out5x5_);
 
   if (Jac!=NULL){
@@ -540,27 +551,24 @@ void RKTrackRep::transformM7P(const M7x7& in7x7, TMatrixDSym& out5x5,
 }
 
 
-void RKTrackRep::transformM6P(const M6x6& in6x6, TMatrixDSym& out5x5,
-                              const DetPlane& pl, const M1x7& state7,
+void RKTrackRep::transformM6P(const M6x6& in6x6,
+                              const M1x7& state7,
+                              MeasuredStateOnPlane* state, // plane and charge must already be set!
                               TMatrixD* Jac) const {
 
-  out5x5.ResizeTo(5, 5);
-
   // get vectors and aux variables
-  const TVector3& U(pl.getU());
-  const TVector3& V(pl.getV());
-  TVector3 W(pl.getNormal());
+  const TVector3& U(state->getPlane()->getU());
+  const TVector3& V(state->getPlane()->getV());
+  TVector3 W(state->getPlane()->getNormal());
 
-  fDir.SetXYZ(state7[3], state7[4], state7[5]);
-
-  const double AtU = fDir*U;
-  const double AtV = fDir*V;
-  const double AtW = fDir*W;
+  const double AtU = state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z();
+  const double AtV = state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z();
+  const double AtW = state7[3]*W.X() + state7[4]*W.Y() + state7[5]*W.Z();
 
   // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,px,py,pz)       (in is 6x6)
 
   const double qop = state7[6];
-  const double p = fCharge/qop; // momentum
+  const double p = getCharge(state)/qop; // momentum
 
   //d(u)/d(x,y,z)
   fJ_Mp_6x5[3]  = U.X(); // [0][3]
@@ -572,9 +580,9 @@ void RKTrackRep::transformM6P(const M6x6& in6x6, TMatrixDSym& out5x5,
   fJ_Mp_6x5[14] = V.Z(); // [2][4]
   // d(q/p)/d(px,py,pz)
   double fact = (-1.) * qop / p;
-  fJ_Mp_6x5[15] = fact * fDir.X(); // [3][0]
-  fJ_Mp_6x5[20] = fact * fDir.Y(); // [4][0]
-  fJ_Mp_6x5[25] = fact * fDir.Z(); // [5][0]
+  fJ_Mp_6x5[15] = fact * state7[3]; // [3][0]
+  fJ_Mp_6x5[20] = fact * state7[4]; // [4][0]
+  fJ_Mp_6x5[25] = fact * state7[5]; // [5][0]
   // d(u')/d(px,py,pz)
   fact = 1./(p*AtW*AtW);
   fJ_Mp_6x5[16] = fact * (U.X()*AtW - W.X()*AtU); // [3][1]
@@ -587,7 +595,7 @@ void RKTrackRep::transformM6P(const M6x6& in6x6, TMatrixDSym& out5x5,
 
   // do the transformation
   // out5x5 = J_Mp^T * in * J_Mp
-  M5x5& out5x5_ = *((M5x5*) out5x5.GetMatrixArray());
+  M5x5& out5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
   RKTools::J_MpTxcov6xJ_Mp(fJ_Mp_6x5, in6x6, out5x5_);
 
   if (Jac!=NULL){
