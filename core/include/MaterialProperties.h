@@ -32,6 +32,10 @@ class MaterialProperties : public TObject {
 
  public:
 
+  /** Compares material parameters, but not segmentLength_ */
+  friend bool operator== (const MaterialProperties& lhs, const MaterialProperties& rhs);
+  friend bool operator!= (const MaterialProperties& lhs, const MaterialProperties& rhs);
+
   MaterialProperties();
   MaterialProperties(const double& density,
                      const double& Z,

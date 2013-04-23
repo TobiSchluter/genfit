@@ -21,6 +21,23 @@
 
 namespace genfit {
 
+bool operator== (const MaterialProperties& lhs, const MaterialProperties& rhs){
+  if (&lhs == &rhs)
+    return true;
+  if (lhs.density_ != rhs.density_ ||
+      lhs.Z_ != rhs.Z_ ||
+      lhs.A_ != rhs.A_ ||
+      lhs.radiationLength_ != rhs.radiationLength_ ||
+      lhs.mEE_ != rhs.mEE_)
+    return false;
+
+  return true;
+}
+
+bool operator!= (const MaterialProperties& lhs, const MaterialProperties& rhs) {
+  return !(lhs==rhs);
+}
+
 MaterialProperties::MaterialProperties() :
   density_(0),
   Z_(0),
