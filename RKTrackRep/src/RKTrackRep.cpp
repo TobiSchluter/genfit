@@ -29,7 +29,7 @@
 
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
-//#define DEBUG
+#define DEBUG
 
 
 namespace genfit {
@@ -666,8 +666,8 @@ bool RKTrackRep::RKutta (const DetPlane& plane,
 
   #ifdef DEBUG
     std::cout << "RKTrackRep::RKutta \n";
-    std::cout << "position: "; fPos.Print();
-    std::cout << "direction: "; fDir.Print();
+    std::cout << "position: "; TVector3(R[0], R[1], R[2]).Print();
+    std::cout << "direction: "; TVector3(A[0], A[1], A[2]).Print();
     std::cout << "momentum: " << momentum << " GeV\n";
     std::cout << "destination: "; plane.Print();
   #endif
@@ -1149,8 +1149,8 @@ double RKTrackRep::Extrap(const DetPlane& plane, double charge, M1x7& state7, M7
 
     #ifdef DEBUG
       std::cout<<"Original points \n";
-      for (unsigned int i=0; i<points.size(); ++i){
-        points[i].Print();
+      for (unsigned int i=0; i<materials_.size(); ++i){
+        materials_[i].first.Print();
       }
       std::cout<<"\n";
     #endif
@@ -1280,7 +1280,7 @@ double RKTrackRep::Extrap(const DetPlane& plane, double charge, M1x7& state7, M7
     //we arrived at the destination plane, if we point to the active area of the plane (if it is finite), and the distance is below threshold
     if( plane.distance(state7[0], state7[1], state7[2]) < MINSTEP) {
       #ifdef DEBUG
-        std::cerr << "arrived at plane with a distance of  " << plane.distance((state7[0], state7[1], state7[2]) << " cm left. ";
+        std::cerr << "arrived at plane with a distance of  " << plane.distance(state7[0], state7[1], state7[2]) << " cm left. ";
       #endif
       if (plane.isInActive(state7[0], state7[1], state7[2],  state7[3], state7[4], state7[5])) {
         #ifdef DEBUG
