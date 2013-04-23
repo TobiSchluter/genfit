@@ -35,14 +35,102 @@
 namespace genfit {
 
 
-void RKTrackRep::initArrays(){
-  fNoise.fill(0);
-  fOldCov.fill(0);
 
-  fJ_pM_5x7.fill(0);
-  fJ_pM_5x6.fill(0);
-  fJ_Mp_7x5.fill(0);
-  fJ_Mp_6x5.fill(0);
+RKTrackRep::RKTrackRep() :
+  AbsTrackRep()
+{
+  initArrays();
+}
+
+
+RKTrackRep::RKTrackRep(int pdgCode, char propDir) :
+  AbsTrackRep(pdgCode, propDir)
+{
+  initArrays();
+}
+
+
+double RKTrackRep::extrapolateToPlane(const StateOnPlane& stateInput,
+    StateOnPlane& statePrediction,
+    SharedPlanePtr plane,
+    bool stopAtBoundary) const {
+
+}
+
+
+double RKTrackRep::extrapolateToLine(const StateOnPlane* stateInput,
+    StateOnPlane* statePrediction,
+    const TVector3& linePoint,
+    const TVector3& lineDirection,
+    bool stopAtBoundary) const {
+
+}
+
+
+double RKTrackRep::extrapolateToPoint(const StateOnPlane* stateInput,
+    StateOnPlane* statePrediction,
+    const TVector3& point,
+    bool stopAtBoundary) const {
+
+}
+
+
+double RKTrackRep::extrapolateToCylinder(const StateOnPlane* stateInput,
+    StateOnPlane* statePrediction,
+    const TVector3& linePoint,
+    const TVector3& lineDirection,
+    double radius,
+    bool stopAtBoundary) const {
+
+}
+
+
+double RKTrackRep::extrapolateToSphere(const StateOnPlane* stateInput,
+    StateOnPlane* statePrediction,
+    const TVector3& point,
+    double radius,
+    bool stopAtBoundary) const {
+
+}
+
+
+TVector3 RKTrackRep::getPos(const StateOnPlane* stateInput) const {
+
+}
+
+
+TVector3 RKTrackRep::getMom(const StateOnPlane* stateInput) const {
+
+}
+
+
+void RKTrackRep::getPosMom(const StateOnPlane* stateInput, TVector3& pos, TVector3& mom) const {
+
+}
+
+
+void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const {
+
+}
+
+
+TMatrixD RKTrackRep::getForwardJacobian() const {
+
+}
+
+
+TMatrixD RKTrackRep::getBackwardJacobian() const {
+
+}
+
+
+TMatrixDSym RKTrackRep::getForwardNoise() const {
+
+}
+
+
+TMatrixDSym RKTrackRep::getBackwardNoise() const {
+
 }
 
 
@@ -161,7 +249,6 @@ void RKTrackRep::setPosMomCov(MeasuredStateOnPlane* state, const TVector3& pos, 
   transformM6P(cov6x6_, state7, state);
 
 }
-
 
 
 double RKTrackRep::RKPropagate(M1x7& state7,
@@ -312,7 +399,15 @@ double RKTrackRep::RKPropagate(M1x7& state7,
 
 
 
+void RKTrackRep::initArrays(){
+  fNoise.fill(0);
+  fOldCov.fill(0);
 
+  fJ_pM_5x7.fill(0);
+  fJ_pM_5x6.fill(0);
+  fJ_Mp_7x5.fill(0);
+  fJ_Mp_6x5.fill(0);
+}
 
 
 void RKTrackRep::getState7(const StateOnPlane* state, M1x7& state7) const {

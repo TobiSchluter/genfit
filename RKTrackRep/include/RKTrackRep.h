@@ -40,7 +40,7 @@ class RKTrackRep : public AbsTrackRep {
 
   virtual ~RKTrackRep() {;}
 
-  virtual AbsTrackRep* clone() const = 0;
+  virtual AbsTrackRep* clone() const {return new RKTrackRep(*this);}
 
   /** Extrapolates the stateInput to plane, and returns the extrapolation length
    * and, via reference, the extrapolated statePrediction.
@@ -131,14 +131,6 @@ class RKTrackRep : public AbsTrackRep {
  private:
 
   void initArrays();
-
-  void calcStateCov(const TVector3& pos,
-                    const TVector3& mom,
-                    const TVector3& poserr,
-                    const TVector3& momerr) const;
-
-  void calcState(const TVector3& pos,
-                 const TVector3& mom) const;
 
   void getState7(const StateOnPlane* state, M1x7& state7) const;
   void getState5(StateOnPlane* state, const M1x7& state7) const;
