@@ -17,12 +17,13 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "DetPlane.h"
+
 #include <assert.h>
 #include <iostream>
 #include <cmath>
 #include <TMath.h>
 
-#include "DetPlane.h"
 
 namespace genfit {
 

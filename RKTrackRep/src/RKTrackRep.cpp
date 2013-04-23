@@ -1160,25 +1160,26 @@ double RKTrackRep::Extrap(const DetPlane& plane, double charge, M1x7& state7, M7
 
     sumDistance+=coveredDistance;
 
-    // filter points // TODO: rewrite!!!
-    /*if (true) { // points are only filled if mat fx are on
+    // filter points // TODO: test!!!
+    if (/*!fNoMaterial*/ true) { // points are only filled if mat fx are on
       if(materials_.size() > 2){ // check if there are at least three points
-        double firstStep(points[0].getPath());
-        for (unsigned int i=points.size()-2; i>0; --i){
-          if (points[i].getPath() * firstStep < 0 || fabs(points[i].getPath()) < MINSTEP){
-            points[i-1].addToPath(points[i].getPath());
-            points.erase(points.begin()+i);
+        for (unsigned int i=materials_.size()-1; i>0; --i){
+          if (materials_[i] == materials_[i-1] &&
+              (fabs(materials_[i].getSegmentLength()) < MINSTEP ||
+               fabs(materials_[i-1].getSegmentLength()) < MINSTEP) ){
+            materials_[i-1].addToSegmentLength(materials_[i].getSegmentLength());
+            materials_.erase(materials_.begin()+i);
           }
         }
       }
       #ifdef DEBUG
-        std::cout<<"Filtered points \n";
-        for (unsigned int i=0; i<points.size(); ++i){
-          points[i].Print();
+        std::cout<<"Filtered materials_ \n";
+        for (unsigned int i=0; i<materials_.size(); ++i){
+          materials_[i].Print();
         }
         std::cout<<"\n";
       #endif
-    }*/
+    }
 
 
     if(calcCov) memset(fNoise,0x00,7*7*sizeof(double)); // set fNoise to 0

@@ -19,6 +19,8 @@
 
 #include "MaterialProperties.h"
 
+#include <iostream>
+
 namespace genfit {
 
 bool operator== (const MaterialProperties& lhs, const MaterialProperties& rhs){
@@ -89,6 +91,15 @@ void MaterialProperties::setMaterialProperties(const double& density,
   A_ = A;
   radiationLength_ = radiationLength;
   mEE_ = mEE;
+}
+
+
+void MaterialProperties::Print(const Option_t*) const {
+  std::cout << "Density = " << density_ << ", " <<
+               "Z = " << Z_ << ", " <<
+               "A = " << A_ << ", " <<
+               "radiationLength = " << radiationLength_ << ", " <<
+               "mEE = " << mEE_ << "\n";
 }
 
 

@@ -64,6 +64,9 @@ class MaterialProperties : public TObject {
                              const double& mEE);
 
   void setSegmentLength(const double& segmentLength) {segmentLength_ = segmentLength;}
+  void addToSegmentLength(const double& deltaSegmentLength) {segmentLength_ += deltaSegmentLength;}
+
+  void Print(const Option_t* = "") const override;
 
  private:
 
