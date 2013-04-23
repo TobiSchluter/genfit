@@ -49,4 +49,30 @@ MaterialProperties::MaterialProperties(const double& density,
 }
 
 
+void MaterialProperties::getMaterialProperties(double& density,
+                                               double& Z,
+                                               double& A,
+                                               double& radiationLength,
+                                               double& mEE) const {
+  density = density_;
+  Z = Z_;
+  A = A_;
+  radiationLength = radiationLength_;
+  mEE = mEE_;
+}
+
+
+void MaterialProperties::setMaterialProperties(const double& density,
+                                               const double& Z,
+                                               const double& A,
+                                               const double& radiationLength,
+                                               const double& mEE) {
+  density_ = density;
+  Z_ = Z;
+  A_ = A;
+  radiationLength_ = radiationLength;
+  mEE_ = mEE;
+}
+
+
 } /* End of namespace genfit */

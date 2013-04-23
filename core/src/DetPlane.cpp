@@ -290,6 +290,31 @@ TVector2 DetPlane::straightLineToPlane (const TVector3& point, const TVector3& d
 }
 
 
+//! gives u,v coordinates of the intersection point of a straight line with plane
+void DetPlane::straightLineToPlane(const double& posX, const double& posY, const double& posZ,
+                                   const double& dirX, const double& dirY, const double& dirZ,
+                                   double& u, double& v) const {
+
+  TVector3 W = getNormal();
+  double dirTimesN = dirX*W.X() + dirY*W.Y() + dirZ*W.Z();
+  if(fabs(dirTimesN)<1.E-6){//straight line is parallel to plane, so return infinity
+    u = 1.E100;
+    v = 1.E100;
+    return;
+  }
+  double t = 1./dirTimesN * ((o_.X()-posX)*W.X() +
+                             (o_.Y()-posY)*W.Y() +
+                             (o_.Z()-posZ)*W.Z());
+
+  double posOnPlaneX = posX-o_.X() + t*dirX;
+  double posOnPlaneY = posY-o_.Y() + t*dirY;
+  double posOnPlaneZ = posZ-o_.Z() + t*dirZ;
+
+  u = u_.X()*posOnPlaneX + u_.Y()*posOnPlaneY + u_.Z()*posOnPlaneZ;
+  v = v_.X()*posOnPlaneX + v_.Y()*posOnPlaneY + v_.Z()*posOnPlaneZ;
+}
+
+
 void DetPlane::reset() {
   o_.SetXYZ(0.,0.,0.);
   u_.SetXYZ(1.,0.,0.);

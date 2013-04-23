@@ -120,8 +120,12 @@ class DetPlane : public TObject {
   TVector3 dist(const TVector3& point) const;
 
   //! gives u,v coordinates of the intersection point of a straight line with plane
-  TVector2 straightLineToPlane(const TVector3& point,const TVector3& dir) const;
+  TVector2 straightLineToPlane(const TVector3& point, const TVector3& dir) const;
 
+  //! gives u,v coordinates of the intersection point of a straight line with plane
+  void straightLineToPlane(const double& posX, const double& posY, const double& posZ,
+                           const double& dirX, const double& dirY, const double& dirZ,
+                           double& u, double& v) const;
 
   void Print(const Option_t* = "") const override;
 
@@ -140,6 +144,15 @@ class DetPlane : public TObject {
   bool isInActive(const TVector3& point, const TVector3& dir) const {
     if(finitePlane_ == nullptr) return true;
     return this->isInActive( this->straightLineToPlane(point,dir));
+  }
+
+  //! intersect in the active area? C.f. AbsFinitePlane
+  bool isInActive(const double& posX, const double& posY, const double& posZ,
+                  const double& dirX, const double& dirY, const double& dirZ) const {
+    if(finitePlane_ == nullptr) return true;
+    double u, v;
+    this->straightLineToPlane(posX, posY, posZ, dirX, dirY, dirZ, u, v);
+    return this->isInActive(u, v);
   }
 
   //! isInActive methods refer to finite plane. C.f. AbsFinitePlane

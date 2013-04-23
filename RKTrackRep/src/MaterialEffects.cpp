@@ -110,13 +110,12 @@ void MaterialEffects::setMscModel(const std::string& modelName)
 double MaterialEffects::effects(const std::vector<MaterialProperties>& points,
                                 const double& mom,
                                 const int& pdg,
-                                double& xx0,
                                 double* noise,
                                 const double* jacobian,
-                                const TVector3* directionBefore,
-                                const TVector3* directionAfter)
+                                const double* directionBefore,
+                                const double* directionAfter)
 {
-/*
+
   if (materialInterface_ == nullptr) {
     std::string msg("MaterialEffects hasn't been initialized with a correct AbsMaterialInterface pointer!");
     std::runtime_error err(msg);
@@ -133,60 +132,41 @@ double MaterialEffects::effects(const std::vector<MaterialProperties>& points,
   double momLoss = 0.;
   unsigned int nPoints(points.size());
 
-  for (unsigned int i = 0; i < nPoints - 1; ++i) { // loop over points
+  for (unsigned int i = 0; i < nPoints; ++i) { // loop over points
 
-    double dist = points[i].getDist(points[i + 1]); // straight line distance
+    double realPath = points[i].getSegmentLength();
+    double stepSign(1.);
+    if (realPath < 0)
+      stepSign = -1.;
+    realPath = fabs(realPath);
 
-    if (dist > 1.E-8) { // do material effects only if distance is not too small
+    if (realPath > 1.E-8) { // do material effects only if distance is not too small
 
-      double X(0.); // path already gone through material (straight line)
-      double step(0); // straight line step
-      double realPath = points[i].getSegmentLength(); // real (curved) distance, signed
 
-      materialInterface_->initTrack(points[i].X(),  points[i].Y(),  points[i].Z(),
-                                    (points[i + 1].X() - points[i].X()) / dist, (points[i + 1].Y() - points[i].Y()) / dist, (points[i + 1].Z() - points[i].Z()) / dist);
+      points[i].getMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
 
-      unsigned int nIter(0);
-      static unsigned int maxIt(300);
+      if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
 
-      while (X < dist) {
+        if (energyLossBetheBloch_)
+          momLoss += stepSign * this->energyLossBetheBloch(mom);
+        if (doNoise && energyLossBetheBloch_ && noiseBetheBloch_)
+          this->noiseBetheBloch(mom, noise);
 
-        if (++nIter > maxIt) {
-          Exception exc("MaterialEffects::effects ==> maximum number of iterations exceeded", __LINE__, __FILE__);
-          throw exc;
-        }
+        if (doNoise && noiseCoulomb_)
+          this->noiseCoulomb(mom, noise, M1x3{ 0.5*(directionBefore[0]+directionAfter[0]),
+                                               0.5*(directionBefore[1]+directionAfter[1]),
+                                               0.5*(directionBefore[2]+directionAfter[2]) } );
 
-        materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
-        step = materialInterface_->findNextBoundaryAndStepStraight(dist - X);
-        stepSize_ = fabs(step * realPath / dist); // the actual path is curved, not straight!
-        if (stepSize_ <= 0.) continue;
+        if (energyLossBrems_)
+          momLoss += stepSign * this->energyLossBrems(mom);
+        if (doNoise && energyLossBrems_ && noiseBrems_)
+          this->noiseBrems(mom, noise);
 
-        double stepSign(1.);
-        if (realPath < 0) stepSign = -1.;
-
-        if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
-
-          if (energyLossBetheBloch_)
-            momLoss += stepSign * this->energyLossBetheBloch(mom);
-          if (doNoise && energyLossBetheBloch_ && noiseBetheBloch_)
-            this->noiseBetheBloch(mom, noise);
-
-          if (doNoise && noiseCoulomb_)
-            this->noiseCoulomb(mom, noise, 0.5*((*directionBefore) + (*directionAfter)) );
-
-          if (energyLossBrems_)
-            momLoss += stepSign * this->energyLossBrems(mom);
-          if (doNoise && energyLossBrems_ && noiseBrems_)
-            this->noiseBrems(mom, noise);
-
-          xx0 += stepSize_ / radiationLength_;
-        }
-        X += step;
       }
     }
   } // end loop over points
 
-  return momLoss;*/
+  return momLoss;
 }
 
 
@@ -196,6 +176,7 @@ double MaterialEffects::stepper(const RKTrackRep* rep,
                                   const double& mom, // momentum
                                   double& relMomLoss, // relative momloss for the step will be added
                                   const int& pdg,
+                                  MaterialProperties& currentMaterial,
                                   bool varField)
 {
 
@@ -221,9 +202,10 @@ double MaterialEffects::stepper(const RKTrackRep* rep,
                                 state7[3],                   state7[4],                   state7[5]);
 
   materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
+  currentMaterial.setMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
 
   stepSize_ = materialInterface_->findNextBoundary(rep, state7, sMax, varField);
-  ;
+
 #ifdef DEBUG
   std::cerr << "in material: " << matZ_ << std::endl;
   std::cerr << "       stepSize_ = " << stepSize_ << std::endl;
@@ -360,7 +342,7 @@ void MaterialEffects::noiseBetheBloch(const double& mom,
 
 void MaterialEffects::noiseCoulomb(const double& mom,
                                      double* noise,
-                                     const TVector3& direction) const
+                                     const M1x3& direction) const
 {
 
 //std::cerr << "MaterialEffects::noiseCoulomb" << std::endl;
@@ -381,7 +363,7 @@ void MaterialEffects::noiseCoulomb(const double& mom,
   assert(sigma2 > 0.0);
   //XXX std::cerr << "MaterialEffects::noiseCoulomb the MSC variance is " << sigma2 << std::endl;
 
-  double noiseAfter[7 * 7]; // will holde the new MSC noise to cause by the current fStep length
+  double noiseAfter[7 * 7]; // will hold the new MSC noise to cause by the current stepSize_ length
   memset(noiseAfter, 0x00, 7 * 7 * sizeof(double));
 
   double phi = atan2(direction[1], direction[0]);

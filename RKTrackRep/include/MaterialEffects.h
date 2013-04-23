@@ -87,11 +87,10 @@ public:
   double effects(const std::vector<MaterialProperties>& points,
                  const double& mom,
                  const int& pdg,
-                 double& xx0,
                  double* noise7x7 = NULL,
                  const double* jacobian7x7 = NULL,
-                 const TVector3* directionBefore = NULL,
-                 const TVector3* directionAfter = NULL);
+                 const double* directionBefore = NULL,
+                 const double* directionAfter = NULL);
 
   //! Returns maximum length so that a specified momentum loss will not be exceeded
   /**  The stepper returns the maximum length that the particle may travel, so that a specified relative momentum loss will not be exceeded,
@@ -103,6 +102,7 @@ public:
                  const double& mom, // momentum
                  double& relMomLoss, // relative momloss for the step will be added
                  const int& pdg,
+                 MaterialProperties& currentMaterial,
                  bool varField = true);
 
 
@@ -141,7 +141,7 @@ public:
     */
   void noiseCoulomb(const double& mom,
                     double* noise,
-                    const TVector3& direction) const;
+                    const M1x3& direction) const;
 
   //! Returns energy loss
   /** Can be called with any pdg, but only calculates energy loss for electrons and positrons (otherwise returns 0).

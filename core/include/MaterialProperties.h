@@ -47,6 +47,20 @@ class MaterialProperties : public TObject {
   double getMEE() const {return mEE_;}
   double getSegmentLength() const {return segmentLength_;}
 
+  void getMaterialProperties(double& density,
+                             double& Z,
+                             double& A,
+                             double& radiationLength,
+                             double& mEE) const;
+
+  void setMaterialProperties(const double& density,
+                             const double& Z,
+                             const double& A,
+                             const double& radiationLength,
+                             const double& mEE);
+
+  void setSegmentLength(const double& segmentLength) {segmentLength_ = segmentLength;}
+
  private:
 
   // material variables

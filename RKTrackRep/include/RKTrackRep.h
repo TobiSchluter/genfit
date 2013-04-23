@@ -122,7 +122,7 @@ class RKTrackRep : public AbsTrackRep {
    *  It gives a suggestion how you must scale #S so that the quality will be sufficient.
    */
   double RKPropagate(M1x7& state7,
-                     M7x7* cov,
+                     M7x7* jacobian,
                      M1x3& SA,
                      double S,
                      bool varField = true) const;
@@ -163,29 +163,27 @@ class RKTrackRep : public AbsTrackRep {
 
   //! Propagates the particle through the magnetic field.
   /** If the propagation is successful and the plane is reached, the function returns true.
-    * Propagated state and the jacobian of the extrapolation are written to #state7 and #cov.
-    * The jacobian is only calculated if #cov != NULL.
+    * Propagated state and the jacobian of the extrapolation are written to #state7 and #jacobian.
+    * The jacobian is only calculated if #jacobian != NULL.
     * In the main loop of the Runge Kutta algorithm, the #estimateStep() is called
     * and may reduce the estimated stepsize so that a maximum momentum loss will not be exceeded.
     * If this is the case, #RKutta() will only propagate the reduced distance and then return. This is to ensure that
     * material effects, which are calculated after the propagation, are taken into account properly.
     */
-  bool RKutta (const DetPlane& plane,
-               M1x7& state7,
-               M7x7* cov,
-               double& coveredDistance,
-               std::vector<MaterialProperties>& points,
-               bool& checkJacProj,
-               TMatrixD& noiseProjection,
-               bool onlyOneStep = false,
-               double maxStep = 1.E99) const;
+  bool RKutta(const DetPlane& plane,
+              double charge,
+              M1x7& state7,
+              M7x7* jacobian,
+              double& coveredDistance,
+              bool& checkJacProj,
+              TMatrixD& noiseProjection,
+              bool onlyOneStep = false,
+              double maxStep = 1.E99) const;
 
-  double estimateStep(std::vector<MaterialProperties>& points,
-                      const TVector3& pos,
-                      const TVector3& dir,
+  double estimateStep(const M1x7& state7,
                       const M1x4& SU,
                       const DetPlane& plane,
-                      const double& mom,
+                      const double& charge,
                       double& relMomLoss,
                       bool& momLossExceeded,
                       bool& atPlane,
@@ -206,6 +204,7 @@ class RKTrackRep : public AbsTrackRep {
     * #fXX0 is also updated here.
     */
   double Extrap(const DetPlane& plane,
+                double charge,
                 M1x7& state7,
                 M7x7* cov=NULL,
                 bool onlyOneStep = false,
@@ -213,12 +212,16 @@ class RKTrackRep : public AbsTrackRep {
 
 
 
-  mutable TVectorD lastStartState_; // state where the last extrapolation has started
-  mutable TMatrixD jacobian_; // jacobian of the last extrapolation
-  mutable TMatrixDSym noise_; // noise matrix of the last extrapolation
-  mutable std::vector< MaterialProperties > materials_; // materials crossed in the last extrapolation
+  mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
+  mutable TMatrixD jacobian_; //! jacobian of the last extrapolation
+  mutable TMatrixDSym noise_; //! noise matrix of the last extrapolation
+  mutable std::vector< MaterialProperties > materials_; //! materials crossed in the last extrapolation
 
 
+  // auxiliary variables and arrays
+  // needed in Extrap()
+  mutable M7x7 fNoise; //!
+  mutable M7x7 fOldCov; //!
   // needed in transform...
   mutable M5x7 fJ_pM_5x7; //!
   mutable M5x6 fJ_pM_5x6; //!

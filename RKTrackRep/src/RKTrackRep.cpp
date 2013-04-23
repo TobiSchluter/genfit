@@ -24,6 +24,7 @@
 #include <MaterialEffects.h>
 
 #include <TDatabasePDG.h>
+#include <TDecompSVD.h>
 #include <TMath.h>
 
 
@@ -35,6 +36,9 @@ namespace genfit {
 
 
 void RKTrackRep::initArrays(){
+  memset(fNoise,0x00,7*7*sizeof(double));
+  memset(fOldCov,0x00,7*7*sizeof(double));
+
   memset(fJ_pM_5x7,0x00,5*7*sizeof(double));
   memset(fJ_pM_5x6,0x00,5*6*sizeof(double));
   memset(fJ_Mp_7x5,0x00,7*5*sizeof(double));
@@ -161,7 +165,7 @@ void RKTrackRep::setPosMomCov(MeasuredStateOnPlane* state, const TVector3& pos, 
 
 
 double RKTrackRep::RKPropagate(M1x7& state7,
-                        M7x7* cov,
+                        M7x7* jacobian,
                         M1x3& SA,
                         double S,
                         bool varField) const {
@@ -181,7 +185,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   double   B0(0), B1(0), B2(0), B3(0), B4(0), B5(0), B6(0);
   double   C0(0), C1(0), C2(0), C3(0), C4(0), C5(0), C6(0);
 
-  bool calcCov(cov != NULL);
+  bool calcJacobian(jacobian != nullptr);
 
   //
   // Runge Kutta Extrapolation
@@ -206,7 +210,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
     field = FieldManager::getFieldVal(pos);
     H1[0] = field.X()*PS2; H1[1] = field.Y()*PS2; H1[2] = field.Z()*PS2; // H1 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * [(A0, B0, C0) + 2*(ax, ay, az)]
   }
-  else if (calcCov) memcpy(H1, H0, 3*sizeof(double));
+  else if (calcJacobian) memcpy(H1, H0, 3*sizeof(double));
   A3 = B2*H1[2]-C2*H1[1]+A[0]; B3 = C2*H1[0]-A2*H1[2]+A[1]; C3 = A2*H1[1]-B2*H1[0]+A[2]; // (A2, B2, C2) x H1 + (ax, ay, az)
   A4 = B3*H1[2]-C3*H1[1]+A[0]; B4 = C3*H1[0]-A3*H1[2]+A[1]; C4 = A3*H1[1]-B3*H1[0]+A[2]; // (A3, B3, C3) x H1 + (ax, ay, az)
   A5 = A4-A[0]+A4            ; B5 = B4-A[1]+B4            ; C5 = C4-A[2]+C4            ; //    2*(A4, B4, C4) - (ax, ay, az)
@@ -218,54 +222,54 @@ double RKTrackRep::RKPropagate(M1x7& state7,
     field = FieldManager::getFieldVal(pos);
     H2[0] = field.X()*PS2;  H2[1] = field.Y()*PS2;  H2[2] = field.Z()*PS2; // H2 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * (A4, B4, C4)
   }
-  else if (calcCov) memcpy(H2, H0, 3*sizeof(double));
+  else if (calcJacobian) memcpy(H2, H0, 3*sizeof(double));
   A6 = B5*H2[2]-C5*H2[1]; B6 = C5*H2[0]-A5*H2[2]; C6 = A5*H2[1]-B5*H2[0]; // (A5, B5, C5) x H2
 
 
   //
   // Derivatives of track parameters
   //
-  if(calcCov){
+  if(calcJacobian){
     double   dA0(0), dA2(0), dA3(0), dA4(0), dA5(0), dA6(0);
     double   dB0(0), dB2(0), dB3(0), dB4(0), dB5(0), dB6(0);
     double   dC0(0), dC2(0), dC3(0), dC4(0), dC5(0), dC6(0);
 
     // d(x, y, z)/d(x, y, z) submatrix is unit matrix
-    (*cov)[0] = 1;  (*cov)[8] = 1;  (*cov)[16] = 1;
+    (*jacobian)[0] = 1;  (*jacobian)[8] = 1;  (*jacobian)[16] = 1;
     // d(ax, ay, az)/d(ax, ay, az) submatrix is 0
     // start with d(x, y, z)/d(ax, ay, az)
     for(int i=3*7; i<49; i+=7) {
 
-      if(i==42) {(*cov)[i+3]*=state7[6]; (*cov)[i+4]*=state7[6]; (*cov)[i+5]*=state7[6];}
+      if(i==42) {(*jacobian)[i+3]*=state7[6]; (*jacobian)[i+4]*=state7[6]; (*jacobian)[i+5]*=state7[6];}
 
       //first point
-      dA0 = H0[2]*(*cov)[i+4]-H0[1]*(*cov)[i+5];    // dA0/dp }
-      dB0 = H0[0]*(*cov)[i+5]-H0[2]*(*cov)[i+3];    // dB0/dp  } = dA x H0
-      dC0 = H0[1]*(*cov)[i+3]-H0[0]*(*cov)[i+4];    // dC0/dp }
+      dA0 = H0[2]*(*jacobian)[i+4]-H0[1]*(*jacobian)[i+5];    // dA0/dp }
+      dB0 = H0[0]*(*jacobian)[i+5]-H0[2]*(*jacobian)[i+3];    // dB0/dp  } = dA x H0
+      dC0 = H0[1]*(*jacobian)[i+3]-H0[0]*(*jacobian)[i+4];    // dC0/dp }
 
       if(i==42) {dA0+=A0; dB0+=B0; dC0+=C0;}     // if last row: (dA0, dB0, dC0) := (dA0, dB0, dC0) + (A0, B0, C0)
 
-      dA2 = dA0+(*cov)[i+3];        // }
-      dB2 = dB0+(*cov)[i+4];        //  } = (dA0, dB0, dC0) + dA
-      dC2 = dC0+(*cov)[i+5];        // }
+      dA2 = dA0+(*jacobian)[i+3];        // }
+      dB2 = dB0+(*jacobian)[i+4];        //  } = (dA0, dB0, dC0) + dA
+      dC2 = dC0+(*jacobian)[i+5];        // }
 
       //second point
-      dA3 = (*cov)[i+3]+dB2*H1[2]-dC2*H1[1];    // dA3/dp }
-      dB3 = (*cov)[i+4]+dC2*H1[0]-dA2*H1[2];    // dB3/dp  } = dA + (dA2, dB2, dC2) x H1
-      dC3 = (*cov)[i+5]+dA2*H1[1]-dB2*H1[0];    // dC3/dp }
+      dA3 = (*jacobian)[i+3]+dB2*H1[2]-dC2*H1[1];    // dA3/dp }
+      dB3 = (*jacobian)[i+4]+dC2*H1[0]-dA2*H1[2];    // dB3/dp  } = dA + (dA2, dB2, dC2) x H1
+      dC3 = (*jacobian)[i+5]+dA2*H1[1]-dB2*H1[0];    // dC3/dp }
 
       if(i==42) {dA3+=A3-A[0]; dB3+=B3-A[1]; dC3+=C3-A[2];} // if last row: (dA3, dB3, dC3) := (dA3, dB3, dC3) + (A3, B3, C3) - (ax, ay, az)
 
-      dA4 = (*cov)[i+3]+dB3*H1[2]-dC3*H1[1];    // dA4/dp }
-      dB4 = (*cov)[i+4]+dC3*H1[0]-dA3*H1[2];    // dB4/dp  } = dA + (dA3, dB3, dC3) x H1
-      dC4 = (*cov)[i+5]+dA3*H1[1]-dB3*H1[0];    // dC4/dp }
+      dA4 = (*jacobian)[i+3]+dB3*H1[2]-dC3*H1[1];    // dA4/dp }
+      dB4 = (*jacobian)[i+4]+dC3*H1[0]-dA3*H1[2];    // dB4/dp  } = dA + (dA3, dB3, dC3) x H1
+      dC4 = (*jacobian)[i+5]+dA3*H1[1]-dB3*H1[0];    // dC4/dp }
 
       if(i==42) {dA4+=A4-A[0]; dB4+=B4-A[1]; dC4+=C4-A[2];} // if last row: (dA4, dB4, dC4) := (dA4, dB4, dC4) + (A4, B4, C4) - (ax, ay, az)
 
       //last point
-      dA5 = dA4+dA4-(*cov)[i+3];      // }
-      dB5 = dB4+dB4-(*cov)[i+4];      //  } =  2*(dA4, dB4, dC4) - dA
-      dC5 = dC4+dC4-(*cov)[i+5];      // }
+      dA5 = dA4+dA4-(*jacobian)[i+3];      // }
+      dB5 = dB4+dB4-(*jacobian)[i+4];      //  } =  2*(dA4, dB4, dC4) - dA
+      dC5 = dC4+dC4-(*jacobian)[i+5];      // }
 
       dA6 = dB5*H2[2]-dC5*H2[1];      // dA6/dp }
       dB6 = dC5*H2[0]-dA5*H2[2];      // dB6/dp  } = (dA5, dB5, dC5) x H2
@@ -274,14 +278,14 @@ double RKTrackRep::RKPropagate(M1x7& state7,
       if(i==42) {dA6+=A6; dB6+=B6; dC6+=C6;}     // if last row: (dA6, dB6, dC6) := (dA6, dB6, dC6) + (A6, B6, C6)
 
       if(i==42) {
-        (*cov)[i]   += (dA2+dA3+dA4)*S3/state7[6];  (*cov)[i+3] = (dA0+dA3+dA3+dA5+dA6)*P3/state7[6]; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
-        (*cov)[i+1] += (dB2+dB3+dB4)*S3/state7[6];  (*cov)[i+4] = (dB0+dB3+dB3+dB5+dB6)*P3/state7[6]; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
-        (*cov)[i+2] += (dC2+dC3+dC4)*S3/state7[6];  (*cov)[i+5] = (dC0+dC3+dC3+dC5+dC6)*P3/state7[6];
+        (*jacobian)[i]   += (dA2+dA3+dA4)*S3/state7[6];  (*jacobian)[i+3] = (dA0+dA3+dA3+dA5+dA6)*P3/state7[6]; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
+        (*jacobian)[i+1] += (dB2+dB3+dB4)*S3/state7[6];  (*jacobian)[i+4] = (dB0+dB3+dB3+dB5+dB6)*P3/state7[6]; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
+        (*jacobian)[i+2] += (dC2+dC3+dC4)*S3/state7[6];  (*jacobian)[i+5] = (dC0+dC3+dC3+dC5+dC6)*P3/state7[6];
       }
       else {
-        (*cov)[i]   += (dA2+dA3+dA4)*S3;  (*cov)[i+3] = (dA0+dA3+dA3+dA5+dA6)*P3; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
-        (*cov)[i+1] += (dB2+dB3+dB4)*S3;  (*cov)[i+4] = (dB0+dB3+dB3+dB5+dB6)*P3; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
-        (*cov)[i+2] += (dC2+dC3+dC4)*S3;  (*cov)[i+5] = (dC0+dC3+dC3+dC5+dC6)*P3;
+        (*jacobian)[i]   += (dA2+dA3+dA4)*S3;  (*jacobian)[i+3] = (dA0+dA3+dA3+dA5+dA6)*P3; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
+        (*jacobian)[i+1] += (dB2+dB3+dB4)*S3;  (*jacobian)[i+4] = (dB0+dB3+dB3+dB5+dB6)*P3; // dA :=     1/3*[(dA0, dB0, dC0) + 2*(dA3, dB3, dC3) + (dA5, dB5, dC5) + (dA6, dB6, dC6)]
+        (*jacobian)[i+2] += (dC2+dC3+dC4)*S3;  (*jacobian)[i+5] = (dC0+dC3+dC3+dC5+dC6)*P3;
       }
     }
   }
@@ -430,7 +434,7 @@ void RKTrackRep::transformPM7(const MeasuredStateOnPlane* state,
   const M5x5& in5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
   RKTools::J_pMTxcov5xJ_pM(fJ_pM_5x7, in5x5_, out7x7);
 
-  if (Jac!=NULL){
+  if (Jac!=nullptr){
     Jac->ResizeTo(5,7);
     *Jac = TMatrixD(5,7, &(fJ_pM_5x7[0]));
   }
@@ -494,7 +498,7 @@ void RKTrackRep::transformPM6(const MeasuredStateOnPlane* state,
   const M5x5& in5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
   RKTools::J_pMTxcov5xJ_pM(fJ_pM_5x6, in5x5_, out6x6);
 
-  if (Jac!=NULL){
+  if (Jac!=nullptr){
     Jac->ResizeTo(5,6);
     *Jac = TMatrixD(5,6, &(fJ_pM_5x6[0]));
   }
@@ -544,7 +548,7 @@ void RKTrackRep::transformM7P(const M7x7& in7x7,
   M5x5& out5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
   RKTools::J_MpTxcov7xJ_Mp(fJ_Mp_7x5, in7x7, out5x5_);
 
-  if (Jac!=NULL){
+  if (Jac!=nullptr){
     Jac->ResizeTo(7,5);
     *Jac = TMatrixD(7,5, &(fJ_Mp_7x5[0]));
   }
@@ -598,10 +602,711 @@ void RKTrackRep::transformM6P(const M6x6& in6x6,
   M5x5& out5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
   RKTools::J_MpTxcov6xJ_Mp(fJ_Mp_6x5, in6x6, out5x5_);
 
-  if (Jac!=NULL){
+  if (Jac!=nullptr){
     Jac->ResizeTo(6,5);
     *Jac = TMatrixD(6,5, &(fJ_Mp_6x5[0]));;
   }
+}
+
+
+//
+// Runge-Kutta method for tracking a particles through a magnetic field.
+// Uses Nystroem algorithm (See Handbook Nat. Bur. of Standards, procedure 25.5.20)
+//
+// Input parameters:
+//    SU     - plane parameters
+//    SU[0]  - direction cosines normal to surface Ex
+//    SU[1]  -          -------                    Ey
+//    SU[2]  -          -------                    Ez; Ex*Ex+Ey*Ey+Ez*Ez=1
+//    SU[3]  - distance to surface from (0,0,0) > 0 cm
+//
+//    state7 - initial parameters (coordinates(cm), direction,
+//             charge/momentum (Gev-1)
+//    cov      and derivatives this parameters  (7x7)
+//
+//    X         Y         Z         Ax        Ay        Az        q/P
+//    state7[0] state7[1] state7[2] state7[3] state7[4] state7[5] state7[6]
+//
+//    dX/dp     dY/dp     dZ/dp     dAx/dp    dAy/dp    dAz/dp    d(q/P)/dp
+//    cov[ 0]   cov[ 1]   cov[ 2]   cov[ 3]   cov[ 4]   cov[ 5]   cov[ 6]               d()/dp1
+//
+//    cov[ 7]   cov[ 8]   cov[ 9]   cov[10]   cov[11]   cov[12]   cov[13]               d()/dp2
+//    ............................................................................    d()/dpND
+//
+// Authors: R.Brun, M.Hansroul, V.Perevoztchikov (Geant3)
+//
+bool RKTrackRep::RKutta (const DetPlane& plane,
+                         double charge,
+                         M1x7& state7,
+                         M7x7* jacobian,
+                         double& coveredDistance,
+                         bool& checkJacProj,
+                         TMatrixD& noiseProjection,
+                         bool onlyOneStep,
+                         double maxStep) const {
+
+  // limits, check-values, etc. Can be tuned!
+  static const double Wmax   = 3000.;           // max. way allowed [cm]
+  static const double AngleMax = 6.3;           // max. total angle change of momentum. Prevents extrapolating a curler round and round if no active plane is found.
+  static const double Pmin   = 4.E-3;           // minimum momentum for propagation [GeV]
+  static const unsigned int maxNumIt = 1000;    // maximum number of iterations in main loop
+  // Aux parameters
+  M1x3&   R           = *((M1x3*) &state7[0]);  // Start coordinates  [cm]  (x,  y,  z)
+  M1x3&   A           = *((M1x3*) &state7[3]);  // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
+  M1x3    SA          = {0.,0.,0.};             // Start directions derivatives dA/S
+  double  Way         = 0.;                     // Sum of absolute values of all extrapolation steps [cm]
+  bool    atPlane = false;                      // stepper thinks that the plane will be reached in that step -> linear extrapolation and projection of jacobian
+  bool    momLossExceeded = false;              // stepper had to limit stepsize due to momentum loss -> no next RKutta loop, no linear extrapolation
+  double  momentum   = fabs(charge/state7[6]);// momentum [GeV]
+  double  relMomLoss = 0;                      // relative momentum loss in RKutta
+  double  deltaAngle = 0.;                     // total angle by which the momentum has changed during extrapolation
+  double  An(0), S(0), Sl(0), CBA(0);
+  M1x4    SU = {0.,0.,0.,0.};
+
+
+  #ifdef DEBUG
+    std::cout << "RKTrackRep::RKutta \n";
+    std::cout << "position: "; fPos.Print();
+    std::cout << "direction: "; fDir.Print();
+    std::cout << "momentum: " << momentum << " GeV\n";
+    std::cout << "destination: "; plane.Print();
+  #endif
+
+  checkJacProj = false;
+
+  // check momentum
+  if(momentum < Pmin){
+    std::ostringstream sstream;
+    sstream << "RKTrackRep::RKutta ==> momentum too low: " << momentum*1000. << " MeV";
+    Exception exc(sstream.str(),__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+
+
+  // make SU vector point away from origin
+  const TVector3 W(plane.getNormal());
+  if (W*plane.getO() > 0) {
+    SU[0] =     W.X();
+    SU[1] =     W.Y();
+    SU[2] =     W.Z();
+  }
+  else {
+    SU[0] = -1.*W.X();
+    SU[1] = -1.*W.Y();
+    SU[2] = -1.*W.Z();
+  }
+
+  SU[3] = plane.distance(0., 0., 0.);
+
+  unsigned int counter(0);
+
+  // Step estimation (signed)
+  S = estimateStep(state7, SU, plane, charge, relMomLoss, momLossExceeded, atPlane, maxStep);
+  if (fabs(S) < 0.001*MINSTEP) {
+    #ifdef DEBUG
+      std::cout << " RKutta - step too small -> break \n";
+    #endif
+    ++counter; // skip the main loop, go to linear extrapolation step (will be skipped) and just project jacobian
+  }
+
+  //
+  // Main loop of Runge-Kutta method
+  //
+  while (fabs(S) >= MINSTEP || counter == 0) {
+
+    if(++counter > maxNumIt){
+      Exception exc("RKTrackRep::RKutta ==> maximum number of iterations exceeded",__LINE__,__FILE__);
+      exc.setFatal();
+      throw exc;
+    }
+
+    #ifdef DEBUG
+      std::cout << "------ RKutta main loop nr. " << counter-1 << " ------\n";
+    #endif
+
+    // update paths
+    coveredDistance += S;       // add stepsize to way (signed)
+    Way  += fabs(S);
+
+    // check way limit
+    if(Way > Wmax){
+      std::ostringstream sstream;
+      sstream << "RKTrackRep::RKutta ==> Total extrapolation length is longer than length limit : " << Way << " cm !";
+      Exception exc(sstream.str(),__LINE__,__FILE__);
+      exc.setFatal();
+      throw exc;
+    }
+
+    M1x3 ABefore{A[0], A[1], A[2]};
+    RKPropagate(state7, jacobian, SA, S); // the actual Runge Kutta propagation
+    deltaAngle += acos(ABefore[0]*A[0] + ABefore[1]*A[1] + ABefore[2]*A[2]);
+
+    if (onlyOneStep) return(true);
+
+    // if stepsize has been limited by material, break the loop and return. No linear extrapolation!
+    if (momLossExceeded) {
+      #ifdef DEBUG
+        std::cout<<" momLossExceeded -> return(true); \n";
+      #endif
+      return(true);
+    }
+
+    // estimate Step for next loop or linear extrapolation
+    Sl = S; // last S used
+    S = estimateStep(state7, SU, plane, charge, relMomLoss, momLossExceeded, atPlane, maxStep);
+
+    if (atPlane && fabs(S) < MINSTEP) {
+      #ifdef DEBUG
+        std::cout<<" (atPlane && fabs(S) < MINSTEP) -> break; \n";
+      #endif
+      break; // else if at plane: do linear extrapolation
+    }
+    if (momLossExceeded && fabs(S) < MINSTEP) {
+      #ifdef DEBUG
+        std::cout<<" (momLossExceeded && fabs(S) < MINSTEP) -> return(true); \n";
+      #endif
+      return(true); // no linear extrapolation!
+    }
+
+    // check if total angle is bigger than AngleMax. Can happen if a curler should be fitted and it does not hit the active area of the next plane.
+    if (fabs(deltaAngle) > AngleMax){
+      std::ostringstream sstream;
+      sstream << "RKTrackRep::RKutta ==> Do not get to an active plane! Already extrapolated " << deltaAngle * 180 / TMath::Pi() << "°.";
+      Exception exc(sstream.str(),__LINE__,__FILE__);
+      exc.setFatal();
+      throw exc;
+    }
+
+    // check if we went back and forth multiple times -> we don't come closer to the plane!
+    if (counter > 3){
+      if (S                                       *materials_[counter-1].getSegmentLength() < 0 &&
+          materials_[counter-1].getSegmentLength()*materials_[counter-2].getSegmentLength() < 0 &&
+          materials_[counter-2].getSegmentLength()*materials_[counter-3].getSegmentLength() < 0){
+        Exception exc("RKTrackRep::RKutta ==> Do not get closer to plane!",__LINE__,__FILE__);
+        exc.setFatal();
+        throw exc;
+      }
+    }
+
+  } //end of main loop
+
+
+  //
+  // linear extrapolation to surface
+  //
+  if (atPlane) {
+
+    if (fabs(Sl) > 0.001*MINSTEP){
+      #ifdef DEBUG
+        std::cout << " RKutta - linear extrapolation to surface\n";
+      #endif
+      Sl = 1./Sl;        // Sl = inverted last Stepsize Sl
+
+      // normalize SA
+      SA[0]*=Sl;  SA[1]*=Sl;  SA[2]*=Sl; // SA/Sl = delta A / delta way; local derivative of A with respect to the length of the way
+
+      // calculate A
+      A[0] += SA[0]*S;    // S  = distance to surface
+      A[1] += SA[1]*S;    // A = A + S * SA*Sl
+      A[2] += SA[2]*S;
+
+      // normalize A
+      CBA = 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]);  // 1/|A|
+      A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
+
+      R[0] += S*(A[0]-0.5*S*SA[0]);    // R = R + S*(A - 0.5*S*SA); approximation for final point on surface
+      R[1] += S*(A[1]-0.5*S*SA[1]);
+      R[2] += S*(A[2]-0.5*S*SA[2]);
+    }
+#ifdef DEBUG
+    else {
+      std::cout << " RKutta - last stepsize too small -> can't do linear extrapolation! \n";
+    }
+#endif
+
+    //
+    // Project Jacobian of extrapolation onto destination plane
+    //
+    if(jacobian != nullptr){
+      if (checkJacProj && materials_.size()>0){
+        Exception exc("RKTrackRep::Extrap ==> covariance is projected onto destination plane again",__LINE__,__FILE__);
+        throw exc;
+      }
+      //save old jacobian
+      double * covAsPtr = (double*)jacobian;
+
+      noiseProjection.SetMatrixArray(covAsPtr);
+
+      //std::cerr << "The current Jac is:" << std::endl;
+      //RKTools::printDim(covAsPtr,7,7);
+      //std::cerr << "This was filled into noiseProjection so it must be the same:" << std::endl;
+//       noiseProjection.Print();
+      checkJacProj = true;
+      #ifdef DEBUG
+        std::cout << "  Project Jacobian of extrapolation onto destination plane\n";
+      #endif
+      An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
+      fabs(An) > 1.E-7 ? An=1./An : An = 0; // 1/A_normal
+      double norm;
+      for(int i=0; i<49; i+=7) {
+        norm = ((*jacobian)[i]*SU[0] + (*jacobian)[i+1]*SU[1] + (*jacobian)[i+2]*SU[2])*An;  // dR_normal / A_normal
+        (*jacobian)[i]   -= norm*A [0];   (*jacobian)[i+1] -= norm*A [1];   (*jacobian)[i+2] -= norm*A [2];
+        (*jacobian)[i+3] -= norm*SA[0];   (*jacobian)[i+4] -= norm*SA[1];   (*jacobian)[i+5] -= norm*SA[2];
+      }
+      TMatrixD projectedJac(7,7);
+
+      projectedJac.SetMatrixArray(covAsPtr);
+
+//       std::cerr << "The projected Jac is filled into projectedJac so we have:" << std::endl;
+//       projectedJac.Print();
+      //Tools::invert(noiseProjection);
+
+      TDecompSVD invertAlgo(noiseProjection);
+
+  bool status = invertAlgo.Invert(noiseProjection);
+//     std::cerr << "The inverse of the unprojected jac is:" << std::endl;
+//       noiseProjection.Print();
+      noiseProjection = projectedJac * noiseProjection;
+//       std::cerr << "And finaly in RKutta. The noise projection matrix is:" << std::endl;
+      //noiseProjection = projectedJac * noiseProjection;
+//       noiseProjection.Print();
+    }
+
+    coveredDistance += S;
+    Way  += fabs(S);
+  } // end of linear extrapolation to surface
+
+  return(true);
+
+}
+
+
+double RKTrackRep::estimateStep(const M1x7& state7,
+                                const M1x4& SU,
+                                const DetPlane& plane,
+                                const double& charge,
+                                double& relMomLoss,
+                                bool& momLossExceeded,
+                                bool& atPlane,
+                                double maxStepArg) const {
+
+  static const double Smax = 25.; // max. step allowed [cm]
+  double Step(0);
+  bool improveEstimation (true);
+
+  momLossExceeded = false;
+  atPlane = false;
+
+  #ifdef DEBUG
+    std::cout << " RKTrackRep::estimateStep \n";
+    std::cout << "  position: "; TVector3(state7[0], state7[1], state7[2]).Print();
+    std::cout << "  direction: "; TVector3(state7[3], state7[4], state7[5]).Print();
+  #endif
+
+  // check and limit maxStepArg argument
+  if (maxStepArg < 0) maxStepArg *= -1;
+  if (maxStepArg > Smax) maxStepArg = Smax;
+
+  // calculate distance to surface
+  double Dist = SU[3] - (state7[0]*SU[0] + state7[1]*SU[1] + state7[2]*SU[2]);  // Distance between start coordinates and surface
+  double An = state7[3]*SU[0] + state7[4]*SU[1] + state7[5]*SU[2];              // An = dir * N;  component of dir normal to surface
+
+  if (fabs(An) > 1.E-10) Step = Dist/An;
+  else {
+    Step = Dist*1.E10;
+    if (An<0) Step *= -1.;
+  }
+
+  // see if dir points towards surface (1) or not (-1)
+  double StepSign(1);
+  if (Step<0) StepSign = -1;
+
+  #ifdef DEBUG
+    std::cout << "  Distance to plane: " << Dist << "\n";
+    std::cout << "  guess for Step: " << Step << "\n";
+    if (StepSign>0) std::cout << "  Direction is  pointing towards surface.\n";
+    else  std::cout << "  Direction is pointing away from surface.\n";
+  #endif
+
+
+  //
+  // Limit maxStepArg according to curvature and magnetic field inhomogenities
+  //
+  // limit maxStepArg to the straight line distance to plane times some margin
+  // (only if plane is not finite, otherwise maxStepArg only limited by the field & curvature is needed to set Step = propDir_*maxStepArg)
+  static const double margin(1.5);
+  if (!plane.isFinite() && maxStepArg > fabs(margin*Step)) maxStepArg = fabs(margin*Step);
+
+  while (maxStepArg > MINSTEP) {
+    M1x7 state7_temp;
+    memcpy(state7_temp, state7, sizeof(state7));
+    M1x3 SA;
+
+    double q = RKPropagate(state7_temp, nullptr, SA, StepSign*maxStepArg, true);
+#ifdef DEBUG
+    std::cerr << "  maxStepArg = " << maxStepArg << "; q = " << q  << " \n";
+#endif
+    maxStepArg *= q * 0.95;
+
+    if (q >= 1) break;
+  }
+
+#ifdef DEBUG
+  std::cerr << "  limit from curvature and magnetic field inhomogenities: " << maxStepArg << "\n";
+#endif
+
+  // limit Step to maxStepArg
+  if (fabs(Step) > maxStepArg) {
+    Step = StepSign*maxStepArg;
+    improveEstimation = false;
+    #ifdef DEBUG
+      std::cerr << "  improveEstimation = false;\n";
+    #endif
+  }
+
+
+  //
+  // Select direction
+  //
+  // auto select
+  if (propDir_ == 0 || !plane.isFinite()){
+    #ifdef DEBUG
+      std::cerr << "  auto select direction";
+      if (!plane.isFinite()) std::cerr << ", plane is not finite";
+      std::cerr << ".\n";
+    #endif
+  }
+  // see if straight line approximation is ok
+  else if ( fabs(Step) < 0.2*maxStepArg ){
+    #ifdef DEBUG
+      std::cerr << "  straight line approximation is fine.\n";
+    #endif
+
+    // if direction is pointing to active part of surface
+    if( plane.isInActive(state7[0], state7[1], state7[2],  state7[3], state7[4], state7[5]) ) {
+      #ifdef DEBUG
+        std::cerr << "  direction is pointing to active part of surface. \n";
+      #endif
+    }
+    // if we are near the plane, but not pointing to the active area, make a big step!
+    else {
+      Step = propDir_*maxStepArg;
+      improveEstimation = false;
+      #ifdef DEBUG
+        std::cerr << "  we are near the plane, but not pointing to the active area. make a big step! \n";
+      #endif
+    }
+  }
+  // propDir_ decides!
+  else {
+    if (Step * propDir_ < 0){
+      Step = propDir_*maxStepArg;
+      improveEstimation = false;
+      #ifdef DEBUG
+        std::cerr << "  invert Step according to propDir_ and set Step to propDir_*maxStepArg. \n";
+      #endif
+    }
+  }
+
+  #ifdef DEBUG
+    std::cerr << "  guess for Step (signed): " << Step << "\n";
+  #endif
+
+  // re-check sign of Step
+  if (Step>=0) StepSign = 1;
+  else StepSign = -1;
+
+
+
+  // call stepper and reduce stepsize if step not too small
+  if (/*!fNoMaterial*/ true){
+
+    if(fabs(Step) > MINSTEP){ // only call stepper if step estimation big enough
+
+      M1x7 state7_temp;
+      memcpy(state7_temp, state7, sizeof(state7));
+      for (unsigned int i=3; i<6; ++i)
+        state7_temp[i] *= StepSign;
+
+      materials_.push_back(MaterialProperties());
+      double StepMat = MaterialEffects::getInstance()->stepper(this,
+                                                               state7_temp,
+                                                               maxStepArg,
+                                                               charge/state7[6], // |p|
+                                                               relMomLoss,
+                                                               pdgCode_,
+                                                               materials_.back(),
+                                                               true);
+      if (fabs(Step) > StepMat) {
+        Step = StepSign*StepMat;
+        momLossExceeded = true;
+      }
+
+      #ifdef DEBUG
+        std::cerr << "  limit from stepper: " << Step << "\n";
+      #endif
+    }
+  }
+
+
+  if (!momLossExceeded && improveEstimation){
+    atPlane = true;
+   #ifdef DEBUG
+     std::cerr << "  At plane. " << Step << "\n";
+   #endif
+
+    // improve step estimation to surface according to curvature
+    if (fabs(Step) > 0.1*maxStepArg && fabs(Step) > MINSTEP){
+
+      M1x7 state7_temp;
+      memcpy(state7_temp, state7, sizeof(state7));
+      M1x3 SA;
+
+      RKPropagate(state7_temp, nullptr, SA, Step, true);
+
+      // calculate distance to surface
+      Dist = SU[3] - (state7_temp[0] * SU[0] +
+                      state7_temp[1] * SU[1] +
+                      state7_temp[2] * SU[2]); // Distance between position and surface
+
+      An = state7_temp[3] * SU[0] +
+           state7_temp[4] * SU[1] +
+           state7_temp[5] * SU[2];    // An = dir * N;  component of dir normal to surface
+
+      Step += Dist/An;
+
+      #ifdef DEBUG
+        std::cout << "  Improved step estimation taking curvature into account: " << Step << "\n";
+      #endif
+    }
+
+  }
+
+  materials_.back().setSegmentLength(Step);
+
+  #ifdef DEBUG
+    std::cout << "  --> Step to be used: " << Step << "\n";
+  #endif
+
+  return Step;
+
+}
+
+
+TVector3 RKTrackRep::poca2Line(const TVector3& extr1,const TVector3& extr2,const TVector3& point) const {
+
+  TVector3 pocaOnLine(extr2);
+  pocaOnLine -= extr1; // wireDir
+
+  if(pocaOnLine.Mag()<1.E-8){
+    Exception exc("RKTrackRep::poca2Line ==> try to find POCA between line and point, but the line is really just a point",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  double t = 1./(pocaOnLine.Mag2()) * ((point*pocaOnLine) + extr1.Mag2() - (extr1*extr2));
+  pocaOnLine *= t;
+  pocaOnLine += extr1;
+  return pocaOnLine; // = extr1 + t*wireDir
+
+}
+
+
+double RKTrackRep::Extrap(const DetPlane& plane, double charge, M1x7& state7, M7x7* cov, bool onlyOneStep, double maxStep) const {
+
+  static const unsigned int maxNumIt(500);
+  unsigned int numIt(0);
+
+  const bool calcCov(cov!=nullptr);
+  double coveredDistance(0.);
+  double sumDistance(0.);
+  TMatrixD noiseProjection(7,7);
+
+  while(true){
+
+    #ifdef DEBUG
+      std::cout << "\n============ RKTrackRep::Extrap loop nr. " << numIt << " ============\n";
+    #endif
+
+    if(numIt++ > maxNumIt){
+      Exception exc("RKTrackRep::Extrap ==> maximum number of iterations exceeded",__LINE__,__FILE__);
+      exc.setFatal();
+      throw exc;
+    }
+
+    // initialize cov with unit matrix
+    if(calcCov){
+      memcpy(fOldCov, cov, 7*7*sizeof(double));
+      memset(cov,0x00,49*sizeof(double));
+      for(int i=0; i<7; ++i) (*cov)[8*i] = 1.;
+    }
+
+    // propagation
+    bool checkJacProj = true;
+
+    if( ! this->RKutta(plane, charge, state7, cov, coveredDistance, checkJacProj, noiseProjection, onlyOneStep, maxStep) ) {
+      Exception exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
+      exc.setFatal();
+      throw exc;
+    }
+
+    #ifdef DEBUG
+      std::cout<<"Original points \n";
+      for (unsigned int i=0; i<points.size(); ++i){
+        points[i].Print();
+      }
+      std::cout<<"\n";
+    #endif
+
+    sumDistance+=coveredDistance;
+
+    // filter points // TODO: rewrite!!!
+    /*if (true) { // points are only filled if mat fx are on
+      if(materials_.size() > 2){ // check if there are at least three points
+        double firstStep(points[0].getPath());
+        for (unsigned int i=points.size()-2; i>0; --i){
+          if (points[i].getPath() * firstStep < 0 || fabs(points[i].getPath()) < MINSTEP){
+            points[i-1].addToPath(points[i].getPath());
+            points.erase(points.begin()+i);
+          }
+        }
+      }
+      #ifdef DEBUG
+        std::cout<<"Filtered points \n";
+        for (unsigned int i=0; i<points.size(); ++i){
+          points[i].Print();
+        }
+        std::cout<<"\n";
+      #endif
+    }*/
+
+
+    if(calcCov) memset(fNoise,0x00,7*7*sizeof(double)); // set fNoise to 0
+
+
+    // call MatFX
+    unsigned int nPoints(materials_.size());
+    if (/*!fNoMaterial*/ true && nPoints>0){
+      // momLoss has a sign - negative loss means momentum gain
+      double momLoss = MaterialEffects::getInstance()->effects(materials_,
+                                                               fabs(charge/state7[6]), // momentum
+                                                               pdgCode_,
+                                                               fNoise,
+                                                               (double *)cov);
+
+      #ifdef DEBUG
+        std::cout << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6]) << "\n";
+      #endif
+
+      // do momLoss only for defined 1/momentum .ne.0
+      if(fabs(state7[6])>1.E-10) state7[6] = charge/(fabs(charge/state7[6])-momLoss);
+    } // finished MatFX
+
+    if(calcCov){ // propagate cov and add noise
+      // numerical check:
+      for(unsigned int i=0; i<7*7; ++i){
+        if(fabs((*cov)[i]) > 1.E100){
+          Exception exc("RKTrackRep::Extrap ==> covariance matrix exceeds numerical limits",__LINE__,__FILE__);
+          exc.setFatal();
+          throw exc;
+        }
+      }
+
+      // cov = Jac^T * oldCov * Jac;
+      // last column of jac is [0,0,0,0,0,0,1]
+      // cov is symmetric
+      RKTools::J_MMTxcov7xJ_MM(*cov, fOldCov);
+      memcpy(cov, fOldCov, 7*7*sizeof(double));
+      if( checkJacProj == true ){
+
+  // XXX std::cerr << "noise in 7D before it gets added" << std::endl;
+  // XXX RKTools::printDim((double*)fNoise,7,7);
+  // XXX std::cerr << "noise in 5D before it gets added" << std::endl;
+  // XXX TMatrixDSym noise5D;
+  // XXX transformM7P( fNoise,noise5D,plane,state7);
+  // XXX noise5D.Print();
+        //project the noise onto the measurment plane
+         //std::cerr << "the current noise is " << std::endl;
+         //RKTools::printDim(fNoise,7,7);
+  TMatrixDSym projectedNoise(7);
+  projectedNoise.SetMatrixArray(fNoise);
+  //std::cerr << "projectedNoise is filled with the current noise: " << std::endl;
+  //projectedNoise.Print();
+  // XXX std::cerr << "projection matrix for noise:" << std::endl;
+  // XXX RKTools::printDim(noiseProjection.GetMatrixArray(),7,7);
+  // XXX TMatrixD P2 = noiseProjection * noiseProjection;
+  // XXX std::cerr << "P^2:" << std::endl;
+  // XXX RKTools::printDim(P2.GetMatrixArray(),7,7);
+  projectedNoise.SimilarityT(noiseProjection);
+  //std::cerr << "and finally the projecte noise is as root matrix: " << std::endl;
+  //projectedNoise.Print();
+
+  double* projectedNoisePtr = projectedNoise.GetMatrixArray();
+  // XXX std::cerr << "projected noise in 7D before it gets added" << std::endl;
+  // XXX RKTools::printDim(projectedNoisePtr,7,7);
+  // XXX std::cerr << "projected noise in 5D before it gets added" << std::endl;
+  //TMatrixDSym noise5D;
+  // XXX transformM7P( ( M7x7&) (*projectedNoisePtr),noise5D,plane,state7);
+  // XXX noise5D.Print();
+  // add noise to cov
+  // XXX std::cerr << "the covariance in 7D before the noiese gets added" << std::endl;
+  // XXX RKTools::printDim((double*)cov,7,7);
+  // XXX std::cerr << "the covariance in 5D before the noiese gets added" << std::endl;
+  // XXX TMatrixDSym cov5D;
+  // XXX transformM7P( *cov,cov5D,plane,state7);
+  // XXX cov5D.Print();
+//  for (int i=0; i<7*7; ++i) (*cov)[i] += projectedNoisePtr[i];
+
+  // XXX std::cerr << "cov + noise in 7D" << std::endl;
+  // XXX RKTools::printDim((double*)cov,7,7);
+  // XXX std::cerr << "cov + noise in 5D" << std::endl;
+  // XXX transformM7P( *cov,cov5D,plane,state7);
+  // XXX cov5D.Print();
+  for (int i=0; i<7*7; ++i) (*cov)[i] += fNoise[i];
+      } else {
+  // XXX std::cerr << "noise in 7D before it gets added" << std::endl;
+  // XXX RKTools::printDim(fNoise,7,7);
+  // XXX std::cerr << "cov in 7D before noise gets added" << std::endl;
+  // XXX RKTools::printDim((double*)cov,7,7);
+  for (int i=0; i<7*7; ++i) (*cov)[i] += fNoise[i];
+  // XXX std::cerr << "cov + noise 7D" << std::endl;
+  // XXX RKTools::printDim((double*)cov,7,7);
+      }
+
+
+     // std::cerr << "Noise was added to cov in RKTrackRep" << std::endl;
+    } // finished propagate cov and add noise
+
+    if (onlyOneStep) break;
+
+    //we arrived at the destination plane, if we point to the active area of the plane (if it is finite), and the distance is below threshold
+    if( plane.distance(state7[0], state7[1], state7[2]) < MINSTEP) {
+      #ifdef DEBUG
+        std::cerr << "arrived at plane with a distance of  " << plane.distance((state7[0], state7[1], state7[2]) << " cm left. ";
+      #endif
+      if (plane.isInActive(state7[0], state7[1], state7[2],  state7[3], state7[4], state7[5])) {
+        #ifdef DEBUG
+          std::cerr << "In active area of plane. \n";
+        #endif
+        // check if Jacobian has been projected onto plane; Otherwise make another iteration
+        if (calcCov && !checkJacProj && nPoints>0){
+          #ifdef DEBUG
+            std::cout << "Jacobian was not projected onto destination plane -> one more iteration. \n";
+          #endif
+          continue;
+        }
+        break;
+      }
+      #ifdef DEBUG
+      else {
+       std::cerr << "NOT in active area of plane. \n";
+      }
+      #endif
+    }
+
+  }
+
+  return sumDistance;
 }
 
 
