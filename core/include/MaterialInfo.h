@@ -36,19 +36,19 @@ class MaterialInfo : public TObject {
  public:
 
   MaterialInfo();
-  MaterialInfo(sharedPlanePtr sharedPlane,
-               sharedMaterialPropertiesPtr materialBefore,
-               sharedMaterialPropertiesPtr materialAfter);
+  MaterialInfo(SharedPlanePtr sharedPlane,
+               SharedMaterialPropertiesPtr materialBefore,
+               SharedMaterialPropertiesPtr materialAfter);
 
-  sharedPlanePtr getPlane() const {return sharedPlane_;}
-  sharedMaterialPropertiesPtr getMaterialBefore() const {return materialBefore_;}
-  sharedMaterialPropertiesPtr getMaterialAfter() const {return materialAfter_;}
+  SharedPlanePtr getPlane() const {return sharedPlane_;}
+  SharedMaterialPropertiesPtr getMaterialBefore() const {return materialBefore_;}
+  SharedMaterialPropertiesPtr getMaterialAfter() const {return materialAfter_;}
 
  private:
 
-  sharedPlanePtr sharedPlane_; // Material boundary
-  sharedMaterialPropertiesPtr materialBefore_; // Material properties before the boundary
-  sharedMaterialPropertiesPtr materialAfter_; // Material properties after the boundary
+  SharedPlanePtr sharedPlane_; // Material boundary
+  SharedMaterialPropertiesPtr materialBefore_; // Material properties before the boundary
+  SharedMaterialPropertiesPtr materialAfter_; // Material properties after the boundary
   //sharedMaterialPropertiesPtr materialAt_; // Material properties at the boundary (thin scatterer)
 
 };

@@ -48,7 +48,7 @@ class RKTrackRep : public AbsTrackRep {
    */
   virtual double extrapolateToPlane(const StateOnPlane& stateInput,
       StateOnPlane& statePrediction,
-      sharedPlanePtr plane,
+      SharedPlanePtr plane,
       bool stopAtBoundary = false) const override;
 
   virtual double extrapolateToLine(const StateOnPlane* stateInput,
@@ -162,7 +162,7 @@ class RKTrackRep : public AbsTrackRep {
                     TMatrixD* Jac = NULL) const;
 
   //! Propagates the particle through the magnetic field.
-  /** If the propagation is successfull and the plane is reached, the function returns true.
+  /** If the propagation is successful and the plane is reached, the function returns true.
     * Propagated state and the jacobian of the extrapolation are written to #state7 and #cov.
     * The jacobian is only calculated if #cov != NULL.
     * In the main loop of the Runge Kutta algorithm, the #estimateStep() is called

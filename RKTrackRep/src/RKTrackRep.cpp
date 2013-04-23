@@ -76,7 +76,7 @@ void RKTrackRep::setPosMom(StateOnPlane* state, const TVector3& pos, const TVect
   else { // pos is not on plane -> create new plane!
 
     // TODO: Raise Warning that a new plane has been created!
-    sharedPlanePtr plane(new DetPlane(pos, mom));
+    SharedPlanePtr plane(new DetPlane(pos, mom));
     state->setPlane(plane);
 
     TVectorD& state5(state->getState());

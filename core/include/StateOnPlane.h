@@ -44,26 +44,26 @@ class StateOnPlane : public TObject {
  public:
 
   StateOnPlane();
-  StateOnPlane(const TVectorD& state, sharedPlanePtr plane, AbsTrackRep* rep);
+  StateOnPlane(const TVectorD& state, SharedPlanePtr plane, AbsTrackRep* rep);
 
 
   const TVectorD& getState() const {return state_;}
   TVectorD& getState() {return state_;}
   const TVectorD& getAuxInfo() const {return auxInfo_;}
   TVectorD& getAuxInfo() {return auxInfo_;}
-  sharedPlanePtr getPlane() const {return sharedPlane_;}
+  SharedPlanePtr getPlane() const {return sharedPlane_;}
   AbsTrackRep* const getRep() const {return rep_;}
 
   void setState(const TVectorD& state) {state_ = state;}
-  void setPlane(sharedPlanePtr plane) {sharedPlane_ = plane;}
-  void setStatePlane(const TVectorD& state, sharedPlanePtr plane) {state_ = state; sharedPlane_ = plane;}
+  void setPlane(SharedPlanePtr plane) {sharedPlane_ = plane;}
+  void setStatePlane(const TVectorD& state, SharedPlanePtr plane) {state_ = state; sharedPlane_ = plane;}
   void setAuxInfo(const TVectorD& auxInfo) {auxInfo_ = auxInfo;}
 
  protected:
 
   TVectorD state_; // state vector
   TVectorD auxInfo_; // auxiliary information (e.g. charge, flight direction etc.)
-  sharedPlanePtr sharedPlane_; // Shared ownership.
+  SharedPlanePtr sharedPlane_; // Shared ownership.
 
  private:
 

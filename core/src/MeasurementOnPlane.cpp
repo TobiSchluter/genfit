@@ -27,7 +27,7 @@ MeasurementOnPlane::MeasurementOnPlane() :
   ;
 }
 
-MeasurementOnPlane::MeasurementOnPlane(const TVectorD& state, const TMatrixDSym& cov, sharedPlanePtr plane, AbsTrackRep* rep, const TMatrixD& hMatrix, double weight) :
+MeasurementOnPlane::MeasurementOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, AbsTrackRep* rep, const TMatrixD& hMatrix, double weight) :
   MeasuredStateOnPlane(state, cov, plane, rep), hMatrix_(hMatrix), weight_(weight)
 {
   ;

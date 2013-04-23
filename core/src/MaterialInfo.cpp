@@ -30,9 +30,9 @@ MaterialInfo::MaterialInfo() :
 }
 
 
-MaterialInfo::MaterialInfo(sharedPlanePtr sharedPlane,
-                           sharedMaterialPropertiesPtr materialBefore,
-                           sharedMaterialPropertiesPtr materialAfter) :
+MaterialInfo::MaterialInfo(SharedPlanePtr sharedPlane,
+                           SharedMaterialPropertiesPtr materialBefore,
+                           SharedMaterialPropertiesPtr materialAfter) :
   sharedPlane_(sharedPlane),
   materialBefore_(materialBefore),
   materialAfter_(materialAfter)

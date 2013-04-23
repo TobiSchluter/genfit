@@ -29,7 +29,7 @@ class AbsTrackRep {
    */
   virtual double extrapolateToPlane(const StateOnPlane& stateInput,
       StateOnPlane& statePrediction,
-      sharedPlanePtr plane,
+      SharedPlanePtr plane,
       bool stopAtBoundary = false) const = 0;
 
   virtual double extrapolateToLine(const StateOnPlane* stateInput,

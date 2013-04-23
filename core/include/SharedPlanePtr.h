@@ -28,6 +28,6 @@
 
 #include "DetPlane.h"
 
-typedef std::shared_ptr< const genfit::DetPlane > sharedPlanePtr;
+typedef std::shared_ptr< const genfit::DetPlane > SharedPlanePtr;
 
 #endif // genfit_SharedPlanePtr_h

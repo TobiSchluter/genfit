@@ -108,7 +108,7 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeas
 
   MeasuredStateOnPlane smoothedState = getSmoothedState(biased);
   const MeasurementOnPlane& measurement = measurementsOnPlane_.at(iMeasurement);
-  sharedPlanePtr plane = measurement.getPlane();
+  SharedPlanePtr plane = measurement.getPlane();
 
   // check equality of planes and reps
   if(*(smoothedState.getPlane()) != *plane) {

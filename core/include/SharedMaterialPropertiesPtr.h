@@ -28,6 +28,6 @@
 
 #include "MaterialProperties.h"
 
-typedef std::shared_ptr< const genfit::MaterialProperties > sharedMaterialPropertiesPtr;
+typedef std::shared_ptr< const genfit::MaterialProperties > SharedMaterialPropertiesPtr;
 
 #endif // genfit_SharedMaterialPropertiesPtr_h
