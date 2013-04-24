@@ -25,6 +25,12 @@
 
 namespace genfit {
 
+
+bool pairCompare(std::pair<StepLimitType, double> i, std::pair<StepLimitType, double> j) {
+  return i.second < j.second;
+}
+
+
 StepLimits::StepLimits() :
   stepSign_(1)
 {

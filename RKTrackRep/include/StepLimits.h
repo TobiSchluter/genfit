@@ -44,9 +44,7 @@ enum StepLimitType {
   stp_plane       // stepsize limited because destination plane is reached
 };
 
-bool pairCompare( std::pair<StepLimitType, double> i, std::pair<StepLimitType, double> j) {
-  return i.second < j.second;
-}
+bool pairCompare(std::pair<StepLimitType, double> i, std::pair<StepLimitType, double> j);
 
 class StepLimits {
 
