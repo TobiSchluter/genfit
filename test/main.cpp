@@ -1,4 +1,7 @@
 #include <iostream>
+#include <execinfo.h>
+#include <signal.h>
+#include <stdlib.h>
 
 #include <AbsFinitePlane.h>
 #include <AbsFitterInfo.h>
@@ -27,6 +30,12 @@
 #include <WireMeasurement.h>
 #include <WirePointMeasurement.h>
 
+#include <MaterialEffects.h>
+#include <RKTools.h>
+#include <RKTrackRep.h>
+#include <StepLimits.h>
+#include <TGeoMaterialInterface.h>
+
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TEveManager.h>
@@ -44,12 +53,28 @@
 #include <TMath.h>
 #include <TString.h>
 
+
+void handler(int sig) {
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, 2);
+  exit(1);
+}
+
+
 int main() {
+  signal(SIGSEGV, handler);   // install our handler
   std::cerr<<"main"<<std::endl;
 
   const bool debug = true;
 
-  genfit::Track* testTrack = new genfit::Track();
+  /*genfit::Track* testTrack = new genfit::Track();
 
 
   TString outname = "test.root";
@@ -64,8 +89,23 @@ int main() {
   tree->Fill();
   if (debug) std::cerr<<"Write Tree ...";
   tree->Write();
-  file->Close();
+  file->Close();*/
+
+
+  genfit::AbsTrackRep* rep;
+  rep = new genfit::RKTrackRep(211);
+
+  TVector3 pos(0,0,0);
+  TVector3 mom(1,1,1);
+
+  genfit::StateOnPlane* state = new genfit::StateOnPlane(rep);
+  rep->setPosMom(state, pos, mom);
+
+  rep->getPos(state).Print();
+  rep->getMom(state).Print();
 
 
 
+
+  return 0;
 }

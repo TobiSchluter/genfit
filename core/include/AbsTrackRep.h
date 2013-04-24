@@ -19,7 +19,7 @@ class AbsTrackRep {
   AbsTrackRep();
   AbsTrackRep(int pdgCode, char propDir = 0);
 
-  virtual ~AbsTrackRep() = 0;
+  virtual ~AbsTrackRep() {;}
 
   virtual AbsTrackRep* clone() const = 0;
 
@@ -61,6 +61,8 @@ class AbsTrackRep {
    */
   //virtual double extrapolateToTrackPoint() const;
 
+
+  virtual unsigned int getDim() const = 0;
 
   virtual TVector3 getPos(const StateOnPlane* stateInput) const = 0;
 

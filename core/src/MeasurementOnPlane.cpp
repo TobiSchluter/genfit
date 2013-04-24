@@ -21,8 +21,8 @@
 
 namespace genfit {
 
-MeasurementOnPlane::MeasurementOnPlane() :
-  MeasuredStateOnPlane(), hMatrix_(0,0), weight_(0)
+MeasurementOnPlane::MeasurementOnPlane(AbsTrackRep* rep) :
+  MeasuredStateOnPlane(rep), hMatrix_(0,0), weight_(0)
 {
   ;
 }

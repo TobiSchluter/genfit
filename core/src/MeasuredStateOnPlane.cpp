@@ -18,25 +18,31 @@
 */
 
 #include "MeasuredStateOnPlane.h"
+#include "AbsTrackRep.h"
+
+#include <assert.h>
 
 namespace genfit {
 
-MeasuredStateOnPlane::MeasuredStateOnPlane() :
-  StateOnPlane(), cov_(0,0)
+MeasuredStateOnPlane::MeasuredStateOnPlane(AbsTrackRep* rep) :
+  StateOnPlane(rep), cov_(0,0)
 {
-  ;
+  if (rep != nullptr) {
+    cov_.ResizeTo(rep->getDim(), rep->getDim());
+  }
 }
 
 MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, AbsTrackRep* rep) :
   StateOnPlane(state, plane, rep), cov_(cov)
 {
-  ;
+  assert(rep != nullptr);
+  assert(cov_.GetNcols() == rep->getDim());
 }
 
 MeasuredStateOnPlane::MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov) :
   StateOnPlane(state), cov_(cov)
 {
-  ;
+  assert(cov_.GetNcols() == getRep()->getDim());
 }
 
 } /* End of namespace genfit */

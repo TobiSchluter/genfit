@@ -29,14 +29,13 @@
 #include "MeasuredStateOnPlane.h"
 
 
-
 namespace genfit {
 
 class MeasurementOnPlane : public MeasuredStateOnPlane {
 
  public:
 
-  MeasurementOnPlane();
+  MeasurementOnPlane(AbsTrackRep* rep = nullptr);
   MeasurementOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, AbsTrackRep* rep, const TMatrixD& hMatrix, double weight = 1.);
 
   const TMatrixD& getHMatrix() const {return hMatrix_;}

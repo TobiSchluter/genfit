@@ -18,19 +18,25 @@
 */
 
 #include "StateOnPlane.h"
+#include "AbsTrackRep.h"
+
+#include <assert.h>
 
 namespace genfit {
 
 StateOnPlane::StateOnPlane(AbsTrackRep* rep) :
   state_(0), auxInfo_(0), sharedPlane_(), rep_(rep)
 {
-  ;
+  if (rep != nullptr) {
+    state_.ResizeTo(rep->getDim());
+  }
 }
 
 StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr plane, AbsTrackRep* rep) :
   state_(state), sharedPlane_(plane), rep_(rep)
 {
-  ;
+  assert(rep != nullptr);
+  assert(state_.GetNrows() == rep->getDim());
 }
 
 } /* End of namespace genfit */

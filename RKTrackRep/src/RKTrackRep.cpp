@@ -197,7 +197,20 @@ void RKTrackRep::setPosMom(StateOnPlane* state, const TVector3& pos, const TVect
     throw exc;
   }
 
-  if (state->getPlane()->distance(pos) < MINSTEP) { // pos is on plane -> do not change plane!
+  // init auxInfo if that has not yet happened
+  TVectorD& auxInfo = state->getAuxInfo();
+  if (auxInfo.GetNrows() != 2) {
+    auxInfo.ResizeTo(2);
+    TParticlePDG * part = TDatabasePDG::Instance()->GetParticle(pdgCode_);
+    if(part == 0){
+      Exception exc("RKTrackRep::setPosMom ==> particle id not known to TDatabasePDG",__LINE__,__FILE__);
+      throw exc;
+    }
+    setCharge(state, part->Charge()/(3.));
+    setSpu(state, 1.);
+  }
+
+  if (state->getPlane() != nullptr && state->getPlane()->distance(pos) < MINSTEP) { // pos is on plane -> do not change plane!
 
     M1x7 state7;
 
@@ -1287,9 +1300,11 @@ double RKTrackRep::Extrap(const DetPlane& plane,
     if (/*!fNoMaterial*/ true) { // points are only filled if mat fx are on
       if(materials_.size() > 2){ // check if there are at least three points
         for (unsigned int i=materials_.size()-1; i>0; --i){
+          // merge two points if they are in the same material AND (one of them has a small stepsize OR their stepsizes have different signs)
           if (materials_[i].first == materials_[i-1].first &&
               (fabs(materials_[i].first.getSegmentLength()) < MINSTEP ||
-               fabs(materials_[i-1].first.getSegmentLength()) < MINSTEP) ){
+               fabs(materials_[i-1].first.getSegmentLength()) < MINSTEP ||
+               materials_[i].first.getSegmentLength()*materials_[i-1].first.getSegmentLength() < 0) ){
             materials_[i-1].first.addToSegmentLength(materials_[i].first.getSegmentLength());
             materials_.erase(materials_.begin()+i);
           }
@@ -1443,6 +1458,9 @@ void RKTrackRep::checkCache(const StateOnPlane* state) const {
   if (state->getPlane() == lastStartState_.getPlane() &&
       state->getState() == lastStartState_.getState()) {
     useCache_ = true;
+#ifdef DEBUG
+    std::cout << "RKTrackRep::checkCache: use cached material and step values.\n";
+#endif
   }
   else {
     useCache_ = false;

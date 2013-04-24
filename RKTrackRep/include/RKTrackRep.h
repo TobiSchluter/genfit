@@ -82,6 +82,8 @@ class RKTrackRep : public AbsTrackRep {
   //virtual double extrapolateToTrackPoint() const;
 
 
+  unsigned int getDim() const {return 5;}
+
   virtual TVector3 getPos(const StateOnPlane* stateInput) const override;
 
   virtual TVector3 getMom(const StateOnPlane* stateInput) const override;
