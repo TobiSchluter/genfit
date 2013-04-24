@@ -30,6 +30,7 @@ set(GENFIT_SRCS
 	MaterialEffects.cpp  
 	RKTools.cpp  
 	RKTrackRep.cpp  
+	StepLimits.cpp
 	TGeoMaterialInterface.cpp
 )
 

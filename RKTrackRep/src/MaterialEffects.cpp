@@ -166,15 +166,20 @@ double MaterialEffects::effects(const std::vector< std::pair< MaterialProperties
 }
 
 
-double MaterialEffects::stepper(const RKTrackRep* rep,
-                                  M1x7& state7,
-                                  double sMax, // maximum step. unsigned!
-                                  const double& mom, // momentum
-                                  double& relMomLoss, // relative momloss for the step will be added
-                                  const int& pdg,
-                                  MaterialProperties& currentMaterial,
-                                  bool varField)
+void MaterialEffects::stepper(const RKTrackRep* rep,
+                              M1x7& state7,
+                              const double& mom, // momentum
+                              double& relMomLoss, // relative momloss for the step will be added
+                              const int& pdg,
+                              MaterialProperties& currentMaterial,
+                              StepLimits& limits,
+                              bool varField)
 {
+
+  static const double maxRelMomLoss = .005; // maximum relative momentum loss allowed
+  static const double minStep = 1.E-4; // 1 µm
+
+  // Trivial cases
 
   if (materialInterface_ == nullptr) {
     std::string msg("MaterialEffects hasn't been initialized with a correct AbsMaterialInterface pointer!");
@@ -182,12 +187,22 @@ double MaterialEffects::stepper(const RKTrackRep* rep,
     throw err;
   }
 
-  static const double maxRelMomLoss = .005; // maximum relative momentum loss allowed
-  static const double minStep = 1.E-4; // 1 µm
+  if (noEffects_)
+    return;
 
-  if (noEffects_) return sMax;
-  if (relMomLoss > maxRelMomLoss) return 0;
-  if (sMax < minStep) return minStep;
+  if (relMomLoss > maxRelMomLoss) {
+    limits.setLimit(stp_momLoss, 0);
+    return;
+  }
+
+
+  double sMax = limits.getLowestLimitVal();
+
+  if (sMax < minStep)
+    return;
+
+
+  // limit due to momloss
 
   pdg_ = pdg;
   double X(minStep);
@@ -195,39 +210,42 @@ double MaterialEffects::stepper(const RKTrackRep* rep,
   getParticleParameters(mom);
 
   materialInterface_->initTrack(state7[0] + minStep * state7[3], state7[1] + minStep * state7[4], state7[2] + minStep * state7[5],
-                                state7[3],                   state7[4],                   state7[5]);
+                                state7[3],                       state7[4],                       state7[5]);
 
   materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
   currentMaterial.setMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
 
-  stepSize_ = materialInterface_->findNextBoundary(rep, state7, sMax, varField);
-
-#ifdef DEBUG
-  std::cerr << "in material: " << matZ_ << std::endl;
-  std::cerr << "       stepSize_ = " << stepSize_ << std::endl;
-#endif
-
-  if (stepSize_ <= 0.) return minStep; // should not happen
+  stepSize_ = sMax-X; // set a stepsize for momLoss calculation
 
   if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
-
     if (energyLossBetheBloch_) relMomLossStep += this->energyLossBetheBloch(mom) / mom;
     if (energyLossBrems_)      relMomLossStep += this->energyLossBrems(mom) / mom;
   }
 
   if (relMomLoss + relMomLossStep > maxRelMomLoss) {
-    double fraction = (maxRelMomLoss - relMomLoss) / relMomLossStep;
-    X += fraction * stepSize_;
 #ifdef DEBUG
     std::cerr << "     momLoss exceeded \n";
 #endif
+
+    double fraction = (maxRelMomLoss - relMomLoss) / relMomLossStep;
+    X += fraction * stepSize_;
+    relMomLoss = maxRelMomLoss;
+
+    limits.setLimit(stp_momLoss, X);
+  }
+  else
+    relMomLoss += relMomLossStep;
+
+
+
+  // now look for boundaries
+  sMax = limits.getLowestLimitVal();
+
+  stepSize_ = materialInterface_->findNextBoundary(rep, state7, sMax, varField);
+  if (stepSize_ < sMax) {
+    limits.setLimit(stp_boundary, stepSize_);
   }
 
-  relMomLoss += relMomLossStep;
-  X += stepSize_;
-
-
-  return X;
 }
 
 

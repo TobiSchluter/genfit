@@ -35,26 +35,58 @@
 namespace genfit {
 
 
-
 RKTrackRep::RKTrackRep() :
-  AbsTrackRep()
+  AbsTrackRep(),
+  lastStartState_(this),
+  useCache_(false)
 {
   initArrays();
 }
 
 
 RKTrackRep::RKTrackRep(int pdgCode, char propDir) :
-  AbsTrackRep(pdgCode, propDir)
+  AbsTrackRep(pdgCode, propDir),
+  lastStartState_(this),
+  useCache_(false)
 {
   initArrays();
 }
 
 
-double RKTrackRep::extrapolateToPlane(const StateOnPlane& stateInput,
+RKTrackRep::~RKTrackRep() {
+  ;
+}
+
+
+double RKTrackRep::extrapolateToPlane(const StateOnPlane* stateInput,
     StateOnPlane& statePrediction,
     SharedPlanePtr plane,
     bool stopAtBoundary) const {
 
+  checkCache(stateInput);
+  bool calcCov(stateInput->hasCovariance());
+
+  M1x7 state7;
+  getState7(stateInput, state7);
+  M7x7* cov7x7(nullptr);
+
+  if (calcCov) {
+    cov7x7 = new M7x7;
+    transformPM7(dynamic_cast<const MeasuredStateOnPlane*>(stateInput), *cov7x7);
+  }
+
+  double coveredDistance = Extrap(*plane, getCharge(stateInput), state7, cov7x7);
+
+  // TODO: continue here!!!
+  /*statePred.ResizeTo(5);
+  statePred = getState5(state7, pl, fCacheSpu);
+  fCachePlane = pl;
+
+  covPred.ResizeTo(5, 5);
+  transformM7P(cov7x7, covPred, pl, state7);
+*/
+
+  return coveredDistance;
 }
 
 
@@ -64,6 +96,8 @@ double RKTrackRep::extrapolateToLine(const StateOnPlane* stateInput,
     const TVector3& lineDirection,
     bool stopAtBoundary) const {
 
+  checkCache(stateInput);
+  return 0;
 }
 
 
@@ -72,6 +106,8 @@ double RKTrackRep::extrapolateToPoint(const StateOnPlane* stateInput,
     const TVector3& point,
     bool stopAtBoundary) const {
 
+  checkCache(stateInput);
+  return 0;
 }
 
 
@@ -82,6 +118,8 @@ double RKTrackRep::extrapolateToCylinder(const StateOnPlane* stateInput,
     double radius,
     bool stopAtBoundary) const {
 
+  checkCache(stateInput);
+  return 0;
 }
 
 
@@ -91,46 +129,62 @@ double RKTrackRep::extrapolateToSphere(const StateOnPlane* stateInput,
     double radius,
     bool stopAtBoundary) const {
 
+  checkCache(stateInput);
+  return 0;
 }
 
 
 TVector3 RKTrackRep::getPos(const StateOnPlane* stateInput) const {
+  M1x7 state7;
+  getState7(stateInput, state7);
 
+  return TVector3(state7[0], state7[1], state7[2]);
 }
 
 
 TVector3 RKTrackRep::getMom(const StateOnPlane* stateInput) const {
+  M1x7 state7;
+  getState7(stateInput, state7);
 
+  TVector3 mom(state7[3], state7[4], state7[5]);
+  mom.SetMag(getCharge(stateInput)/state7[6]);
+  return mom;
 }
 
 
 void RKTrackRep::getPosMom(const StateOnPlane* stateInput, TVector3& pos, TVector3& mom) const {
+  M1x7 state7;
+  getState7(stateInput, state7);
 
+  pos.SetXYZ(state7[0], state7[1], state7[2]);
+  mom.SetXYZ(state7[3], state7[4], state7[5]);
+  mom.SetMag(getCharge(stateInput)/state7[6]);
 }
 
 
 void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const {
-
+  getPosMom(stateInput, pos, mom);
+  transformPM6(stateInput, *((M6x6*) cov.GetMatrixArray()));
 }
 
 
 TMatrixD RKTrackRep::getForwardJacobian() const {
-
+  return jacobian_;
 }
 
 
 TMatrixD RKTrackRep::getBackwardJacobian() const {
-
+  return TMatrixD();
 }
 
 
 TMatrixDSym RKTrackRep::getForwardNoise() const {
-
+  return noise_;
 }
 
 
 TMatrixDSym RKTrackRep::getBackwardNoise() const {
-
+  return TMatrixDSym();
 }
 
 
@@ -399,7 +453,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
 
 
 
-void RKTrackRep::initArrays(){
+void RKTrackRep::initArrays() const {
   fNoise.fill(0);
   fOldCov.fill(0);
 
@@ -730,15 +784,15 @@ void RKTrackRep::transformM6P(const M6x6& in6x6,
 //
 // Authors: R.Brun, M.Hansroul, V.Perevoztchikov (Geant3)
 //
-bool RKTrackRep::RKutta (const DetPlane& plane,
-                         double charge,
-                         M1x7& state7,
-                         M7x7* jacobian,
-                         double& coveredDistance,
-                         bool& checkJacProj,
-                         TMatrixD& noiseProjection,
-                         bool onlyOneStep,
-                         double maxStep) const {
+bool RKTrackRep::RKutta(const DetPlane& plane,
+                        double charge,
+                        M1x7& state7,
+                        M7x7* jacobian,
+                        double& coveredDistance,
+                        bool& checkJacProj,
+                        TMatrixD& noiseProjection,
+                        StepLimits& limits,
+                        bool onlyOneStep) const {
 
   // limits, check-values, etc. Can be tuned!
   static const double Wmax   = 3000.;           // max. way allowed [cm]
@@ -797,7 +851,7 @@ bool RKTrackRep::RKutta (const DetPlane& plane,
   unsigned int counter(0);
 
   // Step estimation (signed)
-  S = estimateStep(state7, SU, plane, charge, relMomLoss, momLossExceeded, atPlane, maxStep);
+  S = estimateStep(state7, SU, plane, charge, relMomLoss, limits);
   if (fabs(S) < 0.001*MINSTEP) {
     #ifdef DEBUG
       std::cout << " RKutta - step too small -> break \n";
@@ -833,7 +887,7 @@ bool RKTrackRep::RKutta (const DetPlane& plane,
       throw exc;
     }
 
-    M1x3 ABefore{A[0], A[1], A[2]};
+    M1x3 ABefore(A);
     RKPropagate(state7, jacobian, SA, S); // the actual Runge Kutta propagation
     deltaAngle += acos(ABefore[0]*A[0] + ABefore[1]*A[1] + ABefore[2]*A[2]);
 
@@ -849,7 +903,7 @@ bool RKTrackRep::RKutta (const DetPlane& plane,
 
     // estimate Step for next loop or linear extrapolation
     Sl = S; // last S used
-    S = estimateStep(state7, SU, plane, charge, relMomLoss, momLossExceeded, atPlane, maxStep);
+    S = estimateStep(state7, SU, plane, charge, relMomLoss, limits);
 
     if (atPlane && fabs(S) < MINSTEP) {
       #ifdef DEBUG
@@ -982,82 +1036,84 @@ double RKTrackRep::estimateStep(const M1x7& state7,
                                 const DetPlane& plane,
                                 const double& charge,
                                 double& relMomLoss,
-                                bool& momLossExceeded,
-                                bool& atPlane,
-                                double maxStepArg) const {
+                                StepLimits& limits) const {
 
-  static const double Smax = 25.; // max. step allowed [cm]
-  double Step(0);
-  bool improveEstimation (true);
-
-  momLossExceeded = false;
-  atPlane = false;
+  limits.setLimit(stp_sMax, 25.); // max. step allowed [cm]
 
   #ifdef DEBUG
     std::cout << " RKTrackRep::estimateStep \n";
-    std::cout << "  position: "; TVector3(state7[0], state7[1], state7[2]).Print();
+    std::cout << "  position:  "; TVector3(state7[0], state7[1], state7[2]).Print();
     std::cout << "  direction: "; TVector3(state7[3], state7[4], state7[5]).Print();
   #endif
 
-  // check and limit maxStepArg argument
-  if (maxStepArg < 0) maxStepArg *= -1;
-  if (maxStepArg > Smax) maxStepArg = Smax;
-
-  // calculate distance to surface
+  // calculate SL distance to surface
   double Dist = SU[3] - (state7[0]*SU[0] + state7[1]*SU[1] + state7[2]*SU[2]);  // Distance between start coordinates and surface
   double An = state7[3]*SU[0] + state7[4]*SU[1] + state7[5]*SU[2];              // An = dir * N;  component of dir normal to surface
 
-  if (fabs(An) > 1.E-10) Step = Dist/An;
+  double SLDist;
+  if (fabs(An) > 1.E-10)
+    SLDist = Dist/An;
   else {
-    Step = Dist*1.E10;
-    if (An<0) Step *= -1.;
+    SLDist = Dist*1.E10;
+    if (An<0) SLDist *= -1.;
   }
 
-  // see if dir points towards surface (1) or not (-1)
-  double StepSign(1);
-  if (Step<0) StepSign = -1;
+  limits.setLimit(stp_planeRough, SLDist);
+  limits.setStepSign(SLDist);
 
-  #ifdef DEBUG
-    std::cout << "  Distance to plane: " << Dist << "\n";
-    std::cout << "  guess for Step: " << Step << "\n";
-    if (StepSign>0) std::cout << "  Direction is  pointing towards surface.\n";
-    else  std::cout << "  Direction is pointing away from surface.\n";
-  #endif
-
+#ifdef DEBUG
+  std::cout << "  Distance to plane: " << Dist << "\n";
+  std::cout << "  SL distance to plane: " << SLDist << "\n";
+  if (limits.getStepSign()>0) std::cout << "  Direction is  pointing towards surface.\n";
+  else  std::cout << "  Direction is pointing away from surface.\n";
+#endif
+  // DONE calculate SL distance to surface
 
   //
-  // Limit maxStepArg according to curvature and magnetic field inhomogenities
+  // Limit according to curvature and magnetic field inhomogenities
+  // and improve stepsize estimation to reach plane
   //
-  // limit maxStepArg to the straight line distance to plane times some margin
-  // (only if plane is not finite, otherwise maxStepArg only limited by the field & curvature is needed to set Step = propDir_*maxStepArg)
-  static const double margin(1.5);
-  if (!plane.isFinite() && maxStepArg > fabs(margin*Step)) maxStepArg = fabs(margin*Step);
+  double fieldCurvLimit(SLDist); // signed!
+  std::map<double, double> distVsStep; // keys: straight line distances to plane; values: RK steps
 
-  while (maxStepArg > MINSTEP) {
+  while (fieldCurvLimit > MINSTEP) {
     M1x7 state7_temp(state7);
     M1x3 SA;
 
-    double q = RKPropagate(state7_temp, nullptr, SA, StepSign*maxStepArg, true);
+    double q = RKPropagate(state7_temp, nullptr, SA, limits.getStepSign()*fieldCurvLimit, true);
 #ifdef DEBUG
-    std::cerr << "  maxStepArg = " << maxStepArg << "; q = " << q  << " \n";
+    std::cerr << "  maxStepArg = " << fieldCurvLimit << "; q = " << q  << " \n";
 #endif
-    maxStepArg *= q * 0.95;
+    fieldCurvLimit *= q * 0.95;
 
-    if (q >= 1) break;
+    // remember steps and resulting SL distances to plane for stepsize improvement
+    // calculate distance to surface
+    Dist = SU[3] - (state7_temp[0] * SU[0] +
+                    state7_temp[1] * SU[1] +
+                    state7_temp[2] * SU[2]); // Distance between position and surface
+
+    An = state7_temp[3] * SU[0] +
+         state7_temp[4] * SU[1] +
+         state7_temp[5] * SU[2];    // An = dir * N;  component of dir normal to surface
+
+    distVsStep[Dist/An] = fieldCurvLimit;
+
+    if (fabs(q-1) < 0.25 || // good enough!
+        fabs(fieldCurvLimit) > limits.getLowestLimitVal()) // other limits are lower!
+      break;
   }
+  limits.setLimit(stp_fieldCurv, fieldCurvLimit);
+
+  double stepToPlane(limits.getLimitSigned(stp_planeRough));
+  if (distVsStep.size() > 0) {
+    stepToPlane = distVsStep.begin()->first + distVsStep.begin()->second;
+  }
+  limits.setLimit(stp_plane, stepToPlane);
 
 #ifdef DEBUG
-  std::cerr << "  limit from curvature and magnetic field inhomogenities: " << maxStepArg << "\n";
+  limits.Print();
 #endif
 
-  // limit Step to maxStepArg
-  if (fabs(Step) > maxStepArg) {
-    Step = StepSign*maxStepArg;
-    improveEstimation = false;
-    #ifdef DEBUG
-      std::cerr << "  improveEstimation = false;\n";
-    #endif
-  }
 
 
   //
@@ -1072,7 +1128,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
     #endif
   }
   // see if straight line approximation is ok
-  else if ( fabs(Step) < 0.2*maxStepArg ){
+  else if ( limits.getLimit(stp_plane) < 0.2*limits.getLimit(stp_fieldCurv) ){
     #ifdef DEBUG
       std::cerr << "  straight line approximation is fine.\n";
     #endif
@@ -1085,103 +1141,65 @@ double RKTrackRep::estimateStep(const M1x7& state7,
     }
     // if we are near the plane, but not pointing to the active area, make a big step!
     else {
-      Step = propDir_*maxStepArg;
-      improveEstimation = false;
+      limits.removeLimit(stp_plane);
+      limits.setStepSign(propDir_);
       #ifdef DEBUG
         std::cerr << "  we are near the plane, but not pointing to the active area. make a big step! \n";
       #endif
     }
   }
-  // propDir_ decides!
+  // propDir_ is set and we are not pointing to an active part of a plane -> propDir_ decides!
   else {
-    if (Step * propDir_ < 0){
-      Step = propDir_*maxStepArg;
-      improveEstimation = false;
+    if (limits.getStepSign() * propDir_ < 0){
+      limits.removeLimit(stp_plane);
+      limits.setStepSign(propDir_);
       #ifdef DEBUG
-        std::cerr << "  invert Step according to propDir_ and set Step to propDir_*maxStepArg. \n";
+        std::cerr << "  invert Step according to propDir_ and make a big step. \n";
       #endif
     }
   }
 
-  #ifdef DEBUG
-    std::cerr << "  guess for Step (signed): " << Step << "\n";
-  #endif
-
-  // re-check sign of Step
-  if (Step>=0) StepSign = 1;
-  else StepSign = -1;
+#ifdef DEBUG
+  limits.Print();
+#endif
 
 
 
   // call stepper and reduce stepsize if step not too small
   if (/*!fNoMaterial*/ true){
 
-    if(fabs(Step) > MINSTEP){ // only call stepper if step estimation big enough
-
+    if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
       M1x7 state7_temp(state7);
       for (unsigned int i=3; i<6; ++i)
-        state7_temp[i] *= StepSign;
+        state7_temp[i] *= limits.getStepSign();
 
       materials_.push_back( std::make_pair(MaterialProperties(), M1x7(state7)) );
-      double StepMat = MaterialEffects::getInstance()->stepper(this,
-                                                               state7_temp,
-                                                               maxStepArg,
-                                                               charge/state7[6], // |p|
-                                                               relMomLoss,
-                                                               pdgCode_,
-                                                               materials_.back().first,
-                                                               true);
-      if (fabs(Step) > StepMat) {
-        Step = StepSign*StepMat;
-        momLossExceeded = true;
-      }
+      MaterialEffects::getInstance()->stepper(this,
+                                              state7_temp,
+                                              charge/state7[6], // |p|
+                                              relMomLoss,
+                                              pdgCode_,
+                                              materials_.back().first,
+                                              limits,
+                                              true);
 
       #ifdef DEBUG
-        std::cerr << "  limit from stepper: " << Step << "\n";
+        std::cout << "after stepper.\n";
+        limits.Print();
       #endif
     }
   }
 
 
-  if (!momLossExceeded && improveEstimation){
-    atPlane = true;
-   #ifdef DEBUG
-     std::cerr << "  At plane. " << Step << "\n";
-   #endif
+  double finalStep = limits.getLowestLimitSignedVal();
 
-    // improve step estimation to surface according to curvature
-    if (fabs(Step) > 0.1*maxStepArg && fabs(Step) > MINSTEP){
-
-      M1x7 state7_temp(state7);
-      M1x3 SA;
-
-      RKPropagate(state7_temp, nullptr, SA, Step, true);
-
-      // calculate distance to surface
-      Dist = SU[3] - (state7_temp[0] * SU[0] +
-                      state7_temp[1] * SU[1] +
-                      state7_temp[2] * SU[2]); // Distance between position and surface
-
-      An = state7_temp[3] * SU[0] +
-           state7_temp[4] * SU[1] +
-           state7_temp[5] * SU[2];    // An = dir * N;  component of dir normal to surface
-
-      Step += Dist/An;
-
-      #ifdef DEBUG
-        std::cout << "  Improved step estimation taking curvature into account: " << Step << "\n";
-      #endif
-    }
-
-  }
-
-  materials_.back().first.setSegmentLength(Step);
+  materials_.back().first.setSegmentLength(finalStep);
 
   #ifdef DEBUG
-    std::cout << "  --> Step to be used: " << Step << "\n";
+    std::cout << "  --> Step to be used: " << finalStep << "\n";
   #endif
 
-  return Step;
+  return finalStep;
 
 }
 
@@ -1204,7 +1222,13 @@ TVector3 RKTrackRep::poca2Line(const TVector3& extr1,const TVector3& extr2,const
 }
 
 
-double RKTrackRep::Extrap(const DetPlane& plane, double charge, M1x7& state7, M7x7* cov, bool onlyOneStep, double maxStep) const {
+double RKTrackRep::Extrap(const DetPlane& plane,
+                          double charge,
+                          M1x7& state7,
+                          M7x7* cov,
+                          bool onlyOneStep,
+                          bool stopAtBoundary,
+                          double maxStep) const {
 
   static const unsigned int maxNumIt(500);
   unsigned int numIt(0);
@@ -1235,8 +1259,10 @@ double RKTrackRep::Extrap(const DetPlane& plane, double charge, M1x7& state7, M7
 
     // propagation
     bool checkJacProj = true;
+    StepLimits limits;
+    limits.setLimit(stp_sMaxArg, maxStep);
 
-    if( ! this->RKutta(plane, charge, state7, cov, coveredDistance, checkJacProj, noiseProjection, onlyOneStep, maxStep) ) {
+    if( ! RKutta(plane, charge, state7, cov, coveredDistance, checkJacProj, noiseProjection, limits, onlyOneStep) ) {
       Exception exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
@@ -1402,6 +1428,25 @@ double RKTrackRep::Extrap(const DetPlane& plane, double charge, M1x7& state7, M7
   return sumDistance;
 }
 
+
+void RKTrackRep::checkCache(const StateOnPlane* state) const {
+  if (state->getRep() != this){
+    Exception exc("RKTrackRep::checkCache ==> state is defined wrt. another TrackRep",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  if (state->getPlane() == lastStartState_.getPlane() &&
+      state->getState() == lastStartState_.getState()) {
+    useCache_ = true;
+  }
+  else {
+    useCache_ = false;
+    materials_.clear();
+
+    lastStartState_.setStatePlane(state->getState(), state->getPlane());
+    initArrays();
+  }
+}
 
 
 } /* End of namespace genfit */

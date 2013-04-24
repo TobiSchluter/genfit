@@ -17,7 +17,7 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/** @addtogroup genfit
+/** @addtogroup RKTrackRep
  * @{
  */
 
@@ -27,6 +27,7 @@
 #include <AbsTrackRep.h>
 
 #include "RKTools.h"
+#include "StepLimits.h"
 
 
 namespace genfit {
@@ -38,7 +39,7 @@ class RKTrackRep : public AbsTrackRep {
   RKTrackRep();
   RKTrackRep(int pdgCode, char propDir = 0);
 
-  virtual ~RKTrackRep() {;}
+  virtual ~RKTrackRep();
 
   virtual AbsTrackRep* clone() const {return new RKTrackRep(*this);}
 
@@ -46,7 +47,7 @@ class RKTrackRep : public AbsTrackRep {
    * and, via reference, the extrapolated statePrediction.
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    */
-  virtual double extrapolateToPlane(const StateOnPlane& stateInput,
+  virtual double extrapolateToPlane(const StateOnPlane* stateInput,
       StateOnPlane& statePrediction,
       SharedPlanePtr plane,
       bool stopAtBoundary = false) const override;
@@ -130,7 +131,7 @@ class RKTrackRep : public AbsTrackRep {
 
  private:
 
-  void initArrays();
+  void initArrays() const;
 
   void getState7(const StateOnPlane* state, M1x7& state7) const;
   void getState5(StateOnPlane* state, const M1x7& state7) const;
@@ -169,17 +170,15 @@ class RKTrackRep : public AbsTrackRep {
               double& coveredDistance,
               bool& checkJacProj,
               TMatrixD& noiseProjection,
-              bool onlyOneStep = false,
-              double maxStep = 1.E99) const;
+              StepLimits& limits,
+              bool onlyOneStep = false) const;
 
   double estimateStep(const M1x7& state7,
                       const M1x4& SU,
                       const DetPlane& plane,
                       const double& charge,
                       double& relMomLoss,
-                      bool& momLossExceeded,
-                      bool& atPlane,
-                      double maxStep = 1.E99) const;
+                      StepLimits& limits) const;
 
   TVector3 poca2Line(const TVector3& extr1,
                      const TVector3& extr2,
@@ -200,7 +199,10 @@ class RKTrackRep : public AbsTrackRep {
                 M1x7& state7,
                 M7x7* cov=NULL,
                 bool onlyOneStep = false,
+                bool stopAtBoundary = false,
                 double maxStep = 1.E99) const;
+
+  void checkCache(const StateOnPlane* state) const;
 
 
 
@@ -209,6 +211,7 @@ class RKTrackRep : public AbsTrackRep {
   mutable TMatrixDSym noise_; //! noise matrix of the last extrapolation
   mutable std::vector< std::pair< MaterialProperties, M1x7 > > materials_; //! materials crossed in the last extrapolation, together with 7D states at start of each step
 
+  mutable bool useCache_; //! use cached materials_ for extrapolation
 
   // auxiliary variables and arrays
   // needed in Extrap()

@@ -21,8 +21,8 @@
 
 namespace genfit {
 
-StateOnPlane::StateOnPlane() :
-  state_(0), auxInfo_(0), sharedPlane_(), rep_(nullptr)
+StateOnPlane::StateOnPlane(AbsTrackRep* rep) :
+  state_(0), auxInfo_(0), sharedPlane_(), rep_(rep)
 {
   ;
 }

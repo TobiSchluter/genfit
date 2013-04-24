@@ -27,7 +27,7 @@ class AbsTrackRep {
    * and, via reference, the extrapolated statePrediction.
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    */
-  virtual double extrapolateToPlane(const StateOnPlane& stateInput,
+  virtual double extrapolateToPlane(const StateOnPlane* stateInput,
       StateOnPlane& statePrediction,
       SharedPlanePtr plane,
       bool stopAtBoundary = false) const = 0;

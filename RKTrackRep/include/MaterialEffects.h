@@ -94,14 +94,14 @@ public:
   /**  The stepper returns the maximum length that the particle may travel, so that a specified relative momentum loss will not be exceeded,
    *   or the next material boundary is reached. The material crossed are stored together with their stepsizes.
   */
-  double stepper(const RKTrackRep* rep,
-                 M1x7& state7,
-                 double sMax, // maximum step. unsigned!
-                 const double& mom, // momentum
-                 double& relMomLoss, // relative momloss for the step will be added
-                 const int& pdg,
-                 MaterialProperties& currentMaterial,
-                 bool varField = true);
+  void stepper(const RKTrackRep* rep,
+               M1x7& state7,
+               const double& mom, // momentum
+               double& relMomLoss, // relative momloss for the step will be added
+               const int& pdg,
+               MaterialProperties& currentMaterial,
+               StepLimits& limits,
+               bool varField = true);
 
 
  private:

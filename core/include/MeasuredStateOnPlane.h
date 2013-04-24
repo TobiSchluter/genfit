@@ -46,6 +46,8 @@ class MeasuredStateOnPlane : public StateOnPlane {
   const TMatrixDSym& getCov() const {return cov_;}
   TMatrixDSym& getCov() {return cov_;}
 
+  virtual bool hasCovariance() const override {return true;}
+
   void setStateCov(const TVectorD& state, const TMatrixDSym& cov) {state_ = state; cov_ = cov;}
   void setStateCovPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane) {setStatePlane(state, plane); cov_ = cov;}
   void setCov(const TMatrixDSym& cov) {cov_ = cov;}
