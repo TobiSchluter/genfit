@@ -1013,7 +1013,12 @@ bool RKTrackRep::RKutta(const DetPlane& plane,
 
       TDecompSVD invertAlgo(noiseProjection);
 
-  bool status = invertAlgo.Invert(noiseProjection);
+      bool status = invertAlgo.Invert(noiseProjection);
+      if(status == 0){
+        Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
+        e.setFatal();
+        throw e;
+      }
 //     std::cerr << "The inverse of the unprojected jac is:" << std::endl;
 //       noiseProjection.Print();
       noiseProjection = projectedJac * noiseProjection;
@@ -1360,7 +1365,7 @@ double RKTrackRep::Extrap(const DetPlane& plane,
   //std::cerr << "and finally the projecte noise is as root matrix: " << std::endl;
   //projectedNoise.Print();
 
-  double* projectedNoisePtr = projectedNoise.GetMatrixArray();
+  //double* projectedNoisePtr = projectedNoise.GetMatrixArray();
   // XXX std::cerr << "projected noise in 7D before it gets added" << std::endl;
   // XXX RKTools::printDim(projectedNoisePtr,7,7);
   // XXX std::cerr << "projected noise in 5D before it gets added" << std::endl;

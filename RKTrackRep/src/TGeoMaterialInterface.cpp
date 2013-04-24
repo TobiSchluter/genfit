@@ -70,7 +70,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
                                           bool varField){
 
   const double delta(1.E-2); // cm
-  double s(0), safety(0), lastSafety(0), slDist(0), lastSlDist(0);
+  double s(0), safety(0), slDist(0);
   M1x3 SA;
   M1x7 stateOrig(state7);
 
@@ -128,9 +128,6 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 #ifdef DEBUG
     std::cout << "   Material after step: " << gGeoManager->GetCurrentVolume()->GetMedium()->GetName() << "\n";
 #endif
-
-    lastSafety = safety;
-    lastSlDist = slDist;
 
   }
 
