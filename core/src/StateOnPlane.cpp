@@ -21,6 +21,7 @@
 #include "AbsTrackRep.h"
 
 #include <assert.h>
+#include <iostream>
 
 namespace genfit {
 
@@ -37,6 +38,18 @@ StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr plane, AbsTrack
 {
   assert(rep != nullptr);
   assert(state_.GetNrows() == rep->getDim());
+}
+
+void StateOnPlane::Print(Option_t* option) const {
+  std::cout << "genfit::StateOnPlane ";
+  std::cout << " state vector: "; state_.Print();
+  if (sharedPlane_ != nullptr) {
+    std::cout << " defined in plane "; sharedPlane_->Print();
+    TVector3 pos, mom;
+    getRep()->getPosMom(this, pos, mom);
+    std::cout << " 3D position: "; pos.Print();
+    std::cout << " 3D momentum: "; mom.Print();
+  }
 }
 
 } /* End of namespace genfit */

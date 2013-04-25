@@ -445,7 +445,7 @@ void RKTools::printDim(const double* mat, unsigned int dimX, unsigned int dimY){
   std::cout << dimX << " x " << dimY << " matrix as follows: \n";
   for (unsigned int i=0; i< dimX; ++i){
     for (unsigned int j=0; j< dimY; ++j){
-      printf("  %11.5g", mat[i*dimX+j]);
+      printf("  %11.5g", mat[i*dimY+j]);
     }
     std::cout<<"\n";
   }

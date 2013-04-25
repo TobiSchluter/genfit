@@ -27,31 +27,26 @@ class AbsTrackRep {
    * and, via reference, the extrapolated statePrediction.
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    */
-  virtual double extrapolateToPlane(const StateOnPlane* stateInput,
-      StateOnPlane& statePrediction,
+  virtual double extrapolateToPlane(StateOnPlane* state,
       SharedPlanePtr plane,
       bool stopAtBoundary = false) const = 0;
 
-  virtual double extrapolateToLine(const StateOnPlane* stateInput,
-      StateOnPlane* statePrediction,
+  virtual double extrapolateToLine(StateOnPlane* state,
       const TVector3& linePoint,
       const TVector3& lineDirection,
       bool stopAtBoundary = false) const = 0;
 
-  virtual double extrapolateToPoint(const StateOnPlane* stateInput,
-      StateOnPlane* statePrediction,
+  virtual double extrapolateToPoint(StateOnPlane* state,
       const TVector3& point,
       bool stopAtBoundary = false) const = 0;
 
-  virtual double extrapolateToCylinder(const StateOnPlane* stateInput,
-      StateOnPlane* statePrediction,
+  virtual double extrapolateToCylinder(StateOnPlane* state,
       const TVector3& linePoint,
       const TVector3& lineDirection,
       double radius,
       bool stopAtBoundary = false) const = 0;
 
-  virtual double extrapolateToSphere(const StateOnPlane* stateInput,
-      StateOnPlane* statePrediction,
+  virtual double extrapolateToSphere(StateOnPlane* state,
       const TVector3& point,
       double radius,
       bool stopAtBoundary = false) const = 0;

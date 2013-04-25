@@ -38,7 +38,7 @@ namespace genfit {
 class ConstField : public AbsBField {
  public:
   //! define the constant field in this ctor
-  ConstField(double b1,double b2, double b3)
+  ConstField(double b1, double b2, double b3)
     : field_(b1, b2, b3)
   { ; }
 

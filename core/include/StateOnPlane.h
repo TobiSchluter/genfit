@@ -61,6 +61,8 @@ class StateOnPlane : public TObject {
   void setStatePlane(const TVectorD& state, SharedPlanePtr plane) {state_ = state; sharedPlane_ = plane;}
   void setAuxInfo(const TVectorD& auxInfo) {auxInfo_ = auxInfo;}
 
+  virtual void Print(Option_t* option = "") const override;
+
  protected:
 
   TVectorD state_; // state vector

@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <iostream>
 #include <limits>
 
 namespace genfit {
@@ -54,18 +55,13 @@ std::pair<StepLimitType, double> StepLimits::getLowestLimit(double margin) const
     return std::pair<StepLimitType, double>(stp_noLimit, std::numeric_limits<double>::max());
   }
 
-  auto itMedium = limits_.upper_bound(stp_planeRough);
+  auto itMedium = limits_.upper_bound(stp_noLimit);
   auto itHard   = limits_.upper_bound(stp_sMax);
-
-  // case 1: only soft limits
-  if (itMedium == limits_.end() && itHard == limits_.end()) {
-    return *min_element(limits_.begin(), limits_.end(), pairCompare );
-  }
 
   // find minimum medium limit
   auto itMinMedium = *min_element(itMedium, itHard, pairCompare );
 
-  // case 2: medium limits, no hard limits -> ignore soft limits
+  // case 2: medium limits, no hard limits
   if (itHard == limits_.end()) {
     return itMinMedium;
   }
@@ -121,15 +117,33 @@ void StepLimits::setStepSign(double signedVal) {
 
 
 void StepLimits::Print() {
-  /*std::cout << "Stepsize has been limited due to following reasons: \n";
-  if (sMax) std::cout << " sMax: stepsize only limited by SMax defined in #estimateStep() \n";
-  if (sMaxArg) std::cout << " sMaxArg: stepsize limited by argument maxStepArg passed to #estimateStep()\n";
-  if (planeDist) std::cout << " planeDist: stepsize limited due to first estimation of SL distance to destination plane\n";
-  if (fieldCurv) std::cout << " fieldCurv: stepsize limited by curvature and magnetic field inhomogenities\n";
-  if (minStep) std::cout << " minStep: stepsize set to minimum value by stepper\n";
-  if (boundary) std::cout << " boundary: stepsize limited by stepper because material boundary is encountered\n";
-  if (momLoss) std::cout << " boundary: stepsize limited by stepper because maximum momLoss is reached\n";
-  if (atPlane) std::cout << " atPlane: stepsize limited because destination plane is reached\n";*/
+  for (auto it = limits_.begin(); it != limits_.end(); ++it) {
+    std::cout << "   | " << it->second << " cm due to ";
+    switch (it->first) {
+    case stp_noLimit:
+      break;
+    case stp_fieldCurv:
+      std::cout << "stp_fieldCurv (medium limit): stepsize limited by curvature and magnetic field inhomogenities";
+      break;
+    case stp_momLoss:
+      std::cout << "stp_momLoss (medium limit): stepsize limited by stepper because maximum momLoss is reached";
+      break;
+    case stp_sMax:
+      std::cout << "stp_sMax (medium limit): stepsize limited by SMax defined in #estimateStep()";
+      break;
+    case stp_sMaxArg:
+      std::cout << "stp_sMaxArg (hard limit): stepsize limited by argument maxStepArg passed to #estimateStep()";
+      break;
+    case stp_boundary:
+      std::cout << "stp_boundary (hard limit): stepsize limited by stepper because material boundary is encountered";
+      break;
+    case stp_plane:
+      std::cout << "stp_plane (hard limit):  stepsize limited because destination plane is reached";
+      break;
+    }
+    std::cout << "\n";
+  }
+  std::cout << "\n";
 }
 
 } /* End of namespace genfit */

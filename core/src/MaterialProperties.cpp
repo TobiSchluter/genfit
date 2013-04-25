@@ -95,11 +95,12 @@ void MaterialProperties::setMaterialProperties(const double& density,
 
 
 void MaterialProperties::Print(const Option_t*) const {
-  std::cout << "Density = " << density_ << ", " <<
-               "Z = " << Z_ << ", " <<
-               "A = " << A_ << ", " <<
-               "radiationLength = " << radiationLength_ << ", " <<
-               "mEE = " << mEE_ << "\n";
+  std::cout << "Density = " << density_ << ", \t" <<
+               "Z = " << Z_ << ", \t" <<
+               "A = " << A_ << ", \t" <<
+               "radiationLength = " << radiationLength_ << ", \t" <<
+               "mEE = " << mEE_ << ", \t" <<
+               "segmentLength = " << segmentLength_ << "\n";
 }
 
 

@@ -31,7 +31,6 @@ namespace genfit {
 enum StepLimitType {
   // soft limits (only rough estimation, can go beyond safely)
   stp_noLimit,    // only for internal use
-  stp_planeRough, // stepsize limited due to first estimation of SL distance to destination plane
 
   // medium limits (can go a bit further if e.g. plane or boundary will be reached)
   stp_fieldCurv,  // stepsize limited by curvature and magnetic field inhomogenities
@@ -59,7 +58,7 @@ class StepLimits {
     return stepSign_*getLimit(type);
   }
   /**
-   * Get the lowest limit. If medium limits are there, soft limits will be ignored.
+   * Get the lowest limit.
    * If hard limits are there, medium limits can be exceeded by up to #margin
    * (default margin is 0.1, i.e. medium limits can be exceeded by up to 10%).
    * If no limit has been set yet, return std::pair<stp_noLimit, std::numeric_limits<double>::max>.

@@ -31,7 +31,7 @@
 #include <TMath.h>
 
 
-//#define DEBUG
+#define DEBUG
 
 namespace genfit {
 
@@ -108,6 +108,7 @@ void MaterialEffects::setMscModel(const std::string& modelName)
 
 
 double MaterialEffects::effects(const std::vector< std::pair< MaterialProperties, M1x7 > >& points,
+                                unsigned int materialsFXIndex,
                                 const double& mom,
                                 const int& pdg,
                                 M7x7* noise,
@@ -130,7 +131,7 @@ double MaterialEffects::effects(const std::vector< std::pair< MaterialProperties
   double momLoss = 0.;
   unsigned int nPoints(points.size());
 
-  for (unsigned int i = 0; i < nPoints; ++i) { // loop over points
+  for (unsigned int i = materialsFXIndex; i < nPoints; ++i) { // loop over points
 
     double realPath = points[i].first.getSegmentLength();
     double stepSign(1.);
@@ -202,50 +203,53 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
     return;
 
 
-  // limit due to momloss
 
   pdg_ = pdg;
-  double X(minStep);
-  double relMomLossStep(0);
   getParticleParameters(mom);
 
-  materialInterface_->initTrack(state7[0] + minStep * state7[3], state7[1] + minStep * state7[4], state7[2] + minStep * state7[5],
-                                state7[3],                       state7[4],                       state7[5]);
+  // make minStep
+  state7[0] += minStep * state7[3];
+  state7[1] += minStep * state7[4];
+  state7[2] += minStep * state7[5];
+
+  materialInterface_->initTrack(state7[0], state7[1], state7[2],
+                                state7[3], state7[4], state7[5]);
 
   materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
   currentMaterial.setMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
 
-  stepSize_ = sMax-X; // set a stepsize for momLoss calculation
 
-  if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
-    if (energyLossBetheBloch_) relMomLossStep += this->energyLossBetheBloch(mom) / mom;
-    if (energyLossBrems_)      relMomLossStep += this->energyLossBrems(mom) / mom;
-  }
-
-  if (relMomLoss + relMomLossStep > maxRelMomLoss) {
 #ifdef DEBUG
-    std::cerr << "     momLoss exceeded \n";
+    std::cerr << "     currentMaterial "; currentMaterial.Print();
 #endif
 
-    double fraction = (maxRelMomLoss - relMomLoss) / relMomLossStep;
-    X += fraction * stepSize_;
-    relMomLoss = maxRelMomLoss;
+  // limit due to momloss
+  double relMomLossPer_cm(0);
+  stepSize_ = 1; // set stepsize for momLoss calculation
 
-    limits.setLimit(stp_momLoss, X);
+  if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
+    if (energyLossBetheBloch_) relMomLossPer_cm += this->energyLossBetheBloch(mom) / mom;
+    if (energyLossBrems_)      relMomLossPer_cm += this->energyLossBrems(mom) / mom;
   }
-  else
-    relMomLoss += relMomLossStep;
 
+  double maxStepMomLoss = (maxRelMomLoss - relMomLoss) / relMomLossPer_cm;
+  limits.setLimit(stp_momLoss, maxStepMomLoss);
+
+#ifdef DEBUG
+    std::cerr << "     momLoss exceeded after a step of " <<  maxStepMomLoss << "\n";
+#endif
 
 
   // now look for boundaries
   sMax = limits.getLowestLimitVal();
 
-  stepSize_ = materialInterface_->findNextBoundary(rep, state7, sMax, varField);
+  stepSize_ = minStep + materialInterface_->findNextBoundary(rep, state7, sMax, varField);
   if (stepSize_ < sMax) {
     limits.setLimit(stp_boundary, stepSize_);
   }
 
+
+  relMomLoss += relMomLossPer_cm * limits.getLowestLimitVal();
 }
 
 
@@ -374,7 +378,7 @@ void MaterialEffects::noiseCoulomb(const double& mom,
     double logCor = (1 + 0.038 * log(stepOverRadLength));
     sigma2 = 0.0136 * 0.0136 * charge_ * charge_ / (beta_ * beta_ * mom * mom) * stepOverRadLength * logCor * logCor;
   }
-  assert(sigma2 > 0.0);
+  assert(sigma2 >= 0.0);
   //XXX std::cerr << "MaterialEffects::noiseCoulomb the MSC variance is " << sigma2 << std::endl;
 
   double noiseAfter[7 * 7]; // will hold the new MSC noise to cause by the current stepSize_ length

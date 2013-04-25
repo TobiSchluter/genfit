@@ -7,8 +7,10 @@
 #include <AbsFitterInfo.h>
 #include <AbsMeasurement.h>
 #include <AbsTrackRep.h>
+#include <ConstField.h>
 #include <DetPlane.h>
 #include <Exception.h>
+#include <FieldManager.h>
 #include <KalmanFittedStateOnPlane.h>
 #include <KalmanFitterInfo.h>
 #include <MaterialInfo.h>
@@ -20,6 +22,7 @@
 #include <ProlateSpacePointMeasurement.h>
 #include <RectangularFinitePlane.h>
 #include <ReferenceStateOnPlane.h>
+#include <SharedPlanePtr.h>
 #include <SpacePointMeasurement.h>
 #include <StateOnPlane.h>
 #include <Tools.h>
@@ -69,10 +72,18 @@ void handler(int sig) {
 
 
 int main() {
-  signal(SIGSEGV, handler);   // install our handler
-  std::cerr<<"main"<<std::endl;
 
+  const double BField = 0.;       // kGauss
   const bool debug = true;
+
+
+  signal(SIGSEGV, handler);   // install our handler
+
+  // init geometry and mag. field
+  TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
+  TGeoManager::Import("genfitGeom.root");
+  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,BField));
+  genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
   /*genfit::Track* testTrack = new genfit::Track();
 
@@ -96,13 +107,28 @@ int main() {
   rep = new genfit::RKTrackRep(211);
 
   TVector3 pos(0,0,0);
-  TVector3 mom(1,1,1);
+  TVector3 mom(0,0.5,0.);
 
   genfit::StateOnPlane* state = new genfit::StateOnPlane(rep);
   rep->setPosMom(state, pos, mom);
+  state->Print();
 
-  rep->getPos(state).Print();
-  rep->getMom(state).Print();
+  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,10,0), TVector3(0,-1,0)));
+
+  double extrapLen(0);
+  try {
+    extrapLen = rep->extrapolateToPlane(state, plane);
+  }
+  catch (genfit::Exception& e) {
+    std::cerr << e.what();
+  }
+
+  std::cout << "extrapLen = " << extrapLen << "\n";
+
+  state->Print();
+
+
+
 
 
 

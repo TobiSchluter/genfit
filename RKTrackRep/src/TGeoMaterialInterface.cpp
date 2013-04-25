@@ -26,7 +26,7 @@
 #include <assert.h>
 #include <math.h>
 
-//#define DEBUG
+#define DEBUG
 
 
 namespace genfit {
@@ -79,7 +79,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
   while (s < sMax) {
 
     if (++it > maxIt){
-      Exception exc("TGeoMaterialInterface::findNextBoundaryAndStep ==> maximum number of iterations exceeded",__LINE__,__FILE__);
+      Exception exc("TGeoMaterialInterface::findNextBoundary ==> maximum number of iterations exceeded",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
     }
@@ -90,7 +90,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 
 
 #ifdef DEBUG
-    std::cout << "   TGeoMaterialInterface::findNextBoundaryAndStep: Iteration " << it << ". Safety = " << safety << ". slDist = " << slDist << ". Step so far = " << s << "\n";
+    std::cout << "   TGeoMaterialInterface::findNextBoundary: Iteration " << it << ". Safety = " << safety << ". slDist = " << slDist << ". Step so far = " << s << "\n";
     std::cout << "   Material before step: " << gGeoManager->GetCurrentVolume()->GetMedium()->GetName() << "\n";
 #endif
 
@@ -103,7 +103,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 
     if (slDist < delta) { // very near the boundary
 #ifdef DEBUG
-      std::cout << "   very near the boundary -> return s + slDist \n";
+      std::cout << "   very near the boundary -> return s + slDist = " << s + slDist << "\n";
 #endif
       return s + slDist;
     }
@@ -119,6 +119,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
        std::cout << "   make RKutta step \n";
 #endif
       s += safety;
+      s *= 0.99999;
       state7 = stateOrig; // propagate complete way from original start
       rep->RKPropagate(state7, NULL, SA, s, varField);
       initTrack(state7[0], state7[1], state7[2],  state7[3], state7[4], state7[5]);

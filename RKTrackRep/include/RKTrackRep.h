@@ -47,31 +47,26 @@ class RKTrackRep : public AbsTrackRep {
    * and, via reference, the extrapolated statePrediction.
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    */
-  virtual double extrapolateToPlane(const StateOnPlane* stateInput,
-      StateOnPlane& statePrediction,
+  virtual double extrapolateToPlane(StateOnPlane* state,
       SharedPlanePtr plane,
       bool stopAtBoundary = false) const override;
 
-  virtual double extrapolateToLine(const StateOnPlane* stateInput,
-      StateOnPlane* statePrediction,
+  virtual double extrapolateToLine(StateOnPlane* state,
       const TVector3& linePoint,
       const TVector3& lineDirection,
       bool stopAtBoundary = false) const override;
 
-  virtual double extrapolateToPoint(const StateOnPlane* stateInput,
-      StateOnPlane* statePrediction,
+  virtual double extrapolateToPoint(StateOnPlane* state,
       const TVector3& point,
       bool stopAtBoundary = false) const override;
 
-  virtual double extrapolateToCylinder(const StateOnPlane* stateInput,
-      StateOnPlane* statePrediction,
+  virtual double extrapolateToCylinder(StateOnPlane* state,
       const TVector3& linePoint,
       const TVector3& lineDirection,
       double radius,
       bool stopAtBoundary = false) const override;
 
-  virtual double extrapolateToSphere(const StateOnPlane* stateInput,
-      StateOnPlane* statePrediction,
+  virtual double extrapolateToSphere(StateOnPlane* state,
       const TVector3& point,
       double radius,
       bool stopAtBoundary = false) const override;
@@ -136,7 +131,7 @@ class RKTrackRep : public AbsTrackRep {
   void initArrays() const;
 
   void getState7(const StateOnPlane* state, M1x7& state7) const;
-  void getState5(StateOnPlane* state, const M1x7& state7) const;
+  void getState5(StateOnPlane* state, const M1x7& state7) const; // state7 must already lie on plane of state!
 
   void transformPM7(const MeasuredStateOnPlane* state,
                     M7x7& out7x7,
@@ -212,6 +207,7 @@ class RKTrackRep : public AbsTrackRep {
   mutable TMatrixD jacobian_; //! jacobian of the last extrapolation
   mutable TMatrixDSym noise_; //! noise matrix of the last extrapolation
   mutable std::vector< std::pair< MaterialProperties, M1x7 > > materials_; //! materials crossed in the last extrapolation, together with 7D states at start of each step
+  mutable unsigned int materialsFXIndex_; //! index of materials_ where effects have to start calculating
 
   mutable bool useCache_; //! use cached materials_ for extrapolation
 
