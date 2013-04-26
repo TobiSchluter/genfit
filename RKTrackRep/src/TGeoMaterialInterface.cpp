@@ -66,7 +66,7 @@ TGeoMaterialInterface::getMaterialParameters(double& density,
 double
 TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
                                           M1x7& state7,
-                                          double sMax,
+                                          double sMax, // signed
                                           bool varField){
 
   const double delta(1.E-2); // cm
@@ -74,9 +74,13 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
   M1x3 SA;
   M1x7 stateOrig(state7);
 
+  int stepSign(1);
+  if (sMax < 0) stepSign = -1;
+
   unsigned int maxIt(300), it(0);
 
-  while (s < sMax) {
+
+  while (true) {
 
     if (++it > maxIt){
       Exception exc("TGeoMaterialInterface::findNextBoundary ==> maximum number of iterations exceeded",__LINE__,__FILE__);
@@ -84,9 +88,9 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
       throw exc;
     }
 
-    safety = gGeoManager->Safety(); // distance to closest boundary
+    safety = gGeoManager->Safety(); // unsigned; distance to closest boundary
     gGeoManager->FindNextBoundary();
-    slDist = gGeoManager->GetStep(); // straight line distance to next boundary along track direction
+    slDist = gGeoManager->GetStep(); // unsigned; straight line distance to next boundary along step direction
 
 
 #ifdef DEBUG
@@ -94,7 +98,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
     std::cout << "   Material before step: " << gGeoManager->GetCurrentVolume()->GetMedium()->GetName() << "\n";
 #endif
 
-    if (s + safety > sMax) { // next boundary is further away than sMax -> \return sMax
+    if (fabs(s + stepSign*safety) > fabs(sMax)) { // next boundary is further away than sMax -> \return sMax
 #ifdef DEBUG
       std::cout << "   next boundary is further away than sMax \n";
 #endif
@@ -103,39 +107,33 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 
     if (slDist < delta) { // very near the boundary
 #ifdef DEBUG
-      std::cout << "   very near the boundary -> return s + slDist = " << s + slDist << "\n";
+      std::cout << "   very near the boundary -> return s + stepSign*slDist; = " << s + stepSign*slDist << "\n";
 #endif
-      return s + slDist;
+      return s + stepSign*slDist;
     }
     else if (safety < delta) {
 #ifdef DEBUG
        std::cout << "   make straight line step \n";
 #endif
-      gGeoManager->FindNextBoundaryAndStep(delta); // make a minimum step of delta
-      s += delta;
+      gGeoManager->FindNextBoundaryAndStep(delta); // make a minimum step of delta (delta must be unsigned here, remember we initialized geoManager with adjusted direction!)
+      s += stepSign*delta;
     }
     else {
 #ifdef DEBUG
-       std::cout << "   make RKutta step \n";
+      std::cout << "   make RKutta step \n";
 #endif
-      s += safety;
-      s *= 0.99999;
+      s += stepSign*safety;
       state7 = stateOrig; // propagate complete way from original start
       rep->RKPropagate(state7, NULL, SA, s, varField);
-      initTrack(state7[0], state7[1], state7[2],  state7[3], state7[4], state7[5]);
+      initTrack(state7[0], state7[1], state7[2],  stepSign*state7[3], stepSign*state7[4], stepSign*state7[5]);
+      RKTools::printDim(state7.data(), 1,7);
     }
-
 
 #ifdef DEBUG
     std::cout << "   Material after step: " << gGeoManager->GetCurrentVolume()->GetMedium()->GetName() << "\n";
 #endif
 
   }
-
-#ifdef DEBUG
-  std::cout << "   return sMax \n";
-#endif
-  return sMax;
 
 }
 

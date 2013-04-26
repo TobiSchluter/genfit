@@ -1080,7 +1080,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
               state7[4]*SU[1] +
               state7[5]*SU[2];              // An = dir * N;  component of dir normal to surface
 
-  double SLDist;
+  double SLDist; // signed
   if (fabs(An) > 1.E-10)
     SLDist = Dist/An;
   else {
@@ -1103,10 +1103,10 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   // Limit according to curvature and magnetic field inhomogenities
   // and improve stepsize estimation to reach plane
   //
-  double fieldCurvLimit(limits.getLowestLimitSignedVal()); // signed!
+  double fieldCurvLimit(limits.getLowestLimitSignedVal()); // signed
   std::map<double, double> distVsStep; // keys: straight line distances to plane; values: RK steps
 
-  while (fieldCurvLimit > MINSTEP) {
+  while (fabs(fieldCurvLimit) > MINSTEP) {
     M1x7 state7_temp(state7);
     M1x3 SA;
 
@@ -1191,10 +1191,8 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   materials_.push_back( std::make_pair(MaterialProperties(), M1x7(state7)) );
   if (/*!fNoMaterial*/ true){
 
-    //if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
+    if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
       M1x7 state7_temp(state7);
-      for (unsigned int i=3; i<6; ++i)
-        state7_temp[i] *= limits.getStepSign();
 
       MaterialEffects::getInstance()->stepper(this,
                                               state7_temp,
@@ -1204,7 +1202,12 @@ double RKTrackRep::estimateStep(const M1x7& state7,
                                               materials_.back().first,
                                               limits,
                                               true);
-    //}
+    }
+    else { //assume material has not changed
+      if  (materials_.size()>1) {
+        materials_.back().first = (materials_.end()-2)->first;
+      }
+    }
   }
 
 #ifdef DEBUG

@@ -80,7 +80,7 @@ std::pair<StepLimitType, double> StepLimits::getLowestLimit(double margin) const
 
 void StepLimits::setLimit(StepLimitType type, double value) {
   assert (type != stp_noLimit);
-  limits_[type] = value;
+  limits_[type] = fabs(value);
 }
 
 

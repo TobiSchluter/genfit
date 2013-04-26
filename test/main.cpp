@@ -70,13 +70,118 @@ void handler(int sig) {
   exit(1);
 }
 
+int randomPdg() {
+  int pdg;
+
+  switch(int(gRandom->Uniform(8))) {
+  case 1:
+    pdg = -11; break;
+  case 2:
+    pdg = 11; break;
+  case 3:
+    pdg = 13; break;
+  case 4:
+    pdg = -13; break;
+  case 5:
+    pdg = 211; break;
+  case 6:
+    pdg = -211; break;
+  case 7:
+    pdg = 2212; break;
+  default:
+    pdg = 211;
+  }
+
+  return pdg;
+}
+
+int randomSign() {
+  if (gRandom->Uniform(1) > 0.5)
+    return 1;
+  return -1;
+}
+
+bool compareForthBackExtrapolation() {
+
+  double epsilon = 1.E-7;
+
+  int pdg = randomPdg();
+  genfit::AbsTrackRep* rep;
+  rep = new genfit::RKTrackRep(pdg);
+
+  //TVector3 pos(0,0,0);
+  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,0.);
+  mom *= randomSign();
+
+
+  genfit::StateOnPlane state(rep);
+  rep->setPosMom(&state, pos, mom);
+
+  genfit::SharedPlanePtr origPlane = state.getPlane();
+  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,randomSign()*10,0), TVector3(0,randomSign()*1,0)));
+
+  genfit::StateOnPlane origState(state);
+
+  double extrapLen(0);
+  try {
+    extrapLen = rep->extrapolateToPlane(&state, plane);
+  }
+  catch (genfit::Exception& e) {
+    std::cerr << e.what();
+
+    delete rep;
+    return true;
+  }
+
+  std::cout << "extrapLen = " << extrapLen << "\n";
+
+  double backExtrapLen(0);
+  try {
+    backExtrapLen = rep->extrapolateToPlane(&state, origPlane);
+  }
+  catch (genfit::Exception& e) {
+    std::cerr << e.what();
+
+    delete rep;
+    return true;
+  }
+
+
+  if ((rep->getPos(&origState) - rep->getPos(&state)).Mag() > epsilon ||
+      (rep->getMom(&origState) - rep->getMom(&state)).Mag() > epsilon ||
+      fabs(extrapLen + backExtrapLen) > epsilon) {
+
+    origState.Print();
+    state.Print();
+
+    std::cerr << "pos difference = " << (rep->getPos(&origState) - rep->getPos(&state)).Mag() << "\n";
+    std::cerr << "mom difference = " << (rep->getMom(&origState) - rep->getMom(&state)).Mag() << "\n";
+    std::cerr << "len difference = " << extrapLen + backExtrapLen << "\n";
+
+    std::cerr << std::endl;
+
+    delete rep;
+    return false;
+  }
+
+  delete rep;
+  return true;
+
+}
+
+//=====================================================================================================================
+//=====================================================================================================================
+//=====================================================================================================================
+//=====================================================================================================================
+
 
 int main() {
 
   const double BField = 15.;       // kGauss
   const bool debug = true;
 
-
+  gRandom->SetSeed(10);
   signal(SIGSEGV, handler);   // install our handler
 
   // init geometry and mag. field
@@ -84,6 +189,12 @@ int main() {
   TGeoManager::Import("genfitGeom.root");
   genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,BField));
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
+
+  genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(false);
+  genfit::MaterialEffects::getInstance()->setNoiseBetheBloch(false);
+  genfit::MaterialEffects::getInstance()->setNoiseCoulomb(false);
+  genfit::MaterialEffects::getInstance()->setEnergyLossBrems(false);
+  genfit::MaterialEffects::getInstance()->setNoiseBrems(false);
 
   /*genfit::Track* testTrack = new genfit::Track();
 
@@ -102,45 +213,20 @@ int main() {
   tree->Write();
   file->Close();*/
 
-
-  genfit::AbsTrackRep* rep;
-  rep = new genfit::RKTrackRep(211);
-
-  TVector3 pos(0,0,0);
-  TVector3 mom(0,0.5,0.);
-
-  genfit::StateOnPlane* state = new genfit::StateOnPlane(rep);
-  rep->setPosMom(state, pos, mom);
-  state->Print();
-
-  genfit::SharedPlanePtr origPlane = state->getPlane();
-
-  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,10,0), TVector3(0,-1,0)));
-
-  double extrapLen(0);
-  try {
-    extrapLen = rep->extrapolateToPlane(state, plane);
+  for (unsigned int i=0; i<100; ++i) {
+    if (!compareForthBackExtrapolation()) {
+      std::cout << "failed in " << i << "\n";
+      break;
+    }
   }
-  catch (genfit::Exception& e) {
-    std::cerr << e.what();
-  }
-
-  std::cout << "extrapLen = " << extrapLen << "\n";
-
-  state->Print();
-
-
-
-  try {
-    extrapLen = rep->extrapolateToPlane(state, origPlane);
-  }
-  catch (genfit::Exception& e) {
-    std::cerr << e.what();
-  }
-
-  state->Print();
 
 
 
   return 0;
 }
+
+
+
+
+
+

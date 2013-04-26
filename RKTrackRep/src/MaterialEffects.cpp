@@ -197,9 +197,9 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   }
 
 
-  double sMax = limits.getLowestLimitVal();
+  double sMax = limits.getLowestLimitSignedVal(); // signed
 
-  if (sMax < minStep)
+  if (fabs(sMax) < minStep)
     return;
 
 
@@ -207,13 +207,14 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   pdg_ = pdg;
   getParticleParameters(mom);
 
+
   // make minStep
-  state7[0] += minStep * state7[3];
-  state7[1] += minStep * state7[4];
-  state7[2] += minStep * state7[5];
+  state7[0] += limits.getStepSign() * minStep * state7[3];
+  state7[1] += limits.getStepSign() * minStep * state7[4];
+  state7[2] += limits.getStepSign() * minStep * state7[5];
 
   materialInterface_->initTrack(state7[0], state7[1], state7[2],
-                                state7[3], state7[4], state7[5]);
+                                limits.getStepSign() * state7[3], limits.getStepSign() * state7[4], limits.getStepSign() * state7[5]);
 
   materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
   currentMaterial.setMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
@@ -241,10 +242,10 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
 
   // now look for boundaries
-  sMax = limits.getLowestLimitVal();
+  sMax = limits.getLowestLimitSignedVal();
 
-  stepSize_ = minStep + materialInterface_->findNextBoundary(rep, state7, sMax, varField);
-  if (stepSize_ < sMax) {
+  stepSize_ = limits.getStepSign() * minStep + materialInterface_->findNextBoundary(rep, state7, sMax, varField);
+  if (fabs(stepSize_) < fabs(sMax)) {
     limits.setLimit(stp_boundary, stepSize_);
   }
 
