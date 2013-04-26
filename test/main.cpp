@@ -73,7 +73,7 @@ void handler(int sig) {
 
 int main() {
 
-  const double BField = 0.;       // kGauss
+  const double BField = 15.;       // kGauss
   const bool debug = true;
 
 
@@ -113,6 +113,8 @@ int main() {
   rep->setPosMom(state, pos, mom);
   state->Print();
 
+  genfit::SharedPlanePtr origPlane = state->getPlane();
+
   genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,10,0), TVector3(0,-1,0)));
 
   double extrapLen(0);
@@ -129,7 +131,14 @@ int main() {
 
 
 
+  try {
+    extrapLen = rep->extrapolateToPlane(state, origPlane);
+  }
+  catch (genfit::Exception& e) {
+    std::cerr << e.what();
+  }
 
+  state->Print();
 
 
 
