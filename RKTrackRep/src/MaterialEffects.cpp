@@ -108,7 +108,8 @@ void MaterialEffects::setMscModel(const std::string& modelName)
 
 
 double MaterialEffects::effects(const std::vector< std::pair< MaterialProperties, M1x7 > >& points,
-                                unsigned int materialsFXIndex,
+                                int materialsFXStart,
+                                int materialsFXStop,
                                 const double& mom,
                                 const int& pdg,
                                 M7x7* noise,
@@ -129,11 +130,14 @@ double MaterialEffects::effects(const std::vector< std::pair< MaterialProperties
   getParticleParameters(mom);
 
   double momLoss = 0.;
-  unsigned int nPoints(points.size());
 
-  for (unsigned int i = materialsFXIndex; i < nPoints; ++i) { // loop over points
+  for (auto it = points.begin() + materialsFXStart; it !=  points.begin() + materialsFXStop; ++it) { // loop over points
 
-    double realPath = points[i].first.getSegmentLength();
+#ifdef DEBUG
+    std::cerr << "     calculate matFX for "; it->first.Print();
+#endif
+
+    double realPath = it->first.getSegmentLength();
     double stepSign(1.);
     if (realPath < 0)
       stepSign = -1.;
@@ -142,7 +146,7 @@ double MaterialEffects::effects(const std::vector< std::pair< MaterialProperties
     if (realPath > 1.E-8) { // do material effects only if distance is not too small
 
 
-      points[i].first.getMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
+      it->first.getMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
 
       if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
 
@@ -152,7 +156,7 @@ double MaterialEffects::effects(const std::vector< std::pair< MaterialProperties
           this->noiseBetheBloch(mom, *noise);
 
         if (doNoise && noiseCoulomb_)
-          this->noiseCoulomb(mom, *noise, *((M1x3*) &points[i].second[3]) );
+          this->noiseCoulomb(mom, *noise, *((M1x3*) &it->second[3]) );
 
         if (energyLossBrems_)
           momLoss += stepSign * this->energyLossBrems(mom);

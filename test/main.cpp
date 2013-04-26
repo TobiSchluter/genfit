@@ -103,7 +103,8 @@ int randomSign() {
 
 bool compareForthBackExtrapolation() {
 
-  double epsilon = 1.E-7;
+  double epsilonLen = 1.E-4; // 1 mu
+  double epsilonMom = 1.E-5; // 10 keV
 
   int pdg = randomPdg();
   genfit::AbsTrackRep* rep;
@@ -123,6 +124,7 @@ bool compareForthBackExtrapolation() {
 
   genfit::StateOnPlane origState(state);
 
+  // forth
   double extrapLen(0);
   try {
     extrapLen = rep->extrapolateToPlane(&state, plane);
@@ -131,11 +133,10 @@ bool compareForthBackExtrapolation() {
     std::cerr << e.what();
 
     delete rep;
-    return true;
+    return false;
   }
 
-  std::cout << "extrapLen = " << extrapLen << "\n";
-
+  // back
   double backExtrapLen(0);
   try {
     backExtrapLen = rep->extrapolateToPlane(&state, origPlane);
@@ -144,13 +145,13 @@ bool compareForthBackExtrapolation() {
     std::cerr << e.what();
 
     delete rep;
-    return true;
+    return false;
   }
 
-
-  if ((rep->getPos(&origState) - rep->getPos(&state)).Mag() > epsilon ||
-      (rep->getMom(&origState) - rep->getMom(&state)).Mag() > epsilon ||
-      fabs(extrapLen + backExtrapLen) > epsilon) {
+  // compare
+  if ((rep->getPos(&origState) - rep->getPos(&state)).Mag() > epsilonLen ||
+      (rep->getMom(&origState) - rep->getMom(&state)).Mag() > epsilonMom ||
+      fabs(extrapLen + backExtrapLen) > epsilonLen) {
 
     origState.Print();
     state.Print();
@@ -190,11 +191,11 @@ int main() {
   genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,BField));
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
-  genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(false);
+  /*genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(false);
   genfit::MaterialEffects::getInstance()->setNoiseBetheBloch(false);
   genfit::MaterialEffects::getInstance()->setNoiseCoulomb(false);
   genfit::MaterialEffects::getInstance()->setEnergyLossBrems(false);
-  genfit::MaterialEffects::getInstance()->setNoiseBrems(false);
+  genfit::MaterialEffects::getInstance()->setNoiseBrems(false);*/
 
   /*genfit::Track* testTrack = new genfit::Track();
 

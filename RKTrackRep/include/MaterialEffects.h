@@ -85,7 +85,8 @@ public:
 
   //! Calculates energy loss in the traveled path, optional calculation of noise matrix
   double effects(const std::vector< std::pair< MaterialProperties, M1x7 > >& points,
-                 unsigned int materialsFXIndex,
+                 int materialsFXStart,
+                 int materialsFXStop,
                  const double& mom,
                  const int& pdg,
                  M7x7* noise = nullptr,

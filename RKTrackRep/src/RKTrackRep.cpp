@@ -38,7 +38,8 @@ namespace genfit {
 RKTrackRep::RKTrackRep() :
   AbsTrackRep(),
   lastStartState_(this),
-  materialsFXIndex_(0),
+  materialsFXStart_(0),
+  materialsFXStop_(0),
   useCache_(false)
 {
   initArrays();
@@ -48,7 +49,8 @@ RKTrackRep::RKTrackRep() :
 RKTrackRep::RKTrackRep(int pdgCode, char propDir) :
   AbsTrackRep(pdgCode, propDir),
   lastStartState_(this),
-  materialsFXIndex_(0),
+  materialsFXStart_(0),
+  materialsFXStop_(0),
   useCache_(false)
 {
   initArrays();
@@ -504,8 +506,6 @@ void RKTrackRep::getState7(const StateOnPlane* state, M1x7& state7) const {
 
 void RKTrackRep::getState5(StateOnPlane* state, const M1x7& state7) const {
 
-  // TODO: Test!
-
   double spu(1.);
 
   const TVector3& O(state->getPlane()->getO());
@@ -934,6 +934,7 @@ bool RKTrackRep::RKutta(const DetPlane& plane,
         std::cout<<" (momLossExceeded && fabs(S) < MINSTEP) -> return(true), no linear extrapolation; \n";
       #endif
       materials_.erase(materials_.end()-1);
+      --materialsFXStop_;
       return(true); // no linear extrapolation!
     }
 
@@ -1189,6 +1190,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
   // call stepper and reduce stepsize if step not too small
   materials_.push_back( std::make_pair(MaterialProperties(), M1x7(state7)) );
+  ++materialsFXStop_;
   if (/*!fNoMaterial*/ true){
 
     if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
@@ -1291,35 +1293,33 @@ double RKTrackRep::Extrap(const DetPlane& plane,
       throw exc;
     }
 
-    #ifdef DEBUG
-      std::cout<<"Original points \n";
-      for (unsigned int i=0; i<materials_.size(); ++i){
-        materials_[i].first.Print();
-      }
-      std::cout<<"\n";
-    #endif
+#ifdef DEBUG
+    std::cout<<"Original points \n";
+    for (auto it = materials_.begin(); it != materials_.end(); ++it){
+      it->first.Print();
+    }
+    std::cout<<"\n";
+#endif
 
-
-    // filter points // TODO: test!!!
-    if (/*!fNoMaterial*/ true) { // points are only filled if mat fx are on
-      if(materials_.size() > 2){ // check if there are at least three points
-        for (unsigned int i=materials_.size()-1; i>materialsFXIndex_; --i){
-          // merge two points if they are in the same material AND (one of them has a small stepsize OR their stepsizes have different signs)
-          if (materials_[i].first == materials_[i-1].first &&
-              (fabs(materials_[i].first.getSegmentLength()) < MINSTEP ||
-               fabs(materials_[i-1].first.getSegmentLength()) < MINSTEP ||
-               materials_[i].first.getSegmentLength()*materials_[i-1].first.getSegmentLength() < 0) ){
-            materials_[i-1].first.addToSegmentLength(materials_[i].first.getSegmentLength());
-            materials_.erase(materials_.begin()+i);
-          }
+    // filter points
+    if (/*!useCache_ &&*/ std::distance(materials_.begin()+materialsFXStart_, materials_.end()) > 1) {
+      for (auto it = materials_.end()-1; it != materials_.begin()+materialsFXStart_; --it) {
+        // merge two points if they are in the same material AND (one of them has a small stepsize OR their stepsizes have different signs)
+        if (it->first == (it-1)->first &&
+            (fabs(it->first.getSegmentLength()) < MINSTEP ||
+             fabs((it-1)->first.getSegmentLength()) < MINSTEP ||
+             it->first.getSegmentLength()*(it-1)->first.getSegmentLength() < 0) ){
+          (it-1)->first.addToSegmentLength(it->first.getSegmentLength());
+          materials_.erase(it);
+          --materialsFXStop_;
         }
       }
       #ifdef DEBUG
         std::cout<<"Filtered materials_ \n";
         double spannedLen(0);
-        for (unsigned int i=0; i<materials_.size(); ++i){
-          materials_[i].first.Print();
-          spannedLen += materials_[i].first.getSegmentLength();
+        for (auto it = materials_.begin(); it != materials_.end(); ++it){
+          it->first.Print();
+          spannedLen += it->first.getSegmentLength();
         }
         std::cout<<"-> Total spanned distance = " << spannedLen << "\n";
       #endif
@@ -1334,13 +1334,14 @@ double RKTrackRep::Extrap(const DetPlane& plane,
     if (/*!fNoMaterial*/ true && nPoints>0){
       // momLoss has a sign - negative loss means momentum gain
       double momLoss = MaterialEffects::getInstance()->effects(materials_,
-                                                               materialsFXIndex_,
+                                                               materialsFXStart_,
+                                                               materialsFXStop_,
                                                                fabs(charge/state7[6]), // momentum
                                                                pdgCode_,
                                                                &fNoise,
                                                                cov);
 
-      materialsFXIndex_ = materials_.size();
+      materialsFXStart_ = materialsFXStop_;
 
       #ifdef DEBUG
         std::cout << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6]) << "\n";
@@ -1459,6 +1460,9 @@ double RKTrackRep::Extrap(const DetPlane& plane,
 
 
 void RKTrackRep::checkCache(const StateOnPlane* state) const {
+
+  // TODO: implement using cache!!!
+
   if (state->getRep() != this){
     Exception exc("RKTrackRep::checkCache ==> state is defined wrt. another TrackRep",__LINE__,__FILE__);
     throw exc;
@@ -1467,7 +1471,8 @@ void RKTrackRep::checkCache(const StateOnPlane* state) const {
   if (state->getPlane() == lastStartState_.getPlane() &&
       state->getState() == lastStartState_.getState()) {
     useCache_ = true;
-    materialsFXIndex_ = 0;
+    materialsFXStart_ = 0;
+    materialsFXStop_ = 0;
 #ifdef DEBUG
     std::cout << "RKTrackRep::checkCache: use cached material and step values.\n";
 #endif
@@ -1475,7 +1480,8 @@ void RKTrackRep::checkCache(const StateOnPlane* state) const {
   else {
     useCache_ = false;
     materials_.clear();
-    materialsFXIndex_ = 0;
+    materialsFXStart_ = 0;
+    materialsFXStop_ = 0;
 
     lastStartState_.setStatePlane(state->getState(), state->getPlane());
     initArrays();
