@@ -37,7 +37,7 @@ StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr plane, AbsTrack
   state_(state), sharedPlane_(plane), rep_(rep)
 {
   assert(rep != nullptr);
-  assert(state_.GetNrows() == rep->getDim());
+  assert(state_.GetNrows() == (signed)rep->getDim());
 }
 
 void StateOnPlane::Print(Option_t* option) const {
