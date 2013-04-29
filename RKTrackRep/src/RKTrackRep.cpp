@@ -332,7 +332,8 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   M1x3&   R           = *((M1x3*) &state7[0]);       // Start coordinates  [cm]  (x,  y,  z)
   M1x3&   A           = *((M1x3*) &state7[3]);       // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
   double  S3(0), S4(0), PS2(0);
-  M1x3     H0 = {0.,0.,0.}, H1 = {0.,0.,0.}, H2 = {0.,0.,0.}, r = {0.,0.,0.};
+  M1x3     H0 = {{0.,0.,0.}}, H1 = {{0.,0.,0.}}, H2 = {{0.,0.,0.}};
+  M1x3     r = {{0.,0.,0.}};
   // Variables for RKutta main loop
   double   A0(0), A1(0), A2(0), A3(0), A4(0), A5(0), A6(0);
   double   B0(0), B1(0), B2(0), B3(0), B4(0), B5(0), B6(0);
@@ -813,13 +814,13 @@ bool RKTrackRep::RKutta(const DetPlane& plane,
   // Aux parameters
   M1x3&   R           = *((M1x3*) &state7[0]);  // Start coordinates  [cm]  (x,  y,  z)
   M1x3&   A           = *((M1x3*) &state7[3]);  // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
-  M1x3    SA          = {0.,0.,0.};             // Start directions derivatives dA/S
+  M1x3    SA          = {{0.,0.,0.}};             // Start directions derivatives dA/S
   double  Way         = 0.;                     // Sum of absolute values of all extrapolation steps [cm]
   double  momentum   = fabs(charge/state7[6]);// momentum [GeV]
   double  relMomLoss = 0;                      // relative momentum loss in RKutta
   double  deltaAngle = 0.;                     // total angle by which the momentum has changed during extrapolation
   double  An(0), S(0), Sl(0), CBA(0);
-  M1x4    SU = {0.,0.,0.,0.};
+  M1x4    SU = {{0.,0.,0.,0.}};
 
 
   #ifdef DEBUG
