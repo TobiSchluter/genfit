@@ -95,11 +95,13 @@ int randomPdg() {
   return pdg;
 }
 
+
 int randomSign() {
   if (gRandom->Uniform(1) > 0.5)
     return 1;
   return -1;
 }
+
 
 bool compareForthBackExtrapolation() {
 
@@ -171,6 +173,117 @@ bool compareForthBackExtrapolation() {
 
 }
 
+
+bool checkStopAtBoundary() {
+
+  double epsilonLen = 1.E-4; // 1 mu
+  double epsilonMom = 1.E-5; // 10 keV
+
+  double matRadius(1.);
+
+  int pdg = randomPdg();
+  genfit::AbsTrackRep* rep;
+  rep = new genfit::RKTrackRep(pdg);
+
+  //TVector3 pos(0,0,0);
+  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,0.);
+  mom *= randomSign();
+
+
+  genfit::StateOnPlane state(rep);
+  rep->setPosMom(&state, pos, mom);
+
+  genfit::SharedPlanePtr origPlane = state.getPlane();
+  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,randomSign()*10,0), TVector3(0,randomSign()*1,0)));
+
+  genfit::StateOnPlane origState(state);
+
+  // forth
+  double extrapLen(0);
+  try {
+    extrapLen = rep->extrapolateToPlane(&state, plane, true);
+  }
+  catch (genfit::Exception& e) {
+    std::cerr << e.what();
+
+    delete rep;
+    return false;
+  }
+
+
+  // compare
+  if (fabs(rep->getPos(&state).Perp() - matRadius) > epsilonLen) {
+
+      origState.Print();
+      state.Print();
+
+      std::cerr << "radius difference = " << rep->getPos(&state).Perp() - matRadius << "\n";
+
+      std::cerr << std::endl;
+
+      delete rep;
+      return false;
+    }
+
+    delete rep;
+    return true;
+
+}
+
+
+bool checkErrorPropagation() {
+
+  double epsilonLen = 1.E-4; // 1 mu
+  double epsilonMom = 1.E-5; // 10 keV
+
+  double matRadius(1.);
+
+  int pdg = randomPdg();
+  genfit::AbsTrackRep* rep;
+  rep = new genfit::RKTrackRep(pdg);
+
+  //TVector3 pos(0,0,0);
+  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,0.);
+  mom *= randomSign();
+
+
+  genfit::MeasuredStateOnPlane state(rep);
+  rep->setPosMom(&state, pos, mom);
+
+  genfit::SharedPlanePtr origPlane = state.getPlane();
+  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,randomSign()*10,0), TVector3(0,randomSign()*1,0)));
+
+  genfit::MeasuredStateOnPlane origState(state);
+
+  // forth
+  double extrapLen(0);
+  try {
+    extrapLen = rep->extrapolateToPlane(&state, plane);
+  }
+  catch (genfit::Exception& e) {
+    std::cerr << e.what();
+
+    delete rep;
+    return false;
+  }
+
+
+  // compare
+  if (false) { // TODO: specify test criterium
+
+      state.Print();
+
+      delete rep;
+      return false;
+    }
+
+    delete rep;
+    return true;
+
+}
+
 //=====================================================================================================================
 //=====================================================================================================================
 //=====================================================================================================================
@@ -215,14 +328,32 @@ int main() {
   file->Close();*/
 
 
-
+  unsigned int nFailed(0);
+  unsigned int nTests(100);
 
   for (unsigned int i=0; i<100; ++i) {
     if (!compareForthBackExtrapolation()) {
       std::cout << "failed compareForthBackExtrapolation nr" << i << "\n";
-      break;
+      ++nFailed;
     }
+
+    if (!checkStopAtBoundary()) {
+      std::cout << "failed checkStopAtBoundary nr" << i << "\n";
+      ++nFailed;
+    }
+
+    if (!checkErrorPropagation()) {
+      std::cout << "failed checkErrorPropagation nr" << i << "\n";
+      ++nFailed;
+    }
+
   }
+
+  std::cout << "failed " << nFailed << " of " << nTests << " Tests." << std::endl;
+  if (nFailed == 0) {
+    std::cout << "passed all tests!" << std::endl;
+  }
+
 
 
 

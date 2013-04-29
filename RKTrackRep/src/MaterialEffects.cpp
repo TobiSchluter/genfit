@@ -134,7 +134,9 @@ double MaterialEffects::effects(const std::vector< std::pair< MaterialProperties
   for (auto it = points.begin() + materialsFXStart; it !=  points.begin() + materialsFXStop; ++it) { // loop over points
 
 #ifdef DEBUG
-    std::cerr << "     calculate matFX for "; it->first.Print();
+    std::cerr << "     calculate matFX ";
+    if (doNoise) std::cerr << " and noise";
+    std::cerr << " for "; it->first.Print();
 #endif
 
     double realPath = it->first.getSegmentLength();

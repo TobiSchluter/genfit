@@ -54,7 +54,7 @@ void makeGeom()
    double distance = 1;
 
    for (unsigned int i=1; i<5; ++i){
-     TGeoVolume *redBullCan = gGeoManager->MakeTube("redBullCan", sil, i*distance-thickness, i*distance, 20.);//, 90., 270.);
+     TGeoVolume *redBullCan = gGeoManager->MakeTube("redBullCan", sil, i*distance, i*distance+thickness, 20.);//, 90., 270.);
      redBullCan->SetLineColor(kRed);
      top->AddNode(redBullCan, 1, gGeoIdentity);
    }

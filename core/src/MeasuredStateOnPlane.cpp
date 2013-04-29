@@ -21,6 +21,7 @@
 #include "AbsTrackRep.h"
 
 #include <assert.h>
+#include <iostream>
 
 namespace genfit {
 
@@ -43,6 +44,21 @@ MeasuredStateOnPlane::MeasuredStateOnPlane(const StateOnPlane& state, const TMat
   StateOnPlane(state), cov_(cov)
 {
   assert(cov_.GetNcols() == (signed)getRep()->getDim());
+}
+
+void MeasuredStateOnPlane::Print(Option_t* option) const {
+  std::cout << "genfit::MeasuredStateOnPlane ";
+  std::cout << " state vector: "; state_.Print();
+  std::cout << " covariance matrix: "; cov_.Print();
+  if (sharedPlane_ != nullptr) {
+    std::cout << " defined in plane "; sharedPlane_->Print();
+    TVector3 pos, mom;
+    TMatrixDSym cov(6,6);
+    getRep()->getPosMomCov(this, pos, mom, cov);
+    std::cout << " 3D position: "; pos.Print();
+    std::cout << " 3D momentum: "; mom.Print();
+    std::cout << " 6D covariance: "; cov.Print();
+  }
 }
 
 } /* End of namespace genfit */

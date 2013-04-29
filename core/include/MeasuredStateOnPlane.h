@@ -50,6 +50,8 @@ class MeasuredStateOnPlane : public StateOnPlane {
   void setStateCovPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane) {setStatePlane(state, plane); cov_ = cov;}
   void setCov(const TMatrixDSym& cov) {cov_ = cov;}
 
+  virtual void Print(Option_t* option = "") const override;
+
  protected:
 
   TMatrixDSym cov_;
