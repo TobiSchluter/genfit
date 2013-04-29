@@ -22,7 +22,7 @@ Execute_process(COMMAND ${ROOT_CONFIG} --cflags
 SET(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wshadow -std=c++11 -pedantic ${ROOT_CFLAGS}")
 #SET(CMAKE_VERBOSE_MAKEFILE ON)
 
-Execute_process(COMMAND root-config --glibs --cflags --evelibs
+Execute_process(COMMAND ${ROOT_CONFIG} --glibs --ldflags --evelibs
 	OUTPUT_VARIABLE ROOT_LIBS
     	OUTPUT_STRIP_TRAILING_WHITESPACE)
 

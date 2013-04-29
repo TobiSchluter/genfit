@@ -61,10 +61,9 @@ set(GENFIT_SRCS
 ################ install ###################
 
 #add ROOT lib
-Execute_process(COMMAND root-config --glibs --cflags
+Execute_process(COMMAND ${ROOT_CONFIG} --glibs --ldflags --evelibs
 	OUTPUT_VARIABLE ROOT_LIBS
     	OUTPUT_STRIP_TRAILING_WHITESPACE)
-
 
 ADD_LIBRARY(genfit SHARED ${GENFIT_SRCS})
 
