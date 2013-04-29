@@ -177,8 +177,8 @@ class RKTrackRep : public AbsTrackRep {
                       double& relMomLoss,
                       StepLimits& limits) const;
 
-  TVector3 poca2Line(const TVector3& extr1,
-                     const TVector3& extr2,
+  TVector3 pocaOnLine(const TVector3& linePoint,
+                     const TVector3& lineDirection,
                      const TVector3& point) const;
 
   //! Handles propagation and material effects
@@ -193,6 +193,7 @@ class RKTrackRep : public AbsTrackRep {
     */
   double Extrap(const DetPlane& plane,
                 double charge,
+                bool& isAtBoundary,
                 M1x7& state7,
                 M7x7* cov=NULL,
                 bool onlyOneStep = false,

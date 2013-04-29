@@ -54,8 +54,6 @@ class StateOnPlane : public TObject {
   SharedPlanePtr getPlane() const {return sharedPlane_;}
   AbsTrackRep* const getRep() const {return rep_;}
 
-  virtual bool hasCovariance() const {return false;}
-
   void setState(const TVectorD& state) {state_ = state;}
   void setPlane(SharedPlanePtr plane) {sharedPlane_ = plane;}
   void setStatePlane(const TVectorD& state, SharedPlanePtr plane) {state_ = state; sharedPlane_ = plane;}

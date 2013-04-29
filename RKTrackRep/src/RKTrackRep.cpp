@@ -67,7 +67,7 @@ double RKTrackRep::extrapolateToPlane(StateOnPlane* state,
     bool stopAtBoundary) const {
 
   checkCache(state);
-  bool calcCov(state->hasCovariance());
+  bool calcCov(dynamic_cast<MeasuredStateOnPlane*>(state) != nullptr);
 
   // to 7D
   M1x7 state7;
@@ -81,10 +81,18 @@ double RKTrackRep::extrapolateToPlane(StateOnPlane* state,
   }
 
   // actual extrapolation
-  double coveredDistance = Extrap(*plane, getCharge(state), state7, covPtr, false, stopAtBoundary);
+  bool isAtBoundary(false);
+  double coveredDistance = Extrap(*plane, getCharge(state), isAtBoundary, state7, covPtr, false, stopAtBoundary);
+
+  if (stopAtBoundary && isAtBoundary) {
+    state->setPlane(SharedPlanePtr(new DetPlane(TVector3(state7[0], state7[1], state7[2]),
+                                                TVector3(state7[3], state7[4], state7[5]))));
+  }
+  else {
+    state->setPlane(plane);
+  }
 
   // back to 5D
-  state->setPlane(plane);
   getState5(state, state7);
 
   if (calcCov) {
@@ -101,7 +109,71 @@ double RKTrackRep::extrapolateToLine(StateOnPlane* state,
     bool stopAtBoundary) const {
 
   checkCache(state);
-  return 0;
+
+  static const unsigned int maxIt(1000);
+
+  // to 7D
+  M1x7 state7;
+  getState7(state, state7);
+
+  double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
+  TVector3 dir(state7[3], state7[4], state7[5]);
+  TVector3 lastDir(0,0,0);
+  TVector3 poca, poca_onwire;
+  bool isAtBoundary(false);
+
+  std::shared_ptr<genfit::DetPlane> plane(new DetPlane(linePoint, dir.Cross(lineDirection), lineDirection));
+  unsigned int iterations(0);
+
+  while(true){
+    if(++iterations == maxIt) {
+      Exception exc("RKTrackRep::extrapolateToLine ==> extrapolation to line failed, maximum number of iterations reached",__LINE__,__FILE__);
+      throw exc;
+    }
+
+    lastStep = step;
+    lastDir = dir;
+
+    step = this->Extrap(*plane, getCharge(state), isAtBoundary, state7, nullptr, true, stopAtBoundary, maxStep);
+    tracklength += step;
+
+    dir.SetXYZ(state7[3], state7[4], state7[5]);
+    poca.SetXYZ(state7[0], state7[1], state7[2]);
+    poca_onwire = pocaOnLine(linePoint, lineDirection, poca);
+
+    // check break conditions
+    if (stopAtBoundary && isAtBoundary) {
+      plane->setON(dir, poca);
+      break;
+    }
+
+    angle = fabs(dir.Angle((poca_onwire-poca))-TMath::PiOver2()); // angle between direction and connection to point - 90 deg
+    distToPoca = (poca_onwire-poca).Mag();
+    if (angle*distToPoca < 0.1*MINSTEP) break;
+
+    // if lastStep and step have opposite sign, the real normal vector lies somewhere between the last two normal vectors (i.e. the directions)
+    // -> try mean value of the two (normalization not needed)
+    if (lastStep*step < 0){
+      dir += lastDir;
+      maxStep = 0.5*fabs(lastStep); // make it converge!
+    }
+
+    plane->setU(dir.Cross(lineDirection));
+  }
+
+  if (dynamic_cast<MeasuredStateOnPlane*>(state) != nullptr) { // now do the full extrapolation with covariance matrix
+    tracklength = extrapolateToPlane(state, plane);
+  }
+  else {
+    state->setPlane(plane);
+    getState5(state, state7);
+  }
+
+#ifdef DEBUG
+  std::cout << "RKTrackRep::extrapolateToLine(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (poca_onwire-poca).Mag() << " cm. Angle deviation: " << dir.Angle((poca_onwire-poca))-TMath::PiOver2() << " rad \n";
+#endif
+
+  return tracklength;
 }
 
 
@@ -1231,26 +1303,21 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 }
 
 
-TVector3 RKTrackRep::poca2Line(const TVector3& extr1,const TVector3& extr2,const TVector3& point) const {
+TVector3 RKTrackRep::pocaOnLine(const TVector3& linePoint, const TVector3& lineDirection, const TVector3& point) const {
 
-  TVector3 pocaOnLine(extr2);
-  pocaOnLine -= extr1; // wireDir
+  TVector3 retVal(lineDirection);
 
-  if(pocaOnLine.Mag()<1.E-8){
-    Exception exc("RKTrackRep::poca2Line ==> try to find POCA between line and point, but the line is really just a point",__LINE__,__FILE__);
-    throw exc;
-  }
-
-  double t = 1./(pocaOnLine.Mag2()) * ((point*pocaOnLine) + extr1.Mag2() - (extr1*extr2));
-  pocaOnLine *= t;
-  pocaOnLine += extr1;
-  return pocaOnLine; // = extr1 + t*wireDir
+  double t = 1./(retVal.Mag2()) * ((point*retVal) - (linePoint*retVal));
+  retVal *= t;
+  retVal += linePoint;
+  return retVal; // = linePoint + t*lineDirection
 
 }
 
 
 double RKTrackRep::Extrap(const DetPlane& plane,
                           double charge,
+                          bool& isAtBoundary,
                           M1x7& state7,
                           M7x7* cov,
                           bool onlyOneStep,
@@ -1264,6 +1331,7 @@ double RKTrackRep::Extrap(const DetPlane& plane,
   double coveredDistance(0.);
   TMatrixD noiseProjection(7,7);
 
+
   while(true){
 
     #ifdef DEBUG
@@ -1275,6 +1343,8 @@ double RKTrackRep::Extrap(const DetPlane& plane,
       exc.setFatal();
       throw exc;
     }
+
+    isAtBoundary = false;
 
     // initialize cov with unit matrix
     if(calcCov){
@@ -1367,67 +1437,40 @@ double RKTrackRep::Extrap(const DetPlane& plane,
       // cov is symmetric
       RKTools::J_MMTxcov7xJ_MM(*cov, fOldCov);
       *cov = fOldCov;
+
       if( checkJacProj == true ){
-
-  // XXX std::cerr << "noise in 7D before it gets added" << std::endl;
-  // XXX RKTools::printDim((double*)fNoise,7,7);
-  // XXX std::cerr << "noise in 5D before it gets added" << std::endl;
-  // XXX TMatrixDSym noise5D;
-  // XXX transformM7P( fNoise,noise5D,plane,state7);
-  // XXX noise5D.Print();
         //project the noise onto the measurment plane
-         //std::cerr << "the current noise is " << std::endl;
-         //RKTools::printDim(fNoise,7,7);
-  TMatrixDSym projectedNoise(7);
-  projectedNoise.SetMatrixArray(fNoise.data());
-  //std::cerr << "projectedNoise is filled with the current noise: " << std::endl;
-  //projectedNoise.Print();
-  // XXX std::cerr << "projection matrix for noise:" << std::endl;
-  // XXX RKTools::printDim(noiseProjection.GetMatrixArray(),7,7);
-  // XXX TMatrixD P2 = noiseProjection * noiseProjection;
-  // XXX std::cerr << "P^2:" << std::endl;
-  // XXX RKTools::printDim(P2.GetMatrixArray(),7,7);
-  projectedNoise.SimilarityT(noiseProjection);
-  //std::cerr << "and finally the projecte noise is as root matrix: " << std::endl;
-  //projectedNoise.Print();
+        //std::cerr << "the current noise is " << std::endl;
+        //RKTools::printDim(fNoise,7,7);
+        TMatrixDSym projectedNoise(7);
+        projectedNoise.SetMatrixArray(fNoise.data());
+        //std::cerr << "projectedNoise is filled with the current noise: " << std::endl;
+        //projectedNoise.Print();
+        projectedNoise.SimilarityT(noiseProjection);
+        //std::cerr << "and finally the projecte noise is as root matrix: " << std::endl;
+        //projectedNoise.Print();
 
-  //double* projectedNoisePtr = projectedNoise.GetMatrixArray();
-  // XXX std::cerr << "projected noise in 7D before it gets added" << std::endl;
-  // XXX RKTools::printDim(projectedNoisePtr,7,7);
-  // XXX std::cerr << "projected noise in 5D before it gets added" << std::endl;
-  //TMatrixDSym noise5D;
-  // XXX transformM7P( ( M7x7&) (*projectedNoisePtr),noise5D,plane,state7);
-  // XXX noise5D.Print();
-  // add noise to cov
-  // XXX std::cerr << "the covariance in 7D before the noiese gets added" << std::endl;
-  // XXX RKTools::printDim((double*)cov,7,7);
-  // XXX std::cerr << "the covariance in 5D before the noiese gets added" << std::endl;
-  // XXX TMatrixDSym cov5D;
-  // XXX transformM7P( *cov,cov5D,plane,state7);
-  // XXX cov5D.Print();
-//  for (int i=0; i<7*7; ++i) (*cov)[i] += projectedNoisePtr[i];
-
-  // XXX std::cerr << "cov + noise in 7D" << std::endl;
-  // XXX RKTools::printDim((double*)cov,7,7);
-  // XXX std::cerr << "cov + noise in 5D" << std::endl;
-  // XXX transformM7P( *cov,cov5D,plane,state7);
-  // XXX cov5D.Print();
-  for (int i=0; i<7*7; ++i) (*cov)[i] += fNoise[i];
-      } else {
-  // XXX std::cerr << "noise in 7D before it gets added" << std::endl;
-  // XXX RKTools::printDim(fNoise,7,7);
-  // XXX std::cerr << "cov in 7D before noise gets added" << std::endl;
-  // XXX RKTools::printDim((double*)cov,7,7);
-  for (int i=0; i<7*7; ++i) (*cov)[i] += fNoise[i];
-  // XXX std::cerr << "cov + noise 7D" << std::endl;
-  // XXX RKTools::printDim((double*)cov,7,7);
+        //double* projectedNoisePtr = projectedNoise.GetMatrixArray();
+        //TMatrixDSym noise5D;
+        // add noise to cov
+        //  for (int i=0; i<7*7; ++i) (*cov)[i] += projectedNoisePtr[i];
       }
 
+      for (int i=0; i<7*7; ++i) (*cov)[i] += fNoise[i];
 
      // std::cerr << "Noise was added to cov in RKTrackRep" << std::endl;
     } // finished propagate cov and add noise
 
-    if (onlyOneStep) break;
+
+    // check if at boundary
+    if (limits.getLowestLimit().first == stp_boundary) {
+      isAtBoundary = true;
+      if (stopAtBoundary)
+        break;
+    }
+
+    if (onlyOneStep)
+      break;
 
     //we arrived at the destination plane, if we point to the active area of the plane (if it is finite), and the distance is below threshold
     if( plane.distance(state7[0], state7[1], state7[2]) < MINSTEP) {
