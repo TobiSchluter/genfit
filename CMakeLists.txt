@@ -8,9 +8,9 @@ IF(NOT DEFINED ENV{GENFIT})
    MESSAGE(FATAL_ERROR "You did not set the environment variable GENFIT.") 
 ENDIF(NOT DEFINED ENV{GENFIT})
 
-IF(NOT DEFINED ENV{GLOGPATH})
-   MESSAGE(FATAL_ERROR "You did not set the environment variable GLOGPATH. Please install the Google Logging Library (glog) and set GLOGPATH.") 
-ENDIF(NOT DEFINED ENV{GLOGPATH})
+#IF(NOT DEFINED ENV{GLOGPATH})
+#   MESSAGE(FATAL_ERROR "You did not set the environment variable GLOGPATH. Please install the Google Logging Library (glog) and set GLOGPATH.") 
+#ENDIF(NOT DEFINED ENV{GLOGPATH})
 
 FIND_PROGRAM(ROOT_CONFIG root-config $ENV{ROOTSYS}/bin)
 
@@ -44,6 +44,9 @@ SET(GENFITLIBDIR ${GENFIT}/lib)
 SET(GENFITLIBINSTALLDIR ${GENFITLIBDIR})
 SET(LIBRARY_OUTPUT_PATH ${GENFITLIBDIR})
 
+SET(GENFITINCDIR ${GENFIT}/include/genfit2)
+SET(GENFITINCINSTALLDIR ${GENFITINCDIR})
+SET(INCLUDE_OUTPUT_PATH ${GENFITINCDIR})
 
 add_subdirectory(core)
 add_subdirectory(RKTrackRep)
