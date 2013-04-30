@@ -29,7 +29,7 @@
 
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
-#define DEBUG
+//#define DEBUG
 
 
 namespace genfit {
@@ -455,6 +455,15 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   // Derivatives of track parameters
   //
   if(jacobian != nullptr){
+    // jacobian
+    // 1 0 0 0 0 0 0
+    // 0 1 0 0 0 0 0
+    // 0 0 1 0 0 0 0
+    // x x x x x x 0
+    // x x x x x x 0
+    // x x x x x x 0
+    // x x x x x x 1
+
     double   dA0(0), dA2(0), dA3(0), dA4(0), dA5(0), dA6(0);
     double   dB0(0), dB2(0), dB3(0), dB4(0), dB5(0), dB6(0);
     double   dC0(0), dC2(0), dC3(0), dC4(0), dC5(0), dC6(0);
@@ -465,14 +474,18 @@ double RKTrackRep::RKPropagate(M1x7& state7,
     // start with d(x, y, z)/d(ax, ay, az)
     for(int i=3*7; i<49; i+=7) {
 
-      if(i==42) {(*jacobian)[i+3]*=state7[6]; (*jacobian)[i+4]*=state7[6]; (*jacobian)[i+5]*=state7[6];}
+      if(i==42) {
+        (*jacobian)[i+3]*=state7[6]; (*jacobian)[i+4]*=state7[6]; (*jacobian)[i+5]*=state7[6];
+      }
 
       //first point
       dA0 = H0[2]*(*jacobian)[i+4]-H0[1]*(*jacobian)[i+5];    // dA0/dp }
       dB0 = H0[0]*(*jacobian)[i+5]-H0[2]*(*jacobian)[i+3];    // dB0/dp  } = dA x H0
       dC0 = H0[1]*(*jacobian)[i+3]-H0[0]*(*jacobian)[i+4];    // dC0/dp }
 
-      if(i==42) {dA0+=A0; dB0+=B0; dC0+=C0;}     // if last row: (dA0, dB0, dC0) := (dA0, dB0, dC0) + (A0, B0, C0)
+      if(i==42) { // if last row: (dA0, dB0, dC0) := (dA0, dB0, dC0) + (A0, B0, C0)
+        dA0+=A0; dB0+=B0; dC0+=C0;
+      }
 
       dA2 = dA0+(*jacobian)[i+3];        // }
       dB2 = dB0+(*jacobian)[i+4];        //  } = (dA0, dB0, dC0) + dA
@@ -483,13 +496,17 @@ double RKTrackRep::RKPropagate(M1x7& state7,
       dB3 = (*jacobian)[i+4]+dC2*H1[0]-dA2*H1[2];    // dB3/dp  } = dA + (dA2, dB2, dC2) x H1
       dC3 = (*jacobian)[i+5]+dA2*H1[1]-dB2*H1[0];    // dC3/dp }
 
-      if(i==42) {dA3+=A3-A[0]; dB3+=B3-A[1]; dC3+=C3-A[2];} // if last row: (dA3, dB3, dC3) := (dA3, dB3, dC3) + (A3, B3, C3) - (ax, ay, az)
+      if(i==42) { // if last row: (dA3, dB3, dC3) := (dA3, dB3, dC3) + (A3, B3, C3) - (ax, ay, az)
+        dA3+=A3-A[0]; dB3+=B3-A[1]; dC3+=C3-A[2];
+      }
 
       dA4 = (*jacobian)[i+3]+dB3*H1[2]-dC3*H1[1];    // dA4/dp }
       dB4 = (*jacobian)[i+4]+dC3*H1[0]-dA3*H1[2];    // dB4/dp  } = dA + (dA3, dB3, dC3) x H1
       dC4 = (*jacobian)[i+5]+dA3*H1[1]-dB3*H1[0];    // dC4/dp }
 
-      if(i==42) {dA4+=A4-A[0]; dB4+=B4-A[1]; dC4+=C4-A[2];} // if last row: (dA4, dB4, dC4) := (dA4, dB4, dC4) + (A4, B4, C4) - (ax, ay, az)
+      if(i==42) { // if last row: (dA4, dB4, dC4) := (dA4, dB4, dC4) + (A4, B4, C4) - (ax, ay, az)
+        dA4+=A4-A[0]; dB4+=B4-A[1]; dC4+=C4-A[2];
+      }
 
       //last point
       dA5 = dA4+dA4-(*jacobian)[i+3];      // }
@@ -500,7 +517,9 @@ double RKTrackRep::RKPropagate(M1x7& state7,
       dB6 = dC5*H2[0]-dA5*H2[2];      // dB6/dp  } = (dA5, dB5, dC5) x H2
       dC6 = dA5*H2[1]-dB5*H2[0];      // dC6/dp }
 
-      if(i==42) {dA6+=A6; dB6+=B6; dC6+=C6;}     // if last row: (dA6, dB6, dC6) := (dA6, dB6, dC6) + (A6, B6, C6)
+      if(i==42) { // if last row: (dA6, dB6, dC6) := (dA6, dB6, dC6) + (A6, B6, C6)
+        dA6+=A6; dB6+=B6; dC6+=C6;
+      }
 
       if(i==42) {
         (*jacobian)[i]   += (dA2+dA3+dA4)*S3/state7[6];  (*jacobian)[i+3] = (dA0+dA3+dA3+dA5+dA6)*P3/state7[6]; // dR := dR + S3*[(dA2, dB2, dC2) +   (dA3, dB3, dC3) + (dA4, dB4, dC4)]
@@ -1077,6 +1096,15 @@ bool RKTrackRep::RKutta(const DetPlane& plane,
     //
     if (jacobian != nullptr) {
 
+      // projected jacobian
+      // x x x x x x 0
+      // x x x x x x 0
+      // x x x x x x 0
+      // x x x x x x 0
+      // x x x x x x 0
+      // x x x x x x 0
+      // x x x x x x 1
+
       if (checkJacProj && materials_.size()>0){
         Exception exc("RKTrackRep::Extrap ==> covariance is projected onto destination plane again",__LINE__,__FILE__);
         throw exc;
@@ -1091,9 +1119,11 @@ bool RKTrackRep::RKutta(const DetPlane& plane,
       //std::cerr << "This was filled into noiseProjection so it must be the same:" << std::endl;
 //       noiseProjection.Print();
       checkJacProj = true;
-      #ifdef DEBUG
-        std::cout << "  Project Jacobian of extrapolation onto destination plane\n";
-      #endif
+#ifdef DEBUG
+      std::cout << "  Jacobian of extrapolation before Projection:\n";
+      RKTools::printDim(jacobian->data(), 7,7);
+      std::cout << "  Project Jacobian of extrapolation onto destination plane\n";
+#endif
       An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
       fabs(An) > 1.E-7 ? An=1./An : An = 0; // 1/A_normal
       double norm;
@@ -1105,6 +1135,11 @@ bool RKTrackRep::RKutta(const DetPlane& plane,
       TMatrixD projectedJac(7,7);
 
       projectedJac.SetMatrixArray(covAsPtr);
+
+#ifdef DEBUG
+      std::cout << "  Jacobian of extrapolation after Projection:\n";
+      RKTools::printDim(jacobian->data(), 7,7);
+#endif
 
 //       std::cerr << "The projected Jac is filled into projectedJac so we have:" << std::endl;
 //       projectedJac.Print();
@@ -1434,7 +1469,7 @@ double RKTrackRep::Extrap(const DetPlane& plane,
       }
 
       // cov = Jac^T * oldCov * Jac;
-      // last column of jac is [0,0,0,0,0,0,1]
+      // last column of Jac is [0,0,0,0,0,0,1]
       // cov is symmetric
       RKTools::J_MMTxcov7xJ_MM(*cov, oldCov_);
       *cov = oldCov_;

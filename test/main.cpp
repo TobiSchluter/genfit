@@ -113,8 +113,8 @@ bool compareForthBackExtrapolation() {
   rep = new genfit::RKTrackRep(pdg);
 
   //TVector3 pos(0,0,0);
-  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,0.);
+  TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,gRandom->Gaus(0,0.1));
   mom *= randomSign();
 
 
@@ -186,8 +186,8 @@ bool checkStopAtBoundary() {
   rep = new genfit::RKTrackRep(pdg);
 
   //TVector3 pos(0,0,0);
-  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,0.);
+  TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,gRandom->Gaus(0,0.1));
   mom *= randomSign();
 
 
@@ -244,8 +244,8 @@ bool checkErrorPropagation() {
   rep = new genfit::RKTrackRep(pdg);
 
   //TVector3 pos(0,0,0);
-  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,0.);
+  TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,gRandom->Gaus(0,0.1));
   mom *= randomSign();
 
 
@@ -399,17 +399,17 @@ int main() {
     if (!checkStopAtBoundary()) {
       std::cout << "failed checkStopAtBoundary nr" << i << "\n";
       ++nFailed;
-    }
+    }*/
 
     if (!checkErrorPropagation()) {
       std::cout << "failed checkErrorPropagation nr" << i << "\n";
       ++nFailed;
-    }*/
-
+    }
+/*
     if (!checkExtrapolateToLine()) {
-          std::cout << "failed checkExtrapolateToLine nr" << i << "\n";
-          ++nFailed;
-        }
+      std::cout << "failed checkExtrapolateToLine nr" << i << "\n";
+      ++nFailed;
+    }*/
 
 
 

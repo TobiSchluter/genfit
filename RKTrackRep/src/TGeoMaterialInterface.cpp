@@ -26,7 +26,7 @@
 #include <assert.h>
 #include <math.h>
 
-#define DEBUG
+//#define DEBUG
 
 
 namespace genfit {
@@ -126,7 +126,6 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
       state7 = stateOrig; // propagate complete way from original start
       rep->RKPropagate(state7, NULL, SA, s, varField);
       initTrack(state7[0], state7[1], state7[2],  stepSign*state7[3], stepSign*state7[4], stepSign*state7[5]);
-      RKTools::printDim(state7.data(), 1,7);
     }
 
 #ifdef DEBUG

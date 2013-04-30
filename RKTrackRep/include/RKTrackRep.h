@@ -205,11 +205,9 @@ class RKTrackRep : public AbsTrackRep {
 
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
-  mutable TMatrixD jacobian_; //! jacobian of the last extrapolation
   mutable std::vector< std::pair< MaterialProperties, M1x7 > > materials_; //! materials crossed in the last extrapolation, together with 7D states at start of each step
   mutable int materialsFXStart_; //!
   mutable int materialsFXStop_; //!
-  mutable unsigned int materialsFXIndex_; //! index of materials_ where effects have to start calculating
 
   mutable bool useCache_; //! use cached materials_ for extrapolation
 
