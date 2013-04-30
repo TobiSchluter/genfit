@@ -243,7 +243,7 @@ void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& 
 
 
 TMatrixD RKTrackRep::getForwardJacobian() const {
-  return jacobian_;
+  return TMatrixD();
 }
 
 
@@ -646,8 +646,8 @@ void RKTrackRep::transformPM7(const MeasuredStateOnPlane* state,
   J_pM_5x7_[22] = U.Y(); // [3][1]
   J_pM_5x7_[23] = U.Z(); // [3][2]
   // d(x,y,z)/d(v)
-  J_pM_5x7_[28] = V.X(); // [4][2]
-  J_pM_5x7_[29] = V.Y(); // [4][2]
+  J_pM_5x7_[28] = V.X(); // [4][0]
+  J_pM_5x7_[29] = V.Y(); // [4][1]
   J_pM_5x7_[30] = V.Z(); // [4][2]
   // d(q/p)/d(q/p)
   J_pM_5x7_[6] = 1.; // not needed for array matrix multiplication
@@ -1402,7 +1402,7 @@ double RKTrackRep::Extrap(const DetPlane& plane,
 
 
     // call MatFX
-    unsigned int nPoints(materials_.size() - materialsFXIndex_);
+    unsigned int nPoints(materialsFXStop_ - materialsFXStart_);
     if (/*!fNoMaterial*/ true && nPoints>0){
       // momLoss has a sign - negative loss means momentum gain
       double momLoss = MaterialEffects::getInstance()->effects(materials_,

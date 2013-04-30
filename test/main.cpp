@@ -284,6 +284,65 @@ bool checkErrorPropagation() {
 
 }
 
+
+bool checkExtrapolateToLine() {
+
+  double epsilonLen = 1.E-4; // 1 mu
+  double epsilonMom = 1.E-5; // 10 keV
+
+  int pdg = randomPdg();
+  genfit::AbsTrackRep* rep;
+  rep = new genfit::RKTrackRep(pdg);
+
+  //TVector3 pos(0,0,0);
+  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,0.);
+  mom *= randomSign();
+
+
+  genfit::StateOnPlane state(rep);
+  rep->setPosMom(&state, pos, mom);
+
+  genfit::SharedPlanePtr origPlane = state.getPlane();
+  genfit::StateOnPlane origState(state);
+
+  TVector3 linePoint(gRandom->Gaus(),randomSign()*10+gRandom->Gaus(),gRandom->Gaus());
+  TVector3 lineDirection(gRandom->Gaus(),gRandom->Gaus(),randomSign()*10+gRandom->Gaus());
+
+  // forth
+  double extrapLen(0);
+  try {
+    extrapLen = rep->extrapolateToLine(&state, linePoint, lineDirection, false);
+  }
+  catch (genfit::Exception& e) {
+    std::cerr << e.what();
+
+    delete rep;
+    return false;
+  }
+
+
+  // compare
+  if (fabs(state.getPlane()->distance(linePoint)) > epsilonLen ||
+      fabs(state.getPlane()->distance(linePoint+lineDirection)) > epsilonLen ||
+      (rep->getMom(&state).Unit() * state.getPlane()->getNormal()) > epsilonMom) {
+
+      origState.Print();
+      state.Print();
+
+      std::cerr << "distance of linePoint to plane = " << state.getPlane()->distance(linePoint) << "\n";
+      std::cerr << "distance of linePoint+lineDirection to plane = " << state.getPlane()->distance(linePoint+lineDirection) << "\n";
+      std::cerr << "direction * plane normal = " << rep->getMom(&state).Unit() * state.getPlane()->getNormal() << "\n";
+
+      delete rep;
+      return false;
+    }
+
+    delete rep;
+    return true;
+
+}
+
 //=====================================================================================================================
 //=====================================================================================================================
 //=====================================================================================================================
@@ -329,10 +388,10 @@ int main() {
 
 
   unsigned int nFailed(0);
-  unsigned int nTests(100);
+  unsigned int nTests(10);
 
   for (unsigned int i=0; i<100; ++i) {
-    if (!compareForthBackExtrapolation()) {
+    /*if (!compareForthBackExtrapolation()) {
       std::cout << "failed compareForthBackExtrapolation nr" << i << "\n";
       ++nFailed;
     }
@@ -345,7 +404,14 @@ int main() {
     if (!checkErrorPropagation()) {
       std::cout << "failed checkErrorPropagation nr" << i << "\n";
       ++nFailed;
-    }
+    }*/
+
+    if (!checkExtrapolateToLine()) {
+          std::cout << "failed checkExtrapolateToLine nr" << i << "\n";
+          ++nFailed;
+        }
+
+
 
   }
 

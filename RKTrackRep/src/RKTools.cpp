@@ -29,15 +29,16 @@ namespace genfit {
 
 void RKTools::J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7){
 
+  // 5D -> 7D
+
+  // J_pM
+  // 0 0 0 0 0 0 1
+  // 0 0 0 x x x 0
+  // 0 0 0 x x x 0
+  // x x x 0 0 0 0
+  // x x x 0 0 0 0
+
   // it is assumed that J_pM is only non-zero here:
-  // [3*7+0]
-  // [3*7+1]
-  // [3*7+2]
-
-  // [4*7+2]
-  // [4*7+2]
-  // [4*7+2]
-
   // [6] = 1
 
   // [1*7+3]
@@ -47,6 +48,14 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7){
   // [2*7+3]
   // [2*7+4]
   // [2*7+5]
+
+  // [3*7+0]
+  // [3*7+1]
+  // [3*7+2]
+
+  // [4*7+2]
+  // [4*7+2]
+  // [4*7+2]
 
   double JTC0  = J_pM[21] * cov5[18] + J_pM[28] * cov5[23];
   double JTC1  = J_pM[21] * cov5[23] + J_pM[28] * cov5[24];
@@ -102,26 +111,35 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7){
 
 void RKTools::J_pMTxcov5xJ_pM(const M5x6& J_pM, const M5x5& cov5, M6x6& out6){
 
+  // 5D -> 6D
+
+  // J_pM
+  // 0 0 0 x x x
+  // 0 0 0 x x x
+  // 0 0 0 x x x
+  // x x x 0 0 0
+  // x x x 0 0 0
+
   // it is assumed that J_pM is only non-zero here:
   // [3]
   // [4]
   // [5]
 
-  // [1*7+3]
-  // [1*7+4]
-  // [1*7+5]
+  // [1*6+3]
+  // [1*6+4]
+  // [1*6+5]
 
-  // [2*7+3]
-  // [2*7+4]
-  // [2*7+5]
+  // [2*6+3]
+  // [2*6+4]
+  // [2*6+5]
 
-  // [3*7+0]
-  // [3*7+1]
-  // [3*7+2]
+  // [3*6+0]
+  // [3*6+1]
+  // [3*6+2]
 
-  // [4*7+0]
-  // [4*7+1]
-  // [4*7+2]
+  // [4*6+0]
+  // [4*6+1]
+  // [4*6+2]
 
   double JTC0  = J_pM[18] * cov5[15+3] + J_pM[24] * cov5[20+3];
   double JTC1  = J_pM[18] * cov5[20+3] + J_pM[24] * cov5[20+4];
@@ -171,7 +189,26 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x6& J_pM, const M5x5& cov5, M6x6& out6){
 
 void RKTools::J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5){
 
+  // 7D -> 5D
+
+  // J_Mp
+  // 0 0 0 x x
+  // 0 0 0 x x
+  // 0 0 0 x x
+  // 0 x x 0 0
+  // 0 x x 0 0
+  // 0 x x 0 0
+  // 1 0 0 0 0
+
   // it is assumed that J_Mp is only non-zero here:
+  // [3]
+  // [1*7+3]
+  // [2*7+3]
+
+  // [4]
+  // [1*7+4]
+  // [2*7+4]
+
   // [3*7+1]
   // [4*7+1]
   // [5*7+1]
@@ -182,13 +219,6 @@ void RKTools::J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5){
 
   // [6*7+0] = 1
 
-  // [3]
-  // [1*7+3]
-  // [2*7+3]
-
-  // [4]
-  // [1*7+4]
-  // [2*7+4]
 
   double JTC0  = (J_Mp[16] * cov7[24] + J_Mp[21] * cov7[31] + J_Mp[26] * cov7[38]);
   double JTC1  = (J_Mp[16] * cov7[31] + J_Mp[21] * cov7[32] + J_Mp[26] * cov7[39]);
@@ -231,26 +261,36 @@ void RKTools::J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5){
 
 void RKTools::J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5){
 
+  // 6D -> 5D
+
+  // J_Mp
+  // 0 0 0 x x
+  // 0 0 0 x x
+  // 0 0 0 x x
+  // x x x 0 0
+  // x x x 0 0
+  // x x x 0 0
+
   // it is assumed that J_Mp is only non-zero here:
   // [3]
-  // [1*7+3]
-  // [2*7+3]
+  // [1*6+3]
+  // [2*6+3]
 
   // [4]
-  // [1*7+4]
-  // [2*7+4]
+  // [1*6+4]
+  // [2*6+4]
 
-  // [3*7+0]
-  // [4*7+0]
-  // [5*7+0]
+  // [3*6+0]
+  // [4*6+0]
+  // [5*6+0]
 
-  // [3*7+1]
-  // [4*7+1]
-  // [5*7+1]
+  // [3*6+1]
+  // [4*6+1]
+  // [5*6+1]
 
-  // [3*7+2]
-  // [4*7+2]
-  // [5*7+2]
+  // [3*6+2]
+  // [4*6+2]
+  // [5*6+2]
 
   double JTC0  = (J_Mp[15] * cov6[18+3] + J_Mp[20] * cov6[24+3] + J_Mp[25] * cov6[30+3]);
   double JTC1  = (J_Mp[15] * cov6[24+3] + J_Mp[20] * cov6[24+4] + J_Mp[25] * cov6[30+4]);
