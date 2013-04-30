@@ -617,7 +617,7 @@ void MaterialEffects::noiseBrems(const double& mom,
 
   double minusXOverLn2  = -1.442695 * fabs(stepSize_) / radiationLength_;
   double sigma2E = 1.44 * mom * mom * (pow(3., minusXOverLn2) - pow(4., minusXOverLn2));
-  assert(sigma2E > 0.0);
+  assert(sigma2E >= 0.0);
   noise[6 * 7 + 6] += (mom * mom + mass_ * mass_) / pow(mom, 6.) * sigma2E;
 
 }
