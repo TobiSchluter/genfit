@@ -31,7 +31,7 @@
 #include <TMath.h>
 
 
-#define DEBUG
+//#define DEBUG
 
 namespace genfit {
 
@@ -402,10 +402,10 @@ void MaterialEffects::noiseCoulomb(const double& mom,
   const double sinPhi2 = sinPhi * sinPhi;
   const double cosPhi2 = cosPhi * cosPhi;
   //this calculates the full projection of the MSC noise variance onto the 7D global coordinate system. Even taking into account the (co)variances of the position coordinates
-  noiseAfter[0 * 7 + 0] =  sigma2 * step2 / 3.0 * (cosTheta2 + (cosPhi2 - 1.0) * (cosTheta2 - 1.0));
+  noiseAfter[0 * 7 + 0] =  sigma2 * step2 / 3.0 * (cosTheta2 + sinPhi2 * sinTheta2);
   noiseAfter[1 * 7 + 0] = -sigma2 * step2 / 3.0 * sinPhi * cosPhi * sinTheta2;
   noiseAfter[2 * 7 + 0] = -sigma2 * step2 / 3.0 * cosPhi * cosTheta * sinTheta;
-  noiseAfter[3 * 7 + 0] =  sigma2 * stepSize_ * 0.5 * (cosTheta2 + (cosPhi2 - 1.0) * (cosTheta2 - 1.0));
+  noiseAfter[3 * 7 + 0] =  sigma2 * stepSize_ * 0.5 * (cosTheta2 + sinPhi2 * sinTheta2);
   noiseAfter[4 * 7 + 0] = -sigma2 * stepSize_ * 0.5 * sinPhi * cosPhi * sinTheta2;
   noiseAfter[5 * 7 + 0] = -sigma2 * stepSize_ * 0.5 * cosPhi * cosTheta * sinTheta;
   noiseAfter[0 * 7 + 1] = noiseAfter[1 * 7 + 0];
