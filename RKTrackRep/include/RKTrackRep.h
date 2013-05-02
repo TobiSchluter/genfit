@@ -24,7 +24,7 @@
 #ifndef genfit_RKTrackRep_h
 #define genfit_RKTrackRep_h
 
-#include <AbsTrackRep.h>
+#include "AbsTrackRep.h"
 
 #include "RKTools.h"
 #include "StepLimits.h"
