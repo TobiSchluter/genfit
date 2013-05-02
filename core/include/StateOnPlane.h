@@ -52,7 +52,7 @@ class StateOnPlane : public TObject {
   const TVectorD& getAuxInfo() const {return auxInfo_;}
   TVectorD& getAuxInfo() {return auxInfo_;}
   SharedPlanePtr getPlane() const {return sharedPlane_;}
-  AbsTrackRep* const getRep() const {return rep_;}
+  AbsTrackRep* getRep() const {return rep_;}
 
   void setState(const TVectorD& state) {state_ = state;}
   void setPlane(SharedPlanePtr plane) {sharedPlane_ = plane;}
