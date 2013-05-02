@@ -55,7 +55,7 @@ class TrackPoint : public TObject {
 
   double getSortingParameter() {return sortingParameter_;}
 
-  Track* const getTrack() const {return track_;}
+  Track* getTrack() const {return track_;}
 
   std::vector< genfit::AbsMeasurement* >& getRawMeasurements() {return rawMeasurements_;}
   AbsMeasurement* getRawMeasurement(int i);

@@ -48,7 +48,7 @@ class AbsMeasurement : public TObject {
   //! Deep copy ctor for polymorphic class.
   virtual AbsMeasurement* clone() const = 0;
 
-  TrackPoint* const getTrackPoint() const {return trackPoint_;}
+  TrackPoint* getTrackPoint() const {return trackPoint_;}
 
 
 
