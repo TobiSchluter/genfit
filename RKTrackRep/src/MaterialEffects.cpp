@@ -107,7 +107,7 @@ void MaterialEffects::setMscModel(const std::string& modelName)
 }
 
 
-double MaterialEffects::effects(const std::vector< std::pair< MaterialProperties, M1x7 > >& points,
+double MaterialEffects::effects(const std::vector< StepInfos >& points,
                                 int materialsFXStart,
                                 int materialsFXStop,
                                 const double& mom,
@@ -136,10 +136,10 @@ double MaterialEffects::effects(const std::vector< std::pair< MaterialProperties
 #ifdef DEBUG
     std::cerr << "     calculate matFX ";
     if (doNoise) std::cerr << " and noise";
-    std::cerr << " for "; it->first.Print();
+    std::cerr << " for "; it->materialProperties_.Print();
 #endif
 
-    double realPath = it->first.getSegmentLength();
+    double realPath = it->materialProperties_.getSegmentLength();
     double stepSign(1.);
     if (realPath < 0)
       stepSign = -1.;
@@ -148,7 +148,7 @@ double MaterialEffects::effects(const std::vector< std::pair< MaterialProperties
     if (realPath > 1.E-8) { // do material effects only if distance is not too small
 
 
-      it->first.getMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
+      it->materialProperties_.getMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
 
       if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
 
@@ -158,7 +158,7 @@ double MaterialEffects::effects(const std::vector< std::pair< MaterialProperties
           this->noiseBetheBloch(mom, *noise);
 
         if (doNoise && noiseCoulomb_)
-          this->noiseCoulomb(mom, *noise, *((M1x3*) &it->second[3]) );
+          this->noiseCoulomb(mom, *noise, *((M1x3*) &it->state7_[3]) );
 
         if (energyLossBrems_)
           momLoss += stepSign * this->energyLossBrems(mom);

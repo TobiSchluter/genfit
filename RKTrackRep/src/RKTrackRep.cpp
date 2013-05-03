@@ -475,7 +475,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
     for(int i=3*7; i<49; i+=7) {
 
       if(i==42) {
-        (*jacobian)[i+3]*=state7[6]; (*jacobian)[i+4]*=state7[6]; (*jacobian)[i+5]*=state7[6];
+        (*jacobian)[i+3] *= state7[6]; (*jacobian)[i+4] *= state7[6]; (*jacobian)[i+5] *= state7[6];
       }
 
       //first point
@@ -505,7 +505,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
       dC4 = (*jacobian)[i+5]+dA3*H1[1]-dB3*H1[0];    // dC4/dp }
 
       if(i==42) { // if last row: (dA4, dB4, dC4) := (dA4, dB4, dC4) + (A4, B4, C4) - (ax, ay, az)
-        dA4+=A4-A[0]; dB4+=B4-A[1]; dC4+=C4-A[2];
+        dA4 += A4-A[0]; dB4 += B4-A[1]; dC4 += C4-A[2];
       }
 
       //last point
@@ -888,7 +888,8 @@ void RKTrackRep::transformM6P(const M6x6& in6x6,
 //
 // Authors: R.Brun, M.Hansroul, V.Perevoztchikov (Geant3)
 //
-bool RKTrackRep::RKutta(const DetPlane& plane,
+bool RKTrackRep::RKutta(const M1x4& SU,
+                        const DetPlane& plane,
                         double charge,
                         M1x7& state7,
                         M7x7* jacobian,
@@ -912,7 +913,6 @@ bool RKTrackRep::RKutta(const DetPlane& plane,
   double  relMomLoss = 0;                      // relative momentum loss in RKutta
   double  deltaAngle = 0.;                     // total angle by which the momentum has changed during extrapolation
   double  An(0), S(0), Sl(0), CBA(0);
-  M1x4    SU = {{0.,0.,0.,0.}};
 
 
   #ifdef DEBUG
@@ -935,20 +935,6 @@ bool RKTrackRep::RKutta(const DetPlane& plane,
   }
 
 
-  // make SU vector point away from origin
-  const TVector3 W(plane.getNormal());
-  if (W*plane.getO() > 0) {
-    SU[0] =     W.X();
-    SU[1] =     W.Y();
-    SU[2] =     W.Z();
-  }
-  else {
-    SU[0] = -1.*W.X();
-    SU[1] = -1.*W.Y();
-    SU[2] = -1.*W.Z();
-  }
-
-  SU[3] = plane.distance(0., 0., 0.);
 
   unsigned int counter(0);
 
@@ -1042,9 +1028,9 @@ bool RKTrackRep::RKutta(const DetPlane& plane,
 
     // check if we went back and forth multiple times -> we don't come closer to the plane!
     if (counter > 3){
-      if (S                                             *materials_[counter-1].first.getSegmentLength() < 0 &&
-          materials_[counter-1].first.getSegmentLength()*materials_[counter-2].first.getSegmentLength() < 0 &&
-          materials_[counter-2].first.getSegmentLength()*materials_[counter-3].first.getSegmentLength() < 0){
+      if (S                                                           *materials_[counter-1].materialProperties_.getSegmentLength() < 0 &&
+          materials_[counter-1].materialProperties_.getSegmentLength()*materials_[counter-2].materialProperties_.getSegmentLength() < 0 &&
+          materials_[counter-2].materialProperties_.getSegmentLength()*materials_[counter-3].materialProperties_.getSegmentLength() < 0){
         Exception exc("RKTrackRep::RKutta ==> Do not get closer to plane!",__LINE__,__FILE__);
         exc.setFatal();
         throw exc;
@@ -1298,7 +1284,8 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
 
   // call stepper and reduce stepsize if step not too small
-  materials_.push_back( std::make_pair(MaterialProperties(), M1x7(state7)) );
+  materials_.push_back( StepInfos() );
+  materials_.back().state7_ = state7;
   ++materialsFXStop_;
   if (/*!fNoMaterial*/ true){
 
@@ -1310,13 +1297,13 @@ double RKTrackRep::estimateStep(const M1x7& state7,
                                               charge/state7[6], // |p|
                                               relMomLoss,
                                               pdgCode_,
-                                              materials_.back().first,
+                                              materials_.back().materialProperties_,
                                               limits,
                                               true);
     }
     else { //assume material has not changed
       if  (materials_.size()>1) {
-        materials_.back().first = (materials_.end()-2)->first;
+        materials_.back().materialProperties_ = (materials_.end()-2)->materialProperties_;
       }
     }
   }
@@ -1328,7 +1315,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
   double finalStep = limits.getLowestLimitSignedVal();
 
-  materials_.back().first.setSegmentLength(finalStep);
+  materials_.back().materialProperties_.setSegmentLength(finalStep);
 
   #ifdef DEBUG
     std::cout << "  --> Step to be used: " << finalStep << "\n";
@@ -1367,6 +1354,17 @@ double RKTrackRep::Extrap(const DetPlane& plane,
   double coveredDistance(0.);
   TMatrixD noiseProjection(7,7);
 
+  const TVector3 W(plane.getNormal());
+  M1x4    SU = {{W.X(), W.Y(), W.Z(), plane.distance(0., 0., 0.)}};
+
+  // make SU vector point away from origin
+  if (W*plane.getO() < 0) {
+    SU[0] = -1.*W.X();
+    SU[1] = -1.*W.Y();
+    SU[2] = -1.*W.Z();
+  }
+
+
 
   while(true){
 
@@ -1394,7 +1392,7 @@ double RKTrackRep::Extrap(const DetPlane& plane,
     StepLimits limits;
     limits.setLimit(stp_sMaxArg, maxStep);
 
-    if( ! RKutta(plane, charge, state7, cov, coveredDistance, checkJacProj, noiseProjection, limits, onlyOneStep) ) {
+    if( ! RKutta(SU, plane, charge, state7, cov, coveredDistance, checkJacProj, noiseProjection, limits, onlyOneStep) ) {
       Exception exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
@@ -1403,7 +1401,7 @@ double RKTrackRep::Extrap(const DetPlane& plane,
 #ifdef DEBUG
     std::cout<<"Original points \n";
     for (auto it = materials_.begin(); it != materials_.end(); ++it){
-      it->first.Print();
+      it->materialProperties_.Print();
     }
     std::cout<<"\n";
 #endif
@@ -1412,11 +1410,11 @@ double RKTrackRep::Extrap(const DetPlane& plane,
     if (/*!useCache_ &&*/ std::distance(materials_.begin()+materialsFXStart_, materials_.end()) > 1) {
       for (auto it = materials_.end()-1; it != materials_.begin()+materialsFXStart_; --it) {
         // merge two points if they are in the same material AND (one of them has a small stepsize OR their stepsizes have different signs)
-        if (it->first == (it-1)->first &&
-            (fabs(it->first.getSegmentLength()) < MINSTEP ||
-             fabs((it-1)->first.getSegmentLength()) < MINSTEP ||
-             it->first.getSegmentLength()*(it-1)->first.getSegmentLength() < 0) ){
-          (it-1)->first.addToSegmentLength(it->first.getSegmentLength());
+        if (it->materialProperties_ == (it-1)->materialProperties_ &&
+            (fabs(it->materialProperties_.getSegmentLength()) < MINSTEP ||
+             fabs((it-1)->materialProperties_.getSegmentLength()) < MINSTEP ||
+             it->materialProperties_.getSegmentLength()*(it-1)->materialProperties_.getSegmentLength() < 0) ){
+          (it-1)->materialProperties_.addToSegmentLength(it->materialProperties_.getSegmentLength());
           materials_.erase(it);
           --materialsFXStop_;
         }
@@ -1425,8 +1423,8 @@ double RKTrackRep::Extrap(const DetPlane& plane,
         std::cout<<"Filtered materials_ \n";
         double spannedLen(0);
         for (auto it = materials_.begin(); it != materials_.end(); ++it){
-          it->first.Print();
-          spannedLen += it->first.getSegmentLength();
+          it->materialProperties_.Print();
+          spannedLen += it->materialProperties_.getSegmentLength();
         }
         std::cout<<"-> Total spanned distance = " << spannedLen << "\n";
       #endif
@@ -1517,7 +1515,7 @@ double RKTrackRep::Extrap(const DetPlane& plane,
     }
 
     //we arrived at the destination plane, if we point to the active area of the plane (if it is finite), and the distance is below threshold
-    if( plane.distance(state7[0], state7[1], state7[2]) < MINSTEP) {
+    if(limits.getLowestLimit().first == stp_plane && plane.distance(state7[0], state7[1], state7[2]) < MINSTEP) {
       #ifdef DEBUG
         std::cerr << "arrived at plane with a distance of  " << plane.distance(state7[0], state7[1], state7[2]) << " cm left. ";
       #endif

@@ -270,6 +270,8 @@ bool checkErrorPropagation() {
   }
 
 
+  state.Print();
+
   // compare
   if (false) { // TODO: specify test criterium
 

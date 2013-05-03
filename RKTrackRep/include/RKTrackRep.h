@@ -32,6 +32,13 @@
 
 namespace genfit {
 
+struct StepInfos {
+  MaterialProperties materialProperties_;
+  M1x7 state7_; // 7D state vector
+  M5x5 jac_; // 5D jacobian of transport
+  M5x5 noise_; // 5D noise matrix
+};
+
 class RKTrackRep : public AbsTrackRep {
 
  public:
@@ -160,7 +167,8 @@ class RKTrackRep : public AbsTrackRep {
     * If this is the case, #RKutta() will only propagate the reduced distance and then return. This is to ensure that
     * material effects, which are calculated after the propagation, are taken into account properly.
     */
-  bool RKutta(const DetPlane& plane,
+  bool RKutta(const M1x4& SU,
+              const DetPlane& plane,
               double charge,
               M1x7& state7,
               M7x7* jacobian,
@@ -205,7 +213,7 @@ class RKTrackRep : public AbsTrackRep {
 
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
-  mutable std::vector< std::pair< MaterialProperties, M1x7 > > materials_; //! materials crossed in the last extrapolation, together with 7D states at start of each step
+  mutable std::vector<StepInfos> materials_; //! materials crossed in the last extrapolation, together with 7D states at start of each step
   mutable int materialsFXStart_; //!
   mutable int materialsFXStop_; //!
 

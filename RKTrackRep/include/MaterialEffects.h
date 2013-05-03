@@ -84,7 +84,7 @@ public:
 
 
   //! Calculates energy loss in the traveled path, optional calculation of noise matrix
-  double effects(const std::vector< std::pair< MaterialProperties, M1x7 > >& points,
+  double effects(const std::vector< StepInfos >& points,
                  int materialsFXStart,
                  int materialsFXStop,
                  const double& mom,
