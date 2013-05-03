@@ -636,8 +636,7 @@ void RKTrackRep::getState5(StateOnPlane* state, const M1x7& state7) const {
 
 
 void RKTrackRep::transformPM7(const MeasuredStateOnPlane* state,
-                              M7x7& out7x7,
-                              TMatrixD* Jac) const {
+                              M7x7& out7x7) const {
 
   // get vectors and aux variables
   const TVector3& U(state->getPlane()->getU());
@@ -651,6 +650,19 @@ void RKTrackRep::transformPM7(const MeasuredStateOnPlane* state,
   pTilde[0] = spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()); // a_x
   pTilde[1] = spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()); // a_y
   pTilde[2] = spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()); // a_z
+
+  calcJ_pM_5x7(U, V, pTilde, spu);
+
+  // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
+  // the multiplication can be done much faster directly on array level
+  // out = J_pM^T * in5x5 * J_pM
+  const M5x5& in5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
+  RKTools::J_pMTxcov5xJ_pM(J_pM_5x7_, in5x5_, out7x7);
+
+}
+
+
+void RKTrackRep::calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const {
 
   const double pTildeMag = sqrt(pTilde[0]*pTilde[0] + pTilde[1]*pTilde[1] + pTilde[2]*pTilde[2]);
   const double pTildeMag2 = pTildeMag*pTildeMag;
@@ -680,23 +692,11 @@ void RKTrackRep::transformPM7(const MeasuredStateOnPlane* state,
   J_pM_5x7_[18] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
   J_pM_5x7_[19] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
 
-
-  // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
-  // the multiplication can be done much faster directly on array level
-  // out = J_pM^T * in5x5 * J_pM
-  const M5x5& in5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
-  RKTools::J_pMTxcov5xJ_pM(J_pM_5x7_, in5x5_, out7x7);
-
-  if (Jac!=nullptr){
-    Jac->ResizeTo(5,7);
-    *Jac = TMatrixD(5,7, &(J_pM_5x7_[0]));
-  }
 }
 
 
 void RKTrackRep::transformPM6(const MeasuredStateOnPlane* state,
-                              M6x6& out6x6,
-                              TMatrixD* Jac) const {
+                              M6x6& out6x6) const {
 
   // get vectors and aux variables
   const TVector3& U(state->getPlane()->getU());
@@ -751,26 +751,36 @@ void RKTrackRep::transformPM6(const MeasuredStateOnPlane* state,
   const M5x5& in5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
   RKTools::J_pMTxcov5xJ_pM(J_pM_5x6_, in5x5_, out6x6);
 
-  if (Jac!=nullptr){
-    Jac->ResizeTo(5,6);
-    *Jac = TMatrixD(5,6, &(J_pM_5x6_[0]));
-  }
 }
 
 
 void RKTrackRep::transformM7P(const M7x7& in7x7,
                               const M1x7& state7,
-                              MeasuredStateOnPlane* state, // plane must already be set!
-                              TMatrixD* Jac) const {
+                              MeasuredStateOnPlane* state) const { // plane must already be set!
 
   // get vectors and aux variables
   const TVector3& U(state->getPlane()->getU());
   const TVector3& V(state->getPlane()->getV());
   TVector3 W(state->getPlane()->getNormal());
 
-  const double AtU = state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z();
-  const double AtV = state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z();
-  const double AtW = state7[3]*W.X() + state7[4]*W.Y() + state7[5]*W.Z();
+  M1x3& A = *((M1x3*) &state7[3]);
+
+  calcJ_Mp_7x5(U, V, W, A);
+
+  // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
+  // the multiplication can be done much faster directly on array level
+  // out5x5 = J_Mp^T * in * J_Mp
+  M5x5& out5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
+  RKTools::J_MpTxcov7xJ_Mp(J_Mp_7x5_, in7x7, out5x5_);
+
+}
+
+
+void RKTrackRep::calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const {
+
+  const double AtU = A[0]*U.X() + A[1]*U.Y() + A[2]*U.Z();
+  const double AtV = A[0]*V.X() + A[1]*V.Y() + A[2]*V.Z();
+  const double AtW = A[0]*W.X() + A[1]*W.Y() + A[2]*W.Z();
 
   // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)   (in is 7x7)
 
@@ -794,24 +804,12 @@ void RKTrackRep::transformM7P(const M7x7& in7x7,
   J_Mp_7x5_[9]  = V.Y(); // [1][4]
   J_Mp_7x5_[14] = V.Z(); // [2][4]
 
-
-  // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
-  // the multiplication can be done much faster directly on array level
-  // out5x5 = J_Mp^T * in * J_Mp
-  M5x5& out5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
-  RKTools::J_MpTxcov7xJ_Mp(J_Mp_7x5_, in7x7, out5x5_);
-
-  if (Jac!=nullptr){
-    Jac->ResizeTo(7,5);
-    *Jac = TMatrixD(7,5, &(J_Mp_7x5_[0]));
-  }
 }
 
 
 void RKTrackRep::transformM6P(const M6x6& in6x6,
                               const M1x7& state7,
-                              MeasuredStateOnPlane* state, // plane and charge must already be set!
-                              TMatrixD* Jac) const {
+                              MeasuredStateOnPlane* state) const { // plane and charge must already be set!
 
   // get vectors and aux variables
   const TVector3& U(state->getPlane()->getU());
@@ -855,10 +853,6 @@ void RKTrackRep::transformM6P(const M6x6& in6x6,
   M5x5& out5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
   RKTools::J_MpTxcov6xJ_Mp(J_Mp_6x5_, in6x6, out5x5_);
 
-  if (Jac!=nullptr){
-    Jac->ResizeTo(6,5);
-    *Jac = TMatrixD(6,5, &(J_Mp_6x5_[0]));;
-  }
 }
 
 

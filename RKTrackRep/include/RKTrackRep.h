@@ -141,22 +141,22 @@ class RKTrackRep : public AbsTrackRep {
   void getState5(StateOnPlane* state, const M1x7& state7) const; // state7 must already lie on plane of state!
 
   void transformPM7(const MeasuredStateOnPlane* state,
-                    M7x7& out7x7,
-                    TMatrixD* Jac = NULL) const;
+                    M7x7& out7x7) const;
+
+  void calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
 
   void transformPM6(const MeasuredStateOnPlane* state,
-                    M6x6& out6x6,
-                    TMatrixD* Jac = NULL) const;
+                    M6x6& out6x6) const;
 
   void transformM7P(const M7x7& in7x7,
                     const M1x7& state7,
-                    MeasuredStateOnPlane* state, // plane must already be set!
-                    TMatrixD* Jac = NULL) const;
+                    MeasuredStateOnPlane* state) const; // plane must already be set!
+
+  void calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const;
 
   void transformM6P(const M6x6& in6x6,
                     const M1x7& state7,
-                    MeasuredStateOnPlane* state, // plane and charge must already be set!
-                    TMatrixD* Jac = NULL) const;
+                    MeasuredStateOnPlane* state) const; // plane and charge must already be set!
 
   //! Propagates the particle through the magnetic field.
   /** If the propagation is successful and the plane is reached, the function returns true.
