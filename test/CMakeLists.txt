@@ -18,7 +18,10 @@ Execute_process(COMMAND ${ROOT_CONFIG} --cflags
 	OUTPUT_VARIABLE ROOT_CFLAGS
     	OUTPUT_STRIP_TRAILING_WHITESPACE)
     	
-
+Execute_process(COMMAND ${ROOT_CONFIG} --incdir
+	OUTPUT_VARIABLE ROOT_INCDIR
+    	OUTPUT_STRIP_TRAILING_WHITESPACE)
+    	
 SET(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wshadow -std=c++11 -pedantic ${ROOT_CFLAGS}")
 #SET(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -27,7 +30,7 @@ Execute_process(COMMAND ${ROOT_CONFIG} --glibs --ldflags --evelibs
     	OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 INCLUDE_DIRECTORIES(
-	$ENV{ROOTSYS}/include 
+	${ROOT_INCDIR}
 	$ENV{GENFIT}/core/include
 	$ENV{GENFIT}/RKTrackRep/include
 )
