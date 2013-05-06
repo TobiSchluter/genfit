@@ -49,6 +49,7 @@ class AbsMeasurement : public TObject {
   virtual AbsMeasurement* clone() const = 0;
 
   TrackPoint* getTrackPoint() const {return trackPoint_;}
+  void setTrackPoint(TrackPoint *tp) {trackPoint_ = tp;}
 
 
 

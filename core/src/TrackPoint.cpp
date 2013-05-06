@@ -44,11 +44,15 @@ TrackPoint::TrackPoint(const TrackPoint& rhs) {
   track_ = rhs.track_;
 
   for (AbsMeasurement* rhsMeasurement : rhs.rawMeasurements_) {
-    rawMeasurements_.push_back(rhsMeasurement->clone());
+    AbsMeasurement* tp = rhsMeasurement->clone();
+    tp->setTrackPoint(this);
+    rawMeasurements_.push_back(tp);
   }
 
   for (AbsFitterInfo* rhsFitterInfo : rhs.fitterInfos_) {
-    fitterInfos_.push_back(rhsFitterInfo->clone());
+    AbsFitterInfo* fi = rhsFitterInfo->clone();
+    fi->setTrackPoint(this);
+    fitterInfos_.push_back(fi);
   }
 
   //material_ = new MaterialInfo(*(rhs.material_));

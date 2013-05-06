@@ -53,6 +53,7 @@ class AbsFitterInfo : public TObject {
   virtual AbsFitterInfo* clone() const = 0;
 
   TrackPoint* getTrackPoint() const {return trackPoint_;}
+  void setTrackPoint(TrackPoint *tp) {trackPoint_ = tp;}
   AbsTrackRep* getRep() const {return rep_;}
 
   virtual void deleteForwardInfo() = 0;
