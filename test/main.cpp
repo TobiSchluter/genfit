@@ -106,7 +106,7 @@ int randomSign() {
 bool compareForthBackExtrapolation() {
 
   double epsilonLen = 1.E-4; // 1 mu
-  double epsilonMom = 1.E-5; // 10 keV
+  double epsilonMom = 2.E-5; // 20 keV
 
   int pdg = randomPdg();
   genfit::AbsTrackRep* rep;
@@ -393,7 +393,7 @@ int main() {
   unsigned int nTests(1);
 
   for (unsigned int i=0; i<nTests; ++i) {
-    /*if (!compareForthBackExtrapolation()) {
+    if (!compareForthBackExtrapolation()) {
       std::cout << "failed compareForthBackExtrapolation nr" << i << "\n";
       ++nFailed;
     }
@@ -401,17 +401,17 @@ int main() {
     if (!checkStopAtBoundary()) {
       std::cout << "failed checkStopAtBoundary nr" << i << "\n";
       ++nFailed;
-    }*/
+    }
 
     if (!checkErrorPropagation()) {
       std::cout << "failed checkErrorPropagation nr" << i << "\n";
       ++nFailed;
     }
-/*
+
     if (!checkExtrapolateToLine()) {
       std::cout << "failed checkExtrapolateToLine nr" << i << "\n";
       ++nFailed;
-    }*/
+    }
 
 
 

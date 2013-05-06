@@ -89,8 +89,7 @@ public:
                  int materialsFXStop,
                  const double& mom,
                  const int& pdg,
-                 M7x7* noise = nullptr,
-                 const M7x7* jacobian = nullptr);
+                 M7x7* noise = nullptr);
 
   //! Returns maximum length so that a specified momentum loss will not be exceeded
   /**  The stepper returns the maximum length that the particle may travel, so that a specified relative momentum loss will not be exceeded,

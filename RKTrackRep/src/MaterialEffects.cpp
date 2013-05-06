@@ -112,8 +112,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
                                 int materialsFXStop,
                                 const double& mom,
                                 const int& pdg,
-                                M7x7* noise,
-                                const M7x7* jacobian)
+                                M7x7* noise)
 {
 
   if (materialInterface_ == nullptr) {
@@ -370,9 +369,6 @@ void MaterialEffects::noiseCoulomb(const double& mom,
                                    const M1x3& direction) const
 {
 
-//std::cerr << "MaterialEffects::noiseCoulomb" << std::endl;
-//RKTools::printDim(jacobian,7,7);
-  //double momTrue = 0.07;
   // MULTIPLE SCATTERING; calculate sigma^2
   double sigma2 = 0;
   assert(mscModelCode_ == 0 || mscModelCode_ == 1);

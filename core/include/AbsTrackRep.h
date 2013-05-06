@@ -71,17 +71,11 @@ class AbsTrackRep {
   virtual double getCharge(const StateOnPlane* state) const = 0;
   char getPropDir() const {return propDir_;}
 
-  /** Get the jacobian of the last extrapolation  */
-  virtual TMatrixD getForwardJacobian() const = 0;
+  /** Get the jacobian and noise matrix of the last extrapolation  */
+  virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const = 0;
 
-  /** Get the jacobian of the last extrapolation if it would have been done in opposite direction  */
-  virtual TMatrixD getBackwardJacobian() const = 0;
-
-  /** Get the noise matrix of the last extrapolation  */
-  virtual TMatrixDSym getForwardNoise() const = 0;
-
-  /** Get the noise matrix of the last extrapolation if it would have been done in opposite direction  */
-  virtual TMatrixDSym getBackwardNoise() const = 0;
+  /** Get the jacobian and noise matrix of the last extrapolation if it would have been done in opposite direction  */
+  virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const = 0;
 
 
   virtual void setPosMom(StateOnPlane* stateInput, const TVector3& pos, const TVector3& mom) const = 0;

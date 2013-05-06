@@ -73,11 +73,10 @@ double RKTrackRep::extrapolateToPlane(StateOnPlane* state,
   M1x7 state7;
   getState7(state, state7);
   M7x7 cov;
-  M7x7* covPtr(nullptr);
+  TMatrixDSym* covPtr(nullptr);
 
   if (calcCov) {
-    covPtr = &cov;
-    transformPM7(dynamic_cast<MeasuredStateOnPlane*>(state), cov);
+    covPtr = &(dynamic_cast<MeasuredStateOnPlane*>(state)->getCov());
   }
 
   // actual extrapolation
@@ -244,24 +243,63 @@ void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& 
 }
 
 
-TMatrixD RKTrackRep::getForwardJacobian() const {
-  return TMatrixD();
+void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const {
+
+#ifdef DEBUG
+  std::cerr << "RKTrackRep::getForwardJacobianAndNoise " << std::endl;
+#endif
+
+  jacobian.ResizeTo(5,5);
+  jacobian.SetMatrixArray(ExtrapSteps_.back().jac_.data());
+
+  noise.ResizeTo(5,5);
+  noise.SetMatrixArray(ExtrapSteps_.back().noise_.data());
+
+  for (unsigned int i=ExtrapSteps_.size()-1; i!=std::numeric_limits<unsigned int>::max(); --i) {
+    jacobian *= TMatrixD(5,5, ExtrapSteps_[i].jac_.data());
+    noise += TMatrixDSym(5, ExtrapSteps_[i].noise_.data()).SimilarityT(jacobian);
+  }
+
+#ifdef DEBUG
+  std::cerr << "jacobian : "; jacobian.Print();
+  std::cerr << "noise : "; noise.Print();
+#endif
+
 }
 
 
-TMatrixD RKTrackRep::getBackwardJacobian() const {
-  return TMatrixD();
+void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const {
+
+  jacobian.ResizeTo(5,5);
+  jacobian.SetMatrixArray(ExtrapSteps_.front().jac_.data());
+
+  TDecompSVD invertAlgo(jacobian);
+  bool status = invertAlgo.Invert(jacobian);
+  if(status == 0){
+    Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
+    e.setFatal();
+    throw e;
+  }
+
+  noise.ResizeTo(5,5);
+  noise.SetMatrixArray(ExtrapSteps_.front().noise_.data());
+
+  for (unsigned int i=1; i!=ExtrapSteps_.size(); ++i) {
+    TMatrixD nextJac(5,5, ExtrapSteps_[i].jac_.data());
+    TDecompSVD invertAlgo2(nextJac);
+    status = invertAlgo2.Invert(nextJac);
+    if(status == 0){
+      Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
+      e.setFatal();
+      throw e;
+    }
+
+    jacobian *= nextJac;
+    noise += (TMatrixDSym(5, ExtrapSteps_[i].noise_.data())).SimilarityT(jacobian);
+  }
+
 }
 
-
-TMatrixDSym RKTrackRep::getForwardNoise() const {
-  return TMatrixDSym();
-}
-
-
-TMatrixDSym RKTrackRep::getBackwardNoise() const {
-  return TMatrixDSym();
-}
 
 
 void RKTrackRep::setPosMom(StateOnPlane* state, const TVector3& pos, const TVector3& mom) const {
@@ -565,7 +603,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
 
 void RKTrackRep::initArrays() const {
   noiseArray_.fill(0);
-  oldCov_.fill(0);
+  J_MM_.fill(0);
 
   J_pM_5x7_.fill(0);
   J_pM_5x6_.fill(0);
@@ -1093,15 +1131,11 @@ bool RKTrackRep::RKutta(const M1x4& SU,
         Exception exc("RKTrackRep::Extrap ==> covariance is projected onto destination plane again",__LINE__,__FILE__);
         throw exc;
       }
+
       //save old jacobian
       double* covAsPtr = (double*)jacobian;
-
       noiseProjection.SetMatrixArray(covAsPtr);
 
-      //std::cerr << "The current Jac is:" << std::endl;
-      //RKTools::printDim(covAsPtr,7,7);
-      //std::cerr << "This was filled into noiseProjection so it must be the same:" << std::endl;
-//       noiseProjection.Print();
       checkJacProj = true;
 #ifdef DEBUG
       std::cout << "  Jacobian of extrapolation before Projection:\n";
@@ -1125,24 +1159,16 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       RKTools::printDim(jacobian->data(), 7,7);
 #endif
 
-//       std::cerr << "The projected Jac is filled into projectedJac so we have:" << std::endl;
-//       projectedJac.Print();
-      //Tools::invert(noiseProjection);
-
+      // TODO: find a more elegant way of calculatin noiseProjection
       TDecompSVD invertAlgo(noiseProjection);
-
       bool status = invertAlgo.Invert(noiseProjection);
       if(status == 0){
         Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
         e.setFatal();
         throw e;
       }
-//     std::cerr << "The inverse of the unprojected jac is:" << std::endl;
-//       noiseProjection.Print();
       noiseProjection = projectedJac * noiseProjection;
-//       std::cerr << "And finaly in RKutta. The noise projection matrix is:" << std::endl;
-      //noiseProjection = projectedJac * noiseProjection;
-//       noiseProjection.Print();
+
     }
   } // end of linear extrapolation to surface
 
@@ -1341,7 +1367,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
                           double charge,
                           bool& isAtBoundary,
                           M1x7& state7,
-                          M7x7* cov,
+                          TMatrixDSym* cov,
                           bool onlyOneStep,
                           bool stopAtBoundary,
                           double maxStep) const {
@@ -1349,12 +1375,12 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
   static const unsigned int maxNumIt(500);
   unsigned int numIt(0);
 
-  const bool calcCov(cov!=nullptr);
+  bool fillExtrapSteps(cov != nullptr);
   double coveredDistance(0.);
   TMatrixD noiseProjection(7,7);
 
   const TVector3 W(destPlane.getNormal());
-  M1x4    SU = {{W.X(), W.Y(), W.Z(), destPlane.distance(0., 0., 0.)}};
+  M1x4 SU = {{W.X(), W.Y(), W.Z(), destPlane.distance(0., 0., 0.)}};
 
   // make SU vector point away from origin
   if (W*destPlane.getO() < 0) {
@@ -1362,7 +1388,6 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     SU[1] = -1.*W.Y();
     SU[2] = -1.*W.Z();
   }
-
 
 
   while(true){
@@ -1377,17 +1402,19 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       throw exc;
     }
 
+    M7x7* jac = nullptr;
+    M7x7* noise = nullptr;
     isAtBoundary = false;
 
-    // initialize cov with unit matrix
-    if(calcCov){
-      oldCov_ = *cov;
-      cov->fill(0);
-      for(int i=0; i<7; ++i) (*cov)[8*i] = 1.;
-    }
 
-    // calc J_pM for later calculation of 5D Jacobian
-    if(calcCov){
+    if(fillExtrapSteps){
+      // initialize jacobian with unit matrix
+      jac = &J_MM_;
+      J_MM_.fill(0);
+      for(int i=0; i<7; ++i) J_MM_[8*i] = 1.;
+
+
+      // calc J_pM for later calculation of 5D Jacobian
       if (numIt == 1) { // first iteration
         M1x3 pTilde = {{state7[3], state7[4], state7[5]}};
         double pTildeW = pTilde[0] * W.X() + pTilde[1] * W.Y() + pTilde[2] * W.Z();
@@ -1414,13 +1441,13 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     StepLimits limits;
     limits.setLimit(stp_sMaxArg, maxStep);
 
-    if( ! RKutta(SU, destPlane, charge, state7, cov, coveredDistance, checkJacProj, noiseProjection, limits, onlyOneStep) ) {
+    if( ! RKutta(SU, destPlane, charge, state7, jac, coveredDistance, checkJacProj, noiseProjection, limits, onlyOneStep) ) {
       Exception exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
     }
 
-    bool atPlane(limits.getLowestLimit().first == stp_plane && checkJacProj);
+    bool atPlane(limits.getLowestLimit().first == stp_plane);
 
 
 #ifdef DEBUG
@@ -1434,7 +1461,10 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
 
     // call MatFX
-    if(calcCov) noiseArray_.fill(0); // set noiseArray_ to 0
+    if(fillExtrapSteps) {
+      noise = &noiseArray_;
+      noiseArray_.fill(0); // set noiseArray_ to 0
+    }
     unsigned int nPoints(RKStepsFXStop_ - RKStepsFXStart_);
     if (/*!fNoMaterial*/ true && nPoints>0){
       // momLoss has a sign - negative loss means momentum gain
@@ -1443,8 +1473,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
                                                                RKStepsFXStop_,
                                                                fabs(charge/state7[6]), // momentum
                                                                pdgCode_,
-                                                               &noiseArray_,
-                                                               cov);
+                                                               noise);
 
       RKStepsFXStart_ = RKStepsFXStop_;
 
@@ -1458,11 +1487,16 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
 
     // fill ExtrapSteps_
-    if (calcCov) {
+    if (fillExtrapSteps) {
       ExtrapStep extrapStep;
 
       // calc J_Mp
       if (atPlane) {
+        if (!checkJacProj) {
+          Exception exc("RKTrackRep::Extrap ==> checkJacProj is false",__LINE__,__FILE__);
+          exc.setFatal();
+          throw exc;
+        }
         calcJ_Mp_7x5(destPlane.getU(), destPlane.getV(), W, *((M1x3*) &state7[3]));
       }
       else {
@@ -1470,7 +1504,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         calcJ_Mp_7x5(pl.getU(), pl.getV(), pl.getNormal(), *((M1x3*) &state7[3]));
       }
 
-      RKTools::J_pMxJ_MMxJ_Mp(J_pM_5x7_, *cov, J_Mp_7x5_, extrapStep.jac_, checkJacProj);
+      RKTools::J_pMxJ_MMxJ_Mp(J_pM_5x7_, J_MM_, J_Mp_7x5_, extrapStep.jac_, checkJacProj);
 
 
       if( checkJacProj == true ){
@@ -1481,7 +1515,6 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       }
 
       RKTools::J_MpTxcov7xJ_Mp(J_Mp_7x5_, noiseArray_, extrapStep.noise_);
-
 
       ExtrapSteps_.push_back(extrapStep);
     }
@@ -1495,49 +1528,6 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     }
     std::cout<<"\n";
 #endif
-
-
-    if(calcCov){ // propagate cov and add noise
-      // numerical check:
-      for(unsigned int i=0; i<7*7; ++i){
-        if(fabs((*cov)[i]) > 1.E100){
-          Exception exc("RKTrackRep::Extrap ==> covariance matrix exceeds numerical limits",__LINE__,__FILE__);
-          exc.setFatal();
-          throw exc;
-        }
-      }
-
-
-      // cov = Jac^T * oldCov * Jac;
-      // last column of Jac is [0,0,0,0,0,0,1]
-      // cov is symmetric
-      RKTools::J_MMTxcov7xJ_MM(*cov, oldCov_);
-      *cov = oldCov_;
-
-      if( checkJacProj == true ){
-        //project the noise onto the destPlane
-        //std::cerr << "the current noise is " << std::endl;
-        //RKTools::printDim(noiseArray_,7,7);
-        TMatrixDSym projectedNoise(7);
-        projectedNoise.SetMatrixArray(noiseArray_.data());
-        //std::cerr << "projectedNoise is filled with the current noise: " << std::endl;
-        //projectedNoise.Print();
-        projectedNoise.SimilarityT(noiseProjection);
-        //std::cerr << "and finally the projecte noise is as root matrix: " << std::endl;
-        //projectedNoise.Print();
-
-        //double* projectedNoisePtr = projectedNoise.GetMatrixArray();
-        //TMatrixDSym noise5D;
-        // add noise to cov
-        //  for (int i=0; i<7*7; ++i) (*cov)[i] += projectedNoisePtr[i];
-      }
-
-      for (int i=0; i<7*7; ++i) (*cov)[i] += noiseArray_[i];
-
-     // std::cerr << "Noise was added to cov in RKTrackRep" << std::endl;
-    } // finished propagate cov and add noise
-
-
 
     // check if at boundary
     if (limits.getLowestLimit().first == stp_boundary) {
@@ -1569,6 +1559,19 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       break;
     }
 
+  }
+
+  if (fillExtrapSteps) {
+    // propagate cov and add noise
+    TMatrixD jac;
+    TMatrixDSym noise;
+
+    getForwardJacobianAndNoise(jac, noise);
+
+    //cov->Print();
+
+    cov->SimilarityT(jac);
+    *cov += noise;
   }
 
   return coveredDistance;

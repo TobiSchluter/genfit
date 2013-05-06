@@ -100,17 +100,11 @@ class RKTrackRep : public AbsTrackRep {
   virtual double getCharge(const StateOnPlane* state) const override {return (state->getAuxInfo())(0);}
   double getSpu(const StateOnPlane* state) const {return (state->getAuxInfo())(1);}
 
-  /** Get the jacobian of the last extrapolation  */
-  virtual TMatrixD getForwardJacobian() const override;
+  /** Get the jacobian and noise matrix of the last extrapolation  */
+  virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const override;
 
-  /** Get the jacobian of the last extrapolation if it would have been done in opposite direction  */
-  virtual TMatrixD getBackwardJacobian() const override;
-
-  /** Get the noise matrix of the last extrapolation  */
-  virtual TMatrixDSym getForwardNoise() const override;
-
-  /** Get the noise matrix of the last extrapolation if it would have been done in opposite direction  */
-  virtual TMatrixDSym getBackwardNoise() const override;
+  /** Get the jacobian and noise matrix of the last extrapolation if it would have been done in opposite direction  */
+  virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const override;
 
 
   virtual void setPosMom(StateOnPlane* state, const TVector3& pos, const TVector3& mom) const override;
@@ -207,7 +201,7 @@ class RKTrackRep : public AbsTrackRep {
                 double charge,
                 bool& isAtBoundary,
                 M1x7& state7,
-                M7x7* cov=NULL,
+                TMatrixDSym* cov = nullptr,
                 bool onlyOneStep = false,
                 bool stopAtBoundary = false,
                 double maxStep = 1.E99) const;
@@ -227,7 +221,7 @@ class RKTrackRep : public AbsTrackRep {
   // auxiliary variables and arrays
   // needed in Extrap()
   mutable M7x7 noiseArray_; //! noise matrix of the last extrapolation
-  mutable M7x7 oldCov_; //!
+  mutable M7x7 J_MM_; //!
   // needed in transform...
   mutable M5x7 J_pM_5x7_; //!
   mutable M5x6 J_pM_5x6_; //!

@@ -63,17 +63,17 @@ class StepLimits {
    * (default margin is 0.1, i.e. medium limits can be exceeded by up to 10%).
    * If no limit has been set yet, return std::pair<stp_noLimit, std::numeric_limits<double>::max>.
    */
-  std::pair<StepLimitType, double> getLowestLimit(double margin = 0.) const;
+  std::pair<StepLimitType, double> getLowestLimit(double margin = 1.E-3) const;
   /**
    * Get the unsigned numerical value of the lowest limit
    */
-  double getLowestLimitVal(double margin = 0.) const {
+  double getLowestLimitVal(double margin = 1.E-3) const {
     return getLowestLimit(margin).second;
   }
   /**
    * Get the numerical value of the lowest limit, signed with #stepSign_.
    */
-  double getLowestLimitSignedVal(double margin = 0.) const {
+  double getLowestLimitSignedVal(double margin = 1.E-3) const {
     return getLowestLimit(margin).second * stepSign_;
   }
 
