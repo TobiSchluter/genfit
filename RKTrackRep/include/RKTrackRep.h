@@ -32,9 +32,12 @@
 
 namespace genfit {
 
-struct StepInfos {
+struct RKStep {
   MaterialProperties materialProperties_;
   M1x7 state7_; // 7D state vector
+};
+
+struct ExtrapStep {
   M5x5 jac_; // 5D jacobian of transport
   M5x5 noise_; // 5D noise matrix
 };
@@ -199,7 +202,8 @@ class RKTrackRep : public AbsTrackRep {
     * iterations is exceeded.
     * #fXX0 is also updated here.
     */
-  double Extrap(const DetPlane& plane,
+  double Extrap(const DetPlane& startPlane, // plane where Extrap starts
+                const DetPlane& destPlane, // plane where Extrap has to extrapolate to
                 double charge,
                 bool& isAtBoundary,
                 M1x7& state7,
@@ -213,11 +217,12 @@ class RKTrackRep : public AbsTrackRep {
 
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
-  mutable std::vector<StepInfos> materials_; //! materials crossed in the last extrapolation, together with 7D states at start of each step
-  mutable int materialsFXStart_; //!
-  mutable int materialsFXStop_; //!
+  mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
+  mutable int RKStepsFXStart_; //!
+  mutable int RKStepsFXStop_; //!
+  mutable std::vector<ExtrapStep> ExtrapSteps_; //! steps made in Extrap during last extrapolation
 
-  mutable bool useCache_; //! use cached materials_ for extrapolation
+  mutable bool useCache_; //! use cached RKSteps_ for extrapolation
 
   // auxiliary variables and arrays
   // needed in Extrap()

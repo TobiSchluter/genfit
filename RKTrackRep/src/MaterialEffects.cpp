@@ -107,7 +107,7 @@ void MaterialEffects::setMscModel(const std::string& modelName)
 }
 
 
-double MaterialEffects::effects(const std::vector< StepInfos >& points,
+double MaterialEffects::effects(const std::vector<RKStep>& steps,
                                 int materialsFXStart,
                                 int materialsFXStop,
                                 const double& mom,
@@ -131,7 +131,7 @@ double MaterialEffects::effects(const std::vector< StepInfos >& points,
 
   double momLoss = 0.;
 
-  for (auto it = points.begin() + materialsFXStart; it !=  points.begin() + materialsFXStop; ++it) { // loop over points
+  for (auto it = steps.begin() + materialsFXStart; it !=  steps.begin() + materialsFXStop; ++it) { // loop over steps
 
 #ifdef DEBUG
     std::cerr << "     calculate matFX ";
@@ -167,7 +167,7 @@ double MaterialEffects::effects(const std::vector< StepInfos >& points,
 
       }
     }
-  } // end loop over points
+  } // end loop over steps
 
   return momLoss;
 }

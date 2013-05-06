@@ -19,6 +19,8 @@
 
 #include <RKTools.h>
 
+#include <TMatrixD.h>
+
 #include <iostream>
 #include <string.h>
 #include <stdio.h>
@@ -477,6 +479,62 @@ void RKTools::J_MMxJ_MM(M7x7& J_MM, const M7x7& J_MM_old){
   J_MM[42+5] = J_MM_old[42+3] * J_MM_temp[21+5] + J_MM_old[42+4] * J_MM_temp[28+5] + J_MM_old[42+5] * J_MM_temp[35+5] + J_MM_old[42+6] * J_MM_temp[42+5];
   J_MM[42+6] = J_MM_old[42+6] * J_MM_temp[42+6];
 
+}
+
+
+void RKTools::J_pMxJ_MMxJ_Mp(const M5x7& J_pM, const M7x7& J_MM, const M7x5& J_Mp, M5x5 J_pp, bool MMproj) {
+
+  // J_pM
+  // 0 0 0 0 0 0 1
+  // 0 0 0 x x x 0
+  // 0 0 0 x x x 0
+  // x x x 0 0 0 0
+  // x x x 0 0 0 0
+
+
+  // J_MM if MMproj == false
+  // 1 0 0 0 0 0 0
+  // 0 1 0 0 0 0 0
+  // 0 0 1 0 0 0 0
+  // x x x x x x 0
+  // x x x x x x 0
+  // x x x x x x 0
+  // x x x x x x 1
+
+  // J_MM if MMproj == true
+  // x x x x x x 0
+  // x x x x x x 0
+  // x x x x x x 0
+  // x x x x x x 0
+  // x x x x x x 0
+  // x x x x x x 0
+  // x x x x x x 1
+
+
+  // J_Mp
+  // 0 0 0 x x
+  // 0 0 0 x x
+  // 0 0 0 x x
+  // 0 x x 0 0
+  // 0 x x 0 0
+  // 0 x x 0 0
+  // 1 0 0 0 0
+
+
+  // TODO: manual implementation
+  TMatrixD JpM(5,7, J_pM.data());
+  TMatrixD JMM(7,7, J_MM.data());
+  TMatrixD JMp(7,5, J_Mp.data());
+
+  TMatrixD Jpp(5,5);
+
+  Jpp = (JpM * JMM) * JMp;
+
+  for (unsigned int i=0; i<5; ++i) {
+    for (unsigned int j=0; j<5; ++j) {
+      J_pp[i*5 + j] = Jpp(i,j);
+    }
+  }
 }
 
 

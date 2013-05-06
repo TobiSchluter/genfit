@@ -253,7 +253,7 @@ bool checkErrorPropagation() {
   rep->setPosMom(&state, pos, mom);
 
   genfit::SharedPlanePtr origPlane = state.getPlane();
-  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,randomSign()*10,0), TVector3(0,randomSign()*1,0)));
+  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,randomSign()*50,0), TVector3(0,randomSign()*1,0)));
 
   genfit::MeasuredStateOnPlane origState(state);
 
@@ -390,9 +390,9 @@ int main() {
 
 
   unsigned int nFailed(0);
-  unsigned int nTests(10);
+  unsigned int nTests(1);
 
-  for (unsigned int i=0; i<100; ++i) {
+  for (unsigned int i=0; i<nTests; ++i) {
     /*if (!compareForthBackExtrapolation()) {
       std::cout << "failed compareForthBackExtrapolation nr" << i << "\n";
       ++nFailed;
