@@ -30,7 +30,7 @@
 #define genfit_AbsFinitePlane_h
 
 
-#include "TObject.h"
+#include <TObject.h>
 
 
 namespace genfit {

@@ -44,6 +44,10 @@ struct ExtrapStep {
 
 class RKTrackRep : public AbsTrackRep {
 
+  /**
+   * state5: (q/p, u', v'. u. v)
+   */
+
  public:
 
   RKTrackRep();

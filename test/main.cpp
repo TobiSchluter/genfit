@@ -192,7 +192,7 @@ bool compareForthBackJacNoise() {
   TMatrixDSym noise_f, noise_fi, noise_b, noise_bi;
 
 
-  genfit::StateOnPlane state(rep);
+  genfit::MeasuredStateOnPlane state(rep);
   rep->setPosMom(&state, pos, mom);
 
   genfit::SharedPlanePtr origPlane = state.getPlane();
@@ -227,10 +227,10 @@ bool compareForthBackJacNoise() {
   }
 
   // compare
-  if (! (jac_f - jac_bi).Abs() < epsilonJac ||
-      ! (jac_b - jac_fi).Abs() < epsilonJac ||
-      ! (noise_f - noise_bi).Abs() < epsilonNoise ||
-      ! (noise_b - noise_fi).Abs() < epsilonNoise ) {
+  if (!((jac_f - jac_bi).Abs() < epsilonJac) ||
+      !((jac_b - jac_fi).Abs() < epsilonJac) ||
+      !((noise_f - noise_bi).Abs() < epsilonNoise) ||
+      !((noise_b - noise_fi).Abs() < epsilonNoise) ) {
 
     origState.Print();
     state.Print();
@@ -478,22 +478,22 @@ int main() {
     if (!checkStopAtBoundary()) {
       std::cout << "failed checkStopAtBoundary nr" << i << "\n";
       ++nFailed;
-    }
+    }*/
 
     if (!checkErrorPropagation()) {
       std::cout << "failed checkErrorPropagation nr" << i << "\n";
       ++nFailed;
     }
 
-    if (!checkExtrapolateToLine()) {
+    /*if (!checkExtrapolateToLine()) {
       std::cout << "failed checkExtrapolateToLine nr" << i << "\n";
       ++nFailed;
     }*/
 
-    if (!compareForthBackJacNoise() {
+    /*if (!compareForthBackJacNoise()) {
       std::cout << "failed compareForthBackJacNoise nr" << i << "\n";
       ++nFailed;
-    }
+    }*/
 
   }
 

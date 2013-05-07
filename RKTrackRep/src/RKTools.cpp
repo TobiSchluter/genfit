@@ -482,7 +482,7 @@ void RKTools::J_MMxJ_MM(M7x7& J_MM, const M7x7& J_MM_old){
 }
 
 
-void RKTools::J_pMxJ_MMxJ_Mp(const M5x7& J_pM, const M7x7& J_MM, const M7x5& J_Mp, M5x5 J_pp, bool MMproj) {
+void RKTools::J_pMxJ_MMxJ_Mp(const M5x7& J_pM, const M7x7& J_MM, const M7x5& J_Mp, M5x5& J_pp, bool MMproj) {
 
   // J_pM
   // 0 0 0 0 0 0 1

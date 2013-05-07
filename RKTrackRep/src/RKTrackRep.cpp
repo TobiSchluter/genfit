@@ -252,6 +252,11 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
   std::cerr << "RKTrackRep::getForwardJacobianAndNoise " << std::endl;
 #endif
 
+  if (ExtrapSteps_.size() == 0) {
+    Exception exc("RKTrackRep::getForwardJacobianAndNoise ==> cache is empty. Extrapolation must run with a MeasuredStateOnPlane.",__LINE__,__FILE__);
+    throw exc;
+  }
+
   jacobian.ResizeTo(5,5);
   jacobian.SetMatrixArray(ExtrapSteps_.back().jac_.data());
 
@@ -272,6 +277,11 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
 
 
 void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const {
+
+  if (ExtrapSteps_.size() == 0) {
+    Exception exc("RKTrackRep::getForwardJacobianAndNoise ==> cache is empty. Extrapolation must run with a MeasuredStateOnPlane.",__LINE__,__FILE__);
+    throw exc;
+  }
 
   jacobian.ResizeTo(5,5);
   jacobian.SetMatrixArray(ExtrapSteps_.front().jac_.data());
@@ -643,6 +653,8 @@ void RKTrackRep::getState7(const StateOnPlane* state, M1x7& state7) const {
 
 
 void RKTrackRep::getState5(StateOnPlane* state, const M1x7& state7) const {
+
+  // state5: (q/p, u', v'. u. v)
 
   double spu(1.);
 
@@ -1508,7 +1520,6 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       }
 
       RKTools::J_pMxJ_MMxJ_Mp(J_pM_5x7_, J_MM_, J_Mp_7x5_, extrapStep.jac_, checkJacProj);
-
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane
