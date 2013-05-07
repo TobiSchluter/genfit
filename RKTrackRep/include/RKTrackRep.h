@@ -51,7 +51,7 @@ class RKTrackRep : public AbsTrackRep {
 
   virtual ~RKTrackRep();
 
-  virtual AbsTrackRep* clone() const {return new RKTrackRep(*this);}
+  virtual AbsTrackRep* clone() const override {return new RKTrackRep(*this);}
 
   /** Extrapolates the stateInput to plane, and returns the extrapolation length
    * and, via reference, the extrapolated statePrediction.

@@ -174,6 +174,83 @@ bool compareForthBackExtrapolation() {
 }
 
 
+bool compareForthBackJacNoise() {
+
+  double epsilonJac = 1.E-5;
+  double epsilonNoise = 1.E-5;
+
+  int pdg = randomPdg();
+  genfit::AbsTrackRep* rep;
+  rep = new genfit::RKTrackRep(pdg);
+
+  //TVector3 pos(0,0,0);
+  TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,gRandom->Gaus(0,0.1));
+  mom *= randomSign();
+
+  TMatrixD jac_f, jac_fi, jac_b, jac_bi;
+  TMatrixDSym noise_f, noise_fi, noise_b, noise_bi;
+
+
+  genfit::StateOnPlane state(rep);
+  rep->setPosMom(&state, pos, mom);
+
+  genfit::SharedPlanePtr origPlane = state.getPlane();
+  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,randomSign()*10,0), TVector3(0,randomSign()*1,0)));
+
+  genfit::StateOnPlane origState(state);
+
+  // forth
+  try {
+    rep->extrapolateToPlane(&state, plane);
+    rep->getForwardJacobianAndNoise(jac_f, noise_f);
+    rep->getBackwardJacobianAndNoise(jac_fi, noise_fi);
+  }
+  catch (genfit::Exception& e) {
+    std::cerr << e.what();
+
+    delete rep;
+    return false;
+  }
+
+  // back
+  try {
+    rep->extrapolateToPlane(&state, origPlane);
+    rep->getForwardJacobianAndNoise(jac_b, noise_b);
+    rep->getBackwardJacobianAndNoise(jac_bi, noise_bi);
+  }
+  catch (genfit::Exception& e) {
+    std::cerr << e.what();
+
+    delete rep;
+    return false;
+  }
+
+  // compare
+  if (! (jac_f - jac_bi).Abs() < epsilonJac ||
+      ! (jac_b - jac_fi).Abs() < epsilonJac ||
+      ! (noise_f - noise_bi).Abs() < epsilonNoise ||
+      ! (noise_b - noise_fi).Abs() < epsilonNoise ) {
+
+    origState.Print();
+    state.Print();
+
+    std::cerr << "jac difference (jac_f - jac_bi) = "; (jac_f - jac_bi).Print();
+    std::cerr << "jac difference (jac_b - jac_fi) = "; (jac_b - jac_fi).Print();
+    std::cerr << "noise difference (noise_f - noise_bi) = "; (noise_f - noise_bi).Print();
+    std::cerr << "noise difference (noise_b - noise_fi) = "; (noise_b - noise_fi).Print();
+
+    std::cerr << std::endl;
+
+    delete rep;
+    return false;
+  }
+
+  delete rep;
+  return true;
+}
+
+
 bool checkStopAtBoundary() {
 
   double epsilonLen = 1.E-4; // 1 mu
@@ -390,10 +467,10 @@ int main() {
 
 
   unsigned int nFailed(0);
-  unsigned int nTests(1);
+  unsigned int nTests(100);
 
   for (unsigned int i=0; i<nTests; ++i) {
-    if (!compareForthBackExtrapolation()) {
+    /*if (!compareForthBackExtrapolation()) {
       std::cout << "failed compareForthBackExtrapolation nr" << i << "\n";
       ++nFailed;
     }
@@ -411,9 +488,12 @@ int main() {
     if (!checkExtrapolateToLine()) {
       std::cout << "failed checkExtrapolateToLine nr" << i << "\n";
       ++nFailed;
+    }*/
+
+    if (!compareForthBackJacNoise() {
+      std::cout << "failed compareForthBackJacNoise nr" << i << "\n";
+      ++nFailed;
     }
-
-
 
   }
 
