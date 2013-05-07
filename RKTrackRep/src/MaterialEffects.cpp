@@ -143,6 +143,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
     if (realPath < 0)
       stepSign = -1.;
     realPath = fabs(realPath);
+    stepSize_ = realPath;
 
     if (realPath > 1.E-8) { // do material effects only if distance is not too small
 
@@ -401,21 +402,21 @@ void MaterialEffects::noiseCoulomb(const double& mom,
   noiseAfter[0 * 7 + 0] =  sigma2 * step2 / 3.0 * (cosTheta2 + sinPhi2 * sinTheta2);
   noiseAfter[1 * 7 + 0] = -sigma2 * step2 / 3.0 * sinPhi * cosPhi * sinTheta2;
   noiseAfter[2 * 7 + 0] = -sigma2 * step2 / 3.0 * cosPhi * cosTheta * sinTheta;
-  noiseAfter[3 * 7 + 0] =  sigma2 * stepSize_ * 0.5 * (cosTheta2 + sinPhi2 * sinTheta2);
-  noiseAfter[4 * 7 + 0] = -sigma2 * stepSize_ * 0.5 * sinPhi * cosPhi * sinTheta2;
-  noiseAfter[5 * 7 + 0] = -sigma2 * stepSize_ * 0.5 * cosPhi * cosTheta * sinTheta;
+  noiseAfter[3 * 7 + 0] =  sigma2 * fabs(stepSize_) * 0.5 * (cosTheta2 + sinPhi2 * sinTheta2);
+  noiseAfter[4 * 7 + 0] = -sigma2 * fabs(stepSize_) * 0.5 * sinPhi * cosPhi * sinTheta2;
+  noiseAfter[5 * 7 + 0] = -sigma2 * fabs(stepSize_) * 0.5 * cosPhi * cosTheta * sinTheta;
   noiseAfter[0 * 7 + 1] = noiseAfter[1 * 7 + 0];
   noiseAfter[1 * 7 + 1] = -sigma2 * step2 / 3.0 * (sinPhi2 * sinTheta2 - 1.0);
   noiseAfter[2 * 7 + 1] = -sigma2 * step2 / 3.0 * cosTheta * sinPhi * sinTheta;
   noiseAfter[3 * 7 + 1] = noiseAfter[4 * 7 + 0]; // Cov(x,a_y) = Cov(y,a_x)
-  noiseAfter[4 * 7 + 1] = -sigma2 * stepSize_ * 0.5 * (sinPhi2 * sinTheta2 - 1.0);
-  noiseAfter[5 * 7 + 1] = -sigma2 * stepSize_ * 0.5 * cosTheta * sinPhi * sinTheta;
+  noiseAfter[4 * 7 + 1] = -sigma2 * fabs(stepSize_) * 0.5 * (sinPhi2 * sinTheta2 - 1.0);
+  noiseAfter[5 * 7 + 1] = -sigma2 * fabs(stepSize_) * 0.5 * cosTheta * sinPhi * sinTheta;
   noiseAfter[0 * 7 + 2] = noiseAfter[2 * 7 + 0];
   noiseAfter[1 * 7 + 2] = noiseAfter[2 * 7 + 1];
   noiseAfter[2 * 7 + 2] =  sigma2 * step2 / 3.0 * sinTheta2;
   noiseAfter[3 * 7 + 2] = noiseAfter[5 * 7 + 0]; // Cov(z,a_x) = Cov(x,a_z)
   noiseAfter[4 * 7 + 2] = noiseAfter[5 * 7 + 1]; // Cov(y,a_z) = Cov(z,a_y)
-  noiseAfter[5 * 7 + 2] =  sigma2 * stepSize_ * 0.5 * sinTheta2;
+  noiseAfter[5 * 7 + 2] =  sigma2 * fabs(stepSize_) * 0.5 * sinTheta2;
   noiseAfter[0 * 7 + 3] = noiseAfter[3 * 7 + 0];
   noiseAfter[1 * 7 + 3] = noiseAfter[3 * 7 + 1];
   noiseAfter[2 * 7 + 3] = noiseAfter[3 * 7 + 2];

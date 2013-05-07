@@ -29,7 +29,7 @@
 
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
-//#define DEBUG
+#define DEBUG
 
 
 namespace genfit {
@@ -263,9 +263,9 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
   noise.ResizeTo(5,5);
   noise.SetMatrixArray(ExtrapSteps_.back().noise_.data());
 
-  for (unsigned int i=ExtrapSteps_.size()-1; i!=std::numeric_limits<unsigned int>::max(); --i) {
-    jacobian *= TMatrixD(5,5, ExtrapSteps_[i].jac_.data());
+  for (unsigned int i=ExtrapSteps_.size()-2; i!=std::numeric_limits<unsigned int>::max(); --i) {
     noise += TMatrixDSym(5, ExtrapSteps_[i].noise_.data()).SimilarityT(jacobian);
+    jacobian *= TMatrixD(5,5, ExtrapSteps_[i].jac_.data());
   }
 
 #ifdef DEBUG
@@ -277,6 +277,10 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
 
 
 void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const {
+
+#ifdef DEBUG
+  std::cerr << "RKTrackRep::getBackwardJacobianAndNoise " << std::endl;
+#endif
 
   if (ExtrapSteps_.size() == 0) {
     Exception exc("RKTrackRep::getForwardJacobianAndNoise ==> cache is empty. Extrapolation must run with a MeasuredStateOnPlane.",__LINE__,__FILE__);
@@ -294,8 +298,13 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
     throw e;
   }
 
+#ifdef DEBUG
+  std::cerr << "inverted jacobian 0 "; jacobian.Print();
+#endif
+
   noise.ResizeTo(5,5);
   noise.SetMatrixArray(ExtrapSteps_.front().noise_.data());
+  noise.SimilarityT(jacobian);
 
   for (unsigned int i=1; i!=ExtrapSteps_.size(); ++i) {
     TMatrixD nextJac(5,5, ExtrapSteps_[i].jac_.data());
@@ -307,9 +316,18 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
       throw e;
     }
 
+#ifdef DEBUG
+  std::cerr << "inverted jacobian " << i << " "; nextJac.Print();
+#endif
+
     jacobian *= nextJac;
     noise += (TMatrixDSym(5, ExtrapSteps_[i].noise_.data())).SimilarityT(jacobian);
   }
+
+#ifdef DEBUG
+  std::cerr << "jacobian : "; jacobian.Print();
+  std::cerr << "noise : "; noise.Print();
+#endif
 
 }
 
@@ -1586,6 +1604,10 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
     cov->SimilarityT(jac);
     *cov += noise;
+
+#ifdef DEBUG
+    std::cerr << "final covariance matrix after Extrap: "; cov->Print();
+#endif
   }
 
   return coveredDistance;

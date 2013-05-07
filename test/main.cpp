@@ -176,8 +176,8 @@ bool compareForthBackExtrapolation() {
 
 bool compareForthBackJacNoise() {
 
-  double epsilonJac = 1.E-5;
-  double epsilonNoise = 1.E-5;
+  double epsilonJac = 1.E-9;
+  double epsilonNoise = 1.E-9;
 
   int pdg = randomPdg();
   genfit::AbsTrackRep* rep;
@@ -467,7 +467,7 @@ int main() {
 
 
   unsigned int nFailed(0);
-  unsigned int nTests(100);
+  unsigned int nTests(1);
 
   for (unsigned int i=0; i<nTests; ++i) {
     /*if (!compareForthBackExtrapolation()) {
@@ -480,20 +480,20 @@ int main() {
       ++nFailed;
     }*/
 
-    if (!checkErrorPropagation()) {
+    /*if (!checkErrorPropagation()) {
       std::cout << "failed checkErrorPropagation nr" << i << "\n";
       ++nFailed;
-    }
+    }*/
 
     /*if (!checkExtrapolateToLine()) {
       std::cout << "failed checkExtrapolateToLine nr" << i << "\n";
       ++nFailed;
     }*/
 
-    /*if (!compareForthBackJacNoise()) {
+    if (!compareForthBackJacNoise()) {
       std::cout << "failed compareForthBackJacNoise nr" << i << "\n";
       ++nFailed;
-    }*/
+    }
 
   }
 
