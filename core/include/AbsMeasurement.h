@@ -40,8 +40,11 @@ class AbsMeasurement : public TObject {
 
  public:
 
-  AbsMeasurement();
-  AbsMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
+  AbsMeasurement() {};
+  AbsMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
+    : detId_(detId), hitId_(hitId), trackPoint_(trackPoint)
+  { rawHitCoords_.ResizeTo(rawHitCoords); rawHitCoords_ = rawHitCoords;
+    rawHitCov_.ResizeTo(rawHitCov); rawHitCov_ = rawHitCov; };
 
   virtual ~AbsMeasurement();
 
