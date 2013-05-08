@@ -24,7 +24,8 @@
 #include <MaterialEffects.h>
 
 #include <TDatabasePDG.h>
-#include <TDecompSVD.h>
+//#include <TDecompSVD.h>
+#include <TDecompLU.h>
 #include <TMath.h>
 
 
@@ -290,7 +291,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
   jacobian.ResizeTo(5,5);
   jacobian.SetMatrixArray(ExtrapSteps_.front().jac_.data());
 
-  TDecompSVD invertAlgo(jacobian);
+  TDecompLU invertAlgo(jacobian);
   bool status = invertAlgo.Invert(jacobian);
   if(status == 0){
     Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
@@ -308,7 +309,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 
   for (unsigned int i=1; i!=ExtrapSteps_.size(); ++i) {
     TMatrixD nextJac(5,5, ExtrapSteps_[i].jac_.data());
-    TDecompSVD invertAlgo2(nextJac);
+    TDecompLU invertAlgo2(nextJac);
     status = invertAlgo2.Invert(nextJac);
     if(status == 0){
       Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
@@ -1193,7 +1194,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 #endif
 
       // TODO: find a more elegant way of calculatin noiseProjection
-      TDecompSVD invertAlgo(noiseProjection);
+      TDecompLU invertAlgo(noiseProjection);
       bool status = invertAlgo.Invert(noiseProjection);
       if(status == 0){
         Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);

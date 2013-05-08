@@ -50,7 +50,7 @@ void makeGeom()
    TGeoVolume *top = gGeoManager->MakeBox("TOPPER", air, 1000., 1000., 1000.);
    gGeoManager->SetTopVolume(top); // mandatory !
 
-   double thickness(0.005);
+   double thickness(0.05);
    double distance = 1;
 
    for (unsigned int i=1; i<5; ++i){

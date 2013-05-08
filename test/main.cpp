@@ -235,6 +235,16 @@ bool compareForthBackJacNoise() {
     origState.Print();
     state.Print();
 
+    std::cerr << "jac_f = "; jac_f.Print();
+    std::cerr << "jac_bi = "; jac_bi.Print();
+    std::cerr << "jac_b = "; jac_b.Print();
+    std::cerr << "jac_fi = "; jac_fi.Print();
+
+    std::cerr << "noise_f = "; noise_f.Print();
+    std::cerr << "noise_bi = "; noise_bi.Print();
+    std::cerr << "noise_b = "; noise_b.Print();
+    std::cerr << "noise_fi = "; noise_fi.Print();
+
     std::cerr << "jac difference (jac_f - jac_bi) = "; (jac_f - jac_bi).Print();
     std::cerr << "jac difference (jac_b - jac_fi) = "; (jac_b - jac_fi).Print();
     std::cerr << "noise difference (noise_f - noise_bi) = "; (noise_f - noise_bi).Print();
