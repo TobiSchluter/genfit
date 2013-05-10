@@ -1428,6 +1428,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
     #ifdef DEBUG
       std::cout << "\n============ RKTrackRep::Extrap loop nr. " << numIt << " ============\n";
+      std::cout << "Start plane: "; startPlane.Print();
     #endif
 
     if(++numIt > maxNumIt){

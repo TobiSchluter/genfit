@@ -575,6 +575,12 @@ void RKTools::J_pMxJ_MMxJ_Mp(const M5x7& J_pM, const M7x7& J_MM, const M7x5& J_M
     J_pp[4*5+3] = J_pM[4*7+0] * J_Mp[0*5+3] + J_pM[4*7+1] * J_Mp[1*5+3] + J_pM[4*7+2] * J_Mp[2*5+3];
     J_pp[4*5+4] = J_pM[4*7+0] * J_Mp[0*5+4] + J_pM[4*7+1] * J_Mp[1*5+4] + J_pM[4*7+2] * J_Mp[2*5+4];
   }
+
+  /*std::cout << "RKTools::J_pMxJ_MMxJ_Mp \n";
+  std::cout << "J_pM: "; printDim(J_pM.data(), 5,7);
+  std::cout << "J_MM: "; printDim(J_MM.data(), 7,7);
+  std::cout << "J_Mp: "; printDim(J_Mp.data(), 7,5);
+  std::cout << "J_pp: "; printDim(J_pp.data(), 5,5);*/
 }
 
 
