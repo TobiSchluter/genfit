@@ -29,7 +29,7 @@
 
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
-#define DEBUG
+//#define DEBUG
 
 
 namespace genfit {
@@ -313,6 +313,8 @@ void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& 
 
 
 void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const {
+
+  // TODO: check accuracy and compare with getBackwardJacobianAndNoise()
 
 #ifdef DEBUG
   std::cout << "RKTrackRep::getForwardJacobianAndNoise " << std::endl;
@@ -1476,6 +1478,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
   bool fillExtrapSteps(cov != nullptr);
   double coveredDistance(0.);
+  double dqop(0.);
   TMatrixD noiseProjection(7,7);
 
   const TVector3 W(destPlane.getNormal());
@@ -1502,18 +1505,15 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       throw exc;
     }
 
-    M7x7* jac = nullptr;
+    // initialize jacobian with unit matrix
+    J_MM_.fill(0);
+    for(int i=0; i<7; ++i) J_MM_[8*i] = 1.;
+
     M7x7* noise = nullptr;
     isAtBoundary = false;
 
 
     if(fillExtrapSteps){
-      // initialize jacobian with unit matrix
-      jac = &J_MM_;
-      J_MM_.fill(0);
-      for(int i=0; i<7; ++i) J_MM_[8*i] = 1.;
-
-
       // calc J_pM for later calculation of 5D Jacobian
       if (numIt == 1) { // first iteration
         M1x3 pTilde = {{state7[3], state7[4], state7[5]}};
@@ -1541,7 +1541,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     StepLimits limits;
     limits.setLimit(stp_sMaxArg, maxStep);
 
-    if( ! RKutta(SU, destPlane, charge, state7, jac, coveredDistance, checkJacProj, noiseProjection, limits, onlyOneStep) ) {
+    if( ! RKutta(SU, destPlane, charge, state7, &J_MM_, coveredDistance, checkJacProj, noiseProjection, limits, onlyOneStep) ) {
       Exception exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
@@ -1582,7 +1582,16 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       #endif
 
       // do momLoss only for defined 1/momentum .ne.0
-      if(fabs(state7[6])>1.E-10) state7[6] = charge/(fabs(charge/state7[6])-momLoss);
+      if(fabs(state7[6])>1.E-10) {
+        double qop = charge/(fabs(charge/state7[6])-momLoss);
+        dqop = qop - state7[6];
+        state7[6] = qop;
+
+        // correct state7 with dx/dqop, dy/dqop ... Greatly improves extrapolation accuracy!
+        for (unsigned int i=0; i<6; ++i) {
+          state7[i] += 0.5 * dqop * J_MM_[6*7 + i];
+        }
+      }
     } // finished MatFX
 
 

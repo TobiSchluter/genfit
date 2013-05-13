@@ -294,8 +294,8 @@ double MaterialEffects::energyLossBetheBloch(const double& mom)
     if (dEdx_ < 0.) dEdx_ = 0;
   }
 
-  double DE = fabs(stepSize_) * dEdx_; //always positive
-  double momLoss = sqrt(mom * mom + 2.*sqrt(mom * mom + mass_ * mass_) * DE + DE * DE) - mom; //always positive
+  double dE = fabs(stepSize_) * dEdx_; //always positive
+  double momLoss = sqrt(mom * mom + 2.*sqrt(mom * mom + mass_ * mass_) * dE + dE * dE) - mom; //always positive
 
   //in vacuum it can numerically happen that momLoss becomes a small negative number.
   if (momLoss < 0.) return 0.;
@@ -597,8 +597,8 @@ double MaterialEffects::energyLossBrems(const double& mom) const
     }
   }
 
-  double DE = fabs(stepSize_) * factor * dedxBrems; //always positive
-  double momLoss = sqrt(mom * mom + 2.*sqrt(mom * mom + mass_ * mass_) * DE + DE * DE) - mom; //always positive
+  double dE = fabs(stepSize_) * factor * dedxBrems; //always positive
+  double momLoss = sqrt(mom * mom + 2.*sqrt(mom * mom + mass_ * mass_) * dE + dE * dE) - mom; //always positive
 
   return momLoss;
 }

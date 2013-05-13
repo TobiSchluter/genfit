@@ -122,8 +122,8 @@ bool compareMatrices(TMatrixTBase<double>& A, TMatrixTBase<double>& B, double ma
 
 bool compareForthBackExtrapolation() {
 
-  double epsilonLen = 1.2E-4; // 1 mu
-  double epsilonMom = 5.E-5; // 20 keV
+  double epsilonLen = 5.E-5; // 0.5 mu
+  double epsilonMom = 1.E-4; // 100 keV
 
   int pdg = randomPdg();
   genfit::AbsTrackRep* rep;
@@ -131,7 +131,8 @@ bool compareForthBackExtrapolation() {
 
   //TVector3 pos(0,0,0);
   TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,gRandom->Gaus(0,0.3));
+  mom.SetMag(0.5);
   mom *= randomSign();
 
 
@@ -375,19 +376,17 @@ bool checkErrorPropagation() {
   }
 
 
-  state.Print();
-
   // compare
   if (false) { // TODO: specify test criterium
 
-      state.Print();
-
-      delete rep;
-      return false;
-    }
+    state.Print();
 
     delete rep;
-    return true;
+    return false;
+  }
+
+  delete rep;
+  return true;
 
 }
 
@@ -553,7 +552,7 @@ int main() {
 
 
   unsigned int nFailed(0);
-  unsigned int nTests(10);
+  unsigned int nTests(100);
 
   for (unsigned int i=0; i<nTests; ++i) {
     if (!compareForthBackExtrapolation()) {
