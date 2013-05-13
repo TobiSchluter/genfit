@@ -24,7 +24,6 @@
 #include <MaterialEffects.h>
 
 #include <TDatabasePDG.h>
-//#include <TDecompSVD.h>
 #include <TDecompLU.h>
 #include <TMath.h>
 
@@ -183,9 +182,75 @@ double RKTrackRep::extrapolateToPoint(StateOnPlane* state,
     const TVector3& point,
     bool stopAtBoundary) const {
 
-  // TODO: implement
   checkCache(state);
-  return 0;
+
+  static const unsigned int maxIt(1000);
+
+  // to 7D
+  M1x7 state7;
+  getState7(state, state7);
+
+  double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
+  TVector3 dir(state7[3], state7[4], state7[5]);
+  TVector3 lastDir(0,0,0);
+
+  TVector3 poca;
+  bool isAtBoundary(false);
+
+  DetPlane startPlane(*(state->getPlane()));
+  std::shared_ptr<genfit::DetPlane> plane(new DetPlane(point, dir));
+  unsigned int iterations(0);
+
+  while(true){
+    if(++iterations == maxIt) {
+      Exception exc("RKTrackRep::extrapolateToLine ==> extrapolation to line failed, maximum number of iterations reached",__LINE__,__FILE__);
+      throw exc;
+    }
+
+    lastStep = step;
+    lastDir = dir;
+
+    step = this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, nullptr, true, stopAtBoundary, maxStep);
+    tracklength += step;
+
+    dir.SetXYZ(state7[3], state7[4], state7[5]);
+    poca.SetXYZ(state7[0], state7[1], state7[2]);
+
+    // check break conditions
+    if (stopAtBoundary && isAtBoundary) {
+      plane->setON(dir, poca);
+      break;
+    }
+
+    angle = fabs(dir.Angle((point-poca))-TMath::PiOver2()); // angle between direction and connection to point - 90 deg
+    distToPoca = (point-poca).Mag();
+    if (angle*distToPoca < 0.1*MINSTEP) break;
+
+    // if lastStep and step have opposite sign, the real normal vector lies somewhere between the last two normal vectors (i.e. the directions)
+    // -> try mean value of the two (normalization not needed)
+    if (lastStep*step < 0){
+      dir += lastDir;
+      maxStep = 0.5*fabs(lastStep); // make it converge!
+    }
+
+    startPlane = *plane;
+    plane->setNormal(dir);
+  }
+
+  if (dynamic_cast<MeasuredStateOnPlane*>(state) != nullptr) { // now do the full extrapolation with covariance matrix
+    tracklength = extrapolateToPlane(state, plane);
+  }
+  else {
+    state->setPlane(plane);
+    getState5(state, state7);
+  }
+
+
+#ifdef DEBUG
+  std::cout << "RKTrackRep::extrapolateToPoint(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (point-poca).Mag() << " cm. Angle deviation: " << dir.Angle((point-poca))-TMath::PiOver2() << " rad \n";
+#endif
+
+  return tracklength;
 }
 
 
@@ -250,7 +315,7 @@ void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& 
 void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const {
 
 #ifdef DEBUG
-  std::cerr << "RKTrackRep::getForwardJacobianAndNoise " << std::endl;
+  std::cout << "RKTrackRep::getForwardJacobianAndNoise " << std::endl;
 #endif
 
   if (ExtrapSteps_.size() == 0) {
@@ -270,8 +335,8 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
   }
 
 #ifdef DEBUG
-  std::cerr << "jacobian : "; jacobian.Print();
-  std::cerr << "noise : "; noise.Print();
+  std::cout << "jacobian : "; jacobian.Print();
+  std::cout << "noise : "; noise.Print();
 #endif
 
 }
@@ -280,7 +345,7 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
 void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const {
 
 #ifdef DEBUG
-  std::cerr << "RKTrackRep::getBackwardJacobianAndNoise " << std::endl;
+  std::cout << "RKTrackRep::getBackwardJacobianAndNoise " << std::endl;
 #endif
 
   if (ExtrapSteps_.size() == 0) {
@@ -300,7 +365,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
   }
 
 #ifdef DEBUG
-  std::cerr << "inverted jacobian 0 "; jacobian.Print();
+  std::cout << "inverted jacobian 0 "; jacobian.Print();
 #endif
 
   noise.ResizeTo(5,5);
@@ -318,7 +383,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
     }
 
 #ifdef DEBUG
-  std::cerr << "inverted jacobian " << i << " "; nextJac.Print();
+  std::cout << "inverted jacobian " << i << " "; nextJac.Print();
 #endif
 
     jacobian *= nextJac;
@@ -326,8 +391,8 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
   }
 
 #ifdef DEBUG
-  std::cerr << "jacobian : "; jacobian.Print();
-  std::cerr << "noise : "; noise.Print();
+  std::cout << "jacobian : "; jacobian.Print();
+  std::cout << "noise : "; noise.Print();
 #endif
 
 }
@@ -626,7 +691,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
                fabs((C1+C6)-(C3+C4));  // EST = ||(ABC1+ABC6)-(ABC3+ABC4)||_1  =  ||(axzy x H0 + ABC5 x H2) - (ABC2 x H1 + ABC3 x H1)||_1
   if (EST < 1.E-7) EST = 1.E-7; // prevent q from getting too large
 #ifdef DEBUG
-   std::cerr << "   RKTrackRep::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
+   std::cout << "   RKTrackRep::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
 #endif
   return pow(DLT/EST, par);
 }
@@ -1266,7 +1331,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
     double q = RKPropagate(state7_temp, nullptr, SA, fieldCurvLimit, true);
 #ifdef DEBUG
-    std::cerr << "  maxStepArg = " << fieldCurvLimit << "; q = " << q  << " \n";
+    std::cout << "  maxStepArg = " << fieldCurvLimit << "; q = " << q  << " \n";
 #endif
 
     // remember steps and resulting SL distances to plane for stepsize improvement
@@ -1303,21 +1368,21 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   // auto select
   if (propDir_ == 0 || !plane.isFinite()){
     #ifdef DEBUG
-      std::cerr << "  auto select direction";
-      if (!plane.isFinite()) std::cerr << ", plane is not finite";
-      std::cerr << ".\n";
+      std::cout << "  auto select direction";
+      if (!plane.isFinite()) std::cout << ", plane is not finite";
+      std::cout << ".\n";
     #endif
   }
   // see if straight line approximation is ok
   else if ( limits.getLimit(stp_plane) < 0.2*limits.getLimit(stp_fieldCurv) ){
     #ifdef DEBUG
-      std::cerr << "  straight line approximation is fine.\n";
+      std::cout << "  straight line approximation is fine.\n";
     #endif
 
     // if direction is pointing to active part of surface
     if( plane.isInActive(state7[0], state7[1], state7[2],  state7[3], state7[4], state7[5]) ) {
       #ifdef DEBUG
-        std::cerr << "  direction is pointing to active part of surface. \n";
+        std::cout << "  direction is pointing to active part of surface. \n";
       #endif
     }
     // if we are near the plane, but not pointing to the active area, make a big step!
@@ -1325,7 +1390,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
       limits.removeLimit(stp_plane);
       limits.setStepSign(propDir_);
       #ifdef DEBUG
-        std::cerr << "  we are near the plane, but not pointing to the active area. make a big step! \n";
+        std::cout << "  we are near the plane, but not pointing to the active area. make a big step! \n";
       #endif
     }
   }
@@ -1335,7 +1400,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
       limits.removeLimit(stp_plane);
       limits.setStepSign(propDir_);
       #ifdef DEBUG
-        std::cerr << "  invert Step according to propDir_ and make a big step. \n";
+        std::cout << "  invert Step according to propDir_ and make a big step. \n";
       #endif
     }
   }
@@ -1568,7 +1633,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       isAtBoundary = true;
       if (stopAtBoundary) {
 #ifdef DEBUG
-        std::cerr << "stopAtBoundary -> break; \n ";
+        std::cout << "stopAtBoundary -> break; \n ";
 #endif
         break;
       }
@@ -1576,7 +1641,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
     if (onlyOneStep) {
 #ifdef DEBUG
-      std::cerr << "onlyOneStep -> break; \n ";
+      std::cout << "onlyOneStep -> break; \n ";
 #endif
       break;
     }
@@ -1584,11 +1649,11 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     //break we arrived at destPlane
     if(atPlane) {
       #ifdef DEBUG
-        std::cerr << "arrived at destPlane with a distance of  " << destPlane.distance(state7[0], state7[1], state7[2]) << " cm left. ";
+        std::cout << "arrived at destPlane with a distance of  " << destPlane.distance(state7[0], state7[1], state7[2]) << " cm left. ";
         if (destPlane.isInActive(state7[0], state7[1], state7[2],  state7[3], state7[4], state7[5]))
-          std::cerr << "In active area of destPlane. \n";
+          std::cout << "In active area of destPlane. \n";
         else
-          std::cerr << "NOT in active area of plane. \n";
+          std::cout << "NOT in active area of plane. \n";
       #endif
       break;
     }
@@ -1608,7 +1673,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     *cov += noise;
 
 #ifdef DEBUG
-    std::cerr << "final covariance matrix after Extrap: "; cov->Print();
+    std::cout << "final covariance matrix after Extrap: "; cov->Print();
 #endif
   }
 

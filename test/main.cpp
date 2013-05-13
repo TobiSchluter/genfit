@@ -41,6 +41,7 @@
 
 #include <TApplication.h>
 #include <TCanvas.h>
+#include <TDatabasePDG.h>
 #include <TEveManager.h>
 #include <TGeoManager.h>
 #include <TH1D.h>
@@ -103,10 +104,26 @@ int randomSign() {
 }
 
 
+bool compareMatrices(TMatrixTBase<double>& A, TMatrixTBase<double>& B, double maxAbsErr, double maxRelErr) {
+  for (unsigned int i=0; i<A.GetNrows(); ++i) {
+    for (unsigned int j=0; j<A.GetNcols(); ++j) {
+      double absErr = A(i,j) - B(i,j);
+      if ( fabs(absErr) > maxAbsErr ) {
+        double relErr = A(i,j)/B(i,j) - 1;
+        if ( fabs(relErr) > maxRelErr ) {
+          std::cout << "compareMatrices: absErr = " << absErr << "    relErr = " << relErr << "\n";
+          return false;
+        }
+      }
+    }
+  }
+}
+
+
 bool compareForthBackExtrapolation() {
 
-  double epsilonLen = 1.E-4; // 1 mu
-  double epsilonMom = 2.E-5; // 20 keV
+  double epsilonLen = 1.2E-4; // 1 mu
+  double epsilonMom = 5.E-5; // 20 keV
 
   int pdg = randomPdg();
   genfit::AbsTrackRep* rep;
@@ -158,11 +175,11 @@ bool compareForthBackExtrapolation() {
     origState.Print();
     state.Print();
 
-    std::cerr << "pos difference = " << (rep->getPos(&origState) - rep->getPos(&state)).Mag() << "\n";
-    std::cerr << "mom difference = " << (rep->getMom(&origState) - rep->getMom(&state)).Mag() << "\n";
-    std::cerr << "len difference = " << extrapLen + backExtrapLen << "\n";
+    std::cout << "pos difference = " << (rep->getPos(&origState) - rep->getPos(&state)).Mag() << "\n";
+    std::cout << "mom difference = " << (rep->getMom(&origState) - rep->getMom(&state)).Mag() << "\n";
+    std::cout << "len difference = " << extrapLen + backExtrapLen << "\n";
 
-    std::cerr << std::endl;
+    std::cout << std::endl;
 
     delete rep;
     return false;
@@ -176,8 +193,9 @@ bool compareForthBackExtrapolation() {
 
 bool compareForthBackJacNoise() {
 
-  double epsilonJac = 1.E-9;
-  double epsilonNoise = 1.E-9;
+  double epsilonJac = 1.E-2; // absolute
+  double deltaJac = 0.2; // relative
+  double epsilonNoise = 1.E-6;
 
   int pdg = randomPdg();
   genfit::AbsTrackRep* rep;
@@ -227,30 +245,30 @@ bool compareForthBackJacNoise() {
   }
 
   // compare
-  if (!((jac_f - jac_bi).Abs() < epsilonJac) ||
-      !((jac_b - jac_fi).Abs() < epsilonJac) ||
-      !((noise_f - noise_bi).Abs() < epsilonNoise) ||
-      !((noise_b - noise_fi).Abs() < epsilonNoise) ) {
+  if (!compareMatrices(jac_f, jac_bi, epsilonJac, deltaJac) ||
+      !compareMatrices(jac_b, jac_fi, epsilonJac, deltaJac) ||
+      !compareMatrices(noise_f, noise_bi, epsilonNoise, 0) ||
+      !compareMatrices(noise_b, noise_fi, epsilonNoise, 0) ) {
 
     origState.Print();
     state.Print();
 
-    std::cerr << "jac_f = "; jac_f.Print();
-    std::cerr << "jac_bi = "; jac_bi.Print();
-    std::cerr << "jac_b = "; jac_b.Print();
-    std::cerr << "jac_fi = "; jac_fi.Print();
+    std::cout << "jac_f = "; jac_f.Print();
+    std::cout << "jac_bi = "; jac_bi.Print();
+    std::cout << "jac_b = "; jac_b.Print();
+    std::cout << "jac_fi = "; jac_fi.Print();
 
-    std::cerr << "noise_f = "; noise_f.Print();
-    std::cerr << "noise_bi = "; noise_bi.Print();
-    std::cerr << "noise_b = "; noise_b.Print();
-    std::cerr << "noise_fi = "; noise_fi.Print();
+    std::cout << "noise_f = "; noise_f.Print();
+    std::cout << "noise_bi = "; noise_bi.Print();
+    std::cout << "noise_b = "; noise_b.Print();
+    std::cout << "noise_fi = "; noise_fi.Print();
 
-    std::cerr << "jac difference (jac_f - jac_bi) = "; (jac_f - jac_bi).Print();
-    std::cerr << "jac difference (jac_b - jac_fi) = "; (jac_b - jac_fi).Print();
-    std::cerr << "noise difference (noise_f - noise_bi) = "; (noise_f - noise_bi).Print();
-    std::cerr << "noise difference (noise_b - noise_fi) = "; (noise_b - noise_fi).Print();
+    std::cout << "jac difference (jac_f - jac_bi) = "; (jac_f - jac_bi).Print();
+    std::cout << "jac difference (jac_b - jac_fi) = "; (jac_b - jac_fi).Print();
+    std::cout << "noise difference (noise_f - noise_bi) = "; (noise_f - noise_bi).Print();
+    std::cout << "noise difference (noise_b - noise_fi) = "; (noise_b - noise_fi).Print();
 
-    std::cerr << std::endl;
+    std::cout << std::endl;
 
     delete rep;
     return false;
@@ -419,9 +437,65 @@ bool checkExtrapolateToLine() {
       origState.Print();
       state.Print();
 
-      std::cerr << "distance of linePoint to plane = " << state.getPlane()->distance(linePoint) << "\n";
-      std::cerr << "distance of linePoint+lineDirection to plane = " << state.getPlane()->distance(linePoint+lineDirection) << "\n";
-      std::cerr << "direction * plane normal = " << rep->getMom(&state).Unit() * state.getPlane()->getNormal() << "\n";
+      std::cout << "distance of linePoint to plane = " << state.getPlane()->distance(linePoint) << "\n";
+      std::cout << "distance of linePoint+lineDirection to plane = " << state.getPlane()->distance(linePoint+lineDirection) << "\n";
+      std::cout << "direction * plane normal = " << rep->getMom(&state).Unit() * state.getPlane()->getNormal() << "\n";
+
+      delete rep;
+      return false;
+    }
+
+    delete rep;
+    return true;
+
+}
+
+
+bool checkExtrapolateToPoint() {
+
+  double epsilonLen = 1.E-4; // 1 mu
+  double epsilonMom = 1.E-5; // 10 keV
+
+  int pdg = randomPdg();
+  genfit::AbsTrackRep* rep;
+  rep = new genfit::RKTrackRep(pdg);
+
+  //TVector3 pos(0,0,0);
+  TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,gRandom->Gaus(0,0.1));
+  mom *= randomSign();
+
+
+  genfit::StateOnPlane state(rep);
+  rep->setPosMom(&state, pos, mom);
+
+  genfit::SharedPlanePtr origPlane = state.getPlane();
+  genfit::StateOnPlane origState(state);
+
+  TVector3 point(gRandom->Gaus(),randomSign()*10+gRandom->Gaus(),gRandom->Gaus());
+
+  // forth
+  double extrapLen(0);
+  try {
+    extrapLen = rep->extrapolateToPoint(&state, point, false);
+  }
+  catch (genfit::Exception& e) {
+    std::cerr << e.what();
+
+    delete rep;
+    return false;
+  }
+
+
+  // compare
+  if (fabs(state.getPlane()->distance(point)) > epsilonLen ||
+      fabs((rep->getMom(&state).Unit() * state.getPlane()->getNormal())) - 1 > epsilonMom) {
+
+      origState.Print();
+      state.Print();
+
+      std::cout << "distance of point to plane = " << state.getPlane()->distance(point) << "\n";
+      std::cout << "direction * plane normal = " << rep->getMom(&state).Unit() * state.getPlane()->getNormal() << "\n";
 
       delete rep;
       return false;
@@ -452,6 +526,8 @@ int main() {
   genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,BField));
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
+  TDatabasePDG::Instance()->GetParticle(211);
+
   /*genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(false);
   genfit::MaterialEffects::getInstance()->setNoiseBetheBloch(false);
   genfit::MaterialEffects::getInstance()->setNoiseCoulomb(false);
@@ -471,16 +547,16 @@ int main() {
 
 
   tree->Fill();
-  if (debug) std::cerr<<"Write Tree ...";
+  if (debug) std::cout<<"Write Tree ...";
   tree->Write();
   file->Close();*/
 
 
   unsigned int nFailed(0);
-  unsigned int nTests(1);
+  unsigned int nTests(10);
 
   for (unsigned int i=0; i<nTests; ++i) {
-    /*if (!compareForthBackExtrapolation()) {
+    if (!compareForthBackExtrapolation()) {
       std::cout << "failed compareForthBackExtrapolation nr" << i << "\n";
       ++nFailed;
     }
@@ -488,22 +564,27 @@ int main() {
     if (!checkStopAtBoundary()) {
       std::cout << "failed checkStopAtBoundary nr" << i << "\n";
       ++nFailed;
-    }*/
+    }
 
-    /*if (!checkErrorPropagation()) {
+    if (!checkErrorPropagation()) {
       std::cout << "failed checkErrorPropagation nr" << i << "\n";
       ++nFailed;
-    }*/
+    }
 
-    /*if (!checkExtrapolateToLine()) {
+    if (!checkExtrapolateToLine()) {
       std::cout << "failed checkExtrapolateToLine nr" << i << "\n";
       ++nFailed;
-    }*/
+    }
 
-    if (!compareForthBackJacNoise()) {
-      std::cout << "failed compareForthBackJacNoise nr" << i << "\n";
+    if (!checkExtrapolateToPoint()) {
+      std::cout << "failed checkExtrapolateToPoint nr" << i << "\n";
       ++nFailed;
     }
+
+    //if (!compareForthBackJacNoise()) {
+    //  std::cout << "failed compareForthBackJacNoise nr" << i << "\n";
+    //  ++nFailed;
+    //}
 
   }
 
