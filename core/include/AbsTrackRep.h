@@ -41,14 +41,14 @@ class AbsTrackRep {
       bool stopAtBoundary = false) const = 0;
 
   virtual double extrapolateToCylinder(StateOnPlane* state,
-      const TVector3& linePoint,
-      const TVector3& lineDirection,
       double radius,
+      const TVector3& linePoint = TVector3(0.,0.,0.),
+      const TVector3& lineDirection = TVector3(0.,0.,1.),
       bool stopAtBoundary = false) const = 0;
 
   virtual double extrapolateToSphere(StateOnPlane* state,
-      const TVector3& point,
       double radius,
+      const TVector3& point = TVector3(0.,0.,0.),
       bool stopAtBoundary = false) const = 0;
 
   /**

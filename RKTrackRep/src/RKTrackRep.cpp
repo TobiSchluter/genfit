@@ -255,9 +255,9 @@ double RKTrackRep::extrapolateToPoint(StateOnPlane* state,
 
 
 double RKTrackRep::extrapolateToCylinder(StateOnPlane* state,
+    double radius,
     const TVector3& linePoint,
     const TVector3& lineDirection,
-    double radius,
     bool stopAtBoundary) const {
 
   // TODO: implement
@@ -267,8 +267,8 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane* state,
 
 
 double RKTrackRep::extrapolateToSphere(StateOnPlane* state,
-    const TVector3& point,
     double radius,
+    const TVector3& point,
     bool stopAtBoundary) const {
 
   // TODO: implement

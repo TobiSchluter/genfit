@@ -499,7 +499,7 @@ void RKTools::J_pMxJ_MMxJ_Mp(const M5x7& J_pM, const M7x7& J_MM, const M7x5& J_M
   // x x x x x x 0
   // x x x x x x 0
   // x x x x x x 0
-  // x x x x x x 1
+  // x x x x x x x
 
   // J_MM if MMproj == false
   // 1 0 0 0 0 0 0
@@ -508,7 +508,7 @@ void RKTools::J_pMxJ_MMxJ_Mp(const M5x7& J_pM, const M7x7& J_MM, const M7x5& J_M
   // x x x x x x 0
   // x x x x x x 0
   // x x x x x x 0
-  // x x x x x x 1
+  // x x x x x x x
 
 
   // J_Mp
@@ -522,7 +522,7 @@ void RKTools::J_pMxJ_MMxJ_Mp(const M5x7& J_pM, const M7x7& J_MM, const M7x5& J_M
 
 
   if (MMproj) {
-    J_pp[0*5+0] = 1;
+    J_pp[0*5+0] = J_MM[6*7+6];
     J_pp[0*5+1] = J_MM[6*7+3] * J_Mp[3*5+1] + J_MM[6*7+4] * J_Mp[4*5+1] + J_MM[6*7+5] * J_Mp[5*5+1];
     J_pp[0*5+2] = J_MM[6*7+3] * J_Mp[3*5+2] + J_MM[6*7+4] * J_Mp[4*5+2] + J_MM[6*7+5] * J_Mp[5*5+2];
     J_pp[0*5+3] = J_MM[6*7+0] * J_Mp[0*5+3] + J_MM[6*7+1] * J_Mp[1*5+3] + J_MM[6*7+2] * J_Mp[2*5+3];
@@ -549,7 +549,7 @@ void RKTools::J_pMxJ_MMxJ_Mp(const M5x7& J_pM, const M7x7& J_MM, const M7x5& J_M
     J_pp[4*5+4] = (J_pM[4*7+0] * J_MM[0*7+0] + J_pM[4*7+1] * J_MM[1*7+0] + J_pM[4*7+2] * J_MM[2*7+0]) * J_Mp[0*5+4] + (J_pM[4*7+0] * J_MM[0*7+1] + J_pM[4*7+1] * J_MM[1*7+1] + J_pM[4*7+2] * J_MM[2*7+1]) * J_Mp[1*5+4] + (J_pM[4*7+0] * J_MM[0*7+2] + J_pM[4*7+1] * J_MM[1*7+2] + J_pM[4*7+2] * J_MM[2*7+2]) * J_Mp[2*5+4];
   }
   else {
-    J_pp[0*5+0] = 1;
+    J_pp[0*5+0] = J_MM[6*7+6];
     J_pp[0*5+1] = J_MM[6*7+3] * J_Mp[3*5+1] + J_MM[6*7+4] * J_Mp[4*5+1] + J_MM[6*7+5] * J_Mp[5*5+1];
     J_pp[0*5+2] = J_MM[6*7+3] * J_Mp[3*5+2] + J_MM[6*7+4] * J_Mp[4*5+2] + J_MM[6*7+5] * J_Mp[5*5+2];
     J_pp[0*5+3] = J_MM[6*7+0] * J_Mp[0*5+3] + J_MM[6*7+1] * J_Mp[1*5+3] + J_MM[6*7+2] * J_Mp[2*5+3];
