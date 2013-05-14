@@ -45,7 +45,7 @@ class AbsMeasurement : public TObject {
   : rawHitCoords_(rawHitCoords), rawHitCov_(rawHitCov), detId_(detId), hitId_(hitId), trackPoint_(trackPoint)
   {}
 
-  virtual ~AbsMeasurement() {};
+  virtual ~AbsMeasurement();
 
   //! Deep copy ctor for polymorphic class.
   virtual AbsMeasurement* clone() const = 0;

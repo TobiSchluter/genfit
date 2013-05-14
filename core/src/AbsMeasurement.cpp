@@ -21,5 +21,9 @@
 
 namespace genfit {
 
+  AbsMeasurement::~AbsMeasurement()
+  {
+
+  }
 
 } /* End of namespace genfit */
