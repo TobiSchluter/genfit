@@ -105,8 +105,8 @@ int randomSign() {
 
 
 bool compareMatrices(TMatrixTBase<double>& A, TMatrixTBase<double>& B, double maxAbsErr, double maxRelErr) {
-  for (unsigned int i=0; i<A.GetNrows(); ++i) {
-    for (unsigned int j=0; j<A.GetNcols(); ++j) {
+  for (int i=0; i<A.GetNrows(); ++i) {
+    for (int j=0; j<A.GetNcols(); ++j) {
       double absErr = A(i,j) - B(i,j);
       if ( fabs(absErr) > maxAbsErr ) {
         double relErr = A(i,j)/B(i,j) - 1;
@@ -117,6 +117,7 @@ bool compareMatrices(TMatrixTBase<double>& A, TMatrixTBase<double>& B, double ma
       }
     }
   }
+  return true;
 }
 
 
@@ -283,7 +284,7 @@ bool compareForthBackJacNoise() {
 bool checkStopAtBoundary() {
 
   double epsilonLen = 1.E-4; // 1 mu
-  double epsilonMom = 1.E-5; // 10 keV
+  //double epsilonMom = 1.E-5; // 10 keV
 
   double matRadius(1.);
 
@@ -306,9 +307,8 @@ bool checkStopAtBoundary() {
   genfit::StateOnPlane origState(state);
 
   // forth
-  double extrapLen(0);
   try {
-    extrapLen = rep->extrapolateToPlane(&state, plane, true);
+    rep->extrapolateToPlane(&state, plane, true);
   }
   catch (genfit::Exception& e) {
     std::cerr << e.what();
@@ -340,10 +340,8 @@ bool checkStopAtBoundary() {
 
 bool checkErrorPropagation() {
 
-  double epsilonLen = 1.E-4; // 1 mu
-  double epsilonMom = 1.E-5; // 10 keV
-
-  double matRadius(1.);
+  //double epsilonLen = 1.E-4; // 1 mu
+  //double epsilonMom = 1.E-5; // 10 keV
 
   int pdg = randomPdg();
   genfit::AbsTrackRep* rep;
@@ -364,9 +362,8 @@ bool checkErrorPropagation() {
   genfit::MeasuredStateOnPlane origState(state);
 
   // forth
-  double extrapLen(0);
   try {
-    extrapLen = rep->extrapolateToPlane(&state, plane);
+    rep->extrapolateToPlane(&state, plane);
   }
   catch (genfit::Exception& e) {
     std::cerr << e.what();
@@ -416,9 +413,8 @@ bool checkExtrapolateToLine() {
   TVector3 lineDirection(gRandom->Gaus(),gRandom->Gaus(),randomSign()*10+gRandom->Gaus());
 
   // forth
-  double extrapLen(0);
   try {
-    extrapLen = rep->extrapolateToLine(&state, linePoint, lineDirection, false);
+    rep->extrapolateToLine(&state, linePoint, lineDirection, false);
   }
   catch (genfit::Exception& e) {
     std::cerr << e.what();
@@ -474,9 +470,8 @@ bool checkExtrapolateToPoint() {
   TVector3 point(gRandom->Gaus(),randomSign()*10+gRandom->Gaus(),gRandom->Gaus());
 
   // forth
-  double extrapLen(0);
   try {
-    extrapLen = rep->extrapolateToPoint(&state, point, false);
+    rep->extrapolateToPoint(&state, point, false);
   }
   catch (genfit::Exception& e) {
     std::cerr << e.what();
@@ -505,6 +500,74 @@ bool checkExtrapolateToPoint() {
 
 }
 
+
+bool checkExtrapolateToCylinder() {
+
+  double epsilonLen = 1.E-4; // 1 mu
+  //double epsilonMom = 1.E-5; // 10 keV
+
+  int pdg = randomPdg();
+  genfit::AbsTrackRep* rep;
+  rep = new genfit::RKTrackRep(pdg);
+
+  //TVector3 pos(0,0,0);
+  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,0.);
+  mom *= randomSign();
+
+
+  genfit::StateOnPlane state(rep);
+  rep->setPosMom(&state, pos, mom);
+
+  genfit::SharedPlanePtr origPlane = state.getPlane();
+  genfit::StateOnPlane origState(state);
+
+  const TVector3 linePoint(gRandom->Gaus(0,5), gRandom->Gaus(0,5), gRandom->Gaus(0,5));
+  const TVector3 lineDirection(gRandom->Gaus(),gRandom->Gaus(),2+gRandom->Gaus());
+  const double radius = gRandom->Uniform(10);
+
+  // forth
+  try {
+    rep->extrapolateToCylinder(&state, radius, linePoint, lineDirection, false);
+  }
+  catch (genfit::Exception& e) {
+    std::cerr << e.what();
+
+    delete rep;
+
+    static const char* bla = "cannot solve";
+    const char* what = e.what();
+    if (strstr(what, bla))
+      return true;
+    return false;
+  }
+
+  TVector3 pocaOnLine(lineDirection);
+  double t = 1./(pocaOnLine.Mag2()) * ((rep->getPos(&state)*pocaOnLine) - (linePoint*pocaOnLine));
+  pocaOnLine *= t;
+  pocaOnLine += linePoint;
+
+  TVector3 radiusVec = rep->getPos(&state) - pocaOnLine;
+
+  // compare
+  if (fabs(lineDirection*radiusVec) > epsilonLen ||
+      fabs(radiusVec.Mag()-radius) > epsilonLen) {
+
+      origState.Print();
+      state.Print();
+
+      std::cout << "lineDirection*radiusVec = " << lineDirection*radiusVec << "\n";
+      std::cout << "radiusVec.Mag()-radius = " << radiusVec.Mag()-radius << "\n";
+
+      delete rep;
+      return false;
+    }
+
+    delete rep;
+    return true;
+
+}
+
 //=====================================================================================================================
 //=====================================================================================================================
 //=====================================================================================================================
@@ -514,7 +577,7 @@ bool checkExtrapolateToPoint() {
 int main() {
 
   const double BField = 15.;       // kGauss
-  const bool debug = true;
+  //const bool debug = true;
 
   gRandom->SetSeed(10);
   signal(SIGSEGV, handler);   // install our handler
@@ -555,6 +618,7 @@ int main() {
   unsigned int nTests(100);
 
   for (unsigned int i=0; i<nTests; ++i) {
+
     if (!compareForthBackExtrapolation()) {
       std::cout << "failed compareForthBackExtrapolation nr" << i << "\n";
       ++nFailed;
@@ -577,6 +641,11 @@ int main() {
 
     if (!checkExtrapolateToPoint()) {
       std::cout << "failed checkExtrapolateToPoint nr" << i << "\n";
+      ++nFailed;
+    }
+
+    if (!checkExtrapolateToCylinder()) {
+      std::cout << "failed checkExtrapolateToCylinder nr" << i << "\n";
       ++nFailed;
     }
 
