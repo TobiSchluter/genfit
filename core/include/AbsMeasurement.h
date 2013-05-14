@@ -42,11 +42,10 @@ class AbsMeasurement : public TObject {
 
   AbsMeasurement() {};
   AbsMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
-    : detId_(detId), hitId_(hitId), trackPoint_(trackPoint)
-  { rawHitCoords_.ResizeTo(rawHitCoords); rawHitCoords_ = rawHitCoords;
-    rawHitCov_.ResizeTo(rawHitCov); rawHitCov_ = rawHitCov; };
+  : rawHitCoords_(rawHitCoords), rawHitCov_(rawHitCov), detId_(detId), hitId_(hitId), trackPoint_(trackPoint)
+  {}
 
-  virtual ~AbsMeasurement();
+  virtual ~AbsMeasurement() {};
 
   //! Deep copy ctor for polymorphic class.
   virtual AbsMeasurement* clone() const = 0;
