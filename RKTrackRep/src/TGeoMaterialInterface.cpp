@@ -111,21 +111,47 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 #endif
       return s + stepSign*slDist;
     }
-    else if (safety < delta) {
+    /*else if (safety < delta) {
 #ifdef DEBUG
        std::cout << "   make straight line step \n";
 #endif
       gGeoManager->FindNextBoundaryAndStep(delta); // make a minimum step of delta (delta must be unsigned here, remember we initialized geoManager with adjusted direction!)
       s += stepSign*delta;
-    }
+    }*/
     else {
 #ifdef DEBUG
       std::cout << "   make RKutta step \n";
 #endif
-      s += stepSign*safety;
-      state7 = stateOrig; // propagate complete way from original start
-      rep->RKPropagate(state7, NULL, SA, s, varField);
-      initTrack(state7[0], state7[1], state7[2],  stepSign*state7[3], stepSign*state7[4], stepSign*state7[5]);
+      // check if we would cross a boundary when making slDist step
+      double tryStep = 0.9 * stepSign*slDist;
+
+      bool safe = false;
+      if (fabs(tryStep) < fabs(safety))
+        safe = true;
+
+      if (!safe) {
+        state7 = stateOrig; // propagate complete way from original start
+        rep->RKPropagate(state7, NULL, SA, s+tryStep, varField);
+        initTrack(stateOrig[0], stateOrig[1], stateOrig[2],
+                  state7[0]-stateOrig[0], state7[1]-stateOrig[1], state7[2]-stateOrig[2]);
+      }
+      if (!safe && gGeoManager->GetStep() > fabs(tryStep)) {
+        s += tryStep;
+        initTrack(state7[0], state7[1], state7[2],  stepSign*state7[3], stepSign*state7[4], stepSign*state7[5]);
+        #ifdef DEBUG
+          std::cout << "   tried and its safe to make a step of  " << stepSign*tryStep << "\n";
+        #endif
+      }
+      else {
+        s += stepSign*safety;
+        state7 = stateOrig; // propagate complete way from original start
+        rep->RKPropagate(state7, NULL, SA, s, varField);
+        initTrack(state7[0], state7[1], state7[2],  stepSign*state7[3], stepSign*state7[4], stepSign*state7[5]);
+#ifdef DEBUG
+    std::cout << "   step along safety  " << stepSign*safety << "\n";
+#endif
+      }
+
     }
 
 #ifdef DEBUG

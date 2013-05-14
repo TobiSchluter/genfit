@@ -796,7 +796,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
                fabs((C1+C6)-(C3+C4));  // EST = ||(ABC1+ABC6)-(ABC3+ABC4)||_1  =  ||(axzy x H0 + ABC5 x H2) - (ABC2 x H1 + ABC3 x H1)||_1
   if (EST < 1.E-7) EST = 1.E-7; // prevent q from getting too large
 #ifdef DEBUG
-   std::cout << "   RKTrackRep::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
+   std::cout << "    RKTrackRep::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
 #endif
   return pow(DLT/EST, par);
 }
