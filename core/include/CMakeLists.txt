@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 set(GENFIT_INCS
   AbsBField.h
   AbsFinitePlane.h
+  AbsFitter.h
   AbsFitterInfo.h
   AbsMeasurement.h
   AbsTrackRep.h
@@ -12,6 +13,7 @@ set(GENFIT_INCS
   FieldManager.h
   genfitLinkDef.h
   KalmanFittedStateOnPlane.h
+  KalmanFitter.h
   KalmanFitterInfo.h
   MaterialInfo.h
   MaterialProperties.h

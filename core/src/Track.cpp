@@ -38,14 +38,16 @@ Track::Track(const TrackCand& trackCand) :
   // TODO: implement
 }
 
-Track::Track(AbsTrackRep* trackRep) :
-  cardinalRep_(0)
+Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
+  cardinalRep_(0), stateSeed_(stateSeed)
 {
   trackReps_.push_back(trackRep);
 }
 
 
-Track::Track(const Track& rhs) {
+Track::Track(const Track& rhs)
+  : stateSeed_(rhs.stateSeed_)
+{
   for (TrackPoint* rhsPoint : rhs.trackPoints_) {
     trackPoints_.push_back(new TrackPoint(*rhsPoint));
   }
@@ -79,6 +81,9 @@ Track& Track::operator=(const Track& rhs) {
   }
 
   cardinalRep_ = rhs.cardinalRep_;
+
+  stateSeed_.ResizeTo(rhs.stateSeed_);
+  stateSeed_ = rhs.stateSeed_;
 
   return *this;
 }

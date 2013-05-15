@@ -9,6 +9,7 @@
 #include "TrackPoint.h"
 
 #include "TObject.h"
+#include "TVectorD.h"
 
 namespace genfit {
 
@@ -24,12 +25,12 @@ class Track : public TObject {
 
   Track();
   Track(const TrackCand& trackCand);
-  Track(AbsTrackRep* trackRep);
+  Track(AbsTrackRep* trackRep, const TVectorD& stateSeed);
 
   Track(const Track&); // copy constructor
   Track(Track&&) = default; // move constructor
   Track& operator=(const Track&); // assignment operator
-  Track& operator=(Track&&) = default; // move assignment operator
+  //Track& operator=(Track&&) = default; // move assignment operator
 
   ~Track();
 
@@ -53,6 +54,9 @@ class Track : public TObject {
    */
   AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_);}
   unsigned int getCardinalRepID() const {return cardinalRep_;}
+
+  const TVectorD& getStateSeed() const {return stateSeed_;}
+  void setStateSeed(const TVectorD& s) {stateSeed_.ResizeTo(s); stateSeed_ = s;}
 
   /** Insert TrackPoint before TrackPoint with position id.
    * Id -1 means after last TrackPoint.
@@ -85,6 +89,7 @@ class Track : public TObject {
   std::vector< AbsTrackRep* > trackReps_; // Ownership
   unsigned int cardinalRep_; // THE selected rep, default = 0;
 
+  TVectorD stateSeed_; // 6D: position, momentum
 
   //ClassDef(Track,1)
 
