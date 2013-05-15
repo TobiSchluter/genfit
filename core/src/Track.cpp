@@ -151,6 +151,17 @@ unsigned int Track::getNumPointsWithMeasurement() const {
 
 void Track::insertPoint(TrackPoint* point, int id) {
   // TODO: test
+
+  if (trackPoints_.size() == 0) {
+    assert(id == -1 || id == 0);
+    trackPoints_.insert(trackPoints_.begin(), point);
+    point->setTrack(this);
+    return;
+  }
+
+  // [-size, size-1] is the allowed range
+  assert(id < (ssize_t)trackPoints_.size() || -id-1 <= (ssize_t)trackPoints_.size());
+
   if (id < 0)
     id += trackPoints_.size();
 
@@ -161,6 +172,7 @@ void Track::insertPoint(TrackPoint* point, int id) {
   }
 
   trackPoints_.insert(trackPoints_.begin() + id, point);
+  point->setTrack(this);
 }
 
 
