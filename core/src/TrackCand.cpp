@@ -31,7 +31,6 @@ TrackCand::TrackCand() :
   mcTrackId_(-1),
   pdg_(0),
   state6D_(6),
-  cov6D_(-1.0*TMatrixDSym(TMatrixDSym::kUnit,TMatrixDSym(6))),
   q_(0)
 {
   ;
@@ -49,7 +48,6 @@ TrackCand::TrackCand( const TrackCand& other ) :
   mcTrackId_(other.mcTrackId_),
   pdg_(other.pdg_),
   state6D_(other.state6D_),
-  cov6D_(other.cov6D_),
   q_(other.q_)
 {
   // deep copy
@@ -60,10 +58,12 @@ TrackCand::TrackCand( const TrackCand& other ) :
 }
 
 TrackCand& TrackCand::operator=( const TrackCand& other ){
+  if (&other == this)
+    return *this;
+
   mcTrackId_ = other.mcTrackId_;
   pdg_ = other.pdg_;
   state6D_ = other.state6D_;
-  cov6D_ = other.cov6D_;
   q_ = other.q_;
 
   for (unsigned int i=0; i<hits_.size(); ++i) {
@@ -194,9 +194,8 @@ bool operator== (const TrackCand& lhs, const TrackCand& rhs){
 void TrackCand::Print(const Option_t* option) const {
   std::cout << "======== TrackCand::print ========\n";
   std::cout << "mcTrackId=" << mcTrackId_ << "\n";
-  std::cout << "seed values for 6D state and cov: " << std::endl;
+  std::cout << "seed values for 6D state: \n";
   state6D_.Print(option);
-  cov6D_.Print(option);
   std::cout << "q" << q_ << "\n";
   std::cout << "PDG code= " << pdg_ << "\n";
   for(unsigned int i=0; i<hits_.size(); ++i){
@@ -236,56 +235,26 @@ void TrackCand::sortHits(const std::vector<unsigned int>& indices){
 }
 
 
-void TrackCand::set6DSeed(const TVectorD& state6D, const double charge, const TMatrixDSym& cov6D) {
-  q_ = charge;
-  state6D_ = state6D;
-  cov6D_ = cov6D;
-}
-
 void TrackCand::set6DSeed(const TVectorD& state6D, const double charge) {
   q_ = charge;
   state6D_ = state6D;
-  cov6D_ =  -1.0 * TMatrixDSym(TMatrixDSym::kUnit, TMatrixDSym(6));
-}
-
-void TrackCand::set6DSeedAndPdgCode(const TVectorD& state6D, const int pdgCode, const TMatrixDSym& cov6D) {
-  setPdgCode(pdgCode);
-  state6D_ = state6D;
-  cov6D_ = cov6D;
 }
 
 void TrackCand::set6DSeedAndPdgCode(const TVectorD& state6D, const int pdgCode) {
   setPdgCode(pdgCode);
   state6D_ = state6D;
-  cov6D_ =  -1.0 * TMatrixDSym(TMatrixDSym::kUnit, TMatrixDSym(6));
-}
-
-void TrackCand::setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge, const TMatrixDSym& cov6D) {
-  q_ = charge;
-  state6D_[0] = pos[0];  state6D_[1] = pos[1];  state6D_[2] = pos[2];
-  state6D_[3] = mom[0];  state6D_[4] = mom[1];  state6D_[5] = mom[2];
-  cov6D_ = cov6D;
 }
 
 void TrackCand::setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge) {
   q_ = charge;
   state6D_[0] = pos[0];  state6D_[1] = pos[1];  state6D_[2] = pos[2];
   state6D_[3] = mom[0];  state6D_[4] = mom[1];  state6D_[5] = mom[2];
-  cov6D_ =  -1.0 * TMatrixDSym(TMatrixDSym::kUnit, TMatrixDSym(6));
-}
-
-void TrackCand::setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode, const TMatrixDSym& cov6D) {
-  setPdgCode(pdgCode);
-  state6D_[0] = pos[0];  state6D_[1] = pos[1];  state6D_[2] = pos[2];
-  state6D_[3] = mom[0];  state6D_[4] = mom[1];  state6D_[5] = mom[2];
-  cov6D_ = cov6D;
 }
 
 void TrackCand::setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode) {
   setPdgCode(pdgCode);
   state6D_[0] = pos[0];  state6D_[1] = pos[1];  state6D_[2] = pos[2];
   state6D_[3] = mom[0];  state6D_[4] = mom[1];  state6D_[5] = mom[2];
-  cov6D_ = -1.0 * TMatrixDSym(TMatrixDSym::kUnit, TMatrixDSym(6));
 }
 
 

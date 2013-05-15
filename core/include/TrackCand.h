@@ -126,9 +126,6 @@ class TrackCand : public TObject {
   /** returns the 6D seed state; should be in global coordinates */
   const TVectorD& getStateSeed() const {return state6D_;}
 
-  /** returns the 6D covariance matrix of the seed state; should be in global coordinates */
-  const TMatrixDSym& getCovSeed() const {return cov6D_;}
-
   double getChargeSeed() const {return q_;}
 
   /** @brief get the PDG code*/
@@ -173,32 +170,20 @@ class TrackCand : public TObject {
 
   /** @brief sets the state to seed the track fitting. State has to be a TVectorD(6). First 3 elements are the staring postion second 3 elements the starting momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
-   * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not STANDARD DEVIATIONS on the diagonal
    */
-  void set6DSeed(const TVectorD& state6D, const double charge, const TMatrixDSym& cov6D);
-
   void set6DSeed(const TVectorD& state6D, const double charge);
 
   /** @brief This function works the same as set6DSeed but instead of a charge hypothesis you can set a pdg code which will set the charge automatically
-   * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not standard deviations on the diagonal
    */
-  void set6DSeedAndPdgCode(const TVectorD& state6D, const int pdgCode, const TMatrixDSym& cov6D);
-
   void set6DSeedAndPdgCode(const TVectorD& state6D, const int pdgCode);
 
   /** @brief sets the state to seed the track fitting. State has to be a TVector3 for position and a TVector3 for momentum. Everything in global coordinates
    * charge is the charge hypotheses of the particle charge
-   * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not STANDARD DEVIATIONS on the diagonal
    */
-  void setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge, const TMatrixDSym& cov6D);
-
   void setPosMomSeed(const TVector3& pos, const TVector3& mom, const double charge);
 
   /** @brief This function works the same as setPosMomSeed but instead of a charge hypothesis you can set a pdg code which will set the charge automatically
-   * ATTENTION: If you set the cov6D covariance matrix of the state remember that there are VARIANCES not standard deviations on the diagonal
    */
-  void setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode, const TMatrixDSym& cov6D);
-
   void setPosMomSeedAndPdgCode(const TVector3& pos, const TVector3& mom, const int pdgCode);
 
 
@@ -211,7 +196,6 @@ class TrackCand : public TObject {
   int pdg_; /**< particle data groupe's id for a particle*/
 
   TVectorD state6D_; /**< global 6D position plus momentum state */
-  TMatrixDSym cov6D_; /**< global 6D position plus momentum covariance matrix */
   double q_; /**< the charge of the particle in units of elementary charge */
 
 
