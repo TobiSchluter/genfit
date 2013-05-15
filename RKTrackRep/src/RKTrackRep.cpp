@@ -663,9 +663,8 @@ double RKTrackRep::RKPropagate(M1x7& state7,
 
   // First point
   r[0] = R[0];           r[1] = R[1];           r[2]=R[2];
-  TVector3 pos(r[0], r[1], r[2]);// vector of start coordinates R0  (x, y, z)
-  TVector3 field(FieldManager::getFieldVal(pos));       // magnetic field in 10^-4 T = kGauss
-  H0[0] = PS2*field.X(); H0[1] = PS2*field.Y(); H0[2] = PS2*field.Z();     // H0 is PS2*(Hx, Hy, Hz) @ R0
+  FieldManager::getFieldVal(r[0], r[1], r[2], H0[0], H0[1], H0[2]);       // magnetic field in 10^-4 T = kGauss
+  H0[0] *= PS2; H0[1] *= PS2; H0[2] *= PS2;     // H0 is PS2*(Hx, Hy, Hz) @ R0
   A0 = A[1]*H0[2]-A[2]*H0[1]; B0 = A[2]*H0[0]-A[0]*H0[2]; C0 = A[0]*H0[1]-A[1]*H0[0]; // (ax, ay, az) x H0
   A2 = A[0]+A0              ; B2 = A[1]+B0              ; C2 = A[2]+C0              ; // (A0, B0, C0) + (ax, ay, az)
   A1 = A2+A[0]              ; B1 = B2+A[1]              ; C1 = C2+A[2]              ; // (A0, B0, C0) + 2*(ax, ay, az)
@@ -673,9 +672,8 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   // Second point
   if (varField) {
     r[0] += A1*S4;         r[1] += B1*S4;         r[2] += C1*S4;
-    pos.SetXYZ(r[0], r[1], r[2]);
-    field = FieldManager::getFieldVal(pos);
-    H1[0] = field.X()*PS2; H1[1] = field.Y()*PS2; H1[2] = field.Z()*PS2; // H1 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * [(A0, B0, C0) + 2*(ax, ay, az)]
+    FieldManager::getFieldVal(r[0], r[1], r[2], H1[0], H1[1], H1[2]);
+    H1[0] *= PS2; H1[1] *= PS2; H1[2] *= PS2; // H1 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * [(A0, B0, C0) + 2*(ax, ay, az)]
   }
   else H1 = H0;
   A3 = B2*H1[2]-C2*H1[1]+A[0]; B3 = C2*H1[0]-A2*H1[2]+A[1]; C3 = A2*H1[1]-B2*H1[0]+A[2]; // (A2, B2, C2) x H1 + (ax, ay, az)
@@ -685,9 +683,8 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   // Last point
   if (varField) {
     r[0]=R[0]+S*A4;         r[1]=R[1]+S*B4;         r[2]=R[2]+S*C4;  //setup.Field(r,H2);
-    pos.SetXYZ(r[0], r[1], r[2]);
-    field = FieldManager::getFieldVal(pos);
-    H2[0] = field.X()*PS2;  H2[1] = field.Y()*PS2;  H2[2] = field.Z()*PS2; // H2 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * (A4, B4, C4)
+    FieldManager::getFieldVal(r[0], r[1], r[2], H2[0], H2[1], H2[2]);
+    H2[0] *= PS2; H2[1] *= PS2; H2[2] *= PS2; // H2 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * (A4, B4, C4)
   }
   else H2 = H0;
   A6 = B5*H2[2]-C5*H2[1]; B6 = C5*H2[0]-A5*H2[2]; C6 = A5*H2[1]-B5*H2[0]; // (A5, B5, C5) x H2

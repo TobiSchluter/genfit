@@ -48,7 +48,7 @@ class ConstField : public AbsBField {
 
   //! return value at position
   TVector3 get(const TVector3& pos) const override;
-  void get(const TVector3& position, double& Bx, double& By, double& Bz) const override;
+  void get(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz) const override;
 
  private:
   TVector3 field_;

@@ -45,7 +45,7 @@ public:
   virtual TVector3 get(const TVector3& position) const = 0;
 
   //! override this in your concrete implementation
-  virtual void get(const TVector3& position, double& Bx, double& By, double& Bz) const = 0;
+  virtual void get(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz) const = 0;
  
 };
 
