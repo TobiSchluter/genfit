@@ -8,6 +8,9 @@ namespace genfit {
 
 class WireMeasurement : public AbsMeasurement {
 
+ public:
+  WireMeasurement() {}
+  WireMeasurement(int nDim) : AbsMeasurement(nDim) {}
 
  protected:
   double leftRight_;

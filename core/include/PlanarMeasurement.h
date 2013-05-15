@@ -8,6 +8,9 @@ namespace genfit {
 
 class PlanarMeasurement : public AbsMeasurement {
 
+ public:
+  PlanarMeasurement() {}
+  PlanarMeasurement(int nDim) : AbsMeasurement(nDim) {}
 
  protected:
   int planeId_;
