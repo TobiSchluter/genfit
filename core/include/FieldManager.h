@@ -68,7 +68,7 @@ class FieldManager {
     return field_->get(position);
   }
 
-  static void getFieldVal(const TVector3& position, double& Bx, double& By, double& Bz){
+  static void getFieldVal(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz){
     if(instance_==NULL){
       std::cerr << "FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!" << std::endl;
       std::string msg("FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!");
@@ -81,7 +81,7 @@ class FieldManager {
       std::runtime_error err(msg);
       throw err;
     }
-    return field_->get(position, Bx, By, Bz);
+    return field_->get(posX, posY, posZ, Bx, By, Bz);
   }
 
   //! set the magnetic field here. Magnetic field classes must be derived from AbsBField.
