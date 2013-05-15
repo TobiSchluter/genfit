@@ -28,6 +28,10 @@
 
 #include "MaterialProperties.h"
 
+#ifndef __CINT__
 typedef std::shared_ptr< const genfit::MaterialProperties > SharedMaterialPropertiesPtr;
+#else
+typedef const genfit::MaterialProperties* SharedMaterialPropertiesPrt;
+#endif
 
 #endif // genfit_SharedMaterialPropertiesPtr_h

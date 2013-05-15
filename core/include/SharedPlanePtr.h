@@ -30,7 +30,11 @@
 
 namespace genfit {
 
+#ifndef __CINT__
 typedef std::shared_ptr< const genfit::DetPlane > SharedPlanePtr;
+#else
+typedef const genfit::DetPlane* SharedPlanePtr;
+#endif
 
 }
 
