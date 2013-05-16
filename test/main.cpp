@@ -120,6 +120,29 @@ bool compareMatrices(TMatrixTBase<double>& A, TMatrixTBase<double>& B, double ma
   return true;
 }
 
+bool isCovMatrix(TMatrixTBase<double>& cov) {
+
+  if (!(cov.IsSymmetric())) {
+    std::cout << "isCovMatrix: not symmetric\n";
+    return false;
+  }
+
+  for (int i=0; i<cov.GetNrows(); ++i) {
+    for (int j=0; j<cov.GetNcols(); ++j) {
+       if (isnan(cov(i,j))) {
+         std::cout << "isCovMatrix: element isnan\n";
+         return false;
+       }
+       if (i==j && cov(i,j) < 0) {
+         std::cout << "isCovMatrix: negative diagonal element\n";
+         return false;
+       }
+    }
+  }
+
+  return true;
+}
+
 
 bool compareForthBackExtrapolation() {
 
@@ -373,23 +396,10 @@ bool checkErrorPropagation() {
   }
 
 
-  // compare
-  bool failed = false;
-  TMatrixDSym& cov = state.getCov();
-  for (int i=0; i<cov.GetNrows(); ++i) {
-    for (int j=0; j<cov.GetNcols(); ++j) {
-       if (isnan(cov(i,j))) {
-         std::cout << "isnan\n";
-         failed = true;
-       }
-       if (i==j && cov(i,j) < 0) {
-         std::cout << "negative diagonal element\n";
-         failed = true;
-       }
-    }
-  }
-  if (failed) { // TODO: specify test criterium
+  // check
+  if (!isCovMatrix(state.getCov())) {
 
+    origState.Print();
     state.Print();
 
     delete rep;

@@ -76,7 +76,6 @@ std::cout << "RKTrackRep::extrapolateToPlane()\n";
   // to 7D
   M1x7 state7;
   getState7(state, state7);
-  M7x7 cov;
   TMatrixDSym* covPtr(nullptr);
 
   if (calcCov) {
@@ -97,10 +96,6 @@ std::cout << "RKTrackRep::extrapolateToPlane()\n";
 
   // back to 5D
   getState5(state, state7);
-
-  if (calcCov) {
-    transformM7P(cov, state7, dynamic_cast<MeasuredStateOnPlane*>(state));
-  }
 
   return coveredDistance;
 }
@@ -454,7 +449,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 #endif
 
   if (ExtrapSteps_.size() == 0) {
-    Exception exc("RKTrackRep::getForwardJacobianAndNoise ==> cache is empty. Extrapolation must run with a MeasuredStateOnPlane.",__LINE__,__FILE__);
+    Exception exc("RKTrackRep::getBackwardJacobianAndNoise ==> cache is empty. Extrapolation must run with a MeasuredStateOnPlane.",__LINE__,__FILE__);
     throw exc;
   }
 

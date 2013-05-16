@@ -58,6 +58,9 @@ TrackCand::TrackCand( const TrackCand& other ) :
 }
 
 TrackCand& TrackCand::operator=( const TrackCand& other ){
+
+  // TODO: use copy-and-swap idiom (also in all other classes defining assignment operators)
+
   if (&other == this)
     return *this;
 
