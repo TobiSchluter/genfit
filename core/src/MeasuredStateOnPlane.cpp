@@ -37,13 +37,13 @@ MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixD
   StateOnPlane(state, plane, rep), cov_(cov)
 {
   assert(rep != nullptr);
-  assert(cov_.GetNcols() == (signed)rep->getDim());
+  //assert(cov_.GetNcols() == (signed)rep->getDim());
 }
 
 MeasuredStateOnPlane::MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov) :
   StateOnPlane(state), cov_(cov)
 {
-  assert(cov_.GetNcols() == (signed)getRep()->getDim());
+  //assert(cov_.GetNcols() == (signed)getRep()->getDim());
 }
 
 void MeasuredStateOnPlane::Print(Option_t* option) const {

@@ -2,9 +2,12 @@
 #define genfit_PlanarMeasurement_h
 
 #include "AbsMeasurement.h"
+#include "MeasurementOnPlane.h"
 
 
 namespace genfit {
+
+class AbsTrackRep;
 
 class PlanarMeasurement : public AbsMeasurement {
 

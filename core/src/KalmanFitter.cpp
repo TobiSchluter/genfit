@@ -23,6 +23,7 @@
 
 #include "Track.h"
 #include "TrackPoint.h"
+#include "Exception.h"
 
 #include "KalmanFitter.h"
 
@@ -31,29 +32,9 @@ using namespace genfit;
 
 void KalmanFitter::fitTrack(Track* tr, AbsTrackRep* rep)
 {
-  /* How to extrapolate:
-  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,0.);
-  mom *= randomSign();
-
-
-  genfit::StateOnPlane state(rep);
-  rep->setPosMom(&state, pos, mom);
-
-  genfit::SharedPlanePtr origPlane = state.getPlane();
-  genfit::StateOnPlane origState(state);
-
-  const TVector3 linePoint(gRandom->Gaus(0,5), gRandom->Gaus(0,5), gRandom->Gaus(0,5));
-  const TVector3 lineDirection(gRandom->Gaus(),gRandom->Gaus(),2+gRandom->Gaus());
-  const double radius = gRandom->Uniform(10);
-
-  // forth
-  try {
-    rep->extrapolateToCylinder(&state, radius, linePoint, lineDirection, false);
-  }
-  catch (genfit::Exception& e) {
-    std::cerr << e.what();
-  */
+  std::cout << tr->getNumPoints() << " TrackPoints in this track." << std::endl;
+  for (size_t i = 0; i < tr->getNumPoints(); ++i)
+    processTrackPoint(tr, tr->getPoint(i), rep, 1);
 }
 
 
@@ -61,6 +42,8 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
 {
   currentState.ResizeTo(tr->getStateSeed());
   currentState = tr->getStateSeed();
+
+  currentState.Print();
 
   currentCov.ResizeTo(6, 6);
   for (int i = 0; i < 6; i++)
@@ -77,7 +60,22 @@ void KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
   MeasurementOnPlane mOnPlane = m->constructMeasurementOnPlane(rep);
   const SharedPlanePtr plane = mOnPlane.getPlane();
 
-  StateOnPlane state(rep);
+  MeasuredStateOnPlane state(rep);
+  rep->setPosMomCov(&state, currentState, currentCov);
+  double extLen = 0;
+  try {
+    extLen = rep->extrapolateToPlane(&state, plane);
+  } catch (genfit::Exception& e) {
+    std::cerr << e.what();
+    return;
+  }
+
+  std::cout << "extrapolated by " << extLen << std::endl;
+  const TVectorD& stateVector = state.getState();
+  const TVectorD& measurement = mOnPlane.getState();
+  stateVector.Print();
+  measurement.Print();
+  (mOnPlane.getHMatrix() * stateVector).Print();
 
   // If hit, do Kalman algebra.
 
