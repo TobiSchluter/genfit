@@ -24,9 +24,7 @@
 #define genfit_KalmanFitter_h
 
 #include "AbsFitter.h"
-
-#include <TVectorD.h>
-#include <TMatrixDSym.h>
+#include "MeasuredStateOnPlane.h"
 
 namespace genfit {
 
@@ -43,8 +41,7 @@ class KalmanFitter : public AbsFitter {
 
  private:
   void processTrackPoint(Track* tr, TrackPoint* tp, AbsTrackRep* rep, int direction);
-  TVectorD currentState;
-  TMatrixDSym currentCov;
+  MeasuredStateOnPlane* currentState;
 };
 
 }

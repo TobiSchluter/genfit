@@ -21,6 +21,8 @@
    that uses the stateSeed only until it forgets about it after the
    first few hits.  */
 
+#include <TDecompChol.h>
+
 #include "Track.h"
 #include "TrackPoint.h"
 #include "Exception.h"
@@ -40,16 +42,16 @@ void KalmanFitter::fitTrack(Track* tr, AbsTrackRep* rep)
 
 void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
 {
-  currentState.ResizeTo(tr->getStateSeed());
-  currentState = tr->getStateSeed();
-
-  currentState.Print();
-
-  currentCov.ResizeTo(6, 6);
+  currentState = new MeasuredStateOnPlane(rep);
+  TMatrixDSym cov(6);
   for (int i = 0; i < 6; i++)
-    currentCov(i,i) = 1e4;
+    cov(i,i) = 1e2;
+  rep->setPosMomCov(currentState, tr->getStateSeed(), cov);
+
+  currentState->Print();
 
   fitTrack(tr, rep);
+  delete currentState;
 }
 
 void KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
@@ -60,8 +62,7 @@ void KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
   MeasurementOnPlane mOnPlane = m->constructMeasurementOnPlane(rep);
   const SharedPlanePtr plane = mOnPlane.getPlane();
 
-  MeasuredStateOnPlane state(rep);
-  rep->setPosMomCov(&state, currentState, currentCov);
+  MeasuredStateOnPlane state(*currentState);
   double extLen = 0;
   try {
     extLen = rep->extrapolateToPlane(&state, plane);
@@ -71,13 +72,51 @@ void KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
   }
 
   std::cout << "extrapolated by " << extLen << std::endl;
-  const TVectorD& stateVector = state.getState();
-  const TVectorD& measurement = mOnPlane.getState();
+  TVectorD stateVector(state.getState());
+  TMatrixDSym cov(state.getCov());
+  const TVectorD& measurement(mOnPlane.getState());
+  const TMatrixDSym& V(mOnPlane.getCov());
+  const TMatrixD& H(mOnPlane.getHMatrix());
   stateVector.Print();
+  cov.Print();
   measurement.Print();
-  (mOnPlane.getHMatrix() * stateVector).Print();
+
+  TVectorD res(measurement - (H * stateVector));
+  res.Print();
 
   // If hit, do Kalman algebra.
+
+  // calculate kalman gain ------------------------------
+  // calculate covsum (V + HCH^T)
+  TMatrixDSym HcovHt(cov);
+  HcovHt.Similarity(H);
+
+  TMatrixDSym covSum(V + HcovHt);
+  std::cerr << std::flush << std::endl;
+  std::cout << std::flush;
+  std::cout << "a sum's components:" << std::endl;
+  V.Print();
+  HcovHt.Print();
+
+  TDecompChol decomp(covSum);
+  TMatrixDSym covSumInv(decomp.Invert());
+  std::cout << "a matrix and its inverse:" << std::endl;
+  covSum.Print();
+  covSumInv.Print();
+
+  TMatrixD CHt(cov, TMatrixD::kMultTranspose, H);
+  TVectorD update = TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res;
+
+  std::cout << "STATUS:" << std::endl;
+  stateVector.Print();
+  update.Print();
+  cov.Print();
+
+  stateVector += update;
+  covSumInv.Similarity(CHt);
+  cov -= covSumInv;
+
+  currentState->setStateCov(stateVector, cov);
 
   // Store in KalmanInfo asscoiated with the TrackPoint.
 }
