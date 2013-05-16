@@ -25,6 +25,9 @@
 
 #include "AbsFitter.h"
 
+#include <TVectorD.h>
+#include <TMatrixDSym.h>
+
 namespace genfit {
 
 class TrackPoint;
@@ -40,6 +43,8 @@ class KalmanFitter : public AbsFitter {
 
  private:
   void processTrackPoint(Track* tr, TrackPoint* tp, AbsTrackRep* rep, int direction);
+  TVectorD currentState;
+  TMatrixDSym currentCov;
 };
 
 }

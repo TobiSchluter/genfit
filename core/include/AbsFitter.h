@@ -27,7 +27,6 @@ namespace genfit {
 
 class Track;
 class AbsTrackRep;
-class TVectorD;
 
 class AbsFitter {
  public:

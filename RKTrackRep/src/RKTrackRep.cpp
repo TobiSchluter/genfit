@@ -631,6 +631,36 @@ void RKTrackRep::setPosMomCov(MeasuredStateOnPlane* state, const TVector3& pos, 
 
 }
 
+void RKTrackRep::setPosMomCov(MeasuredStateOnPlane* state, const TVectorD& state6, const TMatrixDSym& cov6x6) const {
+
+  if (state6.GetNrows()!=6){
+    Exception exc("RKTrackRep::setPosMomCov ==> state has to be 6d (x, y, z, px, py, pz)",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  if (cov6x6.GetNcols()!=6 || cov6x6.GetNrows()!=6){
+    Exception exc("RKTrackRep::setPosMomCov ==> cov has to be 6x6 (x, y, z, px, py, pz)",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  if (fabs(getCharge(state)) < 0.001){
+    Exception exc("RKTrackRep::setPosMomCov ==> charge is 0. setPosMomCov cannot work with charge == 0 ",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  TVector3 pos(state6(0), state6(1), state6(2));
+  TVector3 mom(state6(3), state6(4), state6(5));
+  setPosMom(state, pos, mom); // charge does not change!
+
+  M1x7 state7;
+  getState7(state, state7);
+
+  const M6x6& cov6x6_( *((M6x6*) cov6x6.GetMatrixArray()) );
+
+  transformM6P(cov6x6_, state7, state);
+
+}
+
 
 double RKTrackRep::RKPropagate(M1x7& state7,
                         M7x7* jacobian,

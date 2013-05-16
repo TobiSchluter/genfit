@@ -21,6 +21,7 @@
    that uses the stateSeed only until it forgets about it after the
    first few hits.  */
 
+#include "Track.h"
 #include "TrackPoint.h"
 
 #include "KalmanFitter.h"
@@ -58,6 +59,13 @@ void KalmanFitter::fitTrack(Track* tr, AbsTrackRep* rep)
 
 void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
 {
+  currentState.ResizeTo(tr->getStateSeed());
+  currentState = tr->getStateSeed();
+
+  currentCov.ResizeTo(6, 6);
+  for (int i = 0; i < 6; i++)
+    currentCov(i,i) = 1e4;
+
   fitTrack(tr, rep);
 }
 
@@ -66,6 +74,10 @@ void KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
 {
   // Extrapolate to TrackPoint.
   const AbsMeasurement* m = tp->getRawMeasurement(0);
+  MeasurementOnPlane mOnPlane = m->constructMeasurementOnPlane(rep);
+  const SharedPlanePtr plane = mOnPlane.getPlane();
+
+  StateOnPlane state(rep);
 
   // If hit, do Kalman algebra.
 

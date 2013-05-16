@@ -114,6 +114,7 @@ class RKTrackRep : public AbsTrackRep {
   virtual void setPosMom(StateOnPlane* state, const TVector3& pos, const TVector3& mom) const override;
   virtual void setPosMomErr(MeasuredStateOnPlane* state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const override;
   virtual void setPosMomCov(MeasuredStateOnPlane* state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const override;
+  virtual void setPosMomCov(MeasuredStateOnPlane* state, const TVectorD& state6, const TMatrixDSym& cov6x6) const override;
 
 
   void setCharge(StateOnPlane* state, double charge) const {(state->getAuxInfo())(0) = charge;}
