@@ -30,6 +30,7 @@
 
 namespace genfit {
 
+class AbsTrackRep;
 class TrackPoint;
 
   /** 
@@ -56,14 +57,16 @@ class AbsMeasurement : public TObject {
 
 
 
-  virtual MeasurementOnPlane constructMeasurementOnPlane() = 0;
+  virtual MeasurementOnPlane constructMeasurementOnPlane(AbsTrackRep *) = 0;
 
 
  protected:
 
   // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
   AbsMeasurement(const AbsMeasurement&) = default;
+#ifndef __CINT__
   AbsMeasurement& operator=(const AbsMeasurement&) = delete; // default cannot work because TVector and TMatrix = operators don't do resizing
+#endif
 
   TVectorD rawHitCoords_;
   TMatrixDSym rawHitCov_;

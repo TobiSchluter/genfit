@@ -27,14 +27,19 @@
 
 namespace genfit {
 
+class TrackPoint;
+
 class KalmanFitter : public AbsFitter {
  public:
   KalmanFitter() {}
   ~KalmanFitter() {}
 
-  void fitTrack(Track* tr, AbsTrackRep* rep, TVectorD& state);
+  void fitTrack(Track* tr, AbsTrackRep* rep);
 
-  void processTrack(Track* tr, AbsTrackRep* rep, TVectorD& state) override;
+  void processTrack(Track* tr, AbsTrackRep* rep) override;
+
+ private:
+  void processTrackPoint(Track* tr, TrackPoint* tp, AbsTrackRep* rep, int direction);
 };
 
 }
