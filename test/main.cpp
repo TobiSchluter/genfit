@@ -270,7 +270,8 @@ bool compareForthBackJacNoise() {
   }
 
   // compare
-  if (!compareMatrices(jac_f, jac_bi, epsilonJac, deltaJac) ||
+  if (!isCovMatrix(state.getCov()) ||
+      !compareMatrices(jac_f, jac_bi, epsilonJac, deltaJac) ||
       !compareMatrices(jac_b, jac_fi, epsilonJac, deltaJac) ||
       !compareMatrices(noise_f, noise_bi, epsilonNoise, 0) ||
       !compareMatrices(noise_b, noise_fi, epsilonNoise, 0) ) {
