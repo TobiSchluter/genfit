@@ -374,7 +374,21 @@ bool checkErrorPropagation() {
 
 
   // compare
-  if (false) { // TODO: specify test criterium
+  bool failed = false;
+  TMatrixDSym& cov = state.getCov();
+  for (int i=0; i<cov.GetNrows(); ++i) {
+    for (int j=0; j<cov.GetNcols(); ++j) {
+       if (isnan(cov(i,j))) {
+         std::cout << "isnan\n";
+         failed = true;
+       }
+       if (i==j && cov(i,j) < 0) {
+         std::cout << "negative diagonal element\n";
+         failed = true;
+       }
+    }
+  }
+  if (failed) { // TODO: specify test criterium
 
     state.Print();
 
