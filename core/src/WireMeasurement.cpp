@@ -50,6 +50,7 @@ MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRe
   const TVector3& pocaOnWire = wire1 + wireDirection.Dot(poca - wire1)*wireDirection;
 
 #if 0
+
   // check distance of poca to wire
   if((poca - pocaOnWire).Mag() > fMaxdistance) {
     Exception exc("GFAbsWireHit::detPlane(): distance poca-wire > maxdistance", __LINE__,__FILE__);
@@ -65,7 +66,8 @@ MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRe
   }
   
   // construct orthogonal vector
-  TVector3 U = dirInPoca.Cross(wireDirection);
+  TVector3 U = poca - pocaOnWire;//dirInPoca.Cross(wireDirection);
+  U.SetMag(1.);
 
 #if 0
   // check left/right ambiguity
@@ -77,9 +79,12 @@ MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRe
 
   SharedPlanePtr detPlane(new DetPlane(wire1, U, wireDirection, 0));
 
-  return MeasurementOnPlane(TVectorD(1, rawHitCoords_(6)),
-			    TMatrixDSym(1, rawHitCov_(6,6)),
-			    detPlane, rep, HMatrix_);
+  double m = rawHitCoords_(6);
+  double V = rawHitCov_(6,6);
+  MeasurementOnPlane mop(TVectorD(1, &m),
+			 TMatrixDSym(1, &V),
+			 detPlane, rep, HMatrix_);
+  return mop;
 }
 
 } /* End of namespace genfit */
