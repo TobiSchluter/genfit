@@ -17,6 +17,8 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
+
 #include "MeasurementOnPlane.h"
 
 namespace genfit {
@@ -31,6 +33,17 @@ MeasurementOnPlane::MeasurementOnPlane(const TVectorD& state, const TMatrixDSym&
   MeasuredStateOnPlane(state, cov, plane, rep), hMatrix_(hMatrix), weight_(weight)
 {
   ;
+}
+
+void MeasurementOnPlane::Print(Option_t* option) const
+{
+  std::cout << "genfit::MeasuredStateOnPlane ";
+  std::cout << " state vector: "; state_.Print();
+  std::cout << " covariance matrix: "; cov_.Print();
+  if (sharedPlane_ != nullptr)
+    std::cout << " defined in plane "; sharedPlane_->Print();
+  std::cout << " hMatrix: "; hMatrix_.Print();
+
 }
 
 } /* End of namespace   */
