@@ -409,6 +409,25 @@ void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& 
   transformPM6(stateInput, *((M6x6*) cov.GetMatrixArray()));
 }
 
+double RKTrackRep::getCharge(const StateOnPlane* state) const
+{
+  const TVectorD& auxInfo = state->getAuxInfo();
+  if (auxInfo.GetNrows() == 2)
+    return (state->getAuxInfo())(0);
+  else
+    return TDatabasePDG::Instance()->GetParticle(pdgCode_)->Charge()/(3.);
+}
+
+
+double RKTrackRep::getSpu(const StateOnPlane* state) const
+{
+  const TVectorD& auxInfo = state->getAuxInfo();
+  if (auxInfo.GetNrows() == 2)
+    return state->getAuxInfo()(1);
+  else
+    return 1.;
+}
+
 
 void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const {
 

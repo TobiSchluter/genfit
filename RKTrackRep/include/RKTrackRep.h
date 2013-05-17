@@ -100,9 +100,8 @@ class RKTrackRep : public AbsTrackRep {
 
   /** Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance */
   virtual void getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const override;
-
-  virtual double getCharge(const StateOnPlane* state) const override {return (state->getAuxInfo())(0);}
-  double getSpu(const StateOnPlane* state) const {return (state->getAuxInfo())(1);}
+  virtual double getCharge(const StateOnPlane* state) const override;
+  double getSpu(const StateOnPlane* state) const;
 
   /** Get the jacobian and noise matrix of the last extrapolation  */
   virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const override;
