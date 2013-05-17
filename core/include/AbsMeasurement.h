@@ -57,7 +57,7 @@ class AbsMeasurement : public TObject {
 
 
 
-  virtual MeasurementOnPlane constructMeasurementOnPlane(AbsTrackRep*) const = 0;
+  virtual MeasurementOnPlane constructMeasurementOnPlane(const AbsTrackRep*, const MeasuredStateOnPlane&) const = 0;
 
 
  protected:

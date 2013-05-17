@@ -48,9 +48,11 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
     cov(i,i) = 1e2;
   rep->setPosMomCov(currentState, tr->getStateSeed(), cov);
 
+  std::cout << "state pre" << std::endl;
   currentState->Print();
-
   fitTrack(tr, rep);
+  std::cout << "state post" << std::endl;
+  currentState->Print();
   delete currentState;
 }
 
@@ -59,7 +61,7 @@ void KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
 {
   // Extrapolate to TrackPoint.
   const AbsMeasurement* m = tp->getRawMeasurement(0);
-  MeasurementOnPlane mOnPlane = m->constructMeasurementOnPlane(rep);
+  MeasurementOnPlane mOnPlane = m->constructMeasurementOnPlane(rep, *currentState);
   const SharedPlanePtr plane = mOnPlane.getPlane();
 
   MeasuredStateOnPlane state(*currentState);
@@ -71,15 +73,15 @@ void KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
     return;
   }
 
-  std::cout << "extrapolated by " << extLen << std::endl;
+  //std::cout << "extrapolated by " << extLen << std::endl;
   TVectorD stateVector(state.getState());
   TMatrixDSym cov(state.getCov());
   const TVectorD& measurement(mOnPlane.getState());
   const TMatrixDSym& V(mOnPlane.getCov());
   const TMatrixD& H(mOnPlane.getHMatrix());
-  stateVector.Print();
-  cov.Print();
-  measurement.Print();
+  //stateVector.Print();
+  //cov.Print();
+  //measurement.Print();
 
   TVectorD res(measurement - (H * stateVector));
   res.Print();
@@ -92,25 +94,25 @@ void KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
   HcovHt.Similarity(H);
 
   TMatrixDSym covSum(V + HcovHt);
-  std::cerr << std::flush << std::endl;
-  std::cout << std::flush;
-  std::cout << "a sum's components:" << std::endl;
-  V.Print();
-  HcovHt.Print();
+  //std::cerr << std::flush << std::endl;
+  //std::cout << std::flush;
+  //std::cout << "a sum's components:" << std::endl;
+  //V.Print();
+  //HcovHt.Print();
 
   TDecompChol decomp(covSum);
   TMatrixDSym covSumInv(decomp.Invert());
-  std::cout << "a matrix and its inverse:" << std::endl;
-  covSum.Print();
-  covSumInv.Print();
+  //std::cout << "a matrix and its inverse:" << std::endl;
+  //covSum.Print();
+  //covSumInv.Print();
 
   TMatrixD CHt(cov, TMatrixD::kMultTranspose, H);
   TVectorD update = TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res;
 
-  std::cout << "STATUS:" << std::endl;
-  stateVector.Print();
+  //std::cout << "STATUS:" << std::endl;
+  //stateVector.Print();
   update.Print();
-  cov.Print();
+  //cov.Print();
 
   stateVector += update;
   covSumInv.Similarity(CHt);

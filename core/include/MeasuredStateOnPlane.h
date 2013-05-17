@@ -39,8 +39,8 @@ class MeasuredStateOnPlane : public StateOnPlane {
 
  public:
 
-  MeasuredStateOnPlane(AbsTrackRep* rep = nullptr);
-  MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, AbsTrackRep* rep);
+  MeasuredStateOnPlane(const AbsTrackRep* rep = nullptr);
+  MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep);
   MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov);
 
   const TMatrixDSym& getCov() const {return cov_;}

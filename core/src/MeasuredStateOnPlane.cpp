@@ -25,7 +25,7 @@
 
 namespace genfit {
 
-MeasuredStateOnPlane::MeasuredStateOnPlane(AbsTrackRep* rep) :
+MeasuredStateOnPlane::MeasuredStateOnPlane(const AbsTrackRep* rep) :
   StateOnPlane(rep), cov_(0,0)
 {
   if (rep != nullptr) {
@@ -33,7 +33,7 @@ MeasuredStateOnPlane::MeasuredStateOnPlane(AbsTrackRep* rep) :
   }
 }
 
-MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, AbsTrackRep* rep) :
+MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep) :
   StateOnPlane(state, plane, rep), cov_(cov)
 {
   assert(rep != nullptr);

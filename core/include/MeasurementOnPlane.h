@@ -35,8 +35,8 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
 
  public:
 
-  MeasurementOnPlane(AbsTrackRep* rep = nullptr);
-  MeasurementOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, AbsTrackRep* rep, const TMatrixD& hMatrix, double weight = 1.);
+  MeasurementOnPlane(const AbsTrackRep* rep = nullptr);
+  MeasurementOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, const TMatrixD& hMatrix, double weight = 1.);
 
   const TMatrixD& getHMatrix() const {return hMatrix_;}
   double getWeight() const {return weight_;}

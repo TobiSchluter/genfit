@@ -43,8 +43,8 @@ class StateOnPlane : public TObject {
 
  public:
 
-  StateOnPlane(AbsTrackRep* rep = nullptr);
-  StateOnPlane(const TVectorD& state, SharedPlanePtr plane, AbsTrackRep* rep);
+  StateOnPlane(const AbsTrackRep* rep = nullptr);
+  StateOnPlane(const TVectorD& state, SharedPlanePtr plane, const AbsTrackRep* rep);
 
 
   const TVectorD& getState() const {return state_;}
@@ -52,7 +52,7 @@ class StateOnPlane : public TObject {
   const TVectorD& getAuxInfo() const {return auxInfo_;}
   TVectorD& getAuxInfo() {return auxInfo_;}
   SharedPlanePtr getPlane() const {return sharedPlane_;}
-  AbsTrackRep* getRep() const {return rep_;}
+  const AbsTrackRep* getRep() const {return rep_;}
 
   void setState(const TVectorD& state) {state_ = state;}
   void setPlane(SharedPlanePtr plane) {sharedPlane_ = plane;}
@@ -71,7 +71,7 @@ class StateOnPlane : public TObject {
 
   /** Pointer to TrackRep with respect to which StateOnPlane is defined
    */
-  AbsTrackRep* rep_; // No ownership
+  const AbsTrackRep* rep_; // No ownership
 
 
   //ClassDef(StateOnPlane,1)

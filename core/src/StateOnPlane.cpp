@@ -25,7 +25,7 @@
 
 namespace genfit {
 
-StateOnPlane::StateOnPlane(AbsTrackRep* rep) :
+StateOnPlane::StateOnPlane(const AbsTrackRep* rep) :
   state_(0), auxInfo_(0), sharedPlane_(), rep_(rep)
 {
   if (rep != nullptr) {
@@ -33,7 +33,7 @@ StateOnPlane::StateOnPlane(AbsTrackRep* rep) :
   }
 }
 
-StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr plane, AbsTrackRep* rep) :
+StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr plane, const AbsTrackRep* rep) :
   state_(state), sharedPlane_(plane), rep_(rep)
 {
   assert(rep != nullptr);
