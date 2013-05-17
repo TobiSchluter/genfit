@@ -44,6 +44,8 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
   void setHMatrix(const TMatrixD& hMatrix) {hMatrix_ = hMatrix;}
   void setWeight(double weight) {weight_ = weight;}
 
+  void Print(Option_t* option = "") const ;
+
  protected:
 
   TMatrixD hMatrix_; // projection matrix
