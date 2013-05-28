@@ -38,9 +38,14 @@ MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRe
   TVector3 wire1(rawHitCoords_(0), rawHitCoords_(1), rawHitCoords_(2));
   TVector3 wire2(rawHitCoords_(3), rawHitCoords_(4), rawHitCoords_(5));
 
+  //std::cout << " wire1(" << rawHitCoords_(0) << ", " << rawHitCoords_(1) << ", " << rawHitCoords_(2) << ")" << std::endl;
+  //std::cout << " wire2(" << rawHitCoords_(3) << ", " << rawHitCoords_(4) << ", " << rawHitCoords_(5) << ")" << std::endl;
+
   // unit vector along the wire (V)
   TVector3 wireDirection = wire2 - wire1; 
   wireDirection.SetMag(1.);
+
+  //std::cout << " wireDirection(" << wireDirection.X() << ", " << wireDirection.Y() << ", " << wireDirection.Z() << ")" << std::endl;
 
   // point of closest approach
   rep->extrapolateToLine(&st, wire1, wireDirection);
@@ -66,7 +71,7 @@ MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRe
   }
   
   // construct orthogonal vector
-  TVector3 U = poca - pocaOnWire;//dirInPoca.Cross(wireDirection);
+  TVector3 U = pocaOnWire - poca;//dirInPoca.Cross(wireDirection);
   U.SetMag(1.);
 
 #if 0
