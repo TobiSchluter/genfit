@@ -89,8 +89,10 @@ class FieldManager {
     field_=b;
   }
 
+  bool isInitialized() { return field_ != nullptr; }
+
   static FieldManager* getInstance(){
-    if(instance_==NULL) {
+    if(instance_ == nullptr) {
       instance_ = new FieldManager();
     }
     return instance_;
