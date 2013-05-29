@@ -50,6 +50,7 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
 
   std::cout << "state pre" << std::endl;
   currentState->Print();
+  std::cout << "fitting" << std::endl;
   fitTrack(tr, rep);
   std::cout << "state post" << std::endl;
   currentState->Print();
@@ -59,16 +60,20 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
 void KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
 				     AbsTrackRep* rep, int direction)
 {
+  if (!tp->hasRawMeasurements())
+    return;
+
   // Extrapolate to TrackPoint.
   const AbsMeasurement* m = tp->getRawMeasurement(0);
+  MeasuredStateOnPlane state(*currentState);
+  //state.Print();
   MeasurementOnPlane mOnPlane = m->constructMeasurementOnPlane(rep, *currentState);
   const SharedPlanePtr plane = mOnPlane.getPlane();
 
-  std::cout << "its plane:" << std::endl;
-  plane->getO().Print();
+  std::cout << "its plane is at R = " << plane->getO().Perp()
+	    << " with normal pointing along (" << plane->getNormal().X() << ", " << plane->getNormal().Y() << ", " << plane->getNormal().Z() << ")" << std::endl;
 
-  MeasuredStateOnPlane state(*currentState);
-  state.Print();
+  //state.Print();
   double extLen = 0;
   try {
     extLen = rep->extrapolateToPlane(&state, plane);
@@ -77,22 +82,23 @@ void KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
     return;
   }
   std::cout << "extrapolated by " << extLen << std::endl;
-  std::cout << "after extrap: " << std::endl;
-  state.Print();
+  //std::cout << "after extrap: " << std::endl;
+  //state.Print();
 
   TVectorD stateVector(state.getState());
   TMatrixDSym cov(state.getCov());
   const TVectorD& measurement(mOnPlane.getState());
   const TMatrixDSym& V(mOnPlane.getCov());
   const TMatrixD& H(mOnPlane.getHMatrix());
-  //stateVector.Print();
+  stateVector.Print();
   //cov.Print();
   //measurement.Print();
 
   TVectorD res(measurement - (H * stateVector));
-  std::cout << "Residual" << std::endl;
-  res.Print();
-
+  std::cout << "Residual = (" << res(0);
+  if (res.GetNrows() > 1)
+    std::cout << ", " << res(1);
+  std::cout << ")" << std::endl;
   // If hit, do Kalman algebra.
 
   // calculate kalman gain ------------------------------
@@ -118,14 +124,40 @@ void KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
 
   //std::cout << "STATUS:" << std::endl;
   //stateVector.Print();
-  //update.Print();
+  update.Print();
   //cov.Print();
 
   stateVector += update;
   covSumInv.Similarity(CHt);
   cov -= covSumInv;
 
+  TVectorD resNew(measurement - H*stateVector);
+  std::cout << "Residual New = (" << resNew(0);
+  if (resNew.GetNrows() > 1)
+    std::cout << ", " << resNew(1);
+  std::cout << ")" << std::endl;
+
   currentState->setStateCovPlane(stateVector, cov, plane);
+  currentState->setAuxInfo(state.getAuxInfo());
+
+  TDecompChol dec(cov);
+  TMatrixDSym mist(cov);
+  bool status = dec.Invert(mist);
+  if (!status)
+    {
+      std::cout << "new cov not pos. def." << std::endl;
+    }
+
+  // Calculate chi²
+  TMatrixDSym HCHt(cov);
+  HCHt.Similarity(H);
+  HCHt -= V;
+  HCHt *= -1;
+
+  TDecompChol decompNew(HCHt);
+  TMatrixDSym HCHtInv(decompNew.Invert());
+
+  std::cout << "chi² = " << HCHtInv.Similarity(resNew) << std::endl;
 
   // Store in KalmanInfo asscoiated with the TrackPoint.
 }
