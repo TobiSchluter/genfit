@@ -176,7 +176,7 @@ void Track::insertPoint(TrackPoint* point, int id) {
     deleteBackwardInfo(0, id-1);
   }
 
-  trackPoints_.insert(trackPoints_.begin() + id, point);
+  trackPoints_.insert(trackPoints_.begin() + id + 1, point);  // insert inserts BEFORE
   point->setTrack(this);
 }
 
