@@ -124,7 +124,7 @@ void KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
 
   //std::cout << "STATUS:" << std::endl;
   //stateVector.Print();
-  //update.Print();
+  update.Print();
   //cov.Print();
 
   stateVector += update;
