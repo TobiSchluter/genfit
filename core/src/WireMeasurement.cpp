@@ -71,8 +71,11 @@ MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRe
   }
   
   // construct orthogonal vector
-  TVector3 U = pocaOnWire - poca;//dirInPoca.Cross(wireDirection);
-  U.SetMag(1.);
+  TVector3 U = dirInPoca.Cross(wireDirection);
+  // U.SetMag(1.); automatically assured
+
+  if ((poca - pocaOnWire)*U < 0)
+    U *= -1.;
 
 #if 0
   // check left/right ambiguity
