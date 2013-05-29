@@ -45,7 +45,7 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
   currentState = new MeasuredStateOnPlane(rep);
   TMatrixDSym cov(6);
   for (int i = 0; i < 6; i++)
-    cov(i,i) = 1e2;
+    cov(i,i) = 1e-2;
   rep->setPosMomCov(currentState, tr->getStateSeed(), cov);
 
   std::cout << "state pre" << std::endl;
@@ -124,7 +124,7 @@ void KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp,
 
   //std::cout << "STATUS:" << std::endl;
   //stateVector.Print();
-  update.Print();
+  //update.Print();
   //cov.Print();
 
   stateVector += update;
