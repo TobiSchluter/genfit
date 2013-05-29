@@ -674,10 +674,10 @@ int main() {
       ++nFailed;
     }
 
-    //if (!compareForthBackJacNoise()) {
-    //  std::cout << "failed compareForthBackJacNoise nr" << i << "\n";
-    //  ++nFailed;
-    //}
+    if (!compareForthBackJacNoise()) {
+      std::cout << "failed compareForthBackJacNoise nr" << i << "\n";
+      ++nFailed;
+    }
 
   }
 
