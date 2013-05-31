@@ -24,7 +24,11 @@
 #ifndef genfit_AbsFitterInfo_h
 #define genfit_AbsFitterInfo_h
 
-#include "TObject.h"
+#include <TObject.h>
+#include <TVectorD.h>
+
+#include "MeasurementOnPlane.h"
+
 
 
 namespace genfit {
@@ -40,7 +44,7 @@ class AbsFitterInfo : public TObject {
  public:
 
   AbsFitterInfo();
-  AbsFitterInfo(TrackPoint* trackPoint, AbsTrackRep* rep);
+  AbsFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep);
 
   AbsFitterInfo(const AbsFitterInfo&) = delete; // copy constructor
   AbsFitterInfo(AbsFitterInfo&&) = default; // move constructor
@@ -52,24 +56,26 @@ class AbsFitterInfo : public TObject {
   //! Deep copy ctor for polymorphic class.
   virtual AbsFitterInfo* clone() const = 0;
 
-  TrackPoint* getTrackPoint() const {return trackPoint_;}
-  void setTrackPoint(TrackPoint *tp) {trackPoint_ = tp;}
-  AbsTrackRep* getRep() const {return rep_;}
+  const TrackPoint* getTrackPoint() const {return trackPoint_;}
+  void setTrackPoint(const TrackPoint *tp) {trackPoint_ = tp;}
+  const AbsTrackRep* getRep() const {return rep_;}
 
   virtual void deleteForwardInfo() = 0;
   virtual void deleteBackwardInfo() = 0;
   virtual void deleteReferenceInfo() = 0;
   virtual void deleteMeasurementInfo() = 0;
 
+  virtual MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const = 0;
+
  private:
 
   /** Pointer to #TrackPoint where the FitterInfo belongs to
    */
-  TrackPoint* trackPoint_; // No ownership
+  const TrackPoint* trackPoint_; // No ownership
 
   /** Pointer to #TrackRep with respect to which the FitterInfo is defined
    */
-  AbsTrackRep* rep_; // No ownership
+  const AbsTrackRep* rep_; // No ownership
 
 
   //ClassDef(AbsFitterInfo,1)

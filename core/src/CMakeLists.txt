@@ -52,6 +52,7 @@ set(GENFIT_SRCS
 	ProlateSpacePointMeasurement.cpp
 	RectangularFinitePlane.cpp
 	ReferenceStateOnPlane.cpp
+	SimpleKalmanFitterInfo.cpp
 	SpacePointMeasurement.cpp
 	StateOnPlane.cpp
 	Tools.cpp

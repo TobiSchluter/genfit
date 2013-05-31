@@ -27,6 +27,7 @@ set(GENFIT_INCS
   ReferenceStateOnPlane.h
   SharedMaterialPropertiesPtr.h
   SharedPlanePtr.h
+  SimpleKalmanFitterInfo.h
   SpacePointMeasurement.h
   StateOnPlane.h
   Tools.h

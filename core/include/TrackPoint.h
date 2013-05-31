@@ -74,7 +74,7 @@ class TrackPoint : public TObject {
 
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
   void addRawMeasurement(AbsMeasurement* rawMeasurement) {rawMeasurements_.push_back(rawMeasurement);}
-  void addFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_.push_back(fitterInfo);}
+  size_t addFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_.push_back(fitterInfo); return fitterInfos_.size();}
   void deleteFitterInfo(int i);
   void deleteFitterInfo(const AbsTrackRep* rep);
   //void setMaterial(MaterialInfo* material);

@@ -28,6 +28,7 @@
 
 namespace genfit {
 
+class SimpleKalmanFitterInfo;
 class TrackPoint;
 
 class KalmanFitter : public AbsFitter {
@@ -35,12 +36,13 @@ class KalmanFitter : public AbsFitter {
   KalmanFitter() {}
   ~KalmanFitter() {}
 
-  void fitTrack(Track* tr, AbsTrackRep* rep);
+  void fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf, int direction);
 
   void processTrack(Track* tr, AbsTrackRep* rep) override;
 
  private:
-  void processTrackPoint(Track* tr, TrackPoint* tp, AbsTrackRep* rep, int direction);
+  void processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInfo* fi,
+			 AbsTrackRep* rep, double chi2, size_t ndf, int direction);
   MeasuredStateOnPlane* currentState;
 };
 

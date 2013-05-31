@@ -1,5 +1,5 @@
-/* Copyright 2008-2010, Technische Universitaet Muenchen,
-   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
+/* Copyright 2008-2013, Technische Universitaet Muenchen, Ludwig-Maximilians-Universität München
+   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch & Tobias Schlüter
 
    This file is part of GENFIT.
 
@@ -38,7 +38,7 @@ KalmanFitterInfo::KalmanFitterInfo() :
   ;
 }
 
-KalmanFitterInfo::KalmanFitterInfo(TrackPoint* trackPoint, AbsTrackRep* rep)  :
+KalmanFitterInfo::KalmanFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep)  :
   AbsFitterInfo(trackPoint, rep),
   referenceState_(nullptr),
   forwardPrediction_(nullptr),

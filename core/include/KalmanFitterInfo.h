@@ -45,7 +45,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
  public:
 
   KalmanFitterInfo();
-  KalmanFitterInfo(TrackPoint* trackPoint, AbsTrackRep* rep);
+  KalmanFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep);
   ~KalmanFitterInfo();
 
   virtual KalmanFitterInfo* clone() const override;
@@ -70,7 +70,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   MeasuredStateOnPlane getSmoothedState(bool biased = false) const;
   /** Get unbiased (default) or biased residual from ith measurement
    */
-  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const; // also calculates covariance of the residual
+  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const override; // also calculates covariance of the residual
 
   void setReferenceState(ReferenceStateOnPlane* referenceState);
   void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction);

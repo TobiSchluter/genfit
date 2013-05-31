@@ -28,7 +28,7 @@ AbsFitterInfo::AbsFitterInfo() :
   ;
 }
 
-AbsFitterInfo::AbsFitterInfo(TrackPoint* trackPoint, AbsTrackRep* rep) :
+AbsFitterInfo::AbsFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep) :
   trackPoint_(trackPoint),
   rep_(rep)
 {
