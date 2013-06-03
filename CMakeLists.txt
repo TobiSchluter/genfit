@@ -51,4 +51,5 @@ SET(INCLUDE_OUTPUT_PATH ${GENFITINCDIR})
 add_subdirectory(core)
 add_subdirectory(RKTrackRep)
 #add_subdirectory(GFRave)
-#add_subdirectory(RecoHitExamples)
+#add_subdirectory(MeasurementExamples)
+

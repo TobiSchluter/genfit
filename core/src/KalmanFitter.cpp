@@ -122,7 +122,8 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInf
   if (fi->measurements_.size() == 0)
     {
       const AbsMeasurement* m = tp->getRawMeasurement(0);
-      fi->measurements_.push_back(m->constructMeasurementOnPlane(rep, *currentState));
+      SharedPlanePtr plane = m->constructPlane(currentState);
+      fi->measurements_.push_back(m->constructMeasurementOnPlane(rep, plane));
     }
   const MeasurementOnPlane& mOnPlane = fi->measurements_[0];
   const SharedPlanePtr plane = mOnPlane.getPlane();

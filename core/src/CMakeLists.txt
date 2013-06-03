@@ -26,6 +26,7 @@ ENDIF(HAS_MARCH_NATIVE)
 
 INCLUDE_DIRECTORIES(
 	${GENFIT}/core/include
+	${GENFIT}/RKTrackRep/include
 	${ROOT_INCDIR}
 	$ENV{GLOGPATH}/include
 )

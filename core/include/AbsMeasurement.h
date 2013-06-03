@@ -44,7 +44,7 @@ class AbsMeasurement : public TObject {
   AbsMeasurement() {};
   AbsMeasurement(int nDims) : rawHitCoords_(nDims), rawHitCov_(nDims) {}
   AbsMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
-  : rawHitCoords_(rawHitCoords), rawHitCov_(rawHitCov), detId_(detId), hitId_(hitId), trackPoint_(trackPoint)
+    : rawHitCoords_(rawHitCoords), rawHitCov_(rawHitCov), detId_(detId), hitId_(hitId), trackPoint_(trackPoint)
   {}
 
   virtual ~AbsMeasurement();
@@ -56,9 +56,17 @@ class AbsMeasurement : public TObject {
   void setTrackPoint(TrackPoint* tp) {trackPoint_ = tp;}
 
 
+  /**
+   * Construct (virtual) detector plane (use state's TrackRep). It's possible to make corrections to the plane here.
+   */
+  virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const = 0;
 
-  virtual MeasurementOnPlane constructMeasurementOnPlane(const AbsTrackRep*, const MeasuredStateOnPlane&) const = 0;
+  /**
+   * Construct measurement on given plane wrt. given TrackRep. The raw measurement has to be projected onto the plane. It's possible to make corrections to the coordinates here.
+   */
+  virtual MeasurementOnPlane constructMeasurementOnPlane(const AbsTrackRep*, const SharedPlanePtr) const = 0;
 
+  virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const = 0;
 
  protected:
 

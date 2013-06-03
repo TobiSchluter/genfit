@@ -21,6 +21,7 @@
 #include <TMatrixD.h>
 
 #include "AbsTrackRep.h"
+#include "RKTrackRep.h"
 #include "MeasurementOnPlane.h"
 #include "Exception.h"
 
@@ -28,12 +29,23 @@
 
 namespace genfit {
 
-const double WireMeasurement::HMatrixContent_[5] = {0, 0, 0, 1, 0};
-const TMatrixD WireMeasurement::HMatrix_ = TMatrixD(1, 5, HMatrixContent_);
 
-MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRep* rep, const MeasuredStateOnPlane& stIn) const
+WireMeasurement::WireMeasurement(int nDim)
+  : AbsMeasurement(nDim), maxDistance_(1.E50), leftRight_(0)
 {
-  MeasuredStateOnPlane st(stIn);
+  ;
+}
+
+WireMeasurement::WireMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
+  : AbsMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint), maxDistance_(1.E50), leftRight_(0)
+{
+  ;
+}
+
+SharedPlanePtr WireMeasurement::constructPlane(const StateOnPlane* state) const {
+
+  // copy state. Neglect covariance.
+  StateOnPlane st(*state);
 
   TVector3 wire1(rawHitCoords_(0), rawHitCoords_(1), rawHitCoords_(2));
   TVector3 wire2(rawHitCoords_(3), rawHitCoords_(4), rawHitCoords_(5));
@@ -48,20 +60,19 @@ MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRe
   //std::cout << " wireDirection(" << wireDirection.X() << ", " << wireDirection.Y() << ", " << wireDirection.Z() << ")" << std::endl;
 
   // point of closest approach
+  const AbsTrackRep* rep = state->getRep();
   rep->extrapolateToLine(&st, wire1, wireDirection);
   const TVector3& poca = rep->getPos(&st);
   TVector3 dirInPoca = rep->getMom(&st);
   dirInPoca.SetMag(1.);
   const TVector3& pocaOnWire = wire1 + wireDirection.Dot(poca - wire1)*wireDirection;
 
-#if 0
 
   // check distance of poca to wire
-  if((poca - pocaOnWire).Mag() > fMaxdistance) {
+  if((poca - pocaOnWire).Mag() > maxDistance_) {
     Exception exc("GFAbsWireHit::detPlane(): distance poca-wire > maxdistance", __LINE__,__FILE__);
     throw exc;    
   }
-#endif
 
  
   // check if direction is parallel to wire
@@ -77,22 +88,46 @@ MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRe
   if ((poca - pocaOnWire)*U < 0)
     U *= -1.;
 
-#if 0
   // check left/right ambiguity
-  if (fLeftRight == 0){ // auto select
-    if ((poca-poca_onwire)*U < 0) U *= -1.;
+  if (leftRight_ == 0){ // auto select
+    if ((poca - pocaOnWire)*U < 0) U *= -1.;
   }
-  else if (fLeftRight < 0) U *= -1.;
-#endif
+  else if (leftRight_ < 0) U *= -1.;
 
-  SharedPlanePtr detPlane(new DetPlane(wire1, U, wireDirection, 0));
+  return SharedPlanePtr(new DetPlane(wire1, U, wireDirection, 0));
+}
 
+
+MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const
+{
   double m = rawHitCoords_(6);
   double V = rawHitCov_(6,6);
   MeasurementOnPlane mop(TVectorD(1, &m),
 			 TMatrixDSym(1, &V),
-			 detPlane, rep, HMatrix_);
+			 plane, rep, getHMatrix(rep));
   return mop;
 }
+
+
+const TMatrixD& WireMeasurement::getHMatrix(const AbsTrackRep* rep) const {
+  if (dynamic_cast<const RKTrackRep*>(rep) != nullptr) {
+    static const double HMatrixContent[5] = {0, 0, 0, 1, 0};
+    static const TMatrixT<double> HMatrix(1,5, HMatrixContent);
+
+    return HMatrix;
+  }
+  else {
+    Exception exc("WireMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
+    throw exc;
+  }
+}
+
+
+void WireMeasurement::setLeftRightResolution(int lr){
+  if (lr==0) leftRight_ = 0;
+  else if (lr<0) leftRight_ = -1;
+  else leftRight_ = 1;
+}
+
 
 } /* End of namespace genfit */

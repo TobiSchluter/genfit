@@ -1,44 +1,47 @@
 cmake_minimum_required(VERSION 2.8)
 
-
 #check for ENV variables that are needed
-IF(NOT DEFINED ENV{ROOTSYS})
-   MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
-ENDIF(NOT DEFINED ENV{ROOTSYS})
-#IF(NOT DEFINED ENV{GENFIT})
-#   MESSAGE(FATAL_ERROR "You did not set the environment variable GENFIT.") 
-#ENDIF(NOT DEFINED ENV{GENFIT})
+FIND_PROGRAM(ROOT_CONFIG root-config $ENV{ROOTSYS}/bin)
+
+IF(ROOT_CONFIG MATCHES "ROOT_CONFIG-NOTFOUND")
+  MESSAGE(FATAL_ERROR "Could not find root-config executable.")
+ENDIF(ROOT_CONFIG MATCHES "ROOT_CONFIG-NOTFOUND")
+
+Execute_process(COMMAND ${ROOT_CONFIG} --cflags
+	OUTPUT_VARIABLE ROOT_CFLAGS
+    	OUTPUT_STRIP_TRAILING_WHITESPACE)
+    	
+Execute_process(COMMAND ${ROOT_CONFIG} --incdir
+	OUTPUT_VARIABLE ROOT_INCDIR
+    	OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+#SET(CMAKE_VERBOSE_MAKEFILE ON)
 
 
-INCLUDE_DIRECTORIES($ENV{ROOTSYS}/include ${GENFIT}/core ${GENFIT}/RKTrackRep ${GENFIT}/RecoHitExamples)
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag(-march=native HAS_MARCH_NATIVE)
+IF(HAS_MARCH_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+ENDIF(HAS_MARCH_NATIVE)
 
-
-AUX_SOURCE_DIRECTORY($ENV{GENFIT}/RecoHitExamples MYRECOHITEXAMPLES_SRCS)
-
-SET(MYRECOHITEXAMPLES_HEADERS 
-  PixHit.h
-  SpacepointHit.h 
-  ProlateSpacepointHit.h
-  StripHit.h
-  WireHit.h
-  WirePointHit.h
+INCLUDE_DIRECTORIES(
+	${GENFIT}/core/include
+	${GENFIT}/RKTrackRep/include
+	${GENFIT}/MeasurementExamples/include
+	${ROOT_INCDIR}
 )
 
-set(MYRECOHITEXAMPLES_LINKDEF  myRecoHitExamplesLinkDef.h)
-set(MYRECOHITEXAMPLES_DICTIONARY myRecoHitExamplesDict.cxx) 
 
-FIND_PROGRAM(ROOT_CINT_EXECUTABLE
-	NAMES rootcint
-	PATHS $ENV{ROOTSYS}/bin
-	NO_DEFAULT_PATH)
+AUX_SOURCE_DIRECTORY(${GENFIT}/MeasurementExamples/src MEASUREMENTEXAMPLES_SRCS)
 
-ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${MYRECOHITEXAMPLES_DICTIONARY}
-	COMMAND ${ROOT_CINT_EXECUTABLE}
-      	ARGS -f ${CMAKE_BINARY_DIR}/${MYRECOHITEXAMPLES_DICTIONARY} -c -DHAVE_CONFIG_H  -I${GENFIT}/core -I${GENFIT}/RecoHitExamples
-      	${MYRECOHITEXAMPLES_HEADERS} ${MYRECOHITEXAMPLES_LINKDEF}
-      	DEPENDS ${MYRECOHITEXAMPLES_HEADERS} ${MYRECOHITEXAMPLES_LINKDEF})
-
-SET(MYRECOHITEXAMPLES_SRCS ${MYRECOHITEXAMPLES_SRCS} ${CMAKE_BINARY_DIR}/${MYRECOHITEXAMPLES_DICTIONARY})
+SET(MEASUREMENTEXAMPLES_HEADERS 
+  PixMeasurement.h
+  SpacepointMeasurement.h 
+  ProlateSpacepointMeasurement.h
+  StripMeasurement.h
+  WireMeasurement.h
+  WirePointMeasurement.h
+)
 
 
 ################ install ###################
@@ -49,8 +52,7 @@ Execute_process(COMMAND root-config --glibs --cflags
     	OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 
-
-ADD_LIBRARY(myRecoHitExamples SHARED ${MYRECOHITEXAMPLES_SRCS})
-TARGET_LINK_LIBRARIES(myRecoHitExamples ${ROOT_LIBS} -L${GENFITLIBDIR} -lgenfit -lgenfitRK  -lGeom -lVMC -lEG)
-INSTALL(TARGETS myRecoHitExamples DESTINATION ${GENFITLIBINSTALLDIR} )
+ADD_LIBRARY(MeasurementExamples SHARED ${MEASUREMENTEXAMPLES_SRCS})
+TARGET_LINK_LIBRARIES(MeasurementExamples ${ROOT_LIBS} -L${GENFITLIBDIR} -lgenfit2 -lgenfit2RK  -lGeom -lVMC -lEG)
+INSTALL(TARGETS MeasurementExamples DESTINATION ${GENFITLIBINSTALLDIR} )
 
