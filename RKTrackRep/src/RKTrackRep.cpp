@@ -131,6 +131,7 @@ std::cout << "RKTrackRep::extrapolateToLine()\n";
   while(true){
     if(++iterations == maxIt) {
       Exception exc("RKTrackRep::extrapolateToLine ==> extrapolation to line failed, maximum number of iterations reached",__LINE__,__FILE__);
+      exc.setFatal();
       throw exc;
     }
 
@@ -211,6 +212,7 @@ std::cout << "RKTrackRep::extrapolateToPoint()\n";
   while(true){
     if(++iterations == maxIt) {
       Exception exc("RKTrackRep::extrapolateToLine ==> extrapolation to line failed, maximum number of iterations reached",__LINE__,__FILE__);
+      exc.setFatal();
       throw exc;
     }
 
@@ -292,6 +294,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane* state,
   while(true){
     if(++iterations == maxIt) {
       Exception exc("RKTrackRep::extrapolateToCylinder ==> maximum number of iterations reached",__LINE__,__FILE__);
+      exc.setFatal();
       throw exc;
     }
 
@@ -309,6 +312,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane* state,
     double arg = b*b - 4.*a*c;
     if(arg < 0) {
       Exception exc("RKTrackRep::extrapolateToCylinder ==> cannot solve",__LINE__,__FILE__);
+      exc.setFatal();
       throw exc;
     }
     double term = sqrt(arg);

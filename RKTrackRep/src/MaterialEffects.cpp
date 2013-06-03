@@ -609,13 +609,16 @@ void MaterialEffects::noiseBrems(const double& mom,
 {
 
   // Code ported from GEANT 3
+  // this formula assumes p >> m and therefore p^2 + m^2 = p^2
+  // the factor  1.44 is not in the original Behta Heitler model. It seems to be some empirical correction copied over from some other project
 
   if (abs(pdg_) != 11) return; // only for electrons and positrons
 
   double minusXOverLn2  = -1.442695 * fabs(stepSize_) / radiationLength_;
-  double sigma2E = 1.44 * mom * mom * (pow(3., minusXOverLn2) - pow(4., minusXOverLn2));
-  assert(sigma2E >= 0.0);
-  noise[6 * 7 + 6] += (mom * mom + mass_ * mass_) / pow(mom, 6.) * sigma2E;
+  double sigma2 = 1.44*(pow(3., minusXOverLn2) - pow(4., minusXOverLn2)) / (mom*mom);
+  //XXX std::cerr << "breams sigma: " << sigma2E << std::endl;
+  assert(sigma2 >= 0.0);
+  noise[6 * 7 + 6] +=  sigma2;
 
 }
 
