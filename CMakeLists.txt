@@ -22,6 +22,14 @@ Execute_process(COMMAND ${ROOT_CONFIG} --cflags
 	OUTPUT_VARIABLE ROOT_CFLAGS
     	OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+Execute_process(COMMAND ${ROOT_CONFIG} --glibs --ldflags --evelibs
+	OUTPUT_VARIABLE ROOT_LIBS
+    	OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+Execute_process(COMMAND ${ROOT_CONFIG} --incdir
+	OUTPUT_VARIABLE ROOT_INCDIR
+    	OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 #include(macros.cmake)
 
 #SET(CMAKE_VERBOSE_MAKEFILE ON)
@@ -48,8 +56,22 @@ SET(GENFITINCDIR ${GENFIT}/include/genfit2)
 SET(GENFITINCINSTALLDIR ${GENFITINCDIR})
 SET(INCLUDE_OUTPUT_PATH ${GENFITINCDIR})
 
-add_subdirectory(core)
-add_subdirectory(RKTrackRep)
+INCLUDE_DIRECTORIES(
+	${GENFIT}/core/include
+	${GENFIT}/RKTrackRep/include
+	${GENFIT}/MeasurementExamples/include
+	${ROOT_INCDIR}
+	$ENV{GLOGPATH}/include
+)
+add_subdirectory(core/src)
+add_subdirectory(RKTrackRep/src)
+add_subdirectory(core/include)
+add_subdirectory(RKTrackRep/include)
 #add_subdirectory(GFRave)
-#add_subdirectory(MeasurementExamples)
+#add_subdirectory(MeasurementExamples/src)
+#add_subdirectory(MeasurementExamples/include)
+
+ADD_LIBRARY(genfit2 SHARED ${GENFIT_SRCS})
+TARGET_LINK_LIBRARIES(genfit2 ${ROOT_LIBS})
+INSTALL(TARGETS genfit2 DESTINATION ${GENFITLIBINSTALLDIR})
 
