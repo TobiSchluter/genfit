@@ -85,9 +85,6 @@ SharedPlanePtr WireMeasurement::constructPlane(const StateOnPlane* state) const 
   TVector3 U = dirInPoca.Cross(wireDirection);
   // U.SetMag(1.); automatically assured
 
-  if ((poca - pocaOnWire)*U < 0)
-    U *= -1.;
-
   // check left/right ambiguity
   if (leftRight_ == 0){ // auto select
     if ((poca - pocaOnWire)*U < 0) U *= -1.;
