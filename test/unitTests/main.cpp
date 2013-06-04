@@ -17,8 +17,6 @@
 #include <MeasuredStateOnPlane.h>
 #include <MeasurementOnPlane.h>
 #include <PlanarMeasurement.h>
-#include <PlanarPixelMeasurement.h>
-#include <PlanarStripMeasurement.h>
 #include <ProlateSpacePointMeasurement.h>
 #include <RectangularFinitePlane.h>
 #include <ReferenceStateOnPlane.h>
