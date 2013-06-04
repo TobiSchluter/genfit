@@ -20,8 +20,6 @@ set(GENFIT_INCS
   ${CMAKE_CURRENT_SOURCE_DIR}/MeasuredStateOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MeasurementOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/PlanarMeasurement.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/PlanarPixelMeasurement.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/PlanarStripMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/ProlateSpacePointMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/RectangularFinitePlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/ReferenceStateOnPlane.h

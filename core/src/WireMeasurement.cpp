@@ -1,5 +1,5 @@
-/* Copyright 2013, Ludwig-Maximilians Universitaet Muenchen,
-   Authors: Tobias Schlüter
+/* Copyright 2008-2010, Technische Universitaet Muenchen,
+   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
 
    This file is part of GENFIT.
 
@@ -16,16 +16,19 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#include <math.h>
-#include <TMatrixD.h>
-
-#include "AbsTrackRep.h"
-#include "RKTrackRep.h"
-#include "MeasurementOnPlane.h"
-#include "Exception.h"
+/** @addtogroup genfit
+ * @{
+ */
 
 #include "WireMeasurement.h"
+
+#include <math.h>
+
+#include "Exception.h"
+#include "RKTrackRep.h"
+
+#include <assert.h>
+
 
 namespace genfit {
 
@@ -33,13 +36,13 @@ namespace genfit {
 WireMeasurement::WireMeasurement(int nDim)
   : AbsMeasurement(nDim), maxDistance_(1.E50), leftRight_(0)
 {
-  ;
+  assert(nDim >= 7);
 }
 
 WireMeasurement::WireMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
   : AbsMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint), maxDistance_(1.E50), leftRight_(0)
 {
-  ;
+  assert(rawHitCoords_.GetNrows() >= 7);
 }
 
 SharedPlanePtr WireMeasurement::constructPlane(const StateOnPlane* state) const {
@@ -91,7 +94,7 @@ SharedPlanePtr WireMeasurement::constructPlane(const StateOnPlane* state) const 
   }
   else if (leftRight_ < 0) U *= -1.;
 
-  return SharedPlanePtr(new DetPlane(wire1, U, wireDirection, 0));
+  return SharedPlanePtr(new DetPlane(wire1, U, wireDirection));
 }
 
 
@@ -99,9 +102,11 @@ MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRe
 {
   double m = rawHitCoords_(6);
   double V = rawHitCov_(6,6);
+
   MeasurementOnPlane mop(TVectorD(1, &m),
 			 TMatrixDSym(1, &V),
 			 plane, rep, getHMatrix(rep));
+
   return mop;
 }
 

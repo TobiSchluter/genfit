@@ -18,8 +18,6 @@ set(GENFIT_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/MeasuredStateOnPlane.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/MeasurementOnPlane.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/PlanarMeasurement.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/PlanarPixelMeasurement.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/PlanarStripMeasurement.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ProlateSpacePointMeasurement.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/RectangularFinitePlane.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ReferenceStateOnPlane.cpp

@@ -19,11 +19,21 @@
 
 #include "AbsMeasurement.h"
 
+#include <assert.h>
+
+
 namespace genfit {
 
-  AbsMeasurement::~AbsMeasurement()
-  {
+AbsMeasurement::AbsMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
+  : rawHitCoords_(rawHitCoords), rawHitCov_(rawHitCov), detId_(detId), hitId_(hitId), trackPoint_(trackPoint)
+{
+  assert(rawHitCov_.GetNrows() == rawHitCoords_.GetNrows());
+}
 
-  }
+
+AbsMeasurement::~AbsMeasurement()
+{
+  ;
+}
 
 } /* End of namespace genfit */
