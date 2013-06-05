@@ -82,7 +82,7 @@ KalmanFitterInfo* KalmanFitterInfo::clone() const {
 }
 
 
-MeasuredStateOnPlane KalmanFitterInfo::getSmoothedState(bool biased) const {
+MeasuredStateOnPlane KalmanFitterInfo::getFittedState(bool biased) const {
   // TODO: Test
 
   if (biased) {
@@ -108,7 +108,7 @@ MeasuredStateOnPlane KalmanFitterInfo::getSmoothedState(bool biased) const {
 MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeasurement) const {
   // TODO: Test
 
-  MeasuredStateOnPlane smoothedState = getSmoothedState(biased);
+  MeasuredStateOnPlane smoothedState = getFittedState(biased);
   const MeasurementOnPlane& measurement = measurementsOnPlane_.at(iMeasurement);
   SharedPlanePtr plane = measurement.getPlane();
 

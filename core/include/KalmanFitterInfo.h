@@ -67,7 +67,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
   /** Get unbiased (default) or biased smoothed state
    */
-  MeasuredStateOnPlane getSmoothedState(bool biased = false) const;
+  MeasuredStateOnPlane getFittedState(bool biased = false) const override;
   /** Get unbiased (default) or biased residual from ith measurement
    */
   MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const override; // also calculates covariance of the residual

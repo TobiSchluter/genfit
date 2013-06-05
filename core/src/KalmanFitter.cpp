@@ -87,25 +87,22 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
     std::cout << "\033[0m";
 
     ++nIt;
-    if (nIt > maxIterations_)
-      {
-	// FIXME throw exception
-	Exception exc("Track fit didn't converge in max iterations.",__LINE__,__FILE__);
-	throw exc;
-      }
+    if (nIt > maxIterations_) {
+      // FIXME throw exception
+      Exception exc("Track fit didn't converge in max iterations.",__LINE__,__FILE__);
+      throw exc;
+    }
     std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
 	      << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
-    if (fabs(oldChi2BW - chi2BW) < deltaChi2_)
-      {
-	// Finished
-	break;
-      }
-    else
-      {
-	oldChi2BW = chi2BW;
-	oldChi2FW = chi2FW;
-	currentState->getCov() *= blowUpFactor_;  // blow up cov
-      }
+    if (fabs(oldChi2BW - chi2BW) < deltaChi2_)  {
+      // Finished
+      break;
+    }
+    else {
+      oldChi2BW = chi2BW;
+      oldChi2FW = chi2FW;
+      currentState->getCov() *= blowUpFactor_;  // blow up cov
+    }
   }
   delete currentState;
 }
@@ -157,7 +154,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInf
   const TVectorD& measurement(mOnPlane.getState());
   const TMatrixDSym& V(mOnPlane.getCov());
   const TMatrixD& H(mOnPlane.getHMatrix());
-  stateVector.Print();
+  std::cout << "State vector: "; stateVector.Print();
   //cov.Print();
   //measurement.Print();
 
@@ -191,7 +188,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInf
 
   //std::cout << "STATUS:" << std::endl;
   //stateVector.Print();
-  update.Print();
+  std::cout << "Update: "; update.Print();
   //cov.Print();
 
   stateVector += update;
