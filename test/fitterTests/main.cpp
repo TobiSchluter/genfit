@@ -114,7 +114,7 @@ int randomSign() {
 int main() {
   std::cerr<<"main"<<std::endl;
 
-  const unsigned int nEvents = 1;
+  const unsigned int nEvents = 100;
   const double BField = 15.;       // kGauss
   const double momentum = 0.2;     // GeV
   const double theta = 150;         // degree
@@ -275,6 +275,10 @@ int main() {
       genfit::AbsTrackRep* repRef = new genfit::RKTrackRep(pdg);
       genfit::StateOnPlane stateRef(repRef);
       repRef->setPosMom(&stateRef, pos, mom);
+
+      // smeared start state
+      genfit::StateOnPlane stateSmeared(repRef);
+      repRef->setPosMom(&stateSmeared, posM, momM);
 
       //repRef->setPropDir(1);
 
@@ -496,14 +500,14 @@ int main() {
           if (!HelixTest) {
             // stepalong (approximately)
             dir.SetMag(pointDist);
-            DetPlane pl(point+dir, dir);
-            repRef->extrapolate(pl);
+            genfit::SharedPlanePtr pl(new genfit::DetPlane(point+dir, dir));
+            repRef->extrapolateToPlane(&stateRef, pl);
           }
         }
 
         assert(measurementTypes.size() == leftRightTrue.size());
       }
-      catch(Exception& e){
+      catch(genfit::Exception& e){
         std::cerr<<"Exception, next track"<<std::endl;
         e.what();
         continue; // here is a memleak!
@@ -514,57 +518,56 @@ int main() {
 
 
       // trackrep to be fitted and tested
-      AbsTrackRep* rep;
-      rep = new RKTrackRep(posM, momM, posErr, momErr, pdg);
+      genfit::AbsTrackRep* rep;
+      rep = new genfit::RKTrackRep(pdg);
 
       // create track
       if (fitTrack != NULL) delete fitTrack;
-      fitTrack = new Track(rep); //initialized with smeared rep
+      fitTrack = new genfit::Track(rep, rep->get6DState(&stateSmeared)); //initialized with smeared rep
       //fitTrack->addTrackRep(rep->clone()); // check if everything works fine with more than one rep
-      fitTrack->setSmoothing(smoothing);
 
       // add measurements
       for(unsigned int i=0; i<measurements.size(); ++i){
-        fitTrack->addHit(measurements[i],
-                         measurementTypes[i], //detector id
-                         i); // measurement id
+        std::vector<genfit::AbsMeasurement*> measVec;
+        measVec.push_back(measurements[i]);
+        fitTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack));
       }
 
       // print trackCand
-      if (debug) fitTrack->getCand().Print();
+      if (debug) fitTrack->Print();
 
 
 
       // do the fit
       try{
         if (useDaf) {
-          if (debug) std::cerr<<"Starting the fitter (Daf)"<<std::endl;
-          daf.processTrack(fitTrack);
+          //if (debug) std::cerr<<"Starting the fitter (Daf)"<<std::endl;
+          //daf.processTrack(fitTrack);
         }
         else {
           if (debug) std::cerr<<"Starting the fitter (Kalman)"<<std::endl;
-          kalman.processTrack(fitTrack);
+          kalman.processTrack(fitTrack, rep);
         }
         if (debug) std::cerr<<"fitter is finished!"<<std::endl;
       }
-      catch(Exception& e){
+      catch(genfit::Exception& e){
         e.what();
         std::cerr<<"Exception, next track"<<std::endl;
         continue;
       }
 
       if (debug) {
-        fitTrack->getBK(0)->Print();
+        fitTrack->Print();
       }
 
 
       //choose trackrep to check
-      AbsTrackRep* repCheck = fitTrack->getTrackRep(0);
+      genfit::AbsTrackRep* repCheck = fitTrack->getTrackRep(0);
 
       // check if fit was successfull
-      if(repCheck->getStatusFlag() != 0 ) {
+      /*if(repCheck->getStatusFlag() != 0 ) {
         continue;
-      }
+      }*/
 
 
 #ifndef VALGRIND
@@ -574,7 +577,7 @@ int main() {
       display->addEvent(event);
 #endif
 
-      if (debug) {
+      /*if (debug) {
         std::cout << "cov before extrapolating back to reference plane \n";
         repCheck->getCov().Print();
 
@@ -600,7 +603,7 @@ int main() {
 
       // calculate pulls
       TVectorT<double> state(repCheck->getState());
-      TMatrixTSym<double> cov(repCheck->getCov());
+      TMatrixTSym<double> cov(repCheck->getCov());*/
 
 
 #ifndef VALGRIND
@@ -752,6 +755,6 @@ int main() {
 
   if (debug) std::cerr<<"... closed file"<<std::endl;
 
-
+}
 
 
