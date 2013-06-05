@@ -33,7 +33,8 @@ class TrackPoint;
 
 class KalmanFitter : public AbsFitter {
  public:
-  KalmanFitter() {}
+  KalmanFitter(size_t maxIterations = 4, double deltaChi2 = 1e-3, double blowUpFactor = 1e3)
+    : maxIterations_(maxIterations), deltaChi2_(deltaChi2), blowUpFactor_(blowUpFactor) {}
   ~KalmanFitter() {}
 
   void fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf, int direction);
@@ -42,8 +43,19 @@ class KalmanFitter : public AbsFitter {
 
  private:
   void processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInfo* fi,
-			 AbsTrackRep* rep, double chi2, size_t ndf, int direction);
+			 AbsTrackRep* rep, double& chi2, size_t& ndf, int direction);
   MeasuredStateOnPlane* currentState;
+
+  // Maximum number of iterations to attempt.  Forward and backward
+  // are counted as one iteration.
+  size_t maxIterations_;
+  // Convergence criterion: if track total chi² changes less than this
+  // between consecutive iterations, consider the track converged.
+  // chi² from the backwards fit is used.
+  double deltaChi2_;
+  // Blow up the covariance of the forward (backward) fit by this
+  // factor before seeding the backward (forward) fit.
+  double blowUpFactor_;
 };
 
 }

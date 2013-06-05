@@ -38,18 +38,18 @@ void KalmanFitter::fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf
   chi2 = 0;
   ndf = 0;
   std::cout << tr->getNumPoints() << " TrackPoints in this track." << std::endl;
-  for (size_t i = 0; i < tr->getNumPoints(); ++i) {
-    TrackPoint *tp = 0;
-    if (direction == +1)
-      tp = tr->getPoint(i);
-    else if (direction == -1)
-      tp = tr->getPoint(-i-1);
-    else
-      assert(direction == +1 || direction == -1);  // Guaranteed to fail if reached.
-    SimpleKalmanFitterInfo* fi = new SimpleKalmanFitterInfo(tp, rep);
-    tp->addFitterInfo(fi);
-    processTrackPoint(tr, tp, fi, rep, chi2, ndf, direction);
-  }
+  for (size_t i = 0; i < tr->getNumPoints(); ++i)
+    {
+      TrackPoint *tp = 0;
+      assert(direction == +1 || direction == -1);
+      if (direction == +1)
+	tp = tr->getPoint(i);
+      else if (direction == -1)
+	tp = tr->getPoint(-i-1);
+      SimpleKalmanFitterInfo* fi = new SimpleKalmanFitterInfo(tp, rep);
+      tp->addFitterInfo(fi);
+      processTrackPoint(tr, tp, fi, rep, chi2, ndf, direction);
+    }
 }
 
 
@@ -60,12 +60,12 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
   //seed[0] += 1e-2;  // just so we don't run through the perfectly correct coordinates
   TMatrixDSym cov(6);
   for (int i = 0; i < 6; i++)
-    cov(i,i) = 1e2;
+    cov(i,i) = blowUpFactor_;    // Make independently configurable?
   rep->setPosMomCov(currentState, seed, cov);
 
   double oldChi2FW = 1e6;
   double oldChi2BW = 1e6;
-  int nIt = 0;
+  size_t nIt = 0;
   for(;;) {
     std::cout << "\033[1;21mstate pre" << std::endl;
     currentState->Print();
@@ -73,39 +73,46 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
     double chi2FW = 0;
     size_t ndfFW = 0;
     fitTrack(tr, rep, chi2FW, ndfFW, +1);
-    std::cout << "\033[1;21mstate post" << std::endl;
+    std::cout << "\033[1;21mstate post forward" << std::endl;
     currentState->Print();
     std::cout << "\033[0m";
 
     // Backwards iteration:
-    currentState->getCov() *= 1e3;  // blow up cov
+    currentState->getCov() *= blowUpFactor_;  // blow up cov
     double chi2BW = 0;
     size_t ndfBW = 0;
     fitTrack(tr, rep, chi2BW, ndfBW, -1);
+    std::cout << "\033[1;21mstate post backward" << std::endl;
+    currentState->Print();
+    std::cout << "\033[0m";
 
     ++nIt;
-    if (nIt > 2) {
-      // FIXME throw exception
-      return;
-    }
+    if (nIt > maxIterations_)
+      {
+	// FIXME throw exception
+	Exception exc("Track fit didn't converge in max iterations.",__LINE__,__FILE__);
+	throw exc;
+      }
     std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
 	      << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
-    if (fabs(oldChi2BW - chi2BW) < 1e-3) {
-      // Finished
-      break;
-    }
-    else {
-      oldChi2BW = chi2BW;
-      oldChi2FW = chi2FW;
-      currentState->getCov() *= 1e3;  // blow up cov
-    }
+    if (fabs(oldChi2BW - chi2BW) < deltaChi2_)
+      {
+	// Finished
+	break;
+      }
+    else
+      {
+	oldChi2BW = chi2BW;
+	oldChi2FW = chi2FW;
+	currentState->getCov() *= blowUpFactor_;  // blow up cov
+      }
   }
   delete currentState;
 }
 
 void
 KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInfo* fi,
-				AbsTrackRep* rep, double chi2, size_t ndf, int direction)
+				AbsTrackRep* rep, double& chi2, size_t& ndf, int direction)
 {
   if (!tp->hasRawMeasurements())
     return;
@@ -139,12 +146,11 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInf
   //state.Print();
 
   // unique_ptr takes care of disposing of the old prediction, takes ownership of state.
+  assert(direction == -1 || direction == +1);
   if (direction == +1)
     fi->fwPrediction_ = std::unique_ptr<MeasuredStateOnPlane>(state);
   else if (direction == -1)
     fi->bwPrediction_ = std::unique_ptr<MeasuredStateOnPlane>(state);
-  else
-    assert(direction == -1 || direction == +1);  // Will fail if reached.
 
   TVectorD stateVector(state->getState());
   TMatrixDSym cov(state->getCov());
