@@ -17,9 +17,11 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <assert.h>
-
 #include "SimpleKalmanFitterInfo.h"
+
+#include <assert.h>
+#include <iostream>
+
 #include "TrackPoint.h"
 #include "AbsTrackRep.h"
 
@@ -79,5 +81,22 @@ MeasurementOnPlane SimpleKalmanFitterInfo::getResidual(bool biased, unsigned int
 
   assert(0);  // FIXME
   return MeasurementOnPlane();
+}
+
+
+void SimpleKalmanFitterInfo::Print(const Option_t*) const {
+  std::cout << "genfit::SimpleKalmanFitterInfo \n";
+
+  for (unsigned int i=0; i<measurements_.size(); ++i) {
+    std::cout << "MeasurementOnPlane Nr " << i <<":"; measurements_[i].Print();
+  }
+
+  if (fwPrediction_) {
+    std::cout << "Forward prediction_: "; fwPrediction_->Print();
+  }
+  if (bwPrediction_) {
+    std::cout << "Backward prediction_: "; bwPrediction_->Print();
+  }
+
 }
 

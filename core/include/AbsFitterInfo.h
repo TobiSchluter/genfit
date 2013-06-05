@@ -67,6 +67,8 @@ class AbsFitterInfo : public TObject {
 
   virtual MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const = 0;
 
+  virtual void Print(const Option_t* = "") const override {;}
+
  private:
 
   /** Pointer to #TrackPoint where the FitterInfo belongs to

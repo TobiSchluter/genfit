@@ -17,10 +17,12 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "KalmanFitterInfo.h"
+
 #include <assert.h>
+#include <iostream>
 
 #include "Exception.h"
-#include "KalmanFitterInfo.h"
 #include "Tools.h"
 #include "Track.h"
 #include "TrackPoint.h"
@@ -222,6 +224,32 @@ MeasuredStateOnPlane KalmanFitterInfo::calcAverageState(const MeasuredStateOnPla
                               smoothed_cov,
                               forwardUpdate_->getPlane(),
                               forwardUpdate_->getRep());
+}
+
+
+void KalmanFitterInfo::Print(const Option_t*) const {
+  std::cout << "genfit::KalmanFitterInfo \n";
+
+  for (unsigned int i=0; i<measurementsOnPlane_.size(); ++i) {
+    std::cout << "MeasurementOnPlane Nr " << i <<":"; measurementsOnPlane_[i].Print();
+  }
+
+  if (referenceState_ != nullptr) {
+    std::cout << "Reference state: "; referenceState_->Print();
+  }
+  if (forwardPrediction_ != nullptr) {
+    std::cout << "Forward prediction_: "; forwardPrediction_->Print();
+  }
+  if (forwardUpdate_ != nullptr) {
+    std::cout << "Forward update: "; forwardUpdate_->Print();
+  }
+  if (backwardPrediction_ != nullptr) {
+    std::cout << "Backward prediction_: "; backwardPrediction_->Print();
+  }
+  if (backwardUpdate_ != nullptr) {
+    std::cout << "Backward update: "; backwardUpdate_->Print();
+  }
+
 }
 
 

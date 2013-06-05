@@ -55,7 +55,9 @@ class SimpleKalmanFitterInfo : public AbsFitterInfo {
   void deleteReferenceInfo() override { /* exception?  */ };
   void deleteMeasurementInfo() override { /* what should be stored? */};
 
-  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const;
+  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const override;
+
+  virtual void Print(const Option_t* = "") const override;
   
  private:
   std::unique_ptr<MeasuredStateOnPlane> fwPrediction_;

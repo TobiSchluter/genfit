@@ -84,6 +84,8 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void deleteReferenceInfo() override;
   void deleteMeasurementInfo() override;
 
+  virtual void Print(const Option_t* = "") const override;
+
  private:
 
   MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const;

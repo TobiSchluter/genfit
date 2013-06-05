@@ -71,6 +71,8 @@ class AbsMeasurement : public TObject {
 
   virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const = 0;
 
+  virtual void Print(const Option_t* = "") const override;
+
  protected:
 
   // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!

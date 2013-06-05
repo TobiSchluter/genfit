@@ -20,6 +20,7 @@
 #include "AbsMeasurement.h"
 
 #include <assert.h>
+#include <iostream>
 
 
 namespace genfit {
@@ -34,6 +35,13 @@ AbsMeasurement::AbsMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& 
 AbsMeasurement::~AbsMeasurement()
 {
   ;
+}
+
+
+void AbsMeasurement::Print(const Option_t*) const {
+  std::cout << "genfit::AbsMeasurement, detId = " << detId_ << ". hitId = " << hitId_ << "\n";
+  std::cout << "Raw hit coordinates: "; rawHitCoords_.Print();
+  std::cout << "Raw hit covariance: "; rawHitCov_.Print();
 }
 
 } /* End of namespace genfit */
