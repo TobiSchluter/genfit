@@ -161,7 +161,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInf
   //cov.Print();
   //measurement.Print();
 
-  TVectorD res(measurement - (H * stateVector));
+  TVectorD res(measurement - H*stateVector);
   std::cout << "Residual = (" << res(0);
   if (res.GetNrows() > 1)
     std::cout << ", " << res(1);

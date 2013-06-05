@@ -56,6 +56,7 @@ class SimpleKalmanFitterInfo : public AbsFitterInfo {
   void deleteMeasurementInfo() override { /* what should be stored? */};
 
   MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const override;
+  MeasuredStateOnPlane getSmoothedState() const;
 
   virtual void Print(const Option_t* = "") const override;
   

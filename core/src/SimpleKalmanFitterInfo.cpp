@@ -22,6 +22,8 @@
 #include <assert.h>
 #include <iostream>
 
+#include "TDecompChol.h"
+
 #include "TrackPoint.h"
 #include "AbsTrackRep.h"
 
@@ -81,6 +83,66 @@ MeasurementOnPlane SimpleKalmanFitterInfo::getResidual(bool biased, unsigned int
 
   assert(0);  // FIXME
   return MeasurementOnPlane();
+}
+
+
+MeasuredStateOnPlane SimpleKalmanFitterInfo::getSmoothedState() const
+{
+  assert(measurements_.size() == 1);
+  assert(fwPrediction_ && bwPrediction_);
+
+  const TMatrixD& H(measurements_[0].getHMatrix());
+  const TVectorD& measurement(measurements_[0].getState());
+  const TMatrixDSym& V(measurements_[0].getCov());
+
+  const TVectorD& fwState(fwPrediction_->getState());
+  const TMatrixDSym& fwCov(fwPrediction_->getCov());
+  TDecompChol fwDecomp(fwCov);
+  bool flag;
+  const TMatrixDSym& fwWeight(fwDecomp.Invert(flag));
+  const TVectorD& bwState(bwPrediction_->getState());
+  const TMatrixDSym& bwCov(bwPrediction_->getCov());
+  TDecompChol bwDecomp(bwCov);
+  const TMatrixDSym& bwWeight(bwDecomp.Invert(flag));
+
+  TDecompChol sumDecomp(fwWeight + bwWeight);
+  const TMatrixDSym& averageCov(sumDecomp.Invert(flag));
+
+  const TVectorD& average = averageCov*(fwWeight*fwState + bwWeight*bwState);
+
+  TVectorD res(measurement - H*average);
+
+  // calculate kalman gain ------------------------------
+  // calculate covsum (V + HCH^T)
+  TMatrixDSym HcovHt(averageCov);
+  HcovHt.Similarity(H);
+
+  TMatrixDSym covSum(V + HcovHt);
+  //std::cerr << std::flush << std::endl;
+  //std::cout << std::flush;
+  //std::cout << "a sum's components:" << std::endl;
+  //V.Print();
+  //HcovHt.Print();
+
+  TDecompChol decomp(covSum);
+  TMatrixDSym covSumInv(decomp.Invert());
+  //std::cout << "a matrix and its inverse:" << std::endl;
+  //covSum.Print();
+  //covSumInv.Print();
+
+  TMatrixD CHt(averageCov, TMatrixD::kMultTranspose, H);
+  TVectorD update = TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res;
+
+  //std::cout << "STATUS:" << std::endl;
+  //stateVector.Print();
+  update.Print();
+  //cov.Print();
+
+  TVectorD smoothedState = measurement + update;
+  covSumInv.Similarity(CHt);
+  TMatrixDSym smoothedCov = V - covSumInv;
+
+  return MeasuredStateOnPlane(smoothedState, smoothedCov, measurements_[0].getPlane(), this->getRep());
 }
 
 
