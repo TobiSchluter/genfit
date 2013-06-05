@@ -2,6 +2,7 @@
 #define genfit_AbsTrackRep_h
 
 #include <TVector3.h>
+#include <TObject.h>
 
 #include "MaterialInfo.h"
 #include "MeasuredStateOnPlane.h"
@@ -12,7 +13,7 @@ namespace genfit {
   /** 
    *  Provides functionality to extrapolate a #GFStateOnPlane to another #GFDetPlane, or to the POCA to a line or a point.
    */
-class AbsTrackRep {
+class AbsTrackRep : public TObject {
 
  public:
 
@@ -63,9 +64,11 @@ class AbsTrackRep {
 
   virtual TVector3 getMom(const StateOnPlane* stateInput) const = 0;
   virtual void getPosMom(const StateOnPlane* stateInput, TVector3& pos, TVector3& mom) const = 0;
+  virtual TVectorD get6DState(const StateOnPlane* stateInput) const;
 
   /** Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance */
   virtual void getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const = 0;
+  virtual void get6DStateCov(const MeasuredStateOnPlane* stateInput, TVectorD& stateVec, TMatrixDSym& cov) const;
 
   int getPDG() const {return pdgCode_;}
   virtual double getCharge(const StateOnPlane* state) const = 0;
@@ -93,6 +96,7 @@ class AbsTrackRep {
   //! Switch propagation direction. Has no effect if propDir_ is set to 0.
   void switchPropDir(){propDir_ = -1*propDir_;}
 
+  void Print(const Option_t* = "") const override;
 
  protected:
 

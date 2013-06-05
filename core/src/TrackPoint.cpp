@@ -19,6 +19,9 @@
 
 #include "TrackPoint.h"
 
+#include <iostream>
+
+
 namespace genfit {
 
 TrackPoint::TrackPoint() :
@@ -36,7 +39,9 @@ TrackPoint::TrackPoint(Track* track) :
 TrackPoint::TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurements, Track* track) :
   sortingParameter_(0), track_(track), rawMeasurements_(rawMeasurements)//, material_(nullptr)
 {
-  ;
+  for (AbsMeasurement* measurement : rawMeasurements_) {
+    measurement->setTrackPoint(this);
+  }
 }
 
 
@@ -144,6 +149,25 @@ void TrackPoint::deleteFitterInfo(const AbsTrackRep* rep) {
       --i;
     }
   }
+}
+
+
+void TrackPoint::Print(const Option_t*) const {
+  std::cout << "genfit::TrackPoint, belonging to Track " << track_ << "; sorting parameter = " << sortingParameter_ << "\n";
+  std::cout << "contains " << rawMeasurements_.size() << " rawMeasurements and " << fitterInfos_.size() << " fitterInfos.\n";
+
+  for (unsigned int i=0; i<rawMeasurements_.size(); ++i) {
+    std::cout << "RawMeasurement Nr. " << i << "\n";
+    rawMeasurements_[i]->Print();
+    std::cout << "............\n";
+  }
+
+  for (unsigned int i=0; i<fitterInfos_.size(); ++i) {
+    std::cout << "FitterInfo Nr. " << i << "\n";
+    fitterInfos_[i]->Print();
+    std::cout << "............\n";
+  }
+
 }
 
 } /* End of namespace genfit */

@@ -311,4 +311,30 @@ void Track::deleteMeasurementInfo(int startId, int endId) {
 }
 
 
+void Track::Print(const Option_t*) const {
+  std::cout << "=======================================================================================\n";
+  std::cout << "genfit::Track, containing " << trackPoints_.size() << " TrackPoints and " << trackReps_.size() << " TrackReps.\n";
+  std::cout << " Seed state: "; stateSeed_.Print();
+
+  for (unsigned int i=0; i<trackReps_.size(); ++i) {
+    std::cout << " TrackRep Nr. " << i;
+    if (i == cardinalRep_)
+      std::cout << " (This is the cardinal rep)";
+    std::cout << "\n";
+    trackReps_[i]->Print();
+  }
+
+  std::cout << "---------------------------------------------------------------------------------------\n";
+
+  for (unsigned int i=0; i<trackPoints_.size(); ++i) {
+    std::cout << "TrackPoint Nr. " << i << "\n";
+    trackPoints_[i]->Print();
+    std::cout << "..........................................................................\n";
+  }
+
+  std::cout << "=======================================================================================\n";
+
+}
+
+
 } /* End of namespace genfit */

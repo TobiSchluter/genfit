@@ -43,6 +43,10 @@ class TrackPoint : public TObject {
 
   TrackPoint();
   TrackPoint(Track* track);
+
+  /**
+   * Contructor taking list of measurements. The #setTrackPoint() of each measurement will be called.
+   */
   TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurements, Track* track);
 
   TrackPoint(const TrackPoint&); // copy constructor
@@ -79,6 +83,7 @@ class TrackPoint : public TObject {
   void deleteFitterInfo(const AbsTrackRep* rep);
   //void setMaterial(MaterialInfo* material);
 
+  void Print(const Option_t* = "") const override;
 
  private:
   double sortingParameter_;

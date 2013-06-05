@@ -16,50 +16,53 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @addtogroup GenfitDisplay
+/** @addtogroup EventDisplay
 * @{
 */
 
 
-#ifndef GenfitDisplay_H
-#define GenfitDisplay_H
+#ifndef Display_H
+#define Display_H
 
-#include <GFTrack.h>
+#include <Track.h>
 #include <TEveBox.h>
 #include <TVector3.h>
 #include <string>
 #include <vector>
 
+namespace genfit {
+
+
 /** @brief Event display designed to run with Genfit.
  *
  *  @author Karl Bicker (Technische Universit&auml;t M&uuml;nchen, original author)
  * 
- * The GenfitDisplay class is a singelton used to visualize the events processed with Genfit. The
+ * The EventDisplay class is a singelton used to visualize the events processed with Genfit. The
  * event display uses the EVE event visualization package to visualize Tracks which are bundeled 
- * in a vector and which form one event. The information about the tracks is supplied in GFTrack 
- * objects. To use the event display, the geometry (TGeoManager)and magnetic field (GFFieldManager)
+ * in a vector and which form one event. The information about the tracks is supplied in Track
+ * objects. To use the event display, the geometry (TGeoManager)and magnetic field (FieldManager)
  * have to be initialized and gApplication and gEve have to exist.
  *
  */
 
-class GenfitDisplay : public TNamed {
+class EventDisplay : public TNamed {
 	private:
-		GenfitDisplay();
+		EventDisplay();
 	
 	public:
-		~GenfitDisplay();
-		static GenfitDisplay* getInstance();
+		~EventDisplay();
+		static EventDisplay* getInstance();
 
 		/** @brief Drop all events.*/
 		void reset();
 
 		/** @brief Add new event
 		 *
-		 * Add a new event. An event is a collection of GFTracks which are displayed at the
+		 * Add a new event. An event is a collection of Tracks which are displayed at the
 		 * the same time.
 		 *
 		 */
-		void addEvent(std::vector<GFTrack*>& tr);
+		void addEvent(std::vector<Track*>& tr);
 
 		/** @brief Go to the next event or step a certain number of events ahead.*/
 		void next(unsigned int stp = 1);
@@ -129,11 +132,11 @@ class GenfitDisplay : public TNamed {
 		void addHits(std::vector< std::vector<double> > hits);
 
 	private:
-		static GenfitDisplay* eventDisplay;
+		static EventDisplay* eventDisplay;
 		int fEventId;
 		double fErrorScale;
 		std::string fOption;
-		std::vector< std::vector<GFTrack*>* > fEvents;
+		std::vector< std::vector<Track*>* > fEvents;
 		std::vector< std::vector< std::vector<double> > > fHits;
 
 		/** @brief Build the buttons for event navigation.*/
@@ -147,9 +150,9 @@ class GenfitDisplay : public TNamed {
 		 */
 		TEveBox* boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth);
 
-	public:
-		ClassDef(GenfitDisplay,1)
 };
+
+}
 
 #endif
 

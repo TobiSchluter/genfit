@@ -19,6 +19,9 @@
 
 #include "AbsTrackRep.h"
 
+#include <iostream>
+
+
 namespace genfit {
 
 AbsTrackRep::AbsTrackRep() :
@@ -33,6 +36,44 @@ AbsTrackRep::AbsTrackRep(int pdgCode, char propDir) :
   ;
 }
 
+
+TVectorD AbsTrackRep::get6DState(const StateOnPlane* stateInput) const {
+  TVector3 pos, mom;
+  getPosMom(stateInput, pos, mom);
+
+  TVectorD stateVec(6);
+
+  stateVec(0) = pos.X();
+  stateVec(1) = pos.Y();
+  stateVec(2) = pos.Z();
+
+  stateVec(3) = mom.X();
+  stateVec(4) = mom.Y();
+  stateVec(5) = mom.Z();
+
+  return stateVec;
+}
+
+
+void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane* stateInput, TVectorD& stateVec, TMatrixDSym& cov) const {
+  TVector3 pos, mom;
+  getPosMomCov(stateInput, pos, mom, cov);
+
+  stateVec.ResizeTo(6);
+
+  stateVec(0) = pos.X();
+  stateVec(1) = pos.Y();
+  stateVec(2) = pos.Z();
+
+  stateVec(3) = mom.X();
+  stateVec(4) = mom.Y();
+  stateVec(5) = mom.Z();
+}
+
+
+void AbsTrackRep::Print(const Option_t*) const {
+  std::cout << "genfit::TrackRep, pdgCode = " << pdgCode_ << ". PropDir = " << propDir_ << "\n";
+}
 
 
 } /* End of namespace genfit */

@@ -38,6 +38,8 @@
 #include <StepLimits.h>
 #include <TGeoMaterialInterface.h>
 
+//#include <EventDisplay.h>
+
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TDatabasePDG.h>
@@ -114,7 +116,7 @@ int randomSign() {
 int main() {
   std::cerr<<"main"<<std::endl;
 
-  const unsigned int nEvents = 100;
+  const unsigned int nEvents = 1;
   const double BField = 15.;       // kGauss
   const double momentum = 0.2;     // GeV
   const double theta = 150;         // degree
@@ -147,7 +149,7 @@ int main() {
   const bool matFX = true;         // include material effects; can only be disabled for RKTrackRep!
   const bool smoothing = true;
 
-  const bool debug = false;
+  const bool debug = true;
 
   // 0: PixMeasurement
   // 1: SpacePointMeasurement
@@ -175,7 +177,7 @@ int main() {
 
   // init event display
 #ifndef VALGRIND
-  GenfitDisplay* display = GenfitDisplay::getInstance();
+  genfit::EventDisplay* display = genfit::EventDisplay::getInstance();
   display->reset();
 #endif
 
@@ -572,7 +574,7 @@ int main() {
 
 #ifndef VALGRIND
       // add track to event display
-      std::vector<Track*> event;
+      std::vector<genfit::Track*> event;
       event.push_back(fitTrack);
       display->addEvent(event);
 #endif
@@ -607,7 +609,7 @@ int main() {
 
 
 #ifndef VALGRIND
-      hmomRes->Fill( (charge/state[0]-momentum));
+      /*hmomRes->Fill( (charge/state[0]-momentum));
       hupRes->Fill(  (state[1]-referenceState[1]));
       hvpRes->Fill(  (state[2]-referenceState[2]));
       huRes->Fill(   (state[3]-referenceState[3]));
@@ -671,7 +673,7 @@ int main() {
       }
 
       if (debug) std::cerr<<"Fill Tree ..." << std::endl;
-      tree->Fill();
+      tree->Fill();*/
 #endif
 
 

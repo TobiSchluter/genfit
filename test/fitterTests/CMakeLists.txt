@@ -33,10 +33,13 @@ INCLUDE_DIRECTORIES(
 	${ROOT_INCDIR}
 	$ENV{GENFIT}/core/include
 	$ENV{GENFIT}/RKTrackRep/include
+	#$ENV{GENFIT}/eventDisplay/include
 )
 
 ADD_EXECUTABLE(main 
 	main.cpp
+	#$ENV{GENFIT}/eventDisplay/include/EventDisplay.h
+	#$ENV{GENFIT}/eventDisplay/src/EventDisplay.cpp
 )
 
 TARGET_LINK_LIBRARIES(main 

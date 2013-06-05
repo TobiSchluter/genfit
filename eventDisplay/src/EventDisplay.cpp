@@ -1,22 +1,24 @@
 
-#include "GenfitDisplay.h"
+#include "EventDisplay.h"
 
 #include <assert.h>
 #include <cmath>
 #include <exception>
 #include <iostream>
-#include <RecoHits/GFAbsRecoHit.h>
-#include <RecoHits/GFAbsPlanarHit.h>
-#include <RecoHits/GFAbsProlateSpacepointHit.h>
-#include <RecoHits/GFAbsSpacepointHit.h>
-#include <RecoHits/GFAbsWireHit.h>
-#include <RecoHits/GFAbsWirepointHit.h>
-#include <GFAbsTrackRep.h>
-#include <GFConstField.h>
-#include <GFDetPlane.h>
-#include <GFException.h>
-#include <GFFieldManager.h>
-#include <GFTools.h>
+
+#include <AbsMeasurement.h>
+#include <PlanarMeasurement.h>
+#include <ProlateSpacePointMeasurement.h>
+#include <SpacePointMeasurement.h>
+#include <WireMeasurement.h>
+#include <WirePointMeasurement.h>
+#include <AbsTrackRep.h>
+#include <ConstField.h>
+#include <DetPlane.h>
+#include <Exception.h>
+#include <FieldManager.h>
+#include <Tools.h>
+
 #include <TApplication.h>
 #include <TEveBrowser.h>
 #include <TEveManager.h>
@@ -41,18 +43,19 @@
 #include <TVectorD.h>
 #include <TSystem.h>
 
+namespace genfit {
 
-GenfitDisplay* GenfitDisplay::eventDisplay = NULL;
+EventDisplay* EventDisplay::eventDisplay = NULL;
 
-GenfitDisplay::GenfitDisplay() {
+EventDisplay::EventDisplay() {
 
 	if((!gApplication) || (gApplication && gApplication->TestBit(TApplication::kDefaultApplication))) {
-		std::cout << "In GenfitDisplay ctor: gApplication not found, creating..." << std::flush;
+		std::cout << "In EventDisplay ctor: gApplication not found, creating..." << std::flush;
 		new TApplication("ROOT_application", 0, 0);
 		std::cout << "done!" << std::endl;
 	}
 	if(!gEve) {
-		std::cout << "In GenfitDisplay ctor: gEve not found, creating..." << std::flush;
+		std::cout << "In EventDisplay ctor: gEve not found, creating..." << std::flush;
 		TEveManager::Create();
 		std::cout << "done!" << std::endl;
 	}
@@ -63,24 +66,24 @@ GenfitDisplay::GenfitDisplay() {
 
 }
 
-void GenfitDisplay::setOptions(std::string opts) { fOption = opts; }
+void EventDisplay::setOptions(std::string opts) { fOption = opts; }
 
-void GenfitDisplay::setErrScale(double errScale) { fErrorScale = errScale; }
+void EventDisplay::setErrScale(double errScale) { fErrorScale = errScale; }
 
-double GenfitDisplay::getErrScale() { return fErrorScale; }
+double EventDisplay::getErrScale() { return fErrorScale; }
 
-GenfitDisplay* GenfitDisplay::getInstance() {
+EventDisplay* EventDisplay::getInstance() {
 
 	if(eventDisplay == NULL) {
-		eventDisplay = new GenfitDisplay();
+		eventDisplay = new EventDisplay();
 	}
 	return eventDisplay;
 
 }
 
-GenfitDisplay::~GenfitDisplay() { reset(); }
+EventDisplay::~EventDisplay() { reset(); }
 
-void GenfitDisplay::reset() {
+void EventDisplay::reset() {
 
 	for(unsigned int i = 0; i < fEvents.size(); i++) {
 
@@ -97,13 +100,13 @@ void GenfitDisplay::reset() {
 
 }
 
-void GenfitDisplay::addEvent(std::vector<GFTrack*>& evts) {
+void EventDisplay::addEvent(std::vector<Track*>& evts) {
 
-	std::vector<GFTrack*>* vec = new std::vector<GFTrack*>;
+	std::vector<Track*>* vec = new std::vector<Track*>;
 
 	for(unsigned int i = 0; i < evts.size(); i++) {
 
-		vec->push_back(new GFTrack(*(evts[i])));
+		vec->push_back(new Track(*(evts[i])));
 
 	}
 
@@ -111,13 +114,13 @@ void GenfitDisplay::addEvent(std::vector<GFTrack*>& evts) {
 
 }
 
-void GenfitDisplay::next(unsigned int stp) {
+void EventDisplay::next(unsigned int stp) {
 
 	gotoEvent(fEventId + stp);
 
 }
 
-void GenfitDisplay::prev(unsigned int stp) {
+void EventDisplay::prev(unsigned int stp) {
 
 	if(fEvents.size() == 0) return;
 	if(fEventId < (int)stp) {
@@ -128,9 +131,9 @@ void GenfitDisplay::prev(unsigned int stp) {
 
 }
 
-int GenfitDisplay::getNEvents() { return fEvents.size(); }
+int EventDisplay::getNEvents() { return fEvents.size(); }
 
-void GenfitDisplay::gotoEvent(unsigned int id) {
+void EventDisplay::gotoEvent(unsigned int id) {
 
 	if(id >= fEvents.size()) id = fEvents.size() - 1;
 
@@ -150,9 +153,9 @@ void GenfitDisplay::gotoEvent(unsigned int id) {
 	}
 	fErrorScale = old_error_scale;
 
-};
+}
 
-void GenfitDisplay::open() {
+void EventDisplay::open() {
 
 	bool drawSilent = false;
 	bool drawGeometry = false;
@@ -196,7 +199,7 @@ void GenfitDisplay::open() {
 
 }
 
-void GenfitDisplay::drawEvent(unsigned int id) {
+void EventDisplay::drawEvent(unsigned int id) {
 
 	// parse the option string ------------------------------------------------------------------------
 	bool drawAutoScale = false;
@@ -247,12 +250,12 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 	for(unsigned int i = 0; i < fEvents[id]->size(); i++) { // loop over all tracks in an event
 
-		GFTrack* track = fEvents[id]->at(i);
+		Track* track = fEvents[id]->at(i);
 
-		GFAbsTrackRep* rep(track->getCardinalRep());
+		AbsTrackRep* rep(track->getCardinalRep());
 		unsigned int irep = track->getCardinalRepID();
 
-		unsigned int numhits = track->getNumHits();
+		unsigned int numhits = track->getNumPointsWithMeasurement();
 		double charge = rep->getCharge();
 
 		bool smoothing = track->getSmoothing();
@@ -272,7 +275,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 		TEveStraightLineSet* track_lines = NULL;
 
 		// saving the initial state of the representation -----------------------------------------
-		GFDetPlane initial_plane = rep->getReferencePlane();
+		DetPlane initial_plane = rep->getReferencePlane();
 		TVectorT<double> initial_state(rep->getState());
 		TMatrixTSym<double> initial_cov(rep->getCov());
 		TMatrixT<double> initial_auxInfo;
@@ -284,8 +287,8 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 		for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
 
-			GFAbsRecoHit* hit = track->getHit(j);
-			GFDetPlane plane;
+			AbsRecoHit* hit = track->getHit(j);
+			DetPlane plane;
 
 			// get the hit infos ------------------------------------------------------------------
 			if(smoothing) {
@@ -293,9 +296,9 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 				TMatrixTSym<double> cov;
 				TMatrixT<double> auxInfo;
 				try{
-          GFTools::getBiasedSmoothedData(track, irep, j, state, cov, plane, auxInfo);
+          Tools::getBiasedSmoothedData(track, irep, j, state, cov, plane, auxInfo);
           rep->setData(state, plane, &cov, &auxInfo);
-        }catch(GFException& e) {
+        }catch(Exception& e) {
           std::cerr << "Error: Exception caught (getSmoothedData): Hit " << j << " in Track " << i << " skipped!" << std::endl;
           std::cerr << e.what();
           if (e.isFatal()) {
@@ -308,7 +311,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 				try{
 					plane = hit->getDetPlane(rep);
 					rep->extrapolate(plane);
-				}catch(GFException& e) {
+				}catch(Exception& e) {
 					std::cerr << "Error: Exception caught (getDetPlane): Hit " << j << " in Track " << i << " skipped!" << std::endl;
 					std::cerr << e.what();
 					if (e.isFatal()) {
@@ -344,7 +347,7 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 
 			int hit_coords_dim = hit_coords.GetNrows();
 
-			if(dynamic_cast<GFAbsPlanarHit*>(hit) != NULL) {
+			if(dynamic_cast<AbsPlanarHit*>(hit) != NULL) {
 				planar_hit = true;
 				if(hit_coords_dim == 1) {
 					hit_u = hit_coords(0);
@@ -356,17 +359,17 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 					hit_res_u = hit_cov(0,0);
 					hit_res_v = hit_cov(1,1);
 				}
-			} else if (dynamic_cast<GFAbsSpacepointHit*>(hit) != NULL) {
+			} else if (dynamic_cast<AbsSpacepointHit*>(hit) != NULL) {
 				space_hit = true;
 				plane_size = 4;
-      } else if (dynamic_cast<GFAbsWireHit*>(hit) != NULL) {
+      } else if (dynamic_cast<AbsWireHit*>(hit) != NULL) {
 				wire_hit = true;
 				hit_u = hit_coords(0);
 				hit_v = v*(track_pos-o); // move the covariance tube so that the track goes through it
 				hit_res_u = hit_cov(0,0);
 				hit_res_v = 4;
 				plane_size = 4;
-				if (dynamic_cast<GFAbsWirepointHit*>(hit) != NULL) {
+				if (dynamic_cast<AbsWirepointHit*>(hit) != NULL) {
 				  wirepoint_hit = true;
 				  hit_v = hit_coords(1);
 				  hit_res_v = hit_cov(1,1);
@@ -629,9 +632,10 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 		// reseting to the initial state ----------------------------------------------------------
 		rep->setData(initial_state,initial_plane,&initial_cov,&initial_auxInfo);
 
-    try{
+    try {
       rep->extrapolate(initial_plane);
-    }catch(GFException& e) {
+    }
+    catch(Exception& e) {
       std::cerr << "Error: Exception caught: could not extrapolate back to initial plane " << std::endl;
       std::cerr << e.what();
       continue;
@@ -647,14 +651,14 @@ void GenfitDisplay::drawEvent(unsigned int id) {
 }
 
 
-void GenfitDisplay::addHits(std::vector<std::vector<double> > hits){
+void EventDisplay::addHits(std::vector<std::vector<double> > hits){
 	fHits.push_back(hits);
 }
 
 
 
 
-TEveBox* GenfitDisplay::boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth) {
+TEveBox* EventDisplay::boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth) {
 
 	TEveBox* box = new TEveBox;
 	float vertices[24];
@@ -696,7 +700,7 @@ TEveBox* GenfitDisplay::boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud,
 
 }
 
-void GenfitDisplay::makeGui() {
+void EventDisplay::makeGui() {
 
 	TEveBrowser* browser = gEve->GetBrowser();
 	browser->StartEmbedding(TRootBrowser::kLeft);
@@ -710,15 +714,15 @@ void GenfitDisplay::makeGui() {
 
 		TString icondir( Form("%s/icons/", gSystem->Getenv("ROOTSYS")) );
 		TGPictureButton* b = 0;
-		GenfitDisplay*  fh = GenfitDisplay::getInstance();
+		EventDisplay*  fh = EventDisplay::getInstance();
 
 		b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoBack.gif"));
 		hf->AddFrame(b);
-		b->Connect("Clicked()", "GenfitDisplay", fh, "prev()");
+		b->Connect("Clicked()", "EventDisplay", fh, "prev()");
 
 		b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoForward.gif"));
 		hf->AddFrame(b);
-		b->Connect("Clicked()", "GenfitDisplay", fh, "next()");
+		b->Connect("Clicked()", "EventDisplay", fh, "next()");
 	}
 	frmMain->AddFrame(hf);
 
@@ -730,4 +734,4 @@ void GenfitDisplay::makeGui() {
 	browser->SetTabTitle("Event Control", 0);
 }
 
-ClassImp(GenfitDisplay)
+}

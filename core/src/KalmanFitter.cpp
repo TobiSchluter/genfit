@@ -38,19 +38,18 @@ void KalmanFitter::fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf
   chi2 = 0;
   ndf = 0;
   std::cout << tr->getNumPoints() << " TrackPoints in this track." << std::endl;
-  for (size_t i = 0; i < tr->getNumPoints(); ++i)
-    {
-      TrackPoint *tp = 0;
-      if (direction == +1)
-	tp = tr->getPoint(i);
-      else if (direction == -1)
-	tp = tr->getPoint(-i-1);
-      else
-	assert(direction == +1 || direction == -1);  // Guaranteed to fail if reached.
-      SimpleKalmanFitterInfo* fi = new SimpleKalmanFitterInfo(tp, rep);
-      tp->addFitterInfo(fi);
-      processTrackPoint(tr, tp, fi, rep, chi2, ndf, direction);
-    }
+  for (size_t i = 0; i < tr->getNumPoints(); ++i) {
+    TrackPoint *tp = 0;
+    if (direction == +1)
+      tp = tr->getPoint(i);
+    else if (direction == -1)
+      tp = tr->getPoint(-i-1);
+    else
+      assert(direction == +1 || direction == -1);  // Guaranteed to fail if reached.
+    SimpleKalmanFitterInfo* fi = new SimpleKalmanFitterInfo(tp, rep);
+    tp->addFitterInfo(fi);
+    processTrackPoint(tr, tp, fi, rep, chi2, ndf, direction);
+  }
 }
 
 
@@ -85,24 +84,21 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
     fitTrack(tr, rep, chi2BW, ndfBW, -1);
 
     ++nIt;
-    if (nIt > 2)
-      {
-	// FIXME throw exception
-	return;
-      }
+    if (nIt > 2) {
+      // FIXME throw exception
+      return;
+    }
     std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
 	      << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
-    if (fabs(oldChi2BW - chi2BW) < 1e-3)
-      {
-	// Finished
-	break;
-      }
-    else
-      {
-	oldChi2BW = chi2BW;
-	oldChi2FW = chi2FW;
-	currentState->getCov() *= 1e3;  // blow up cov
-      }
+    if (fabs(oldChi2BW - chi2BW) < 1e-3) {
+      // Finished
+      break;
+    }
+    else {
+      oldChi2BW = chi2BW;
+      oldChi2FW = chi2FW;
+      currentState->getCov() *= 1e3;  // blow up cov
+    }
   }
   delete currentState;
 }
@@ -119,12 +115,11 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInf
   // Extrapolate to TrackPoint.
   MeasuredStateOnPlane* state = new MeasuredStateOnPlane(*currentState);
   //state.Print();
-  if (fi->measurements_.size() == 0)
-    {
-      const AbsMeasurement* m = tp->getRawMeasurement(0);
-      SharedPlanePtr plane = m->constructPlane(currentState);
-      fi->measurements_.push_back(m->constructMeasurementOnPlane(rep, plane));
-    }
+  if (fi->measurements_.size() == 0) {
+    const AbsMeasurement* m = tp->getRawMeasurement(0);
+    SharedPlanePtr plane = m->constructPlane(currentState);
+    fi->measurements_.push_back(m->constructMeasurementOnPlane(rep, plane));
+  }
   const MeasurementOnPlane& mOnPlane = fi->measurements_[0];
   const SharedPlanePtr plane = mOnPlane.getPlane();
 
@@ -209,10 +204,9 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInf
   TDecompChol dec(cov);
   TMatrixDSym mist(cov);
   bool status = dec.Invert(mist);
-  if (!status)
-    {
-      std::cout << "new cov not pos. def." << std::endl;
-    }
+  if (!status) {
+    std::cout << "new cov not pos. def." << std::endl;
+  }
 
   // Calculate chi²
   TMatrixDSym HCHt(cov);

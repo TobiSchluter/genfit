@@ -82,6 +82,8 @@ class Track : public TObject {
   void deleteReferenceInfo(int startId, int endId);
   void deleteMeasurementInfo(int startId, int endId);
 
+  void Print(const Option_t* = "") const override;
+
  private:
 
   std::vector< TrackPoint* > trackPoints_; // Ownership
