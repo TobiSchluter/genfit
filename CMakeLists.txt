@@ -68,8 +68,6 @@ add_subdirectory(RKTrackRep/src)
 add_subdirectory(core/include)
 add_subdirectory(RKTrackRep/include)
 #add_subdirectory(GFRave)
-#add_subdirectory(MeasurementExamples/src)
-#add_subdirectory(MeasurementExamples/include)
 
 ADD_LIBRARY(genfit2 SHARED ${GENFIT_SRCS})
 TARGET_LINK_LIBRARIES(genfit2 ${ROOT_LIBS})

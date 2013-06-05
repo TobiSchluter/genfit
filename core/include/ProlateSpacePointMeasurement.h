@@ -49,6 +49,8 @@ class ProlateSpacePointMeasurement : public SpacePointMeasurement {
   ProlateSpacePointMeasurement(int nDim = 3);
   ProlateSpacePointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
 
+  virtual AbsMeasurement* clone() const override {return new ProlateSpacePointMeasurement(*this);}
+
   virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const override;
 
 

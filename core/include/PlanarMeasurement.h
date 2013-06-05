@@ -46,6 +46,10 @@ class PlanarMeasurement : public AbsMeasurement {
   PlanarMeasurement(int nDim = 1);
   PlanarMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
 
+  virtual AbsMeasurement* clone() const override {return new PlanarMeasurement(*this);}
+
+  int getPlaneId() const {return planeId_;}
+
   virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const override;
 
   virtual MeasurementOnPlane constructMeasurementOnPlane(const AbsTrackRep*, const SharedPlanePtr) const override;

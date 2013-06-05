@@ -120,18 +120,18 @@ int main() {
   const double theta = 150;         // degree
   const double thetaDetPlane = 120;         // degree
   const double phiDetPlane = 0;         // degree
-  const double pointDist = 5;      // cm; approx. distance between hits generated w/ RKTrackRep
-  const double pointDistDeg = 20;      // degree; distance between hits generated w/ helix model
-  const double resolution = 0.02;   // cm; resolution of generated hits
+  const double pointDist = 5;      // cm; approx. distance between measurements generated w/ RKTrackRep
+  const double pointDistDeg = 20;      // degree; distance between measurements generated w/ helix model
+  const double resolution = 0.02;   // cm; resolution of generated measurements
 
-  const double resolutionWire = 5*resolution;   // cm; resolution of generated hits
+  const double resolutionWire = 5*resolution;   // cm; resolution of generated measurements
   const TVector3 wireDir(0,0,1);
   const double skewAngle(5);
   const bool useSkew = false;
   const int nSuperLayer = 5;
   const double minDrift = 0;
   const double maxDrift = 2;
-  const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire hits
+  const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
   const bool useDaf = true;
 
@@ -142,7 +142,7 @@ int main() {
   const double momSmear = 0.1*momentum;     // GeV
   const double zSmearFac = 100;
 
-  const bool HelixTest = false;      // use helix for creating hits
+  const bool HelixTest = false;      // use helix for creating measurements
 
   const bool matFX = true;         // include material effects; can only be disabled for RKTrackRep!
   const bool smoothing = true;
@@ -271,30 +271,35 @@ int main() {
       }
 
 
-      // trackrep for creating hits
-      genfit::AbsTrackRep* rephits = new genfit::RKTrackRep(pos, mom, posErr, momErr, pdg);
-      ((RKTrackRep*)rephits)->setPropDir(1);
+      // trackrep for creating measurements
+      genfit::AbsTrackRep* repRef = new genfit::RKTrackRep(pdg);
+      genfit::StateOnPlane stateRef(repRef);
+      repRef->setPosMom(&stateRef, pos, mom);
 
-      if (!matFX) MaterialEffects::getInstance()->setNoEffects();
+      //repRef->setPropDir(1);
 
-      // remember original initial plane and state
-      DetPlane referencePlane;
-      TVectorT<double> referenceState(rephits->getState());
+      if (!matFX) genfit::MaterialEffects::getInstance()->setNoEffects();
 
-      // create smeared hits
-      std::vector<AbsRecoHit*> hits;
+      // remember original initial state
+      const genfit::StateOnPlane stateRefOrig(repRef);
 
-      // true values for left right. 0 for non wire hits
+      // create smeared measurements
+      std::vector<genfit::AbsMeasurement*> measurements;
+
+      // true values for left right. 0 for non wire measurements
       std::vector<int> leftRightTrue;
 
       TVector3 point, dir;
       int wireCounter = 0;
-      if (debug) std::cerr << "Start creating hits ... \n";
+      if (debug) std::cerr << "Start creating measurements ... \n";
       try{
         for (unsigned int i=0; i<measurementTypes.size(); ++i){
           // get current position and momentum
-          if (!HelixTest) rephits->getPosMom(rephits->getReferencePlane(), point, dir);
-          else{
+          if (!HelixTest) {
+            repRef->getPosMom(&stateRef, point, dir);
+            dir.SetMag(1);
+          }
+          else {
             double angle = alpha0 - sgn * pointDistDeg/180.*TMath::Pi()*i;
             TVector3 radius(R,0,0);
             radius.SetPhi(angle);
@@ -306,28 +311,9 @@ int main() {
             dir.SetPhi(mom.Phi()+(angle-alpha0));
             dir.SetMag(1);
           }
-          // create hit
-          if (i==0){ // get reference state
-            TVector3 planeNorm(dir);
-            planeNorm.SetTheta(thetaDetPlane*TMath::Pi()/180);
-            planeNorm.SetPhi(planeNorm.Phi()+phiDetPlane);
-            TVector3 z(0,0,1);
-            //z.SetTheta(thetaDetPlane*TMath::Pi()/180-TMath::PiOver2());
-            referencePlane = DetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm));
-            if (!HelixTest) rephits->extrapolate(referencePlane, referenceState);
-            else{
-              double AtW = dir*referencePlane.getNormal();
-              if (AtW<0) AtW *= -1.;
-              referenceState[0] = charge/momentum;
-              referenceState[1] = -1.*dir*referencePlane.getU()/AtW;
-              referenceState[2] = -1.*dir*referencePlane.getV()/AtW;
-              referenceState[3] = (point-referencePlane.getO())*referencePlane.getU();
-              referenceState[4] = (point-referencePlane.getO())*referencePlane.getV();
-              //std::cout<<"referenceState[2][0] "<<referenceState[2][0]<<"\n";
-            }
-          }
 
-          AbsRecoHit* hit;
+          // create measurement
+          genfit::AbsMeasurement* measurement;
 
           TVector3 currentWireDir(wireDir);
 
@@ -338,12 +324,13 @@ int main() {
             }
             else currentWireDir.Rotate(-skewAngle*TMath::Pi()/180, wireDir.Cross(perp));
           }
+          currentWireDir.SetMag(1.);
 
           TVector3 planeNorm(dir);
           planeNorm.SetTheta(thetaDetPlane*TMath::Pi()/180);
           planeNorm.SetPhi(planeNorm.Phi()+phiDetPlane);
-          TVector3 z(0,0,1);
-          TVector3 x(1,0,0);
+          static const TVector3 z(0,0,1);
+          static const TVector3 x(1,0,0);
 
           int lr = 1;
           TVector3 wirePerp;
@@ -360,52 +347,157 @@ int main() {
           else leftRightTrue.push_back(0);
 
           switch(measurementTypes[i]){
-            case 0: // 0: PixHit
-              hit = new PixHit(point, planeNorm, planeNorm.Cross(z), resolution, true);
-              //hit = new PixHit(point, z, x, resolution, true);
-              break;
+            case 0: {// 0: PixHit
+              genfit::SharedPlanePtr plane(new genfit::DetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)));
 
-            case 1: // 1: SpacepointHit
-              hit = new SpacepointHit(point, resolution, true);
-              break;
+              TVectorD hitCoords(2);
+              hitCoords(0) = gRandom->Gaus(0,resolution);
+              hitCoords(1) = gRandom->Gaus(0,resolution);
 
-            case 2: // 2: ProlateSpacepointHit
-              hit = new ProlateSpacepointHit(point, currentWireDir, resolution, resolutionWire, true);
-              break;
+              TMatrixDSym hitCov(2);
+              hitCov(0,0) = resolution*resolution;
+              hitCov(1,1) = resolution*resolution;
 
-            case 3: // 3: StripHit
-              hit = new StripHit(point, planeNorm, planeNorm.Cross(z), resolution, true);
-              break;
+              measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, 0, i, nullptr);
+              static_cast<genfit::PlanarMeasurement*>(measurement)->setPlane(plane, i);
+            }
+            break;
 
-            case 4: // 4: WireHit
-              hit = new WireHit(point-wirePerp-currentWireDir, point-wirePerp+currentWireDir, wirePerp.Mag(), resolution, true);
+            case 1: {// 1: SpacepointHit
+              TVectorD hitCoords(3);
+              hitCoords(0) = gRandom->Gaus(point.X(),resolution);
+              hitCoords(1) = gRandom->Gaus(point.Y(),resolution);
+              hitCoords(2) = gRandom->Gaus(point.Z(),resolution);
+
+              TMatrixDSym hitCov(3);
+              hitCov(0,0) = resolution*resolution;
+              hitCov(1,1) = resolution*resolution;
+              hitCov(2,2) = resolution*resolution;
+
+              measurement = new genfit::SpacePointMeasurement(hitCoords, hitCov, 1, i, nullptr);
+            }
+            break;
+
+            case 2: {// 2: ProlateSpacepointHit
+              TVectorD hitCoords(3);
+              hitCoords(0) = point.X();
+              hitCoords(1) = point.Y();
+              hitCoords(2) = point.Z();
+
+              TMatrixDSym hitCov(3);
+              hitCov(0,0) = resolution*resolution;
+              hitCov(1,1) = resolution*resolution;
+              hitCov(2,2) = resolutionWire*resolutionWire;
+
+              // rotation matrix
+              TVector3 xp = currentWireDir.Orthogonal();
+              xp.SetMag(1);
+              TVector3 yp = currentWireDir.Cross(xp);
+              yp.SetMag(1);
+
+              TMatrixD rot(3,3);
+
+              rot(0,0) = xp.X();  rot(0,1) = yp.X();  rot(0,2) = currentWireDir.X();
+              rot(1,0) = xp.Y();  rot(1,1) = yp.Y();  rot(1,2) = currentWireDir.Y();
+              rot(2,0) = xp.Z();  rot(2,1) = yp.Z();  rot(2,2) = currentWireDir.Z();
+
+              // smear
+              TVectorD smearVec(3);
+              smearVec(0) = resolution;
+              smearVec(1) = resolution;
+              smearVec(2) = resolutionWire;
+              smearVec *= rot;
+              hitCoords(0) += gRandom->Gaus(0, smearVec(0));
+              hitCoords(1) += gRandom->Gaus(0, smearVec(1));
+              hitCoords(2) += gRandom->Gaus(0, smearVec(2));
+
+
+              // rotate cov
+              hitCov.Similarity(rot);
+
+              measurement = new genfit::ProlateSpacePointMeasurement(hitCoords, hitCov, 2, i, nullptr);
+
+              static_cast<genfit::ProlateSpacePointMeasurement*>(measurement)->setLargestErrorDirection(currentWireDir);
+            }
+            break;
+
+            case 3: {// 3: StripHit
+              genfit::SharedPlanePtr plane(new genfit::DetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)));
+
+              TVectorD hitCoords(1);
+              hitCoords(0) = gRandom->Gaus(0,resolution);
+
+              TMatrixDSym hitCov(1);
+              hitCov(0,0) = resolution*resolution;
+
+              measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, 3, i, nullptr);
+              static_cast<genfit::PlanarMeasurement*>(measurement)->setPlane(plane, i);
+            }
+            break;
+
+            case 4: {// 4: WireHit
+              TVectorD hitCoords(7);
+              hitCoords(0) = (point-wirePerp-currentWireDir).X();
+              hitCoords(1) = (point-wirePerp-currentWireDir).Y();
+              hitCoords(2) = (point-wirePerp-currentWireDir).Z();
+
+              hitCoords(3) = (point-wirePerp+currentWireDir).X();
+              hitCoords(4) = (point-wirePerp+currentWireDir).Y();
+              hitCoords(5) = (point-wirePerp+currentWireDir).Z();
+
+              hitCoords(6) = gRandom->Gaus(wirePerp.Mag(), resolution);
+
+              TMatrixDSym hitCov(7);
+              hitCov(6,6) = resolution*resolution;
+
+
+              measurement = new genfit::WireMeasurement(hitCoords, hitCov, 4, i, nullptr);
               if (idealLRResolution){
-                ((WireHit*)hit)->setLeftRightResolution(lr);
+                static_cast<genfit::WireMeasurement*>(measurement)->setLeftRightResolution(lr);
               }
               ++wireCounter;
-              break;
+            }
+            break;
 
-            case 5: // 5: WirePointHit
-              hit = new WirePointHit(point-wirePerp-currentWireDir, point-wirePerp+currentWireDir, wirePerp.Mag(), currentWireDir.Mag(), resolution, resolutionWire, true);
+            case 5: {// 5: WirePointHit
+
+              TVectorD hitCoords(8);
+              hitCoords(0) = (point-wirePerp-currentWireDir).X();
+              hitCoords(1) = (point-wirePerp-currentWireDir).Y();
+              hitCoords(2) = (point-wirePerp-currentWireDir).Z();
+
+              hitCoords(3) = (point-wirePerp+currentWireDir).X();
+              hitCoords(4) = (point-wirePerp+currentWireDir).Y();
+              hitCoords(5) = (point-wirePerp+currentWireDir).Z();
+
+              hitCoords(6) = gRandom->Gaus(wirePerp.Mag(), resolution);
+              hitCoords(7) = gRandom->Gaus(currentWireDir.Mag(), resolutionWire);
+
+              TMatrixDSym hitCov(8);
+              hitCov(6,6) = resolution*resolution;
+              hitCov(7,7) = resolutionWire*resolutionWire;
+
+              measurement = new genfit::WirePointMeasurement(hitCoords, hitCov, 5, i, nullptr);
               if (idealLRResolution){
-                ((WireHit*)hit)->setLeftRightResolution(lr);
+                static_cast<genfit::WirePointMeasurement*>(measurement)->setLeftRightResolution(lr);
               }
               ++wireCounter;
-              break;
+            }
+            break;
 
             default:
-              std::cerr << "hit type not defined!" << std::endl;
+              std::cerr << "measurement type not defined!" << std::endl;
               exit(0);
           }
-          hits.push_back(hit);
+          measurements.push_back(measurement);
 
-          if (debug) {std::cout << "(smeared) hit coordinates"; hit->getRawHitCoord().Print();}
+          if (debug) {std::cout << "(smeared) measurement coordinates"; measurement->getRawHitCoords().Print();}
 
           if (!HelixTest) {
             // stepalong (approximately)
             dir.SetMag(pointDist);
             DetPlane pl(point+dir, dir);
-            rephits->extrapolate(pl);
+            repRef->extrapolate(pl);
           }
         }
 
@@ -417,7 +509,7 @@ int main() {
         continue; // here is a memleak!
       }
 
-      if (debug) std::cerr << "... done creating hits \n";
+      if (debug) std::cerr << "... done creating measurements \n";
 
 
 
@@ -431,11 +523,11 @@ int main() {
       //fitTrack->addTrackRep(rep->clone()); // check if everything works fine with more than one rep
       fitTrack->setSmoothing(smoothing);
 
-      // add hits
-      for(unsigned int i=0; i<hits.size(); ++i){
-        fitTrack->addHit(hits[i],
+      // add measurements
+      for(unsigned int i=0; i<measurements.size(); ++i){
+        fitTrack->addHit(measurements[i],
                          measurementTypes[i], //detector id
-                         i); // hit id
+                         i); // measurement id
       }
 
       // print trackCand
@@ -537,7 +629,7 @@ int main() {
       if (smoothing && useDaf) {
         for (unsigned int i=0; i<leftRightTrue.size(); ++i){
           int trueSide = leftRightTrue[i];
-          if (trueSide == 0) continue; // not a wire hit
+          if (trueSide == 0) continue; // not a wire measurement
           const TVectorT<double>& dafWeightLR = fitTrack->getBK(0)->getVector(BKKey_dafWeight, i);
           assert(dafWeightLR.GetNrows()==2);
 
@@ -565,7 +657,7 @@ int main() {
       if (debug && smoothing){
         std::cout << "smoothed positions \n";
         DetPlane plane;
-        for(unsigned int j = 0; j < measurementTypes.size(); j++) { // loop over all hits in the track
+        for(unsigned int j = 0; j < measurementTypes.size(); j++) { // loop over all measurements in the track
           TVectorT<double> state;
           TMatrixTSym<double> cov;
           TMatrixT<double> auxInfo;

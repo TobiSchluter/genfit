@@ -53,6 +53,11 @@ class AbsMeasurement : public TObject {
   TrackPoint* getTrackPoint() const {return trackPoint_;}
   void setTrackPoint(TrackPoint* tp) {trackPoint_ = tp;}
 
+  const TVectorD& getRawHitCoords() const {return rawHitCoords_;}
+  const TMatrixDSym& getRawHitCov() const {return rawHitCov_;}
+  int getDetId() const {return detId_;}
+  int getHitId() const {return hitId_;}
+
 
   /**
    * Construct (virtual) detector plane (use state's TrackRep). It's possible to make corrections to the plane here.
