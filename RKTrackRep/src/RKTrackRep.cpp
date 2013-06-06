@@ -584,6 +584,15 @@ void RKTrackRep::setPosMom(StateOnPlane* state, const TVector3& pos, const TVect
 }
 
 
+void RKTrackRep::setPosMom(StateOnPlane* stateInput, const TVectorD& state6) const {
+  if (state6.GetNrows()!=6){
+    Exception exc("RKTrackRep::setPosMom ==> state has to be 6d (x, y, z, px, py, pz)",__LINE__,__FILE__);
+    throw exc;
+  }
+  setPosMom(stateInput, TVector3(state6(0), state6(1), state6(2)), TVector3(state6(3), state6(4), state6(5)));
+}
+
+
 void RKTrackRep::setPosMomErr(MeasuredStateOnPlane* state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const {
 
   // TODO: test!
@@ -646,7 +655,7 @@ void RKTrackRep::setPosMomCov(MeasuredStateOnPlane* state, const TVector3& pos, 
 
 void RKTrackRep::setPosMomCov(MeasuredStateOnPlane* state, const TVectorD& state6, const TMatrixDSym& cov6x6) const {
 
-  if (state6.GetNrows()!=6 && *(int*)0){
+  if (state6.GetNrows()!=6){
     Exception exc("RKTrackRep::setPosMomCov ==> state has to be 6d (x, y, z, px, py, pz)",__LINE__,__FILE__);
     throw exc;
   }
