@@ -13,6 +13,7 @@ set(GENFIT_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/KalmanFittedStateOnPlane.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/KalmanFitterInfo.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/KalmanFitter.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/KalmanFitterRefTrack.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/MaterialInfo.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/MaterialProperties.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/MeasuredStateOnPlane.cpp

@@ -14,6 +14,7 @@ set(GENFIT_INCS
   ${CMAKE_CURRENT_SOURCE_DIR}/genfitLinkDef.h
   ${CMAKE_CURRENT_SOURCE_DIR}/KalmanFittedStateOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/KalmanFitter.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/KalmanFitterRefTrack.h
   ${CMAKE_CURRENT_SOURCE_DIR}/KalmanFitterInfo.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MaterialInfo.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MaterialProperties.h
