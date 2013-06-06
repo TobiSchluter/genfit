@@ -62,15 +62,16 @@ class ReferenceStateOnPlane : public StateOnPlane {
   const TMatrixDSym& getForwardNoiseMatrix() const {return forwardNoiseMatrix_;}
   const TMatrixDSym& getBackwardNoiseMatrix() const {return backwardNoiseMatrix_;}
 
+  virtual void Print(Option_t* option = "") const override;
 
  protected:
 
-  double forwardSegmentLength_;
-  double backwardSegmentLength_;
-  TMatrixD forwardTransportMatrix_;
-  TMatrixD backwardTransportMatrix_;
-  TMatrixDSym forwardNoiseMatrix_;
-  TMatrixDSym backwardNoiseMatrix_;
+  double forwardSegmentLength_; // Segment length from previous referenceState
+  double backwardSegmentLength_; //  Segment length from next referenceState
+  TMatrixD forwardTransportMatrix_; // transport matrix from previous referenceState
+  TMatrixD backwardTransportMatrix_; // transport matrix from next referenceState
+  TMatrixDSym forwardNoiseMatrix_; // noise matrix for transport from previous referenceState
+  TMatrixDSym backwardNoiseMatrix_; // noise matrix for transport from next referenceState
 
 
   //ClassDef(ReferenceStateOnPlane,0)

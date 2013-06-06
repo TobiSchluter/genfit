@@ -55,6 +55,8 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, AbsTrackRep* rep, double chi2, si
 
 void KalmanFitterRefTrack::processTrack(Track* tr, AbsTrackRep* rep)
 {
+  prepareTrack(tr, rep);
+
   /*currentState = new MeasuredStateOnPlane(rep);
   TVectorD seed(tr->getStateSeed());
   //seed[0] += 1e-2;  // just so we don't run through the perfectly correct coordinates
@@ -110,6 +112,74 @@ void KalmanFitterRefTrack::processTrack(Track* tr, AbsTrackRep* rep)
 
 void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
 
+  std::unique_ptr<MeasuredStateOnPlane> seedState;
+
+  // get seed state from previous fit if there is one
+  if (tr->getPointWithMeasurement(0)->hasFitterInfos()) {
+    KalmanFitterInfo* fitterInfo(nullptr);
+
+    // get the last fitter info with the correct TrackRep and see if it has the right type
+    std::vector< genfit::AbsFitterInfo* >& fitterInfos = tr->getPointWithMeasurement(0)->getFitterInfos();
+    for (int i=fitterInfos.size()-1; i>-1; --i) {
+      if (fitterInfos[i]->getRep() == rep)
+        fitterInfo = dynamic_cast<KalmanFitterInfo*>(fitterInfos[i]);
+      if (fitterInfo) {
+        if (fitterInfo->hasBackwardUpdate()) {
+          seedState = std::unique_ptr<MeasuredStateOnPlane>(new MeasuredStateOnPlane(*(fitterInfo->getBackwardUpdate())));
+          break;
+        }
+      }
+    }
+  }
+  // else create seed state from seed info of track
+  if (!seedState) {
+    seedState = std::unique_ptr<MeasuredStateOnPlane>(new MeasuredStateOnPlane(rep));
+    TMatrixDSym cov(rep->getDim());
+    cov.UnitMatrix();
+    cov *= blowUpFactor_;
+    rep->setPosMom(&*seedState, tr->getStateSeed());
+    seedState->setCov(cov);
+  }
+
+  double prevFSegmentLen(0);
+  TMatrixD prevFTransportMatrix(rep->getDim(), rep->getDim());
+  prevFTransportMatrix.UnitMatrix();
+
+  TMatrixD BTransportMatrix(rep->getDim(), rep->getDim());
+
+  TMatrixDSym prevFNoiseMatrix(rep->getDim());
+  TMatrixDSym BNoiseMatrix(rep->getDim());
+
+  for (unsigned int i=0; i<tr->getNumPoints(); ++i){
+    TrackPoint* trackPoint = tr->getPoint(i);
+
+    KalmanFitterInfo* fitterInfo = new KalmanFitterInfo(trackPoint, rep);
+    trackPoint->addFitterInfo(fitterInfo);
+
+    // check if we have a measurement
+    if (!trackPoint->hasRawMeasurements())
+      continue;
+
+    // Construct plane
+    SharedPlanePtr plane = trackPoint->getRawMeasurement(0)->constructPlane(&*seedState);
+
+    // do extrapolation and define reference state
+    double segmentLen = rep->extrapolateToPlane(&*seedState, plane);
+
+    rep->getBackwardJacobianAndNoise(BTransportMatrix, BNoiseMatrix);
+
+    fitterInfo->setReferenceState(new ReferenceStateOnPlane(*seedState, prevFSegmentLen, -segmentLen,
+                                                            prevFTransportMatrix, BTransportMatrix,
+                                                            prevFNoiseMatrix, BNoiseMatrix));
+
+    rep->getForwardJacobianAndNoise(prevFTransportMatrix, prevFNoiseMatrix);
+
+    // get MeasurementsInPlane
+    for (AbsMeasurement* measurement : trackPoint->getRawMeasurements()) {
+      fitterInfo->addMeasurementOnPlane(measurement->constructMeasurementOnPlane(rep, plane));
+    }
+
+  }
 }
 
 

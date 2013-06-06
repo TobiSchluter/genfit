@@ -72,7 +72,7 @@ void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane* stateInput, TVectorD
 
 
 void AbsTrackRep::Print(const Option_t*) const {
-  std::cout << "genfit::TrackRep, pdgCode = " << pdgCode_ << ". PropDir = " << propDir_ << "\n";
+  std::cout << "genfit::TrackRep, pdgCode = " << pdgCode_ << ". PropDir = " << (int)propDir_ << "\n";
 }
 
 

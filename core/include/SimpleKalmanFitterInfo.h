@@ -55,6 +55,7 @@ class SimpleKalmanFitterInfo : public AbsFitterInfo {
   void deleteReferenceInfo() override { /* exception?  */ };
   void deleteMeasurementInfo() override { /* what should be stored? */};
 
+  MeasuredStateOnPlane getFittedState(bool biased = false) const {return getSmoothedState();} // FIXME
   MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const override;
   MeasuredStateOnPlane getSmoothedState() const;
 

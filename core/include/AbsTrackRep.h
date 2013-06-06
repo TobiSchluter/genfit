@@ -82,6 +82,7 @@ class AbsTrackRep : public TObject {
 
 
   virtual void setPosMom(StateOnPlane* stateInput, const TVector3& pos, const TVector3& mom) const = 0;
+  virtual void setPosMom(StateOnPlane* stateInput, const TVectorD& state6) const = 0;
   virtual void setPosMomErr(MeasuredStateOnPlane* stateInput, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const = 0;
   virtual void setPosMomCov(MeasuredStateOnPlane* stateInput, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const = 0;
   virtual void setPosMomCov(MeasuredStateOnPlane* stateInput, const TVectorD& state6, const TMatrixDSym& cov6x6) const = 0;

@@ -19,6 +19,9 @@
 
 #include "ReferenceStateOnPlane.h"
 
+#include <iostream>
+
+
 namespace genfit {
 
 ReferenceStateOnPlane::ReferenceStateOnPlane() :
@@ -70,5 +73,20 @@ ReferenceStateOnPlane::ReferenceStateOnPlane(const StateOnPlane& state,
 {
   ;
 }
+
+
+void ReferenceStateOnPlane::Print(Option_t* option) const {
+  StateOnPlane::Print();
+
+  std::cout << " forwardSegmentLength: " << forwardSegmentLength_ << "\n";
+  std::cout << " forwardTransportMatrix: "; forwardTransportMatrix_.Print();
+  std::cout << " forwardNoiseMatrix: "; forwardNoiseMatrix_.Print();
+
+  std::cout << " backwardSegmentLength_: " << backwardSegmentLength_ << "\n";
+  std::cout << " backwardTransportMatrix: "; backwardTransportMatrix_.Print();
+  std::cout << " backwardNoiseMatrix: "; backwardNoiseMatrix_.Print();
+
+}
+
 
 } /* End of namespace genfit */

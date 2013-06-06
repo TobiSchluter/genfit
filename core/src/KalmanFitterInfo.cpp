@@ -231,7 +231,7 @@ void KalmanFitterInfo::Print(const Option_t*) const {
   std::cout << "genfit::KalmanFitterInfo \n";
 
   for (unsigned int i=0; i<measurementsOnPlane_.size(); ++i) {
-    std::cout << "MeasurementOnPlane Nr " << i <<":"; measurementsOnPlane_[i].Print();
+    std::cout << "MeasurementOnPlane Nr " << i <<": "; measurementsOnPlane_[i].Print();
   }
 
   if (referenceState_ != nullptr) {
