@@ -57,7 +57,7 @@ void MeasuredStateOnPlane::Print(Option_t* option) const {
     getRep()->getPosMomCov(this, pos, mom, cov);
     std::cout << " 3D position: "; pos.Print();
     std::cout << " 3D momentum: "; mom.Print();
-    std::cout << " 6D covariance: "; cov.Print();
+    //std::cout << " 6D covariance: "; cov.Print();
   }
 }
 

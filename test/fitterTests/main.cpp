@@ -119,12 +119,12 @@ int main() {
 
   const unsigned int nEvents = 1;
   const double BField = 15.;       // kGauss
-  const double momentum = 0.8;     // GeV
-  const double theta = 100;         // degree
+  const double momentum = 0.1;     // GeV
+  const double theta = 90;         // degree
   const double thetaDetPlane = 90;         // degree
   const double phiDetPlane = 0;         // degree
   const double pointDist = 5;      // cm; approx. distance between measurements generated w/ RKTrackRep
-  const double pointDistDeg = 10;      // degree; distance between measurements generated w/ helix model
+  const double pointDistDeg = 5;      // degree; distance between measurements generated w/ helix model
   const double resolution = 0.02;   // cm; resolution of generated measurements
 
   const double resolutionWire = 5*resolution;   // cm; resolution of generated measurements
@@ -136,14 +136,14 @@ int main() {
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
-  const int fitterId = 2; // 1 = SimpleKalman; 2 = KalmanFitterRefTrack; 3 = DAF
+  const int fitterId = 1; // 1 = SimpleKalman; 2 = KalmanFitterRefTrack; 3 = DAF
 
   const int pdg = 13;               // particle pdg code
 
   const bool smearPosMom = false;     // init the Reps with smeared pos and mom
   const double posSmear = 0;//20*resolution;     // cm
   const double momSmear = 0;//0.1*momentum;     // GeV
-  const double zSmearFac = 100;
+  const double zSmearFac = 10;
 
   const bool HelixTest = false;      // use helix for creating measurements
 
@@ -163,12 +163,15 @@ int main() {
   measurementTypes.push_back(0);
   measurementTypes.push_back(0);
   measurementTypes.push_back(0);
+  measurementTypes.push_back(0);
+  measurementTypes.push_back(0);
+  measurementTypes.push_back(0);
 
 
 
   // init fitters
   genfit::KalmanFitter simpleKalman;
-  genfit::KalmanFitterRefTrack kalmanFitterRefTrack;
+  genfit::KalmanFitterRefTrack kalmanFitterRefTrack(1);
 
 
   gRandom->SetSeed(10);

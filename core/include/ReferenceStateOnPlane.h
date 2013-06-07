@@ -40,6 +40,10 @@ class ReferenceStateOnPlane : public StateOnPlane {
   ReferenceStateOnPlane();
   ReferenceStateOnPlane(const TVectorD& state,
       SharedPlanePtr plane,
+      AbsTrackRep* rep);
+  ReferenceStateOnPlane(const StateOnPlane& state);
+  ReferenceStateOnPlane(const TVectorD& state,
+      SharedPlanePtr plane,
       AbsTrackRep* rep,
       double forwardSegmentLength,
       double backwardSegmentLength,
@@ -54,6 +58,15 @@ class ReferenceStateOnPlane : public StateOnPlane {
       const TMatrixD& backwardTransportMatrix,
       const TMatrixDSym& forwardNoiseMatrix,
       const TMatrixDSym& backwardNoiseMatrix);
+
+  void setForwardSegmentLength(double len) {forwardSegmentLength_ = len;}
+  void setBackwardSegmentLength(double len) {backwardSegmentLength_ = len;}
+  void setForwardTransportMatrix(const TMatrixD& mat) {forwardTransportMatrix_.ResizeTo(mat); forwardTransportMatrix_=mat;}
+  void setBackwardTransportMatrix(const TMatrixD& mat) {backwardTransportMatrix_.ResizeTo(mat); backwardTransportMatrix_=mat;}
+  void setTransportMatrix(const TMatrixD& mat, int direction) {if (direction >= 0) setForwardTransportMatrix(mat); else setBackwardTransportMatrix(mat);}
+  void setForwardNoiseMatrix(const TMatrixDSym& mat) {forwardNoiseMatrix_.ResizeTo(mat); forwardNoiseMatrix_=mat;}
+  void setBackwardNoiseMatrix(const TMatrixDSym& mat) {backwardNoiseMatrix_.ResizeTo(mat); backwardNoiseMatrix_=mat;}
+  void setNoiseMatrix(const TMatrixDSym& mat, int direction) {if (direction >= 0) setForwardNoiseMatrix(mat); else setBackwardNoiseMatrix(mat);}
 
   double getForwardSegmentLength() const {return forwardSegmentLength_;}
   double getBackwardSegmentLength() const {return backwardSegmentLength_;}

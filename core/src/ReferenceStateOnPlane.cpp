@@ -38,6 +38,32 @@ ReferenceStateOnPlane::ReferenceStateOnPlane() :
 
 ReferenceStateOnPlane::ReferenceStateOnPlane(const TVectorD& state,
     SharedPlanePtr plane,
+    AbsTrackRep* rep) :
+  StateOnPlane(state, plane, rep),
+  forwardSegmentLength_(0),
+  backwardSegmentLength_(0),
+  forwardTransportMatrix_(),
+  backwardTransportMatrix_(),
+  forwardNoiseMatrix_(),
+  backwardNoiseMatrix_()
+{
+  ;
+}
+
+ReferenceStateOnPlane::ReferenceStateOnPlane(const StateOnPlane& state) :
+  StateOnPlane(state),
+  forwardSegmentLength_(0),
+  backwardSegmentLength_(0),
+  forwardTransportMatrix_(),
+  backwardTransportMatrix_(),
+  forwardNoiseMatrix_(),
+  backwardNoiseMatrix_()
+{
+  ;
+}
+
+ReferenceStateOnPlane::ReferenceStateOnPlane(const TVectorD& state,
+    SharedPlanePtr plane,
     AbsTrackRep* rep,
     double forwardSegmentLength,
     double backwardSegmentLength,

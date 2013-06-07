@@ -192,8 +192,9 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInf
   //cov.Print();
 
   stateVector += update;
-  covSumInv.Similarity(CHt);
+  covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
   cov -= covSumInv;
+  std::cout << "updated cov: "; cov.Print();
 
   TVectorD resNew(measurement - H*stateVector);
   std::cout << "Residual New = (" << resNew(0);

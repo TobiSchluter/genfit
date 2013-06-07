@@ -47,8 +47,7 @@ class KalmanFitterRefTrack : public AbsFitter {
   void prepareTrack(Track* tr, AbsTrackRep* rep);
 
  private:
-  void processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
-      const KalmanFitterInfo* prevFi, double& chi2, size_t& ndf, int direction);
+  void processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, size_t& ndf, int direction);
 
   // Maximum number of iterations to attempt.  Forward and backward
   // are counted as one iteration.

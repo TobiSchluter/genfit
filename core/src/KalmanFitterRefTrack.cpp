@@ -51,7 +51,7 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, AbsTrackRep* rep, double chi2, si
         tp = tr->getPointWithMeasurement(-i-1);
 
       KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(-1));
-      processTrackPoint(tr, tp, fi, prevFi, chi2, ndf, direction);
+      processTrackPoint(fi, prevFi, chi2, ndf, direction);
       prevFi = fi;
   }
 }
@@ -149,14 +149,14 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
   std::cout << "seed state  "; seedState->Print();
 #endif
 
-  double prevFSegmentLen(0);
-  TMatrixD prevFTransportMatrix(rep->getDim(), rep->getDim());
-  prevFTransportMatrix.UnitMatrix();
-
+  TMatrixD FTransportMatrix(rep->getDim(), rep->getDim());
+  FTransportMatrix.UnitMatrix();
   TMatrixD BTransportMatrix(rep->getDim(), rep->getDim());
 
-  TMatrixDSym prevFNoiseMatrix(rep->getDim());
+  TMatrixDSym FNoiseMatrix(rep->getDim());
   TMatrixDSym BNoiseMatrix(rep->getDim());
+
+  KalmanFitterInfo* prevFitterInfo(nullptr);
 
   for (unsigned int i=0; i<tr->getNumPoints(); ++i){
     TrackPoint* trackPoint = tr->getPoint(i);
@@ -165,27 +165,39 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
     if (!trackPoint->hasRawMeasurements())
       continue;
 
-    // create new fitterInfo
+    // create new fitterInfo and ReferenceState
     KalmanFitterInfo* fitterInfo = new KalmanFitterInfo(trackPoint, rep);
     trackPoint->addFitterInfo(fitterInfo);
+    ReferenceStateOnPlane* refState = new ReferenceStateOnPlane(*seedState);
+    fitterInfo->setReferenceState(refState);
 
     // Construct plane
     SharedPlanePtr plane = trackPoint->getRawMeasurement(0)->constructPlane(&*seedState);
 
-    // do extrapolation and define reference state
+    // do extrapolation and set reference state infos
     double segmentLen = rep->extrapolateToPlane(&*seedState, plane);
-
+    if (i>0) rep->getForwardJacobianAndNoise(FTransportMatrix, FNoiseMatrix);
     rep->getBackwardJacobianAndNoise(BTransportMatrix, BNoiseMatrix);
 
-    fitterInfo->setReferenceState(new ReferenceStateOnPlane(*seedState, segmentLen, 0, //FIXME set backward segment length (need extrapolation to next measurement)
-                                                            prevFTransportMatrix, BTransportMatrix,
-                                                            prevFNoiseMatrix, BNoiseMatrix));
+    if (i==0) { // if we are at first measurement and seed state is defined somewhere else, still set forward info to default
+      segmentLen = 0;
+    }
 
-    rep->getForwardJacobianAndNoise(prevFTransportMatrix, prevFNoiseMatrix);
+    refState->setForwardSegmentLength(segmentLen);
+    refState->setForwardTransportMatrix(FTransportMatrix);
+    refState->setForwardNoiseMatrix(FNoiseMatrix);
 
-    prevFSegmentLen = segmentLen;
+    if (prevFitterInfo != nullptr) {
+      ReferenceStateOnPlane* prevRefState =  prevFitterInfo->getReferenceState();
+      prevRefState->setBackwardSegmentLength(-segmentLen);
+      prevRefState->setBackwardTransportMatrix(BTransportMatrix);
+      prevRefState->setBackwardNoiseMatrix(BNoiseMatrix);
+    }
+
+    prevFitterInfo = fitterInfo;
 
 
+    // set seed as prediction if at first measurement
     if (i==0) {
       fitterInfo->setForwardPrediction(new MeasuredStateOnPlane(*seedState));
     }
@@ -196,12 +208,19 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
     }
 
   }
+
+  // set backward info for last reference state
+  ReferenceStateOnPlane* prevRefState =  prevFitterInfo->getReferenceState();
+  prevRefState->setBackwardSegmentLength(0);
+  BTransportMatrix.UnitMatrix();
+  prevRefState->setBackwardTransportMatrix(BTransportMatrix);
+  BNoiseMatrix.Zero();
+  prevRefState->setBackwardNoiseMatrix(BNoiseMatrix);
 }
 
 
 void
-KalmanFitterRefTrack::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
-      const KalmanFitterInfo* prevFi, double& chi2, size_t& ndf, int direction)
+KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, size_t& ndf, int direction)
 {
 
   const MeasurementOnPlane& m = fi->getAvgWeightedMeasurementOnPlane();
@@ -219,24 +238,28 @@ KalmanFitterRefTrack::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterI
     C += N;
     fi->setPrediction(new MeasuredStateOnPlane(dp + fi->getReferenceState()->getState(), C, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep()), direction);
 #ifdef DEBUG
-    std::cout << "r_{k-1} "; prevFi->getReferenceState()->getState().Print();
+    std::cout << "\033[31m";
+    std::cout << "p_{k-1,r} "; prevFi->getReferenceState()->getState().Print();
 #endif
   }
   else {
     dp = fi->getPrediction(direction)->getState() - fi->getReferenceState()->getState();
     C = fi->getPrediction(direction)->getCov();
 #ifdef DEBUG
-    std::cout << "r_{k} "; fi->getReferenceState()->getState().Print();
+    std::cout << "\033[31m";
+    std::cout << "p_{k,r} "; fi->getReferenceState()->getState().Print();
 #endif
   }
 
 #ifdef DEBUG
   std::cout << "Δp_{k|k-1} "; dp.Print();
-  std::cout << "C_{k|k-1}  "; C.Print();
+  std::cout << " p_{k|k-1} "; fi->getPrediction(direction)->getState().Print();
+  std::cout << " C_{k|k-1} "; C.Print();
+  std::cout << "\033[0m";
 #endif
 
   // update
-  const TVectorD& dm = m.getState() - (m.getHMatrix() * fi->getReferenceState()->getState());
+  const TVectorD& dm = m.getState() - (m.getHMatrix() * fi->getReferenceState()->getState()); // \delta m_k = m_k - H_k p_{k,r}
 
   TMatrixDSym covSumInv(C); // (V_k + H_k C_{k|k-1} H_k^T)^(-1)
   covSumInv.Similarity(m.getHMatrix());
@@ -245,18 +268,27 @@ KalmanFitterRefTrack::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterI
 
   TMatrixD CHt(C, TMatrixD::kMultTranspose, m.getHMatrix());
 
-  const TVectorD& res = dm - m.getHMatrix()*dp;
+  const TVectorD& res = dm - m.getHMatrix()*dp; //
+  //TVectorD res(dm); res.Zero(); // FIXME this is only a test!
+#ifdef DEBUG
+  std::cout << "\033[34m";
+  std::cout << "m   "; m.getState().Print();
+  std::cout << "res "; res.Print();
+  std::cout << "\033[0m";
+#endif
   TVectorD updated(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
   updated += dp;
   updated += fi->getReferenceState()->getState();
 
-  covSumInv.Similarity(CHt);
+  covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
   C -= covSumInv; // updated Cov
 
 #ifdef DEBUG
+  std::cout << "\033[32m";
   std::cout << "Δp_{k|k} "; (updated - fi->getReferenceState()->getState()).Print();
   std::cout << " p_{k|k} "; updated.Print();
   std::cout << " C_{k|k} "; C.Print();
+  std::cout << "\033[0m";
 #endif
 
   // Calculate chi²
