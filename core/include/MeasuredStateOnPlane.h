@@ -46,9 +46,9 @@ class MeasuredStateOnPlane : public StateOnPlane {
   const TMatrixDSym& getCov() const {return cov_;}
   TMatrixDSym& getCov() {return cov_;}
 
-  void setStateCov(const TVectorD& state, const TMatrixDSym& cov) {state_ = state; cov_ = cov;}
-  void setStateCovPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane) {setStatePlane(state, plane); cov_ = cov;}
-  void setCov(const TMatrixDSym& cov) {cov_ = cov;}
+  void setStateCov(const TVectorD& state, const TMatrixDSym& cov) {setState(state); setCov(cov);}
+  void setStateCovPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane) {setStatePlane(state, plane); setCov(cov);}
+  void setCov(const TMatrixDSym& cov) {if(cov_.GetNrows() == 0) cov_.ResizeTo(cov); cov_ = cov;}
 
   virtual void Print(Option_t* option = "") const override;
 

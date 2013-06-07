@@ -136,7 +136,7 @@ int main() {
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
-  const int fitterId = 1; // 1 = SimpleKalman; 2 = KalmanFitterRefTrack; 3 = DAF
+  const int fitterId = 2; // 1 = SimpleKalman; 2 = KalmanFitterRefTrack; 3 = DAF
 
   const int pdg = 13;               // particle pdg code
 
@@ -171,7 +171,7 @@ int main() {
 
   // init fitters
   genfit::KalmanFitter simpleKalman;
-  genfit::KalmanFitterRefTrack kalmanFitterRefTrack(1);
+  genfit::KalmanFitterRefTrack kalmanFitterRefTrack;
 
 
   gRandom->SetSeed(10);
@@ -568,8 +568,8 @@ int main() {
         if (debug) std::cerr<<"fitter is finished!"<<std::endl;
       }
       catch(genfit::Exception& e){
-        e.what();
-        std::cerr<<"Exception, next track"<<std::endl;
+        std::cer << e.what();
+        std::cerr << "Exception, next track" << std::endl;
         continue;
       }
 

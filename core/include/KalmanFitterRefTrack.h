@@ -40,7 +40,7 @@ class KalmanFitterRefTrack : public AbsFitter {
   /**
    * Needs a prepared track!
    */
-  void fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf, int direction);
+  void fitTrack(Track* tr, AbsTrackRep* rep, double& chi2, size_t& ndf, int direction);
 
   void processTrack(Track* tr, AbsTrackRep* rep) override;
 

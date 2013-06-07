@@ -36,7 +36,7 @@
 using namespace genfit;
 
 
-void KalmanFitterRefTrack::fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf, int direction)
+void KalmanFitterRefTrack::fitTrack(Track* tr, AbsTrackRep* rep, double& chi2, size_t& ndf, int direction)
 {
   chi2 = 0;
   ndf = 0;
@@ -62,6 +62,13 @@ void KalmanFitterRefTrack::processTrack(Track* tr, AbsTrackRep* rep)
 
   // TODO: try catch block, what if fit fails?
 
+  double oldChi2FW = 1e6;
+  double oldChi2BW = 1e6;
+  double chi2FW = 0;
+  size_t ndfFW = 0;
+  double chi2BW = 0;
+  size_t ndfBW = 0;
+
   for (unsigned int i=0; i<maxIterations_; ++i) {
 
 #ifdef DEBUG
@@ -76,19 +83,12 @@ void KalmanFitterRefTrack::processTrack(Track* tr, AbsTrackRep* rep)
 #endif
 
     // fit forward
-    double oldChi2FW = 1e6;
-    double oldChi2BW = 1e6;
-    double chi2FW = 0;
-    size_t ndfFW = 0;
-
     fitTrack(tr, rep, chi2FW, ndfFW, +1);
 
     // fit backward
     KalmanFitterInfo* lastInfo = static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(-1)->getFitterInfo(-1));
     lastInfo->setBackwardPrediction(new MeasuredStateOnPlane(*(lastInfo->getForwardUpdate())));
     lastInfo->getBackwardPrediction()->getCov() *= blowUpFactor_;  // blow up cov
-    double chi2BW = 0;
-    size_t ndfBW = 0;
 
     fitTrack(tr, rep, chi2BW, ndfBW, -1);
 
@@ -284,6 +284,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   C -= covSumInv; // updated Cov
 
 #ifdef DEBUG
+  std::cout << " C update "; covSumInv.Print();
   std::cout << "\033[32m";
   std::cout << "Δp_{k|k} "; (updated - fi->getReferenceState()->getState()).Print();
   std::cout << " p_{k|k} "; updated.Print();
@@ -312,6 +313,8 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
 #endif
 
 
-  fi->setUpdate(new KalmanFittedStateOnPlane(updated, C, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(), chi2inc, ndfInc), direction);
+  KalmanFittedStateOnPlane* upState = new KalmanFittedStateOnPlane(updated, C, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(), chi2inc, ndfInc);
+  upState->setAuxInfo(fi->getReferenceState()->getAuxInfo());
+  fi->setUpdate(upState, direction);
 
 }
