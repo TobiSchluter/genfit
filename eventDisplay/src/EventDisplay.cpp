@@ -45,7 +45,7 @@
 
 namespace genfit {
 
-EventDisplay* EventDisplay::eventDisplay = NULL;
+EventDisplay* EventDisplay::eventDisplay = nullptr;
 
 EventDisplay::EventDisplay() {
 
@@ -74,7 +74,7 @@ double EventDisplay::getErrScale() { return fErrorScale; }
 
 EventDisplay* EventDisplay::getInstance() {
 
-	if(eventDisplay == NULL) {
+	if(eventDisplay == nullptr) {
 		eventDisplay = new EventDisplay();
 	}
 	return eventDisplay;
@@ -169,13 +169,13 @@ void EventDisplay::open() {
 	// draw the geometry, does not really work yet. If it's fixed, the docu in the header file should be changed.
 	if(drawGeometry) {
 		TGeoNode* top_node = gGeoManager->GetTopNode();
-		assert(top_node != NULL);
+		assert(top_node != nullptr);
 
 		//Set transparency & color of geometry
 		TObjArray* volumes = gGeoManager->GetListOfVolumes();
 		for(int i = 0; i < volumes->GetEntriesFast(); i++) {
 			TGeoVolume* volume = dynamic_cast<TGeoVolume*>(volumes->At(i));
-			assert(volume != NULL);
+			assert(volume != nullptr);
 			volume->SetLineColor(12);
 			volume->SetTransparency(50);
 		}
@@ -256,23 +256,21 @@ void EventDisplay::drawEvent(unsigned int id) {
 		unsigned int irep = track->getCardinalRepID();
 
 		unsigned int numhits = track->getNumPointsWithMeasurement();
-		double charge = rep->getCharge();
-
-		bool smoothing = track->getSmoothing();
 		
-		if(rep->getStatusFlag()) {
+		// FIXME
+		/*if(rep->getStatusFlag()) {
 			std::cout << "Warning: Trying to display a track with status flag != 0...";
 			if(smoothing) {
 				std::cout << "trying without smoothing!";
 				smoothing = false;
 			}
 			std::cout << std::endl;
-		}
+		}*/
 
 		TVector3 track_pos;
 		TVector3 old_track_pos;
 
-		TEveStraightLineSet* track_lines = NULL;
+		TEveStraightLineSet* track_lines = nullptr;
 
 		// saving the initial state of the representation -----------------------------------------
 		DetPlane initial_plane = rep->getReferencePlane();
@@ -295,10 +293,10 @@ void EventDisplay::drawEvent(unsigned int id) {
 				TVectorT<double> state;
 				TMatrixTSym<double> cov;
 				TMatrixT<double> auxInfo;
-				try{
+				try {
           Tools::getBiasedSmoothedData(track, irep, j, state, cov, plane, auxInfo);
           rep->setData(state, plane, &cov, &auxInfo);
-        }catch(Exception& e) {
+        } catch(Exception& e) {
           std::cerr << "Error: Exception caught (getSmoothedData): Hit " << j << " in Track " << i << " skipped!" << std::endl;
           std::cerr << e.what();
           if (e.isFatal()) {
@@ -347,7 +345,7 @@ void EventDisplay::drawEvent(unsigned int id) {
 
 			int hit_coords_dim = hit_coords.GetNrows();
 
-			if(dynamic_cast<AbsPlanarHit*>(hit) != NULL) {
+			if(dynamic_cast<AbsPlanarHit*>(hit) != nullptr) {
 				planar_hit = true;
 				if(hit_coords_dim == 1) {
 					hit_u = hit_coords(0);
@@ -359,17 +357,17 @@ void EventDisplay::drawEvent(unsigned int id) {
 					hit_res_u = hit_cov(0,0);
 					hit_res_v = hit_cov(1,1);
 				}
-			} else if (dynamic_cast<AbsSpacepointHit*>(hit) != NULL) {
+			} else if (dynamic_cast<AbsSpacepointHit*>(hit) != nullptr) {
 				space_hit = true;
 				plane_size = 4;
-      } else if (dynamic_cast<AbsWireHit*>(hit) != NULL) {
+      } else if (dynamic_cast<AbsWireHit*>(hit) != nullptr) {
 				wire_hit = true;
 				hit_u = hit_coords(0);
 				hit_v = v*(track_pos-o); // move the covariance tube so that the track goes through it
 				hit_res_u = hit_cov(0,0);
 				hit_res_v = 4;
 				plane_size = 4;
-				if (dynamic_cast<AbsWirepointHit*>(hit) != NULL) {
+				if (dynamic_cast<AbsWirepointHit*>(hit) != nullptr) {
 				  wirepoint_hit = true;
 				  hit_v = hit_coords(1);
 				  hit_res_v = hit_cov(1,1);
@@ -399,7 +397,7 @@ void EventDisplay::drawEvent(unsigned int id) {
 
 			// draw track if corresponding option is set ------------------------------------------
 			if(drawTrack) {
-				if(track_lines == NULL) track_lines = new TEveStraightLineSet;
+				if(track_lines == nullptr) track_lines = new TEveStraightLineSet;
 				if(j > 0) track_lines->AddLine(old_track_pos(0), old_track_pos(1), old_track_pos(2), track_pos(0), track_pos(1), track_pos(2));
 				old_track_pos = track_pos;
 				if(charge > 0) {
@@ -642,7 +640,7 @@ void EventDisplay::drawEvent(unsigned int id) {
     }
 		// done resetting -------------------------------------------------------------------------
 
-		if(track_lines != NULL) gEve->AddElement(track_lines);
+		if(track_lines != nullptr) gEve->AddElement(track_lines);
 
 	}
 

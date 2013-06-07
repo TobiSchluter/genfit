@@ -50,18 +50,24 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
   virtual KalmanFitterInfo* clone() const override;
 
-  const ReferenceStateOnPlane* getReferenceState() const {return referenceState_;}
-  const MeasuredStateOnPlane* getForwardPrediction() const {return forwardPrediction_;}
-  const KalmanFittedStateOnPlane* getForwardUpdate() const {return forwardUpdate_;}
-  const MeasuredStateOnPlane* getBackwardPrediction() const {return backwardPrediction_;}
-  const KalmanFittedStateOnPlane* getBackwardUpdate() const {return backwardUpdate_;}
-  const std::vector< genfit::MeasurementOnPlane >& getMeasurementsOnPlane() const {return measurementsOnPlane_;}
-  const MeasurementOnPlane& getMeasurementOnPlane(unsigned int i) const {return measurementsOnPlane_.at(i);}
+  ReferenceStateOnPlane* getReferenceState() const {return referenceState_;}
+  MeasuredStateOnPlane* getForwardPrediction() const {return forwardPrediction_;}
+  MeasuredStateOnPlane* getBackwardPrediction() const {return backwardPrediction_;}
+  MeasuredStateOnPlane* getPrediction(int direction) const {if (direction >=0) return forwardPrediction_; return backwardPrediction_;}
+  KalmanFittedStateOnPlane* getForwardUpdate() const {return forwardUpdate_;}
+  KalmanFittedStateOnPlane* getBackwardUpdate() const {return backwardUpdate_;}
+  KalmanFittedStateOnPlane* getUpdate(int direction) const {if (direction >=0) return forwardUpdate_; return backwardUpdate_;}
+  const std::vector< genfit::MeasurementOnPlane* >& getMeasurementsOnPlane() const {return measurementsOnPlane_;}
+  const MeasurementOnPlane* getMeasurementOnPlane(unsigned int i) const {return measurementsOnPlane_.at(i);}
+  /**
+   * Get weighted mean of all measurements.
+   */
+  MeasurementOnPlane getAvgWeightedMeasurementOnPlane() const;
 
   bool hasReferenceState() const {return (referenceState_ != nullptr);}
   bool hasForwardPrediction() const {return (forwardPrediction_ != nullptr);}
-  bool hasForwardUpdate() const {return (forwardUpdate_ != nullptr);}
   bool hasBackwardPrediction() const {return (backwardPrediction_ != nullptr);}
+  bool hasForwardUpdate() const {return (forwardUpdate_ != nullptr);}
   bool hasBackwardUpdate() const {return (backwardUpdate_ != nullptr);}
   unsigned int getNumMeasurements() {return measurementsOnPlane_.size();}
 
@@ -74,11 +80,13 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
   void setReferenceState(ReferenceStateOnPlane* referenceState);
   void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction);
-  void setForwardUpdate(KalmanFittedStateOnPlane* forwardUpdate);
   void setBackwardPrediction(MeasuredStateOnPlane* backwardPrediction);
+  void setPrediction(MeasuredStateOnPlane* prediction, int direction)  {if (direction >=0) setForwardPrediction(prediction); else setBackwardPrediction(prediction);}
+  void setForwardUpdate(KalmanFittedStateOnPlane* forwardUpdate);
   void setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate);
-  void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane >& measurementsOnPlane) {measurementsOnPlane_ = measurementsOnPlane;}
-  void addMeasurementOnPlane(const MeasurementOnPlane& measurementOnPlane) {measurementsOnPlane_.push_back(measurementOnPlane);}
+  void setUpdate(KalmanFittedStateOnPlane* update, int direction)  {if (direction >=0) setForwardUpdate(update); else setBackwardUpdate(update);}
+  void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
+  void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) {measurementsOnPlane_.push_back(measurementOnPlane);}
 
   void deleteForwardInfo() override;
   void deleteBackwardInfo() override;
@@ -101,7 +109,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
    *  Number of measurements must be equal to size of #fRawMeasurements in #GFTrackPoint.
    * @element-type MeasurementOnPlane
    */
-  std::vector< genfit::MeasurementOnPlane > measurementsOnPlane_;
+  std::vector< genfit::MeasurementOnPlane* > measurementsOnPlane_; // Ownership
 
 
   //ClassDef(KalmanFitterInfo,1)

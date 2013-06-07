@@ -62,6 +62,11 @@ KalmanFitterInfo::~KalmanFitterInfo() {
     delete backwardPrediction_;
   if (backwardUpdate_ != nullptr)
     delete backwardUpdate_;
+
+  for (MeasurementOnPlane* m : measurementsOnPlane_) {
+    if (m != nullptr)
+      delete m;
+  }
 }
 
 
@@ -77,6 +82,51 @@ KalmanFitterInfo* KalmanFitterInfo::clone() const {
     retVal->backwardPrediction_ = new MeasuredStateOnPlane(*(this->backwardPrediction_));
   if (this->backwardUpdate_ != nullptr)
     retVal->backwardUpdate_ = new KalmanFittedStateOnPlane(*(this->backwardUpdate_));
+
+  return retVal;
+}
+
+
+MeasurementOnPlane KalmanFitterInfo::getAvgWeightedMeasurementOnPlane() const {
+
+  MeasurementOnPlane retVal(*(measurementsOnPlane_[0]));
+  retVal.setWeight(1);
+
+  if(measurementsOnPlane_.size() == 1) {
+    if (retVal.getWeight() != 1.)
+      retVal.getCov() *= 1. / retVal.getWeight();
+  }
+  else { // more than one hit
+    retVal.getState().Zero();
+    retVal.getCov().Zero();
+
+    TMatrixDSym covInv;
+    std::vector<TMatrixDSym> weightedCovInvs;
+
+    for(unsigned int i=0; i<measurementsOnPlane_.size(); ++i) {
+
+      if (i>0) {
+        // make sure we have compatible measurement types
+        // TODO: replace with Exceptions!
+        assert(measurementsOnPlane_[i]->getPlane() == measurementsOnPlane_[0]->getPlane());
+        assert(measurementsOnPlane_[i]->getHMatrix() == measurementsOnPlane_[0]->getHMatrix());
+      }
+
+      tools::invertMatrix(measurementsOnPlane_[i]->getCov(), covInv); // invert cov
+      covInv *= measurementsOnPlane_[i]->getWeight(); // weigh cov
+      weightedCovInvs.push_back(covInv); // cov is already inverted and weighted
+      retVal.getCov() += covInv; // cov is already inverted and weighted
+    }
+
+    // invert fHitCov
+    tools::invertMatrix(retVal.getCov());
+
+    //set the weighted-mean coord
+    for(unsigned int i=0; i<measurementsOnPlane_.size(); ++i) {
+      retVal.getState() += weightedCovInvs[i] * measurementsOnPlane_[i]->getState();
+    }
+    retVal.getState() *= retVal.getCov();
+  }
 
   return retVal;
 }
@@ -109,28 +159,28 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeas
   // TODO: Test
 
   MeasuredStateOnPlane smoothedState = getFittedState(biased);
-  const MeasurementOnPlane& measurement = measurementsOnPlane_.at(iMeasurement);
-  SharedPlanePtr plane = measurement.getPlane();
+  const MeasurementOnPlane* measurement = measurementsOnPlane_.at(iMeasurement);
+  SharedPlanePtr plane = measurement->getPlane();
 
   // check equality of planes and reps
   if(*(smoothedState.getPlane()) != *plane) {
     Exception e("KalmanFitterInfo::getResidual: smoothedState and measurement are not defined in the same plane.", __LINE__,__FILE__);
     throw e;
   }
-  if(smoothedState.getRep() != measurement.getRep()) {
+  if(smoothedState.getRep() != measurement->getRep()) {
     Exception e("KalmanFitterInfo::getResidual: smoothedState and measurement are not defined wrt the same TrackRep.", __LINE__,__FILE__);
     throw e;
   }
 
-  const TMatrixD& H = measurement.getHMatrix();
+  const TMatrixD& H = measurement->getHMatrix();
 
-  TVectorD res = measurement.getState() - (H * smoothedState.getState());
+  TVectorD res = measurement->getState() - (H * smoothedState.getState());
 
   TMatrixDSym cov(smoothedState.getCov());
   cov.Similarity(H);
-  cov += measurement.getCov();
+  cov += measurement->getCov();
 
-  return MeasurementOnPlane(res, cov, plane, smoothedState.getRep(), H, measurement.getWeight());
+  return MeasurementOnPlane(res, cov, plane, smoothedState.getRep(), H, measurement->getWeight());
 }
 
 
@@ -162,6 +212,16 @@ void KalmanFitterInfo::setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdat
   if (backwardUpdate_ != nullptr)
     delete backwardUpdate_;
   backwardUpdate_ = backwardUpdate;
+}
+
+
+void KalmanFitterInfo::setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane) {
+  for (MeasurementOnPlane* m : measurementsOnPlane_) {
+    if (m != nullptr)
+      delete m;
+  }
+
+  measurementsOnPlane_ = measurementsOnPlane;
 }
 
 
@@ -231,7 +291,7 @@ void KalmanFitterInfo::Print(const Option_t*) const {
   std::cout << "genfit::KalmanFitterInfo \n";
 
   for (unsigned int i=0; i<measurementsOnPlane_.size(); ++i) {
-    std::cout << "MeasurementOnPlane Nr " << i <<": "; measurementsOnPlane_[i].Print();
+    std::cout << "MeasurementOnPlane Nr " << i <<": "; measurementsOnPlane_[i]->Print();
   }
 
   if (referenceState_ != nullptr) {

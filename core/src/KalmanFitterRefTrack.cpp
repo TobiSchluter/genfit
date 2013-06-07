@@ -23,6 +23,7 @@
 
 #include <TDecompChol.h>
 
+#include "Tools.h"
 #include "Track.h"
 #include "TrackPoint.h"
 #include "Exception.h"
@@ -30,72 +31,75 @@
 #include "KalmanFitterRefTrack.h"
 #include "KalmanFitterInfo.h"
 
+#define DEBUG
+
 using namespace genfit;
 
 
 void KalmanFitterRefTrack::fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf, int direction)
 {
-  /*chi2 = 0;
+  chi2 = 0;
   ndf = 0;
-  std::cout << tr->getNumPoints() << " TrackPoints in this track." << std::endl;
-  for (size_t i = 0; i < tr->getNumPoints(); ++i)
-    {
+  KalmanFitterInfo* prevFi(nullptr);
+  std::cout << tr->getNumPoints() << " TrackPoints with measurements in this track." << std::endl;
+  for (size_t i = 0; i < tr->getNumPointsWithMeasurement(); ++i) {
       TrackPoint *tp = 0;
       assert(direction == +1 || direction == -1);
       if (direction == +1)
-	tp = tr->getPoint(i);
+        tp = tr->getPointWithMeasurement(i);
       else if (direction == -1)
-	tp = tr->getPoint(-i-1);
-      KalmanFitterInfo* fi = new KalmanFitterInfo(tp, rep);
-      tp->addFitterInfo(fi);
-      processTrackPoint(tr, tp, fi, rep, chi2, ndf, direction);
-    }*/
+        tp = tr->getPointWithMeasurement(-i-1);
+
+      KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(-1));
+      processTrackPoint(tr, tp, fi, prevFi, chi2, ndf, direction);
+      prevFi = fi;
+  }
 }
 
 
 void KalmanFitterRefTrack::processTrack(Track* tr, AbsTrackRep* rep)
 {
-  prepareTrack(tr, rep);
 
-  /*currentState = new MeasuredStateOnPlane(rep);
-  TVectorD seed(tr->getStateSeed());
-  //seed[0] += 1e-2;  // just so we don't run through the perfectly correct coordinates
-  TMatrixDSym cov(6);
-  for (int i = 0; i < 6; i++)
-    cov(i,i) = blowUpFactor_;    // Make independently configurable?
-  rep->setPosMomCov(currentState, seed, cov);
+  // TODO: try catch block, what if fit fails?
 
-  double oldChi2FW = 1e6;
-  double oldChi2BW = 1e6;
-  size_t nIt = 0;
-  for(;;) {
-    std::cout << "\033[1;21mstate pre" << std::endl;
-    currentState->Print();
-    std::cout << "\033[0mfitting" << std::endl;
+  for (unsigned int i=0; i<maxIterations_; ++i) {
+
+#ifdef DEBUG
+    std::cout << " KalmanFitterRefTrack::processTrack, iteration nr. " << i << "\n";
+#endif
+
+    // prepare
+    prepareTrack(tr, rep);
+
+#ifdef DEBUG
+    std::cout << "Prepared Track:"; tr->Print();
+#endif
+
+    // fit forward
+    double oldChi2FW = 1e6;
+    double oldChi2BW = 1e6;
     double chi2FW = 0;
     size_t ndfFW = 0;
-    fitTrack(tr, rep, chi2FW, ndfFW, +1);
-    std::cout << "\033[1;21mstate post forward" << std::endl;
-    currentState->Print();
-    std::cout << "\033[0m";
 
-    // Backwards iteration:
-    currentState->getCov() *= blowUpFactor_;  // blow up cov
+    fitTrack(tr, rep, chi2FW, ndfFW, +1);
+
+    // fit backward
+    KalmanFitterInfo* lastInfo = static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(-1)->getFitterInfo(-1));
+    lastInfo->setBackwardPrediction(new MeasuredStateOnPlane(*(lastInfo->getForwardUpdate())));
+    lastInfo->getBackwardPrediction()->getCov() *= blowUpFactor_;  // blow up cov
     double chi2BW = 0;
     size_t ndfBW = 0;
-    fitTrack(tr, rep, chi2BW, ndfBW, -1);
-    std::cout << "\033[1;21mstate post backward" << std::endl;
-    currentState->Print();
-    std::cout << "\033[0m";
 
-    ++nIt;
-    if (nIt > maxIterations_) {
-      // FIXME throw exception
-      Exception exc("Track fit didn't converge in max iterations.",__LINE__,__FILE__);
-      throw exc;
-    }
+    fitTrack(tr, rep, chi2BW, ndfBW, -1);
+
+
+#ifdef DEBUG
+    std::cout << "Track after fit:"; tr->Print();
+#endif
+
+
     std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
-	      << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
+        << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
     if (fabs(oldChi2BW - chi2BW) < deltaChi2_)  {
       // Finished
       break;
@@ -103,10 +107,10 @@ void KalmanFitterRefTrack::processTrack(Track* tr, AbsTrackRep* rep)
     else {
       oldChi2BW = chi2BW;
       oldChi2FW = chi2FW;
-      currentState->getCov() *= blowUpFactor_;  // blow up cov
     }
+
   }
-  delete currentState;*/
+
 }
 
 
@@ -141,6 +145,10 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
     seedState->setCov(cov);
   }
 
+#ifdef DEBUG
+  std::cout << "seed state  "; seedState->Print();
+#endif
+
   double prevFSegmentLen(0);
   TMatrixD prevFTransportMatrix(rep->getDim(), rep->getDim());
   prevFTransportMatrix.UnitMatrix();
@@ -153,12 +161,13 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
   for (unsigned int i=0; i<tr->getNumPoints(); ++i){
     TrackPoint* trackPoint = tr->getPoint(i);
 
-    KalmanFitterInfo* fitterInfo = new KalmanFitterInfo(trackPoint, rep);
-    trackPoint->addFitterInfo(fitterInfo);
-
     // check if we have a measurement
     if (!trackPoint->hasRawMeasurements())
       continue;
+
+    // create new fitterInfo
+    KalmanFitterInfo* fitterInfo = new KalmanFitterInfo(trackPoint, rep);
+    trackPoint->addFitterInfo(fitterInfo);
 
     // Construct plane
     SharedPlanePtr plane = trackPoint->getRawMeasurement(0)->constructPlane(&*seedState);
@@ -168,15 +177,22 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
 
     rep->getBackwardJacobianAndNoise(BTransportMatrix, BNoiseMatrix);
 
-    fitterInfo->setReferenceState(new ReferenceStateOnPlane(*seedState, prevFSegmentLen, -segmentLen,
+    fitterInfo->setReferenceState(new ReferenceStateOnPlane(*seedState, segmentLen, 0, //FIXME set backward segment length (need extrapolation to next measurement)
                                                             prevFTransportMatrix, BTransportMatrix,
                                                             prevFNoiseMatrix, BNoiseMatrix));
 
     rep->getForwardJacobianAndNoise(prevFTransportMatrix, prevFNoiseMatrix);
 
+    prevFSegmentLen = segmentLen;
+
+
+    if (i==0) {
+      fitterInfo->setForwardPrediction(new MeasuredStateOnPlane(*seedState));
+    }
+
     // get MeasurementsInPlane
     for (AbsMeasurement* measurement : trackPoint->getRawMeasurements()) {
-      fitterInfo->addMeasurementOnPlane(measurement->constructMeasurementOnPlane(rep, plane));
+      fitterInfo->addMeasurementOnPlane(new MeasurementOnPlane(measurement->constructMeasurementOnPlane(rep, plane)));
     }
 
   }
@@ -185,118 +201,85 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
 
 void
 KalmanFitterRefTrack::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
-				AbsTrackRep* rep, double& chi2, size_t& ndf, int direction)
+      const KalmanFitterInfo* prevFi, double& chi2, size_t& ndf, int direction)
 {
-  /*if (!tp->hasRawMeasurements())
-    return;
 
-  assert(tp->getNumRawMeasurements() == 1);  // FIXME: should of course support any number
+  const MeasurementOnPlane& m = fi->getAvgWeightedMeasurementOnPlane();
 
-  // Extrapolate to TrackPoint.
-  MeasuredStateOnPlane* state = new MeasuredStateOnPlane(*currentState);
-  //state.Print();
-  if (fi->measurements_.size() == 0) {
-    const AbsMeasurement* m = tp->getRawMeasurement(0);
-    SharedPlanePtr plane = m->constructPlane(currentState);
-    fi->measurements_.push_back(m->constructMeasurementOnPlane(rep, plane));
+  TVectorD dp(m.getHMatrix().GetNcols()); // \delta p_{k|k-1}
+  TMatrixDSym C(m.getHMatrix().GetNcols()); // C_{k|k-1}
+
+  // predict
+  if (prevFi != nullptr) {
+    const TMatrixD& F = fi->getReferenceState()->getTransportMatrix(direction); // Transport matrix
+    const TMatrixDSym& N = fi->getReferenceState()->getNoiseMatrix(direction); // Noise matrix
+    dp = F * (prevFi->getUpdate(direction)->getState() - prevFi->getReferenceState()->getState());
+    C = prevFi->getUpdate(direction)->getCov();
+    C.Similarity(F);
+    C += N;
+    fi->setPrediction(new MeasuredStateOnPlane(dp + fi->getReferenceState()->getState(), C, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep()), direction);
+#ifdef DEBUG
+    std::cout << "r_{k-1} "; prevFi->getReferenceState()->getState().Print();
+#endif
   }
-  const MeasurementOnPlane& mOnPlane = fi->measurements_[0];
-  const SharedPlanePtr plane = mOnPlane.getPlane();
-
-  std::cout << "its plane is at R = " << plane->getO().Perp()
-	    << " with normal pointing along (" << plane->getNormal().X() << ", " << plane->getNormal().Y() << ", " << plane->getNormal().Z() << ")" << std::endl;
-
-  //state.Print();
-  double extLen = 0;
-  try {
-    extLen = rep->extrapolateToPlane(state, plane);
-  } catch (genfit::Exception& e) {
-    std::cerr << e.what();
-    return;
+  else {
+    dp = fi->getPrediction(direction)->getState() - fi->getReferenceState()->getState();
+    C = fi->getPrediction(direction)->getCov();
+#ifdef DEBUG
+    std::cout << "r_{k} "; fi->getReferenceState()->getState().Print();
+#endif
   }
-  std::cout << "extrapolated by " << extLen << std::endl;
-  //std::cout << "after extrap: " << std::endl;
-  //state.Print();
 
-  // unique_ptr takes care of disposing of the old prediction, takes ownership of state.
-  assert(direction == -1 || direction == +1);
-  if (direction == +1)
-    fi->fwPrediction_ = std::unique_ptr<MeasuredStateOnPlane>(state);
-  else if (direction == -1)
-    fi->bwPrediction_ = std::unique_ptr<MeasuredStateOnPlane>(state);
+#ifdef DEBUG
+  std::cout << "Δp_{k|k-1} "; dp.Print();
+  std::cout << "C_{k|k-1}  "; C.Print();
+#endif
 
-  TVectorD stateVector(state->getState());
-  TMatrixDSym cov(state->getCov());
-  const TVectorD& measurement(mOnPlane.getState());
-  const TMatrixDSym& V(mOnPlane.getCov());
-  const TMatrixD& H(mOnPlane.getHMatrix());
-  std::cout << "State vector: "; stateVector.Print();
-  //cov.Print();
-  //measurement.Print();
+  // update
+  const TVectorD& dm = m.getState() - (m.getHMatrix() * fi->getReferenceState()->getState());
 
-  TVectorD res(measurement - H*stateVector);
-  std::cout << "Residual = (" << res(0);
-  if (res.GetNrows() > 1)
-    std::cout << ", " << res(1);
-  std::cout << ")" << std::endl;
-  // If hit, do Kalman algebra.
+  TMatrixDSym covSumInv(C); // (V_k + H_k C_{k|k-1} H_k^T)^(-1)
+  covSumInv.Similarity(m.getHMatrix());
+  covSumInv += m.getCov();
+  tools::invertMatrix(covSumInv);
 
-  // calculate kalman gain ------------------------------
-  // calculate covsum (V + HCH^T)
-  TMatrixDSym HcovHt(cov);
-  HcovHt.Similarity(H);
+  TMatrixD CHt(C, TMatrixD::kMultTranspose, m.getHMatrix());
 
-  TMatrixDSym covSum(V + HcovHt);
-  //std::cerr << std::flush << std::endl;
-  //std::cout << std::flush;
-  //std::cout << "a sum's components:" << std::endl;
-  //V.Print();
-  //HcovHt.Print();
+  const TVectorD& res = dm - m.getHMatrix()*dp;
+  TVectorD updated(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
+  updated += dp;
+  updated += fi->getReferenceState()->getState();
 
-  TDecompChol decomp(covSum);
-  TMatrixDSym covSumInv(decomp.Invert());
-  //std::cout << "a matrix and its inverse:" << std::endl;
-  //covSum.Print();
-  //covSumInv.Print();
-
-  TMatrixD CHt(cov, TMatrixD::kMultTranspose, H);
-  TVectorD update = TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res;
-
-  //std::cout << "STATUS:" << std::endl;
-  //stateVector.Print();
-  std::cout << "Update: "; update.Print();
-  //cov.Print();
-
-  stateVector += update;
   covSumInv.Similarity(CHt);
-  cov -= covSumInv;
+  C -= covSumInv; // updated Cov
 
-  TVectorD resNew(measurement - H*stateVector);
-  std::cout << "Residual New = (" << resNew(0);
-  if (resNew.GetNrows() > 1)
-    std::cout << ", " << resNew(1);
-  std::cout << ")" << std::endl;
-
-  currentState->setStateCovPlane(stateVector, cov, plane);
-  currentState->setAuxInfo(state->getAuxInfo());
-
-  TDecompChol dec(cov);
-  TMatrixDSym mist(cov);
-  bool status = dec.Invert(mist);
-  if (!status) {
-    std::cout << "new cov not pos. def." << std::endl;
-  }
+#ifdef DEBUG
+  std::cout << "Δp_{k|k} "; (updated - fi->getReferenceState()->getState()).Print();
+  std::cout << " p_{k|k} "; updated.Print();
+  std::cout << " C_{k|k} "; C.Print();
+#endif
 
   // Calculate chi²
-  TMatrixDSym HCHt(cov);
-  HCHt.Similarity(H);
-  HCHt -= V;
-  HCHt *= -1;
+  TMatrixDSym Rinv(C);
+  Rinv.Similarity(m.getHMatrix());
+  Rinv -= m.getCov();
+  Rinv *= -1;
+  tools::invertMatrix(Rinv);
 
-  TDecompChol decompNew(HCHt);
-  TMatrixDSym HCHtInv(decompNew.Invert());
+  TVectorD resNew(m.getState() - m.getHMatrix()*updated);
 
-  chi2 += HCHtInv.Similarity(resNew);
-  ndf += measurement.GetNrows();
-  std::cout << "chi² = " << HCHtInv.Similarity(resNew) << std::endl;*/
+  double chi2inc = Rinv.Similarity(resNew);
+  chi2 += chi2inc;
+
+  double ndfInc = m.getState().GetNrows() * m.getWeight();
+  ndf += ndfInc;
+
+#ifdef DEBUG
+  std::cout << " chi² inc " << chi2inc << "\n";
+  std::cout << " ndf inc  " << ndfInc << "\n";
+#endif
+
+
+  fi->setUpdate(new KalmanFittedStateOnPlane(updated, C, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(), chi2inc, ndfInc), direction);
+
 }

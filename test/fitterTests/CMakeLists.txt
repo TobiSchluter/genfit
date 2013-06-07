@@ -33,7 +33,7 @@ INCLUDE_DIRECTORIES(
 	${ROOT_INCDIR}
 	$ENV{GENFIT}/core/include
 	$ENV{GENFIT}/RKTrackRep/include
-	#$ENV{GENFIT}/eventDisplay/include
+	$ENV{GENFIT}/eventDisplay/include
 )
 
 ADD_EXECUTABLE(main 

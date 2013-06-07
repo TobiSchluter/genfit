@@ -38,6 +38,7 @@ class KalmanFittedStateOnPlane : public MeasuredStateOnPlane {
  public:
 
   KalmanFittedStateOnPlane();
+  KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, double chiSquareIncrement, double ndf);
   KalmanFittedStateOnPlane(const MeasuredStateOnPlane& state, double chiSquareIncrement, double ndf);
 
   double getChiSquareIncrement() const {return chiSquareIncrement_;}

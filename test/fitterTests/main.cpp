@@ -13,6 +13,7 @@
 #include <FieldManager.h>
 #include <KalmanFittedStateOnPlane.h>
 #include <KalmanFitter.h>
+#include <KalmanFitterRefTrack.h>
 #include <KalmanFitterInfo.h>
 #include <MaterialInfo.h>
 #include <MeasuredStateOnPlane.h>
@@ -118,12 +119,12 @@ int main() {
 
   const unsigned int nEvents = 1;
   const double BField = 15.;       // kGauss
-  const double momentum = 0.2;     // GeV
-  const double theta = 150;         // degree
-  const double thetaDetPlane = 120;         // degree
+  const double momentum = 0.8;     // GeV
+  const double theta = 100;         // degree
+  const double thetaDetPlane = 90;         // degree
   const double phiDetPlane = 0;         // degree
   const double pointDist = 5;      // cm; approx. distance between measurements generated w/ RKTrackRep
-  const double pointDistDeg = 20;      // degree; distance between measurements generated w/ helix model
+  const double pointDistDeg = 10;      // degree; distance between measurements generated w/ helix model
   const double resolution = 0.02;   // cm; resolution of generated measurements
 
   const double resolutionWire = 5*resolution;   // cm; resolution of generated measurements
@@ -135,19 +136,18 @@ int main() {
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
-  const bool useDaf = true;
+  const int fitterId = 2; // 1 = SimpleKalman; 2 = KalmanFitterRefTrack; 3 = DAF
 
   const int pdg = 13;               // particle pdg code
 
   const bool smearPosMom = false;     // init the Reps with smeared pos and mom
-  const double posSmear = 20*resolution;     // cm
-  const double momSmear = 0.1*momentum;     // GeV
+  const double posSmear = 0;//20*resolution;     // cm
+  const double momSmear = 0;//0.1*momentum;     // GeV
   const double zSmearFac = 100;
 
   const bool HelixTest = false;      // use helix for creating measurements
 
   const bool matFX = true;         // include material effects; can only be disabled for RKTrackRep!
-  const bool smoothing = true;
 
   const bool debug = true;
 
@@ -163,14 +163,12 @@ int main() {
   measurementTypes.push_back(0);
   measurementTypes.push_back(0);
   measurementTypes.push_back(0);
-  measurementTypes.push_back(0);
-  measurementTypes.push_back(0);
-
 
 
 
   // init fitters
-  genfit::KalmanFitter kalman;
+  genfit::KalmanFitter simpleKalman;
+  genfit::KalmanFitterRefTrack kalmanFitterRefTrack;
 
 
   gRandom->SetSeed(10);
@@ -180,6 +178,8 @@ int main() {
   genfit::EventDisplay* display = genfit::EventDisplay::getInstance();
   display->reset();
 #endif
+
+  signal(SIGSEGV, handler);   // install our handler
 
   // init geometry and mag. field
   TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
@@ -542,14 +542,26 @@ int main() {
 
       // do the fit
       try{
-        if (useDaf) {
-          //if (debug) std::cerr<<"Starting the fitter (Daf)"<<std::endl;
-          //daf.processTrack(fitTrack);
+        switch (fitterId) {
+          case 1:
+            if (debug) std::cerr<<"Starting the fitter (simple Kalman)"<<std::endl;
+            simpleKalman.processTrack(fitTrack, rep);
+            break;
+
+          case 2:
+            if (debug) std::cerr<<"Starting the fitter (reference track Kalman)"<<std::endl;
+            kalmanFitterRefTrack.processTrack(fitTrack, rep);
+            break;
+
+          case 3:
+            //if (debug) std::cerr<<"Starting the fitter (DAF)"<<std::endl;
+            //daf.processTrack.processTrack(fitTrack, rep);
+            //break;
+          default:
+            std::cerr<<"no fitter selected!"<<std::endl;
+
         }
-        else {
-          if (debug) std::cerr<<"Starting the fitter (Kalman)"<<std::endl;
-          kalman.processTrack(fitTrack, rep);
-        }
+
         if (debug) std::cerr<<"fitter is finished!"<<std::endl;
       }
       catch(genfit::Exception& e){

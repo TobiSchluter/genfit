@@ -59,8 +59,10 @@ class ReferenceStateOnPlane : public StateOnPlane {
   double getBackwardSegmentLength() const {return backwardSegmentLength_;}
   const TMatrixD& getForwardTransportMatrix() const {return forwardTransportMatrix_;}
   const TMatrixD& getBackwardTransportMatrix() const {return backwardTransportMatrix_;}
+  const TMatrixD& getTransportMatrix(int direction) const {if (direction >= 0) return forwardTransportMatrix_; return backwardTransportMatrix_;}
   const TMatrixDSym& getForwardNoiseMatrix() const {return forwardNoiseMatrix_;}
   const TMatrixDSym& getBackwardNoiseMatrix() const {return backwardNoiseMatrix_;}
+  const TMatrixDSym& getNoiseMatrix(int direction) const {if (direction >= 0) return forwardNoiseMatrix_; return backwardNoiseMatrix_;}
 
   virtual void Print(Option_t* option = "") const override;
 

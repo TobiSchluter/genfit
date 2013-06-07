@@ -37,6 +37,9 @@ class KalmanFitterRefTrack : public AbsFitter {
     : maxIterations_(maxIterations), deltaChi2_(deltaChi2), blowUpFactor_(blowUpFactor) {}
   ~KalmanFitterRefTrack() {}
 
+  /**
+   * Needs a prepared track!
+   */
   void fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf, int direction);
 
   void processTrack(Track* tr, AbsTrackRep* rep) override;
@@ -45,7 +48,7 @@ class KalmanFitterRefTrack : public AbsFitter {
 
  private:
   void processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
-			 AbsTrackRep* rep, double& chi2, size_t& ndf, int direction);
+      const KalmanFitterInfo* prevFi, double& chi2, size_t& ndf, int direction);
 
   // Maximum number of iterations to attempt.  Forward and backward
   // are counted as one iteration.
