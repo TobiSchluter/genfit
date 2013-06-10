@@ -168,8 +168,6 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
     // create new fitterInfo and ReferenceState
     KalmanFitterInfo* fitterInfo = new KalmanFitterInfo(trackPoint, rep);
     trackPoint->addFitterInfo(fitterInfo);
-    ReferenceStateOnPlane* refState = new ReferenceStateOnPlane(*seedState);
-    fitterInfo->setReferenceState(refState);
 
     // Construct plane
     SharedPlanePtr plane = trackPoint->getRawMeasurement(0)->constructPlane(&*seedState);
@@ -178,6 +176,9 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
     double segmentLen = rep->extrapolateToPlane(&*seedState, plane);
     if (i>0) rep->getForwardJacobianAndNoise(FTransportMatrix, FNoiseMatrix);
     rep->getBackwardJacobianAndNoise(BTransportMatrix, BNoiseMatrix);
+
+    ReferenceStateOnPlane* refState = new ReferenceStateOnPlane(*seedState);
+    fitterInfo->setReferenceState(refState);
 
     if (i==0) { // if we are at first measurement and seed state is defined somewhere else, still set forward info to default
       segmentLen = 0;
@@ -192,9 +193,14 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
       prevRefState->setBackwardSegmentLength(-segmentLen);
       prevRefState->setBackwardTransportMatrix(BTransportMatrix);
       prevRefState->setBackwardNoiseMatrix(BNoiseMatrix);
+
+      // check
+      assert(prevFitterInfo->checkConsistency());
     }
 
+
     prevFitterInfo = fitterInfo;
+
 
 
     // set seed as prediction if at first measurement
@@ -216,6 +222,9 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
   prevRefState->setBackwardTransportMatrix(BTransportMatrix);
   BNoiseMatrix.Zero();
   prevRefState->setBackwardNoiseMatrix(BNoiseMatrix);
+
+  // check
+  assert(prevFitterInfo->checkConsistency());
 }
 
 
@@ -239,7 +248,9 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
     fi->setPrediction(new MeasuredStateOnPlane(dp + fi->getReferenceState()->getState(), C, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep()), direction);
 #ifdef DEBUG
     std::cout << "\033[31m";
-    std::cout << "p_{k-1,r} "; prevFi->getReferenceState()->getState().Print();
+    std::cout << "F (Transport Matrix) "; F.Print();
+    std::cout << "Δp_{k-1,k-1} "; (prevFi->getUpdate(direction)->getState() - prevFi->getReferenceState()->getState()).Print();
+    std::cout << " p_{k-1,r} (reference state from previous hit)"; prevFi->getReferenceState()->getState().Print();
 #endif
   }
   else {
@@ -247,14 +258,14 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
     C = fi->getPrediction(direction)->getCov();
 #ifdef DEBUG
     std::cout << "\033[31m";
-    std::cout << "p_{k,r} "; fi->getReferenceState()->getState().Print();
+    std::cout << "p_{k,r} (reference state)"; fi->getReferenceState()->getState().Print();
 #endif
   }
 
 #ifdef DEBUG
   std::cout << "Δp_{k|k-1} "; dp.Print();
-  std::cout << " p_{k|k-1} "; fi->getPrediction(direction)->getState().Print();
-  std::cout << " C_{k|k-1} "; C.Print();
+  std::cout << " p_{k|k-1} (state prediction)"; fi->getPrediction(direction)->getState().Print();
+  std::cout << " C_{k|k-1} (covariance prediction)"; C.Print();
   std::cout << "\033[0m";
 #endif
 
@@ -272,8 +283,8 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   //TVectorD res(dm); res.Zero(); // FIXME this is only a test!
 #ifdef DEBUG
   std::cout << "\033[34m";
-  std::cout << "m   "; m.getState().Print();
-  std::cout << "res "; res.Print();
+  std::cout << "m (measurement) "; m.getState().Print();
+  std::cout << "residual        "; res.Print();
   std::cout << "\033[0m";
 #endif
   TVectorD updated(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
@@ -287,8 +298,8 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   std::cout << " C update "; covSumInv.Print();
   std::cout << "\033[32m";
   std::cout << "Δp_{k|k} "; (updated - fi->getReferenceState()->getState()).Print();
-  std::cout << " p_{k|k} "; updated.Print();
-  std::cout << " C_{k|k} "; C.Print();
+  std::cout << " p_{k|k} (updated state)"; updated.Print();
+  std::cout << " C_{k|k} (updated covariance)"; C.Print();
   std::cout << "\033[0m";
 #endif
 
@@ -316,5 +327,8 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   KalmanFittedStateOnPlane* upState = new KalmanFittedStateOnPlane(updated, C, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(), chi2inc, ndfInc);
   upState->setAuxInfo(fi->getReferenceState()->getAuxInfo());
   fi->setUpdate(upState, direction);
+
+  // check
+  assert(fi->checkConsistency());
 
 }

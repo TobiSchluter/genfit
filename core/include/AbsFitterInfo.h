@@ -70,7 +70,9 @@ class AbsFitterInfo : public TObject {
 
   virtual void Print(const Option_t* = "") const override {;}
 
- private:
+  virtual bool checkConsistency() const {return true;}
+
+ protected:
 
   /** Pointer to #TrackPoint where the FitterInfo belongs to
    */

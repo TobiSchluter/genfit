@@ -59,9 +59,11 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
   TVectorD seed(tr->getStateSeed());
   //seed[0] += 1e-2;  // just so we don't run through the perfectly correct coordinates
   TMatrixDSym cov(6);
-  for (int i = 0; i < 6; i++)
-    cov(i,i) = blowUpFactor_;    // Make independently configurable?
   rep->setPosMomCov(currentState, seed, cov);
+
+  currentState->getCov().UnitMatrix();
+  currentState->getCov() *= blowUpFactor_;
+
 
   double oldChi2FW = 1e6;
   double oldChi2BW = 1e6;
@@ -154,7 +156,8 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInf
   const TVectorD& measurement(mOnPlane.getState());
   const TMatrixDSym& V(mOnPlane.getCov());
   const TMatrixD& H(mOnPlane.getHMatrix());
-  std::cout << "State vector: "; stateVector.Print();
+  std::cout << "State prediction: "; stateVector.Print();
+  std::cout << "Cov prediction: "; state->getCov().Print();
   //cov.Print();
   //measurement.Print();
 
@@ -194,6 +197,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInf
   stateVector += update;
   covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
   cov -= covSumInv;
+  std::cout << "updated state: "; stateVector.Print();
   std::cout << "updated cov: "; cov.Print();
 
   TVectorD resNew(measurement - H*stateVector);

@@ -95,6 +95,8 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
   virtual void Print(const Option_t* = "") const override;
 
+  virtual bool checkConsistency() const override;
+
  private:
 
   MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const;

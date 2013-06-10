@@ -313,4 +313,96 @@ void KalmanFitterInfo::Print(const Option_t*) const {
 }
 
 
+bool KalmanFitterInfo::checkConsistency() const {
+
+  // check if in a TrackPoint
+  if (!trackPoint_) {
+    std::cerr << "trackPoint_ is NULL" << std::endl;
+    return false;
+  }
+
+  // check if there is a reference state
+  if (!referenceState_) {
+    std::cerr << "referenceState_ is NULL" << std::endl;
+    return false;
+  }
+
+  SharedPlanePtr plane = referenceState_->getPlane();
+
+  // see if everything else is defined wrt this plane and rep_
+  if (referenceState_->getRep() != rep_) {
+    std::cerr << "referenceState_ is not defined with the correct TrackRep" << std::endl;
+    return false;
+  }
+
+  if (forwardPrediction_) {
+    if(forwardPrediction_->getPlane() != plane) {
+      std::cerr << "forwardPrediction_ is not defined with the correct plane" << std::endl;
+      return false;
+    }
+    if(forwardPrediction_->getRep() != rep_) {
+      std::cerr << "forwardPrediction_ is not defined with the correct TrackRep" << std::endl;
+      return false;
+    }
+  }
+  if (forwardUpdate_) {
+    if(forwardUpdate_->getPlane() != plane) {
+      std::cerr << "forwardUpdate_ is not defined with the correct plane" << std::endl;
+      return false;
+    }
+    if(forwardUpdate_->getRep() != rep_) {
+      std::cerr << "forwardUpdate_ is not defined with the correct TrackRep" << std::endl;
+      return false;
+    }
+  }
+
+  if (backwardPrediction_) {
+    if(backwardPrediction_->getPlane() != plane) {
+      std::cerr << "backwardPrediction_ is not defined with the correct plane" << std::endl;
+      return false;
+    }
+    if(backwardPrediction_->getRep() != rep_) {
+      std::cerr << "backwardPrediction_ is not defined with the correct TrackRep" << std::endl;
+      return false;
+    }
+  }
+  if (backwardUpdate_) {
+    if(backwardUpdate_->getPlane() != plane) {
+      std::cerr << "backwardUpdate_ is not defined with the correct plane" << std::endl;
+      return false;
+    }
+    if(backwardUpdate_->getRep() != rep_) {
+      std::cerr << "backwardUpdate_ is not defined with the correct TrackRep" << std::endl;
+      return false;
+    }
+  }
+
+  for (MeasurementOnPlane* m : measurementsOnPlane_){
+    if(m->getPlane() != plane) {
+      std::cerr << "measurement is not defined with the correct plane" << std::endl;
+      return false;
+    }
+    if(m->getRep() != rep_) {
+      std::cerr << "measurement is not defined with the correct TrackRep" << std::endl;
+      return false;
+    }
+  }
+
+
+  // see if there is an update w/o prediction
+  if (forwardUpdate_ && !forwardPrediction_) {
+    std::cerr << "forwardUpdate_ w/o forwardPrediction_" << std::endl;
+    return false;
+  }
+
+  if (backwardUpdate_ && !backwardPrediction_) {
+    std::cerr << "backwardUpdate_ w/o backwardPrediction_" << std::endl;
+    return false;
+  }
+
+
+  return true;
+}
+
+
 } /* End of namespace genfit */
