@@ -141,8 +141,8 @@ int main() {
   const int pdg = 13;               // particle pdg code
 
   const bool smearPosMom = false;     // init the Reps with smeared pos and mom
-  const double posSmear = 0;//20*resolution;     // cm
-  const double momSmear = 0;//0.1*momentum;     // GeV
+  const double posSmear = 20*resolution;     // cm
+  const double momSmear = 0.1*momentum;     // GeV
   const double zSmearFac = 10;
 
   const bool HelixTest = false;      // use helix for creating measurements
@@ -163,15 +163,15 @@ int main() {
   measurementTypes.push_back(0);
   measurementTypes.push_back(0);
   measurementTypes.push_back(0);
+  /*measurementTypes.push_back(0);
   measurementTypes.push_back(0);
-  measurementTypes.push_back(0);
-  measurementTypes.push_back(0);
+  measurementTypes.push_back(0);*/
 
 
 
   // init fitters
   genfit::KalmanFitter simpleKalman;
-  genfit::KalmanFitterRefTrack kalmanFitterRefTrack;
+  genfit::KalmanFitterRefTrack kalmanFitterRefTrack(1);
 
 
   gRandom->SetSeed(10);
@@ -568,7 +568,7 @@ int main() {
         if (debug) std::cerr<<"fitter is finished!"<<std::endl;
       }
       catch(genfit::Exception& e){
-        std::cer << e.what();
+        std::cerr << e.what();
         std::cerr << "Exception, next track" << std::endl;
         continue;
       }

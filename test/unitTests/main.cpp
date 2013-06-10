@@ -109,7 +109,7 @@ bool compareMatrices(TMatrixTBase<double>& A, TMatrixTBase<double>& B, double ma
       if ( fabs(absErr) > maxAbsErr ) {
         double relErr = A(i,j)/B(i,j) - 1;
         if ( fabs(relErr) > maxRelErr ) {
-          std::cout << "compareMatrices: absErr = " << absErr << "    relErr = " << relErr << "\n";
+          std::cout << "compareMatrices: A("<<i<<","<<j<<") = " << A(i,j) << "  B("<<i<<","<<j<<") = " << B(i,j) << "     absErr = " << absErr << "    relErr = " << relErr << "\n";
           return false;
         }
       }
@@ -216,9 +216,10 @@ bool compareForthBackExtrapolation() {
 
 bool compareForthBackJacNoise() {
 
-  double epsilonJac = 1.E-2; // absolute
-  double deltaJac = 0.2; // relative
-  double epsilonNoise = 1.E-6;
+  double epsilonJac = 5.E-2; // absolute
+  double deltaJac = 0.1; // relative
+  double epsilonNoise = 1.E-3;
+  double deltaNoise = 0.01;
 
   int pdg = randomPdg();
   genfit::AbsTrackRep* rep;
@@ -271,8 +272,8 @@ bool compareForthBackJacNoise() {
   if (!isCovMatrix(state.getCov()) ||
       !compareMatrices(jac_f, jac_bi, epsilonJac, deltaJac) ||
       !compareMatrices(jac_b, jac_fi, epsilonJac, deltaJac) ||
-      !compareMatrices(noise_f, noise_bi, epsilonNoise, 0) ||
-      !compareMatrices(noise_b, noise_fi, epsilonNoise, 0) ) {
+      !compareMatrices(noise_f, noise_bi, epsilonNoise, deltaNoise) ||
+      !compareMatrices(noise_b, noise_fi, epsilonNoise, deltaNoise) ) {
 
     origState.Print();
     state.Print();
