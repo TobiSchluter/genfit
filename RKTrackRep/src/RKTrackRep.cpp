@@ -453,7 +453,7 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
   noise.SetMatrixArray(ExtrapSteps_.back().noise_.data());
 
   for (unsigned int i=ExtrapSteps_.size()-2; i!=std::numeric_limits<unsigned int>::max(); --i) {
-    noise += TMatrixDSym(5, ExtrapSteps_[i].noise_.data()).SimilarityT(jacobian);
+    noise += TMatrixDSym(5, ExtrapSteps_[i].noise_.data()).Similarity(jacobian);
     jacobian *= TMatrixD(5,5, ExtrapSteps_[i].jac_.data());
   }
 
@@ -493,7 +493,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 
   noise.ResizeTo(5,5);
   noise.SetMatrixArray(ExtrapSteps_.front().noise_.data());
-  noise.SimilarityT(jacobian);
+  noise.Similarity(jacobian);
 
   for (unsigned int i=1; i!=ExtrapSteps_.size(); ++i) {
     TMatrixD nextJac(5,5, ExtrapSteps_[i].jac_.data());
@@ -510,7 +510,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 #endif
 
     jacobian *= nextJac;
-    noise += (TMatrixDSym(5, ExtrapSteps_[i].noise_.data())).SimilarityT(jacobian);
+    noise += (TMatrixDSym(5, ExtrapSteps_[i].noise_.data())).Similarity(jacobian);
   }
 
 #ifdef DEBUG
@@ -1615,7 +1615,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
                           double charge,
                           bool& isAtBoundary,
                           M1x7& state7,
-                          TMatrixDSym* cov,
+                          TMatrixDSym* cov, // 5D
                           bool onlyOneStep,
                           bool stopAtBoundary,
                           double maxStep) const {
@@ -1760,7 +1760,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         calcJ_Mp_7x5(pl.getU(), pl.getV(), pl.getNormal(), *((M1x3*) &state7[3]));
       }
 
-      RKTools::J_pMxJ_MMxJ_Mp(J_pM_5x7_, J_MM_, J_Mp_7x5_, extrapStep.jac_, checkJacProj);
+      RKTools::J_pMxJ_MMTxJ_Mp(J_pM_5x7_, J_MM_, J_Mp_7x5_, extrapStep.jac_, checkJacProj);
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane
@@ -1825,7 +1825,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
     //cov->Print();
 
-    cov->SimilarityT(jac);
+    cov->Similarity(jac);
     *cov += noise;
 
 #ifdef DEBUG
