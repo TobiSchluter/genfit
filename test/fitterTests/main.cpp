@@ -19,11 +19,11 @@
 #include <MeasuredStateOnPlane.h>
 #include <MeasurementOnPlane.h>
 #include <PlanarMeasurement.h>
-#include <ProlateSpacePointMeasurement.h>
+#include <ProlateSpacepointMeasurement.h>
 #include <RectangularFinitePlane.h>
 #include <ReferenceStateOnPlane.h>
 #include <SharedPlanePtr.h>
-#include <SpacePointMeasurement.h>
+#include <SpacepointMeasurement.h>
 #include <StateOnPlane.h>
 #include <Tools.h>
 #include <TrackCand.h>
@@ -152,8 +152,8 @@ int main() {
   const bool debug = true;
 
   // 0: PixMeasurement
-  // 1: SpacePointMeasurement
-  // 2: ProlateSpacePointMeasurement
+  // 1: SpacepointMeasurement
+  // 2: ProlateSpacepointMeasurement
   // 3: StripMeasurement
   // 4: WireMeasurement
   // 5: WirePointMeasurement
@@ -171,7 +171,7 @@ int main() {
 
   // init fitters
   genfit::KalmanFitter simpleKalman;
-  genfit::KalmanFitterRefTrack kalmanFitterRefTrack(1);
+  genfit::KalmanFitterRefTrack kalmanFitterRefTrack;
 
 
   gRandom->SetSeed(10);
@@ -383,7 +383,7 @@ int main() {
               hitCov(1,1) = resolution*resolution;
               hitCov(2,2) = resolution*resolution;
 
-              measurement = new genfit::SpacePointMeasurement(hitCoords, hitCov, 1, i, nullptr);
+              measurement = new genfit::SpacepointMeasurement(hitCoords, hitCov, 1, i, nullptr);
             }
             break;
 
@@ -424,9 +424,9 @@ int main() {
               // rotate cov
               hitCov.Similarity(rot);
 
-              measurement = new genfit::ProlateSpacePointMeasurement(hitCoords, hitCov, 2, i, nullptr);
+              measurement = new genfit::ProlateSpacepointMeasurement(hitCoords, hitCov, 2, i, nullptr);
 
-              static_cast<genfit::ProlateSpacePointMeasurement*>(measurement)->setLargestErrorDirection(currentWireDir);
+              static_cast<genfit::ProlateSpacepointMeasurement*>(measurement)->setLargestErrorDirection(currentWireDir);
             }
             break;
 

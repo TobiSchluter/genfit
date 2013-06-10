@@ -19,11 +19,11 @@ set(GENFIT_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/MeasuredStateOnPlane.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/MeasurementOnPlane.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/PlanarMeasurement.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/ProlateSpacePointMeasurement.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/ProlateSpacepointMeasurement.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/RectangularFinitePlane.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ReferenceStateOnPlane.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/SimpleKalmanFitterInfo.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/SpacePointMeasurement.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/SpacepointMeasurement.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/StateOnPlane.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Tools.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/TrackCand.cpp

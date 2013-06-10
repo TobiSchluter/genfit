@@ -23,14 +23,16 @@ namespace genfit {
 
 AbsFitterInfo::AbsFitterInfo() :
   trackPoint_(nullptr),
-  rep_(nullptr)
+  rep_(nullptr),
+  statusFlag_(0)
 {
   ;
 }
 
 AbsFitterInfo::AbsFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep) :
   trackPoint_(trackPoint),
-  rep_(rep)
+  rep_(rep),
+  statusFlag_(0)
 {
   ;
 }

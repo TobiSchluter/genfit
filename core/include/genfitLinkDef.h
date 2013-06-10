@@ -38,10 +38,10 @@
 #pragma link C++ class genfit::PlanarMeasurement+;
 #pragma link C++ class genfit::PlanarPixelMeasurement+;
 #pragma link C++ class genfit::PlanarStripMeasurement+;
-#pragma link C++ class genfit::ProlateSpacePointMeasurement+;
+#pragma link C++ class genfit::ProlateSpacepointMeasurement+;
 #pragma link C++ class genfit::RectangularFinitePlane+;
 #pragma link C++ class genfit::ReferenceStateOnPlane+;
-#pragma link C++ class genfit::SpacePointMeasurement+;
+#pragma link C++ class genfit::SpacepointMeasurement+;
 #pragma link C++ class genfit::StateOnPlane+;
 #pragma link C++ class genfit::TrackCand+;
 #pragma link C++ class genfit::TrackCandHit+;

@@ -132,6 +132,23 @@ AbsFitterInfo* TrackPoint::getFitterInfo(int i) {
 }
 
 
+AbsFitterInfo* TrackPoint::getFitterInfo(AbsTrackRep* rep, int i) {
+  int n(0);
+  for (AbsFitterInfo* fitterInfo : fitterInfos_) {
+    if (fitterInfo->getRep() == rep) {
+      if (i == n)
+        return fitterInfo;
+      ++n;
+    }
+  }
+
+  if (i<0)
+    return getFitterInfo(rep, i+n);
+
+  return nullptr;
+}
+
+
 void TrackPoint::deleteFitterInfo(int i) {
   if (i < 0)
     i += fitterInfos_.size();

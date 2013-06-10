@@ -20,8 +20,8 @@
  * @{
  */
 
-#ifndef genfit_SpacePointMeasurement_h
-#define genfit_SpacePointMeasurement_h
+#ifndef genfit_SpacepointMeasurement_h
+#define genfit_SpacepointMeasurement_h
 
 #include "AbsMeasurement.h"
 
@@ -42,13 +42,13 @@ namespace genfit {
  * data of the hit is used to define a proper detector plane into which the
  * hit coordinates are then projected.
  */
-class SpacePointMeasurement : public AbsMeasurement {
+class SpacepointMeasurement : public AbsMeasurement {
 
  public:
-  SpacePointMeasurement(int nDim = 3);
-  SpacePointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
+  SpacepointMeasurement(int nDim = 3);
+  SpacepointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
 
-  virtual AbsMeasurement* clone() const override {return new SpacePointMeasurement(*this);}
+  virtual AbsMeasurement* clone() const override {return new SpacepointMeasurement(*this);}
 
   virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const override;
 
@@ -60,4 +60,4 @@ class SpacePointMeasurement : public AbsMeasurement {
 
 } /* End of namespace genfit */
 
-#endif // genfit_SpacePointMeasurement_h
+#endif // genfit_SpacepointMeasurement_h

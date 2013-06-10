@@ -38,8 +38,8 @@ INCLUDE_DIRECTORIES(
 
 ADD_EXECUTABLE(main 
 	main.cpp
-	#$ENV{GENFIT}/eventDisplay/include/EventDisplay.h
-	#$ENV{GENFIT}/eventDisplay/src/EventDisplay.cpp
+	$ENV{GENFIT}/eventDisplay/include/EventDisplay.h
+	$ENV{GENFIT}/eventDisplay/src/EventDisplay.cpp
 )
 
 TARGET_LINK_LIBRARIES(main 

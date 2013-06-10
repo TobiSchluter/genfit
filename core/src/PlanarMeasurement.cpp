@@ -75,12 +75,12 @@ const TMatrixD& PlanarMeasurement::getHMatrix(const AbsTrackRep* rep) const {
       return HMatrix2;
 
     default:
-      Exception exc("SpacePointMeasurement default implementation can only handle 1D (strip) or 2D (pixel) measurements!", __LINE__,__FILE__);
+      Exception exc("SpacepointMeasurement default implementation can only handle 1D (strip) or 2D (pixel) measurements!", __LINE__,__FILE__);
       throw exc;
     }
   }
   else {
-    Exception exc("SpacePointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
+    Exception exc("SpacepointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
     throw exc;
   }
 }

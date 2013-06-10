@@ -63,12 +63,13 @@ class TrackPoint : public TObject {
   void setTrack(Track* track) {track_ = track;}
 
   std::vector< genfit::AbsMeasurement* >& getRawMeasurements() {return rawMeasurements_;}
-  AbsMeasurement* getRawMeasurement(int i);
+  AbsMeasurement* getRawMeasurement(int i = 0);
   unsigned int getNumRawMeasurements() {return rawMeasurements_.size();}
   bool hasRawMeasurements() {return (rawMeasurements_.size() > 0);}
 
   std::vector< genfit::AbsFitterInfo* >& getFitterInfos() {return fitterInfos_;}
   AbsFitterInfo* getFitterInfo(int i);
+  AbsFitterInfo* getFitterInfo(AbsTrackRep* rep, int i = -1);
   unsigned int getNumFitterInfos() {return fitterInfos_.size();}
   bool hasFitterInfos() {return (fitterInfos_.size() > 0);}
 

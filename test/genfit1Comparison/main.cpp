@@ -19,11 +19,11 @@
 #include <PlanarMeasurement.h>
 #include <PlanarPixelMeasurement.h>
 #include <PlanarStripMeasurement.h>
-#include <ProlateSpacePointMeasurement.h>
+#include <ProlateSpacepointMeasurement.h>
 #include <RectangularFinitePlane.h>
 #include <ReferenceStateOnPlane.h>
 #include <SharedPlanePtr.h>
-#include <SpacePointMeasurement.h>
+#include <SpacepointMeasurement.h>
 #include <StateOnPlane.h>
 #include <Tools.h>
 #include <TrackCand.h>

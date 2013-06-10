@@ -20,10 +20,10 @@
  * @{
  */
 
-#ifndef genfit_ProlateSpacePointMeasurement_h
-#define genfit_ProlateSpacePointMeasurement_h
+#ifndef genfit_ProlateSpacepointMeasurement_h
+#define genfit_ProlateSpacepointMeasurement_h
 
-#include "SpacePointMeasurement.h"
+#include "SpacepointMeasurement.h"
 
 
 namespace genfit {
@@ -43,13 +43,13 @@ namespace genfit {
  * The largest error direction can be set. Standard is in z.
  *
  */
-class ProlateSpacePointMeasurement : public SpacePointMeasurement {
+class ProlateSpacepointMeasurement : public SpacepointMeasurement {
 
  public:
-  ProlateSpacePointMeasurement(int nDim = 3);
-  ProlateSpacePointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
+  ProlateSpacepointMeasurement(int nDim = 3);
+  ProlateSpacepointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
 
-  virtual AbsMeasurement* clone() const override {return new ProlateSpacePointMeasurement(*this);}
+  virtual AbsMeasurement* clone() const override {return new ProlateSpacepointMeasurement(*this);}
 
   virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const override;
 
@@ -64,4 +64,4 @@ class ProlateSpacePointMeasurement : public SpacePointMeasurement {
 
 } /* End of namespace genfit */
 
-#endif // genfit_ProlateSpacePointMeasurement_h
+#endif // genfit_ProlateSpacepointMeasurement_h

@@ -17,7 +17,7 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "ProlateSpacePointMeasurement.h"
+#include "ProlateSpacepointMeasurement.h"
 
 #include <math.h>
 
@@ -27,20 +27,20 @@
 
 namespace genfit {
 
-ProlateSpacePointMeasurement::ProlateSpacePointMeasurement(int nDim)
-  : SpacePointMeasurement(nDim), largestErrorDirection_(0,0,1)
+ProlateSpacepointMeasurement::ProlateSpacepointMeasurement(int nDim)
+  : SpacepointMeasurement(nDim), largestErrorDirection_(0,0,1)
 {
   ;
 }
 
-ProlateSpacePointMeasurement::ProlateSpacePointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
-  : SpacePointMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint), largestErrorDirection_(0,0,1)
+ProlateSpacepointMeasurement::ProlateSpacepointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
+  : SpacepointMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint), largestErrorDirection_(0,0,1)
 {
   ;
 }
 
 
-SharedPlanePtr ProlateSpacePointMeasurement::constructPlane(const StateOnPlane* state) const {
+SharedPlanePtr ProlateSpacepointMeasurement::constructPlane(const StateOnPlane* state) const {
 
   // copy state. Neglect covariance.
   StateOnPlane st(*state);
@@ -56,7 +56,7 @@ SharedPlanePtr ProlateSpacePointMeasurement::constructPlane(const StateOnPlane* 
 
   // check if direction is parallel to wire
   if (fabs(largestErrorDirection_.Angle(dirInPoca)) < 0.01){
-    Exception exc("ProlateSpacePointMeasurement::constructPlane(): Cannot construct detector plane, track direction is parallel to largest error direction", __LINE__,__FILE__);
+    Exception exc("ProlateSpacepointMeasurement::constructPlane(): Cannot construct detector plane, track direction is parallel to largest error direction", __LINE__,__FILE__);
     throw exc;
   }
 

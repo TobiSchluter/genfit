@@ -280,7 +280,6 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   TMatrixD CHt(C, TMatrixD::kMultTranspose, m.getHMatrix());
 
   const TVectorD& res = dm - m.getHMatrix()*dp; //
-  //TVectorD res(dm); res.Zero(); // FIXME this is only a test!
 #ifdef DEBUG
   std::cout << "\033[34m";
   std::cout << "m (measurement) "; m.getState().Print();

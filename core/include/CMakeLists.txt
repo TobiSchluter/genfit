@@ -21,13 +21,13 @@ set(GENFIT_INCS
   ${CMAKE_CURRENT_SOURCE_DIR}/MeasuredStateOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MeasurementOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/PlanarMeasurement.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/ProlateSpacePointMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/ProlateSpacepointMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/RectangularFinitePlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/ReferenceStateOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SharedMaterialPropertiesPtr.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SharedPlanePtr.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SimpleKalmanFitterInfo.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/SpacePointMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/SpacepointMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/StateOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Tools.h
   ${CMAKE_CURRENT_SOURCE_DIR}/TrackCand.h

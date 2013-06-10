@@ -17,7 +17,7 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "SpacePointMeasurement.h"
+#include "SpacepointMeasurement.h"
 
 #include "Exception.h"
 #include "RKTrackRep.h"
@@ -27,20 +27,20 @@
 
 namespace genfit {
 
-SpacePointMeasurement::SpacePointMeasurement(int nDim)
+SpacepointMeasurement::SpacepointMeasurement(int nDim)
   : AbsMeasurement(nDim)
 {
   assert(nDim >= 3);
 }
 
-SpacePointMeasurement::SpacePointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
+SpacepointMeasurement::SpacepointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
   : AbsMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint)
 {
   assert(rawHitCoords_.GetNrows() >= 3);
 }
 
 
-SharedPlanePtr SpacePointMeasurement::constructPlane(const StateOnPlane* state) const {
+SharedPlanePtr SpacepointMeasurement::constructPlane(const StateOnPlane* state) const {
 
   // copy state. Neglect covariance.
   StateOnPlane st(*state);
@@ -56,7 +56,7 @@ SharedPlanePtr SpacePointMeasurement::constructPlane(const StateOnPlane* state) 
 }
 
 
-MeasurementOnPlane SpacePointMeasurement::constructMeasurementOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const
+MeasurementOnPlane SpacepointMeasurement::constructMeasurementOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const
 {
   MeasurementOnPlane mop(TVectorD(2),
        TMatrixDSym(3), // will be resized to 2x2 by Similarity later
@@ -97,7 +97,7 @@ MeasurementOnPlane SpacePointMeasurement::constructMeasurementOnPlane(const AbsT
 }
 
 
-const TMatrixD& SpacePointMeasurement::getHMatrix(const AbsTrackRep* rep) const {
+const TMatrixD& SpacepointMeasurement::getHMatrix(const AbsTrackRep* rep) const {
   if (dynamic_cast<const RKTrackRep*>(rep) != nullptr) {
     static const double HMatrixContent[10] = {0, 0, 0, 1, 0,
                                               0, 0, 0, 0, 1};
@@ -106,7 +106,7 @@ const TMatrixD& SpacePointMeasurement::getHMatrix(const AbsTrackRep* rep) const 
     return HMatrix;
   }
   else {
-    Exception exc("SpacePointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
+    Exception exc("SpacepointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
     throw exc;
   }
 }

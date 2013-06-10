@@ -8,8 +8,8 @@
 
 #include <AbsMeasurement.h>
 #include <PlanarMeasurement.h>
-#include <ProlateSpacePointMeasurement.h>
-#include <SpacePointMeasurement.h>
+#include <ProlateSpacepointMeasurement.h>
+#include <SpacepointMeasurement.h>
 #include <WireMeasurement.h>
 #include <WirePointMeasurement.h>
 #include <AbsTrackRep.h>
@@ -257,80 +257,39 @@ void EventDisplay::drawEvent(unsigned int id) {
 
 		unsigned int numhits = track->getNumPointsWithMeasurement();
 		
-		// FIXME
-		/*if(rep->getStatusFlag()) {
-			std::cout << "Warning: Trying to display a track with status flag != 0...";
-			if(smoothing) {
-				std::cout << "trying without smoothing!";
-				smoothing = false;
-			}
-			std::cout << std::endl;
-		}*/
-
 		TVector3 track_pos;
 		TVector3 old_track_pos;
 
 		TEveStraightLineSet* track_lines = nullptr;
 
-		// saving the initial state of the representation -----------------------------------------
-		DetPlane initial_plane = rep->getReferencePlane();
-		TVectorT<double> initial_state(rep->getState());
-		TMatrixTSym<double> initial_cov(rep->getCov());
-		TMatrixT<double> initial_auxInfo;
-		if (rep->hasAuxInfo()) {
-		  initial_auxInfo.ResizeTo(*(rep->getAuxInfo(initial_plane)));
-		  initial_auxInfo = (*(rep->getAuxInfo(initial_plane)));
-		}
-		// saved initial state --------------------------------------------------------------------
 
 		for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
 
-			AbsRecoHit* hit = track->getHit(j);
-			DetPlane plane;
+			// get the fitter infos ------------------------------------------------------------------
+		  AbsFitterInfo* fitterInfo = track->getPointWithMeasurement(j)->getFitterInfo(rep, -1);
+		  const AbsMeasurement* m = track->getPointWithMeasurement(j)->getRawMeasurement();  // FIXME draw all measurements, not only 1st
 
-			// get the hit infos ------------------------------------------------------------------
-			if(smoothing) {
-				TVectorT<double> state;
-				TMatrixTSym<double> cov;
-				TMatrixT<double> auxInfo;
-				try {
-          Tools::getBiasedSmoothedData(track, irep, j, state, cov, plane, auxInfo);
-          rep->setData(state, plane, &cov, &auxInfo);
-        } catch(Exception& e) {
-          std::cerr << "Error: Exception caught (getSmoothedData): Hit " << j << " in Track " << i << " skipped!" << std::endl;
-          std::cerr << e.what();
-          if (e.isFatal()) {
-            std::cerr<<"Fatal exception, skipping rest of the track"<<std::endl;
-            break;
-          }
-          else continue;
-        }
-			} else {
-				try{
-					plane = hit->getDetPlane(rep);
-					rep->extrapolate(plane);
-				}catch(Exception& e) {
-					std::cerr << "Error: Exception caught (getDetPlane): Hit " << j << " in Track " << i << " skipped!" << std::endl;
-					std::cerr << e.what();
-					if (e.isFatal()) {
-					  std::cerr<<"Fatal exception, skipping rest of the track"<<std::endl;
-					  break;
-					}
-					else continue;
-				}
-			}
+		  if (dynamic_cast<KalmanFitterInfo*>(fitterInfo) == nullptr){
+		    std::cerr<<"can only display KalmanFitterInfo"<<std::endl;
+		    continue;
+		  }
+
+		  KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(fitterInfo);
+
+		  MeasuredStateOnPlane fittedState = fi->getFittedState(true);
 			
-			track_pos = rep->getPos(plane);
-			TVectorT<double> hit_coords;
-			TMatrixTSym<double> hit_cov;
-			hit->getMeasurement(rep,plane,rep->getState(),rep->getCov(),hit_coords,hit_cov);
+			track_pos = rep->getPos(&fittedState);
+
+			MeasurementOnPlane* mop = fi->getMeasurementOnPlane(); // FIXME draw all measurements, not only 1st
+			const TVectorT<double>& hit_coords = mop->getState();
+			const TMatrixTSym<double>& hit_cov = mop->getCov();
 
 			// finished getting the hit infos -----------------------------------------------------
 
 			// sort hit infos into variables ------------------------------------------------------
-			TVector3 o = plane.getO();
-			TVector3 u = plane.getU();
-			TVector3 v = plane.getV();
+			TVector3 o = fittedState.getPlane()->getO();
+			TVector3 u = fittedState.getPlane()->getU();
+			TVector3 v = fittedState.getPlane()->getV();
 
 			bool planar_hit = false;
 			bool planar_pixel_hit = false;
@@ -345,7 +304,7 @@ void EventDisplay::drawEvent(unsigned int id) {
 
 			int hit_coords_dim = hit_coords.GetNrows();
 
-			if(dynamic_cast<AbsPlanarHit*>(hit) != nullptr) {
+			if(dynamic_cast<PlanarMeasurement*>(m) != nullptr) {
 				planar_hit = true;
 				if(hit_coords_dim == 1) {
 					hit_u = hit_coords(0);
@@ -357,17 +316,17 @@ void EventDisplay::drawEvent(unsigned int id) {
 					hit_res_u = hit_cov(0,0);
 					hit_res_v = hit_cov(1,1);
 				}
-			} else if (dynamic_cast<AbsSpacepointHit*>(hit) != nullptr) {
+			} else if (dynamic_cast<SpacepointMeasurement*>(m) != nullptr) {
 				space_hit = true;
 				plane_size = 4;
-      } else if (dynamic_cast<AbsWireHit*>(hit) != nullptr) {
+      } else if (dynamic_cast<WireMeasurement*>(m) != nullptr) {
 				wire_hit = true;
 				hit_u = hit_coords(0);
 				hit_v = v*(track_pos-o); // move the covariance tube so that the track goes through it
 				hit_res_u = hit_cov(0,0);
 				hit_res_v = 4;
 				plane_size = 4;
-				if (dynamic_cast<AbsWirepointHit*>(hit) != nullptr) {
+				if (dynamic_cast<WirepointMeasurement*>(m) != nullptr) {
 				  wirepoint_hit = true;
 				  hit_v = hit_coords(1);
 				  hit_res_v = hit_cov(1,1);

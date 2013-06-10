@@ -56,6 +56,8 @@ class AbsFitterInfo : public TObject {
   //! Deep copy ctor for polymorphic class.
   virtual AbsFitterInfo* clone() const = 0;
 
+  void setStatusFlag(int statusFlag) {statusFlag_ = statusFlag;}
+
   const TrackPoint* getTrackPoint() const {return trackPoint_;}
   void setTrackPoint(const TrackPoint *tp) {trackPoint_ = tp;}
   const AbsTrackRep* getRep() const {return rep_;}
@@ -67,6 +69,7 @@ class AbsFitterInfo : public TObject {
 
   virtual MeasuredStateOnPlane getFittedState(bool biased = false) const = 0;
   virtual MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const = 0;
+  int getStatusFlag() const {return statusFlag_;}
 
   virtual void Print(const Option_t* = "") const override {;}
 
@@ -82,6 +85,7 @@ class AbsFitterInfo : public TObject {
    */
   const AbsTrackRep* rep_; // No ownership
 
+  int statusFlag_; // 0 = ok
 
   //ClassDef(AbsFitterInfo,1)
 
