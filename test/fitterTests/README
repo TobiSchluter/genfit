@@ -1,0 +1,6 @@
+to run the tests, type the following (in this folder) (you should build GENFIT first, of course):
+
+cmake .
+make
+root -q makeGeom.C
+./main
