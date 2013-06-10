@@ -173,7 +173,7 @@ class RKTrackRep : public AbsTrackRep {
               const DetPlane& plane,
               double charge,
               M1x7& state7,
-              M7x7* jacobian,
+              M7x7* jacobianT,
               double& coveredDistance,
               bool& checkJacProj,
               TMatrixD& noiseProjection,
@@ -226,7 +226,7 @@ class RKTrackRep : public AbsTrackRep {
   // auxiliary variables and arrays
   // needed in Extrap()
   mutable M7x7 noiseArray_; //! noise matrix of the last extrapolation
-  mutable M7x7 J_MM_; //!
+  mutable M7x7 J_MMT_; //!
   // needed in transform...
   mutable M5x7 J_pM_5x7_; //!
   mutable M5x6 J_pM_5x6_; //!
