@@ -225,6 +225,29 @@ void KalmanFitterInfo::setMeasurementsOnPlane(const std::vector< genfit::Measure
 }
 
 
+void KalmanFitterInfo::setRep(const AbsTrackRep* rep) {
+  rep_ = rep;
+
+  if (referenceState_ != nullptr)
+    referenceState_->setRep(rep);
+
+  if (forwardPrediction_ != nullptr)
+    forwardPrediction_->setRep(rep);
+
+  if (forwardUpdate_ != nullptr)
+    forwardUpdate_->setRep(rep);
+
+  if (backwardPrediction_ != nullptr)
+    backwardPrediction_->setRep(rep);
+
+  if (backwardUpdate_ != nullptr)
+    backwardUpdate_->setRep(rep);
+
+  for (MeasurementOnPlane* m : measurementsOnPlane_)
+    m->setRep(rep);
+}
+
+
 void KalmanFitterInfo::deleteForwardInfo() {
   if (forwardPrediction_ != nullptr) {
     delete forwardPrediction_;
@@ -288,7 +311,7 @@ MeasuredStateOnPlane KalmanFitterInfo::calcAverageState(const MeasuredStateOnPla
 
 
 void KalmanFitterInfo::Print(const Option_t*) const {
-  std::cout << "genfit::KalmanFitterInfo \n";
+  std::cout << "genfit::KalmanFitterInfo. Belongs to TrackPoint " << trackPoint_ << "; TrackRep " <<  rep_ << "; statusFlag = " << statusFlag_ << "\n";
 
   for (unsigned int i=0; i<measurementsOnPlane_.size(); ++i) {
     std::cout << "MeasurementOnPlane Nr " << i <<": "; measurementsOnPlane_[i]->Print();
@@ -317,13 +340,13 @@ bool KalmanFitterInfo::checkConsistency() const {
 
   // check if in a TrackPoint
   if (!trackPoint_) {
-    std::cerr << "trackPoint_ is NULL" << std::endl;
+    std::cerr << "KalmanFitterInfo::checkConsistency(): trackPoint_ is NULL" << std::endl;
     return false;
   }
 
   // check if there is a reference state
   if (!referenceState_) {
-    std::cerr << "referenceState_ is NULL" << std::endl;
+    std::cerr << "KalmanFitterInfo::checkConsistency(): referenceState_ is NULL" << std::endl;
     return false;
   }
 
@@ -331,59 +354,59 @@ bool KalmanFitterInfo::checkConsistency() const {
 
   // see if everything else is defined wrt this plane and rep_
   if (referenceState_->getRep() != rep_) {
-    std::cerr << "referenceState_ is not defined with the correct TrackRep" << std::endl;
+    std::cerr << "KalmanFitterInfo::checkConsistency(): referenceState_ is not defined with the correct TrackRep" << std::endl;
     return false;
   }
 
   if (forwardPrediction_) {
     if(forwardPrediction_->getPlane() != plane) {
-      std::cerr << "forwardPrediction_ is not defined with the correct plane" << std::endl;
+      std::cerr << "KalmanFitterInfo::checkConsistency(): forwardPrediction_ is not defined with the correct plane" << std::endl;
       return false;
     }
     if(forwardPrediction_->getRep() != rep_) {
-      std::cerr << "forwardPrediction_ is not defined with the correct TrackRep" << std::endl;
+      std::cerr << "KalmanFitterInfo::checkConsistency(): forwardPrediction_ is not defined with the correct TrackRep" << std::endl;
       return false;
     }
   }
   if (forwardUpdate_) {
     if(forwardUpdate_->getPlane() != plane) {
-      std::cerr << "forwardUpdate_ is not defined with the correct plane" << std::endl;
+      std::cerr << "KalmanFitterInfo::checkConsistency(): forwardUpdate_ is not defined with the correct plane" << std::endl;
       return false;
     }
     if(forwardUpdate_->getRep() != rep_) {
-      std::cerr << "forwardUpdate_ is not defined with the correct TrackRep" << std::endl;
+      std::cerr << "KalmanFitterInfo::checkConsistency(): forwardUpdate_ is not defined with the correct TrackRep" << std::endl;
       return false;
     }
   }
 
   if (backwardPrediction_) {
     if(backwardPrediction_->getPlane() != plane) {
-      std::cerr << "backwardPrediction_ is not defined with the correct plane" << std::endl;
+      std::cerr << "KalmanFitterInfo::checkConsistency(): backwardPrediction_ is not defined with the correct plane" << std::endl;
       return false;
     }
     if(backwardPrediction_->getRep() != rep_) {
-      std::cerr << "backwardPrediction_ is not defined with the correct TrackRep" << std::endl;
+      std::cerr << "KalmanFitterInfo::checkConsistency(): backwardPrediction_ is not defined with the correct TrackRep" << std::endl;
       return false;
     }
   }
   if (backwardUpdate_) {
     if(backwardUpdate_->getPlane() != plane) {
-      std::cerr << "backwardUpdate_ is not defined with the correct plane" << std::endl;
+      std::cerr << "KalmanFitterInfo::checkConsistency(): backwardUpdate_ is not defined with the correct plane" << std::endl;
       return false;
     }
     if(backwardUpdate_->getRep() != rep_) {
-      std::cerr << "backwardUpdate_ is not defined with the correct TrackRep" << std::endl;
+      std::cerr << "KalmanFitterInfo::checkConsistency(): backwardUpdate_ is not defined with the correct TrackRep" << std::endl;
       return false;
     }
   }
 
   for (MeasurementOnPlane* m : measurementsOnPlane_){
     if(m->getPlane() != plane) {
-      std::cerr << "measurement is not defined with the correct plane" << std::endl;
+      std::cerr << "KalmanFitterInfo::checkConsistency(): measurement is not defined with the correct plane" << std::endl;
       return false;
     }
     if(m->getRep() != rep_) {
-      std::cerr << "measurement is not defined with the correct TrackRep" << std::endl;
+      std::cerr << "KalmanFitterInfo::checkConsistency(): measurement is not defined with the correct TrackRep" << std::endl;
       return false;
     }
   }
@@ -391,12 +414,12 @@ bool KalmanFitterInfo::checkConsistency() const {
 
   // see if there is an update w/o prediction
   if (forwardUpdate_ && !forwardPrediction_) {
-    std::cerr << "forwardUpdate_ w/o forwardPrediction_" << std::endl;
+    std::cerr << "KalmanFitterInfo::checkConsistency(): forwardUpdate_ w/o forwardPrediction_" << std::endl;
     return false;
   }
 
   if (backwardUpdate_ && !backwardPrediction_) {
-    std::cerr << "backwardUpdate_ w/o backwardPrediction_" << std::endl;
+    std::cerr << "KalmanFitterInfo::checkConsistency(): backwardUpdate_ w/o backwardPrediction_" << std::endl;
     return false;
   }
 

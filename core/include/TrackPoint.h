@@ -69,7 +69,7 @@ class TrackPoint : public TObject {
 
   std::vector< genfit::AbsFitterInfo* >& getFitterInfos() {return fitterInfos_;}
   AbsFitterInfo* getFitterInfo(int i);
-  AbsFitterInfo* getFitterInfo(AbsTrackRep* rep, int i = -1);
+  AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep, int i = -1);
   unsigned int getNumFitterInfos() {return fitterInfos_.size();}
   bool hasFitterInfos() {return (fitterInfos_.size() > 0);}
 

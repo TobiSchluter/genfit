@@ -58,6 +58,7 @@ class StateOnPlane : public TObject {
   void setPlane(SharedPlanePtr plane) {sharedPlane_ = plane;}
   void setStatePlane(const TVectorD& state, SharedPlanePtr plane) {state_ = state; sharedPlane_ = plane;}
   void setAuxInfo(const TVectorD& auxInfo) {if(auxInfo_.GetNrows() == 0) auxInfo_.ResizeTo(auxInfo); auxInfo_ = auxInfo;}
+  void setRep(const AbsTrackRep* rep) {rep_ = rep;}
 
   virtual void Print(Option_t* option = "") const override;
 

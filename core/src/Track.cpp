@@ -19,7 +19,9 @@
 
 #include "Track.h"
 
+#include <algorithm>
 #include <iostream>
+#include <map>
 
 //#include <glog/logging.h>
 
@@ -27,7 +29,7 @@
 namespace genfit {
 
 Track::Track() :
-  cardinalRep_(0)
+  cardinalRep_(0), stateSeed_(6)
 {
   ;
 }
@@ -48,18 +50,32 @@ Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
 Track::Track(const Track& rhs)
   : stateSeed_(rhs.stateSeed_)
 {
-  for (TrackPoint* rhsPoint : rhs.trackPoints_) {
-    trackPoints_.push_back(new TrackPoint(*rhsPoint));
-  }
+  std::map<const AbsTrackRep*, AbsTrackRep*> oldRepNewRep;
 
   for (AbsTrackRep* rhsRep : rhs.trackReps_) {
-    trackReps_.push_back(rhsRep->clone());
+    AbsTrackRep* newRep = rhsRep->clone();
+    trackReps_.push_back(newRep);
+    oldRepNewRep[rhsRep] = newRep;
+  }
+
+  for (TrackPoint* rhsPoint : rhs.trackPoints_) {
+    trackPoints_.push_back(new TrackPoint(*rhsPoint));
+    trackPoints_.back()->setTrack(this);
+  }
+
+  // set reps for the new TrackPoints
+  for (TrackPoint* tp : trackPoints_) {
+    for (AbsFitterInfo* fi : tp->getFitterInfos()) {
+      fi->setRep(oldRepNewRep.at(fi->getRep()));
+    }
   }
 
   cardinalRep_ = rhs.cardinalRep_;
+
+  assert(checkConsistency());
 }
 
-Track& Track::operator=(const Track& rhs) {
+/*Track& Track::operator=(const Track& rhs) {
   for (TrackPoint* point : trackPoints_) {
     if (point != nullptr)
       delete point;
@@ -85,8 +101,10 @@ Track& Track::operator=(const Track& rhs) {
   stateSeed_.ResizeTo(rhs.stateSeed_);
   stateSeed_ = rhs.stateSeed_;
 
+  assert(checkConsistency());
+
   return *this;
-}
+}*/
 
 
 Track::~Track() {
@@ -334,6 +352,47 @@ void Track::Print(const Option_t*) const {
 
   std::cout << "=======================================================================================\n";
 
+}
+
+
+bool Track::checkConsistency() const {
+  // check if seed is 6D
+  if (stateSeed_.GetNrows() != 6) {
+    std::cerr << "Track::checkConsistency(): stateSeed_ dimension != 6" << std::endl;
+    return false;
+  }
+
+  // check if cardinalRep_ is in range of trackReps_
+  if (cardinalRep_ >= trackReps_.size()) {
+    std::cerr << "Track::checkConsistency(): cardinalRep id out of bounds" << std::endl;
+    return false;
+  }
+
+  // check TrackPoints
+  for (TrackPoint* tp : trackPoints_) {
+    // check if trackPoint points bach to this track
+    if (tp->getTrack() != this) {
+      std::cerr << "Track::checkConsistency(): TrackPoint does not point back to this track" << std::endl;
+      return false;
+    }
+
+    // check fitterInfos
+    for (AbsFitterInfo* fi : tp->getFitterInfos()) {
+      if (!fi->checkConsistency()) {
+        std::cerr << "Track::checkConsistency(): FitterInfo not consistent" << std::endl;
+        return false;
+      }
+
+      // check if fitterInfos point to valid TrackReps in trackReps_
+      int mycount = std::count (trackReps_.begin(), trackReps_.end(), fi->getRep());
+      if (mycount ==  0) {
+        std::cerr << "Track::checkConsistency(): fitterInfo points to TrackRep which is not in Track" << std::endl;
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 

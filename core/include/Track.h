@@ -29,7 +29,7 @@ class Track : public TObject {
 
   Track(const Track&); // copy constructor
   Track(Track&&) = default; // move constructor
-  Track& operator=(const Track&); // assignment operator
+  Track& operator=(const Track&) = delete; // assignment operator  // delete until properly implemented
   //Track& operator=(Track&&) = default; // move assignment operator
 
   ~Track();
@@ -83,6 +83,8 @@ class Track : public TObject {
   void deleteMeasurementInfo(int startId, int endId);
 
   void Print(const Option_t* = "") const override;
+
+  bool checkConsistency() const;
 
  private:
 

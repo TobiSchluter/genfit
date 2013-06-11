@@ -59,7 +59,9 @@ class SimpleKalmanFitterInfo : public AbsFitterInfo {
   MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const override;
   MeasuredStateOnPlane getSmoothedState() const;
 
-  virtual void Print(const Option_t* = "") const override;
+  void Print(const Option_t* = "") const override;
+
+  bool checkConsistency() const override;
   
  private:
   std::unique_ptr<MeasuredStateOnPlane> fwPrediction_;

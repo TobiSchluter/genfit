@@ -162,3 +162,16 @@ void SimpleKalmanFitterInfo::Print(const Option_t*) const {
 
 }
 
+
+bool SimpleKalmanFitterInfo::checkConsistency() const {
+  // check if in a TrackPoint
+  if (!trackPoint_) {
+    std::cerr << "trackPoint_ is NULL" << std::endl;
+    return false;
+  }
+
+  // FIXME implement
+
+  return true;
+}
+

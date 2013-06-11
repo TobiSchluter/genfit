@@ -19,6 +19,8 @@
 
 #include "TrackPoint.h"
 
+#include "Exception.h"
+
 #include <iostream>
 
 
@@ -132,20 +134,27 @@ AbsFitterInfo* TrackPoint::getFitterInfo(int i) {
 }
 
 
-AbsFitterInfo* TrackPoint::getFitterInfo(AbsTrackRep* rep, int i) {
+AbsFitterInfo* TrackPoint::getFitterInfo(const AbsTrackRep* rep, int i) {
   int n(0);
   for (AbsFitterInfo* fitterInfo : fitterInfos_) {
     if (fitterInfo->getRep() == rep) {
-      if (i == n)
+      if (i == n) {
         return fitterInfo;
+      }
       ++n;
     }
+  }
+
+  if (n == 0 || i > n-1) {
+    Exception exc("TrackPoint::getFitterInfo ==> cannot get fitter info",__LINE__,__FILE__);
+    throw exc;
   }
 
   if (i<0)
     return getFitterInfo(rep, i+n);
 
-  return nullptr;
+  Exception exc("TrackPoint::getFitterInfo ==> cannot get fitter info",__LINE__,__FILE__);
+  throw exc;
 }
 
 

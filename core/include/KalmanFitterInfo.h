@@ -88,6 +88,8 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
   void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) {measurementsOnPlane_.push_back(measurementOnPlane);}
 
+  void setRep(const AbsTrackRep* rep) override;
+
   void deleteForwardInfo() override;
   void deleteBackwardInfo() override;
   void deleteReferenceInfo() override;

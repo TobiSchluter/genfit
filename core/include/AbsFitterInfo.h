@@ -56,11 +56,12 @@ class AbsFitterInfo : public TObject {
   //! Deep copy ctor for polymorphic class.
   virtual AbsFitterInfo* clone() const = 0;
 
-  void setStatusFlag(int statusFlag) {statusFlag_ = statusFlag;}
-
   const TrackPoint* getTrackPoint() const {return trackPoint_;}
-  void setTrackPoint(const TrackPoint *tp) {trackPoint_ = tp;}
   const AbsTrackRep* getRep() const {return rep_;}
+
+  void setTrackPoint(const TrackPoint *tp) {trackPoint_ = tp;}
+  void setStatusFlag(int statusFlag) {statusFlag_ = statusFlag;}
+  virtual void setRep(const AbsTrackRep* rep) {rep_ = rep;}
 
   virtual void deleteForwardInfo() = 0;
   virtual void deleteBackwardInfo() = 0;
@@ -73,7 +74,7 @@ class AbsFitterInfo : public TObject {
 
   virtual void Print(const Option_t* = "") const override {;}
 
-  virtual bool checkConsistency() const {return true;}
+  virtual bool checkConsistency() const = 0;
 
  protected:
 
