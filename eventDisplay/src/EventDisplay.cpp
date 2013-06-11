@@ -45,7 +45,7 @@
 
 namespace genfit {
 
-EventDisplay* EventDisplay::eventDisplay = nullptr;
+EventDisplay* EventDisplay::eventDisplay_ = nullptr;
 
 EventDisplay::EventDisplay() {
 
@@ -60,24 +60,24 @@ EventDisplay::EventDisplay() {
 		std::cout << "done!" << std::endl;
 	}
 
-	fEventId = 0;
+	eventId_ = 0;
 	setOptions();
 	setErrScale();
 
 }
 
-void EventDisplay::setOptions(std::string opts) { fOption = opts; }
+void EventDisplay::setOptions(std::string opts) { option_ = opts; }
 
-void EventDisplay::setErrScale(double errScale) { fErrorScale = errScale; }
+void EventDisplay::setErrScale(double errScale) { errorScale_ = errScale; }
 
-double EventDisplay::getErrScale() { return fErrorScale; }
+double EventDisplay::getErrScale() { return errorScale_; }
 
 EventDisplay* EventDisplay::getInstance() {
 
-	if(eventDisplay == nullptr) {
-		eventDisplay = new EventDisplay();
+	if(eventDisplay_ == nullptr) {
+		eventDisplay_ = new EventDisplay();
 	}
-	return eventDisplay;
+	return eventDisplay_;
 
 }
 
@@ -85,19 +85,17 @@ EventDisplay::~EventDisplay() { reset(); }
 
 void EventDisplay::reset() {
 
-	for(unsigned int i = 0; i < fEvents.size(); i++) {
+	for(unsigned int i = 0; i < events_.size(); i++) {
 
-		for(unsigned int j = 0; j < fEvents[i]->size(); j++) {
+		for(unsigned int j = 0; j < events_[i]->size(); j++) {
 
-			delete fEvents[i]->at(j);
+			delete events_[i]->at(j);
 
 		}
-		delete fEvents[i];
+		delete events_[i];
 	}
 
-	fEvents.clear();
-	fHits.clear();
-
+	events_.clear();
 }
 
 void EventDisplay::addEvent(std::vector<Track*>& evts) {
@@ -110,60 +108,62 @@ void EventDisplay::addEvent(std::vector<Track*>& evts) {
 
 	}
 
-	fEvents.push_back(vec);
+	events_.push_back(vec);
 
 }
 
 void EventDisplay::next(unsigned int stp) {
 
-	gotoEvent(fEventId + stp);
+	gotoEvent(eventId_ + stp);
 
 }
 
 void EventDisplay::prev(unsigned int stp) {
 
-	if(fEvents.size() == 0) return;
-	if(fEventId < (int)stp) {
+	if(events_.size() == 0) return;
+	if(eventId_ < (int)stp) {
 		gotoEvent(0);
 	} else {
-		gotoEvent(fEventId - stp);
+		gotoEvent(eventId_ - stp);
 	}
 
 }
 
-int EventDisplay::getNEvents() { return fEvents.size(); }
+int EventDisplay::getNEvents() { return events_.size(); }
 
 void EventDisplay::gotoEvent(unsigned int id) {
 
-	if(id >= fEvents.size()) id = fEvents.size() - 1;
+	if(id >= events_.size()) id = events_.size() - 1;
 
-	fEventId = id;
+	eventId_ = id;
 
 	std::cout << "At event " << id << std::endl;
 	if (gEve->GetCurrentEvent()) {
 	  gEve->GetCurrentEvent()->DestroyElements();
 	}
-	double old_error_scale = fErrorScale;
-	drawEvent(fEventId);
-	if(old_error_scale != fErrorScale) {
+	double old_error_scale = errorScale_;
+	drawEvent(eventId_);
+	if(old_error_scale != errorScale_) {
 	  if (gEve->GetCurrentEvent()) {
 	    gEve->GetCurrentEvent()->DestroyElements();
 	  }
-		drawEvent(fEventId); // if autoscaling changed the error, draw again.
+		drawEvent(eventId_); // if autoscaling changed the error, draw again.
 	}
-	fErrorScale = old_error_scale;
+	errorScale_ = old_error_scale;
 
 }
 
 void EventDisplay::open() {
 
+  std::cout << "EventDisplay::open()" << std::endl;
+
 	bool drawSilent = false;
 	bool drawGeometry = false;
 
 	// parse the global options
-	for(size_t i = 0; i < fOption.length(); i++) {
-		if(fOption[i] == 'X') drawSilent = true;
-		if(fOption[i] == 'G') drawGeometry = true;
+	for(size_t i = 0; i < option_.length(); i++) {
+		if(option_[i] == 'X') drawSilent = true;
+		if(option_[i] == 'G') drawGeometry = true;
 	}
 
 	// draw the geometry, does not really work yet. If it's fixed, the docu in the header file should be changed.
@@ -185,21 +185,28 @@ void EventDisplay::open() {
 		gEve->AddGlobalElement(eve_top_node);
 	}
 
+	std::cout << "blub" << std::endl;
+
 	if(getNEvents() > 0) {
-		double old_error_scale = fErrorScale;
+		double old_error_scale = errorScale_;
 		drawEvent(0);
-		if(old_error_scale != fErrorScale) gotoEvent(0); // if autoscaling changed the error, draw again.
-		fErrorScale = old_error_scale;
+		if(old_error_scale != errorScale_) gotoEvent(0); // if autoscaling changed the error, draw again.
+		errorScale_ = old_error_scale;
 	}
+
 
 	if(!drawSilent) {
 		makeGui();
 		gApplication->Run(kTRUE);
 	}
 
+	std::cout << "opened" << std::endl;
+
 }
 
 void EventDisplay::drawEvent(unsigned int id) {
+
+  std::cout << "EventDisplay::drawEvent(" << id << ")" << std::endl;
 
 	// parse the option string ------------------------------------------------------------------------
 	bool drawAutoScale = false;
@@ -209,61 +216,41 @@ void EventDisplay::drawEvent(unsigned int id) {
 	bool drawTrackMarkers = false;
 	bool drawPlanes = false;
 	bool drawTrack = false;
-	bool drawRawHits = false;
 
-	if(fOption != "") {
-		for(size_t i = 0; i < fOption.length(); i++) {
-			if(fOption[i] == 'A') drawAutoScale = true;
-			if(fOption[i] == 'D') drawDetectors = true;
-			if(fOption[i] == 'H') drawHits = true;
-			if(fOption[i] == 'M') drawTrackMarkers = true;
-			if(fOption[i] == 'P') drawPlanes = true;
-			if(fOption[i] == 'S') drawScaleMan = true;
-			if(fOption[i] == 'T') drawTrack = true;
-			if(fOption[i] == 'R') drawRawHits = true;
+	if(option_ != "") {
+		for(size_t i = 0; i < option_.length(); i++) {
+			if(option_[i] == 'A') drawAutoScale = true;
+			if(option_[i] == 'D') drawDetectors = true;
+			if(option_[i] == 'H') drawHits = true;
+			if(option_[i] == 'M') drawTrackMarkers = true;
+			if(option_[i] == 'P') drawPlanes = true;
+			if(option_[i] == 'S') drawScaleMan = true;
+			if(option_[i] == 'T') drawTrack = true;
 		}
 	}
 	// finished parsing the option string -------------------------------------------------------------
 
-	// draw SPHits  // quick n dirty hack
-	if(drawRawHits){
-		for(unsigned int j=0; j<fHits[id].size(); ++j){
-			// rotate and translate -------------------------------------------------------
-		  TGeoGenTrans det_trans(fHits[id][j][0], fHits[id][j][1], fHits[id][j][2],
-					1./fHits[id][j][3], 1./fHits[id][j][4], 1./fHits[id][j][5], 0);
-
-			TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
-			det_shape->IncDenyDestroy();
-			det_shape->SetShape(new TGeoSphere(0.,1.));
-			det_shape->SetTransMatrix(det_trans);
-			// finished rotating and translating ------------------------------------------
-
-			det_shape->SetMainColor(kYellow);
-			det_shape->SetMainTransparency(70);
-			gEve->AddElement(det_shape);
-		}
-	}
 
 
+	for(unsigned int i = 0; i < events_[id]->size(); i++) { // loop over all tracks in an event
 
+	  std::cout << " draw track " << i << std::endl;
 
-
-	for(unsigned int i = 0; i < fEvents[id]->size(); i++) { // loop over all tracks in an event
-
-		Track* track = fEvents[id]->at(i);
+		Track* track = events_[id]->at(i);
 
 		AbsTrackRep* rep(track->getCardinalRep());
-		unsigned int irep = track->getCardinalRepID();
 
 		unsigned int numhits = track->getNumPointsWithMeasurement();
 		
-		TVector3 track_pos;
-		TVector3 old_track_pos;
+		TVector3 track_pos, track_posRef, old_track_pos, old_track_posRef;
 
 		TEveStraightLineSet* track_lines = nullptr;
+		TEveStraightLineSet* track_linesRef = nullptr;
 
 
 		for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
+
+		  std::cout << " draw hit " << j << std::endl;
 
 			// get the fitter infos ------------------------------------------------------------------
 		  AbsFitterInfo* fitterInfo = track->getPointWithMeasurement(j)->getFitterInfo(rep, -1);
@@ -275,12 +262,13 @@ void EventDisplay::drawEvent(unsigned int id) {
 		  }
 
 		  KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(fitterInfo);
-
 		  MeasuredStateOnPlane fittedState = fi->getFittedState(true);
-			
 			track_pos = rep->getPos(&fittedState);
+			track_posRef = rep->getPos(fi->getReferenceState());
 
-			MeasurementOnPlane* mop = fi->getMeasurementOnPlane(); // FIXME draw all measurements, not only 1st
+			double charge = rep->getCharge(&fittedState);
+
+			const MeasurementOnPlane* mop = fi->getMeasurementOnPlane(); // FIXME draw all measurements, not only 1st
 			const TVectorT<double>& hit_coords = mop->getState();
 			const TMatrixTSym<double>& hit_cov = mop->getCov();
 
@@ -304,7 +292,7 @@ void EventDisplay::drawEvent(unsigned int id) {
 
 			int hit_coords_dim = hit_coords.GetNrows();
 
-			if(dynamic_cast<PlanarMeasurement*>(m) != nullptr) {
+			if(dynamic_cast<const PlanarMeasurement*>(m) != nullptr) {
 				planar_hit = true;
 				if(hit_coords_dim == 1) {
 					hit_u = hit_coords(0);
@@ -316,23 +304,23 @@ void EventDisplay::drawEvent(unsigned int id) {
 					hit_res_u = hit_cov(0,0);
 					hit_res_v = hit_cov(1,1);
 				}
-			} else if (dynamic_cast<SpacepointMeasurement*>(m) != nullptr) {
+			} else if (dynamic_cast<const SpacepointMeasurement*>(m) != nullptr) {
 				space_hit = true;
 				plane_size = 4;
-      } else if (dynamic_cast<WireMeasurement*>(m) != nullptr) {
+      } else if (dynamic_cast<const WireMeasurement*>(m) != nullptr) {
 				wire_hit = true;
 				hit_u = hit_coords(0);
 				hit_v = v*(track_pos-o); // move the covariance tube so that the track goes through it
 				hit_res_u = hit_cov(0,0);
 				hit_res_v = 4;
 				plane_size = 4;
-				if (dynamic_cast<WirepointMeasurement*>(m) != nullptr) {
+				if (dynamic_cast<const WirePointMeasurement*>(m) != nullptr) {
 				  wirepoint_hit = true;
 				  hit_v = hit_coords(1);
 				  hit_res_v = hit_cov(1,1);
 				}
       } else {
-				std::cout << "Track " << i << ", Hit " << j << ": Unknown policy name: skipping hit!" << std::endl;
+				std::cout << "Track " << i << ", Hit " << j << ": Unknown measurement type: skipping hit!" << std::endl;
 				break;
 			}
 
@@ -370,6 +358,23 @@ void EventDisplay::drawEvent(unsigned int id) {
 				}
 			}
 			// finished drawing track -------------------------------------------------------------
+	     // draw reference track if corresponding option is set ------------------------------------------
+	      if(drawTrack) {
+	        if(track_linesRef == nullptr) track_linesRef = new TEveStraightLineSet;
+	        if(j > 0) track_linesRef->AddLine(old_track_posRef(0), old_track_posRef(1), old_track_posRef(2), track_posRef(0), track_posRef(1), track_posRef(2));
+	        old_track_posRef = track_posRef;
+	        if(charge > 0) {
+	          track_linesRef->SetLineColor(kRed+2);
+	        } else {
+	          track_linesRef->SetLineColor(kBlue+2);
+	        }
+	        track_linesRef->SetLineWidth(2);
+	        track_linesRef->SetLineStyle(2);
+	        if(drawTrackMarkers) {
+	          //track_linesRef->AddMarker(track_posRef(0), track_posRef(1), track_posRef(2));
+	        }
+	      }
+	      // finished drawing reference track -------------------------------------------------------------
 
 			// draw detectors if option is set, only important for wire hits ----------------------
 			if(drawDetectors) {
@@ -405,7 +410,7 @@ void EventDisplay::drawEvent(unsigned int id) {
 				if(planar_hit) {
 					if(!planar_pixel_hit) {
 						TEveBox* hit_box;
-						hit_box = boxCreator((o + hit_u*u), u, v, fErrorScale*std::sqrt(hit_res_u), plane_size, 0.0105);
+						hit_box = boxCreator((o + hit_u*u), u, v, errorScale_*std::sqrt(hit_res_u), plane_size, 0.0105);
 						hit_box->SetMainColor(kYellow);
 						hit_box->SetMainTransparency(0);
 						gEve->AddElement(hit_box);
@@ -416,8 +421,8 @@ void EventDisplay::drawEvent(unsigned int id) {
 						det_shape->IncDenyDestroy();
 						TMatrixT<double> ev = eigen_values.GetEigenValues();
 						TMatrixT<double> eVec = eigen_values.GetEigenVectors();
-						double pseudo_res_0 = fErrorScale*std::sqrt(ev(0,0));
-						double pseudo_res_1 = fErrorScale*std::sqrt(ev(1,1));
+						double pseudo_res_0 = errorScale_*std::sqrt(ev(0,0));
+						double pseudo_res_1 = errorScale_*std::sqrt(ev(1,1));
 						// finished calcluating, got the values -----------------------------------
 
 						// do autoscaling if necessary --------------------------------------------
@@ -429,10 +434,10 @@ void EventDisplay::drawEvent(unsigned int id) {
 								if(min_cov < 0.049) {
 									double cor = 0.05 / min_cov;
 									std::cout << "Track " << i << ", Hit " << j << ": Pixel covariance too small, rescaling by " << cor;
-									fErrorScale *= cor;
+									errorScale_ *= cor;
 									pseudo_res_0 *= cor;
 									pseudo_res_1 *= cor;
-									std::cout << " to " << fErrorScale << std::endl; 
+									std::cout << " to " << errorScale_ << std::endl;
 								}
 							}
 						}
@@ -465,7 +470,7 @@ void EventDisplay::drawEvent(unsigned int id) {
 				if(space_hit) {
 
 					// get eigenvalues of covariance to know how to draw the ellipsoid ------------
-					TMatrixDEigen eigen_values(hit->getRawHitCov());
+					TMatrixDEigen eigen_values(m->getRawHitCov());
 					TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
 					det_shape->IncDenyDestroy();
 					det_shape->SetShape(new TGeoSphere(0.,1.));
@@ -483,13 +488,13 @@ void EventDisplay::drawEvent(unsigned int id) {
 							(eVec3.Theta()*180)/TMath::Pi(), (eVec3.Phi()*180)/TMath::Pi()); // the rotation is already clear
 
 					// set the scaled eigenvalues -------------------------------------------------
-					double pseudo_res_0 = fErrorScale*std::sqrt(ev(0,0));
-					double pseudo_res_1 = fErrorScale*std::sqrt(ev(1,1));
-					double pseudo_res_2 = fErrorScale*std::sqrt(ev(2,2));
+					double pseudo_res_0 = errorScale_*std::sqrt(ev(0,0));
+					double pseudo_res_1 = errorScale_*std::sqrt(ev(1,1));
+					double pseudo_res_2 = errorScale_*std::sqrt(ev(2,2));
 					if(drawScaleMan) { // override again if necessary
-						pseudo_res_0 = fErrorScale*0.5;
-						pseudo_res_1 = fErrorScale*0.5;
-						pseudo_res_2 = fErrorScale*0.5;
+						pseudo_res_0 = errorScale_*0.5;
+						pseudo_res_1 = errorScale_*0.5;
+						pseudo_res_2 = errorScale_*0.5;
 					}
 					// finished scaling -----------------------------------------------------------
 
@@ -502,11 +507,11 @@ void EventDisplay::drawEvent(unsigned int id) {
 							if(min_cov <= 0.149) {
 								double cor = 0.15 / min_cov;
 								std::cout << "Track " << i << ", Hit " << j << ": Space hit covariance too small, rescaling by " << cor;
-								fErrorScale *= cor;
+								errorScale_ *= cor;
 								pseudo_res_0 *= cor;
 								pseudo_res_1 *= cor;
 								pseudo_res_2 *= cor;
-								std::cout << " to " << fErrorScale << std::endl;
+								std::cout << " to " << errorScale_ << std::endl;
 							}
 						}
 					}
@@ -530,9 +535,9 @@ void EventDisplay::drawEvent(unsigned int id) {
 				if(wire_hit) {
 					TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
 					det_shape->IncDenyDestroy();
-					double pseudo_res_0 = fErrorScale*std::sqrt(hit_cov(0,0));
+					double pseudo_res_0 = errorScale_*std::sqrt(hit_cov(0,0));
 					double pseudo_res_1 = plane_size;
-					if (wirepoint_hit) pseudo_res_1 = fErrorScale*std::sqrt(hit_cov(1,1));
+					if (wirepoint_hit) pseudo_res_1 = errorScale_*std::sqrt(hit_cov(1,1));
 
 					// autoscale if necessary -----------------------------------------------------
 					if(drawAutoScale) {
@@ -542,9 +547,9 @@ void EventDisplay::drawEvent(unsigned int id) {
 							if(pseudo_res_0 < 0.0049) {
 								double cor = 0.005 / pseudo_res_0;
 								std::cout << "Track " << i << ", Hit " << j << ": Wire covariance too small, rescaling by " << cor;
-								fErrorScale *= cor;
+								errorScale_ *= cor;
 								pseudo_res_0 *= cor;
-								std::cout << " to " << fErrorScale << std::endl; 
+								std::cout << " to " << errorScale_ << std::endl;
 							}
 						}
 
@@ -554,9 +559,9 @@ void EventDisplay::drawEvent(unsigned int id) {
               if(pseudo_res_1 < 0.0049) {
                 double cor = 0.005 / pseudo_res_1;
                 std::cout << "Track " << i << ", Hit " << j << ": Wire covariance too small, rescaling by " << cor;
-                fErrorScale *= cor;
+                errorScale_ *= cor;
                 pseudo_res_1 *= cor;
-                std::cout << " to " << fErrorScale << std::endl;
+                std::cout << " to " << errorScale_ << std::endl;
               }
             }
 					}
@@ -581,35 +586,17 @@ void EventDisplay::drawEvent(unsigned int id) {
 					gEve->AddElement(det_shape);
 				}
 				// finished drawing wire hits -----------------------------------------------------
-
 			}
 
 		}
 
-		// reseting to the initial state ----------------------------------------------------------
-		rep->setData(initial_state,initial_plane,&initial_cov,&initial_auxInfo);
-
-    try {
-      rep->extrapolate(initial_plane);
-    }
-    catch(Exception& e) {
-      std::cerr << "Error: Exception caught: could not extrapolate back to initial plane " << std::endl;
-      std::cerr << e.what();
-      continue;
-    }
-		// done resetting -------------------------------------------------------------------------
-
 		if(track_lines != nullptr) gEve->AddElement(track_lines);
+		if(track_linesRef != nullptr) gEve->AddElement(track_linesRef);
 
 	}
 
 	gEve->Redraw3D(kTRUE);
 
-}
-
-
-void EventDisplay::addHits(std::vector<std::vector<double> > hits){
-	fHits.push_back(hits);
 }
 
 

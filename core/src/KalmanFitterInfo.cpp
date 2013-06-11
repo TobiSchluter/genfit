@@ -83,6 +83,10 @@ KalmanFitterInfo* KalmanFitterInfo::clone() const {
   if (this->backwardUpdate_ != nullptr)
     retVal->backwardUpdate_ = new KalmanFittedStateOnPlane(*(this->backwardUpdate_));
 
+  retVal->measurementsOnPlane_.reserve(this->measurementsOnPlane_.size());
+  for (MeasurementOnPlane* mop : this->measurementsOnPlane_)
+    retVal->measurementsOnPlane_.push_back(new MeasurementOnPlane(*mop));
+
   return retVal;
 }
 

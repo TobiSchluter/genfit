@@ -608,7 +608,7 @@ void MaterialEffects::noiseBrems(const double& mom,
                                  M7x7& noise) const
 {
 
-  // Code ported from GEANT 3
+  // Code ported from GEANT 3 and simplified
   // this formula assumes p >> m and therefore p^2 + m^2 = p^2
   // the factor  1.44 is not in the original Behta Heitler model. It seems to be some empirical correction copied over from some other project
 

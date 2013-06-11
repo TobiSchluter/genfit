@@ -39,7 +39,7 @@
 #include <StepLimits.h>
 #include <TGeoMaterialInterface.h>
 
-//#include <EventDisplay.h>
+#include <EventDisplay.h>
 
 #include <TApplication.h>
 #include <TCanvas.h>
@@ -112,10 +112,10 @@ int randomSign() {
 //---------------------------------------------------------------------------------------------------------
 
 
-#define VALGRIND
+//#define VALGRIND
 
 int main() {
-  std::cerr<<"main"<<std::endl;
+  std::cout<<"main"<<std::endl;
 
   const unsigned int nEvents = 1;
   const double BField = 15.;       // kGauss
@@ -300,7 +300,7 @@ int main() {
 
       TVector3 point, dir;
       int wireCounter = 0;
-      if (debug) std::cerr << "Start creating measurements ... \n";
+      if (debug) std::cout << "Start creating measurements ... \n";
       try{
         for (unsigned int i=0; i<measurementTypes.size(); ++i){
           // get current position and momentum
@@ -518,7 +518,7 @@ int main() {
         continue; // here is a memleak!
       }
 
-      if (debug) std::cerr << "... done creating measurements \n";
+      if (debug) std::cout << "... done creating measurements \n";
 
 
 
@@ -547,25 +547,25 @@ int main() {
       try{
         switch (fitterId) {
           case 1:
-            if (debug) std::cerr<<"Starting the fitter (simple Kalman)"<<std::endl;
+            if (debug) std::cout<<"Starting the fitter (simple Kalman)"<<std::endl;
             simpleKalman.processTrack(fitTrack, rep);
             break;
 
           case 2:
-            if (debug) std::cerr<<"Starting the fitter (reference track Kalman)"<<std::endl;
+            if (debug) std::cout<<"Starting the fitter (reference track Kalman)"<<std::endl;
             kalmanFitterRefTrack.processTrack(fitTrack, rep);
             break;
 
           case 3:
-            //if (debug) std::cerr<<"Starting the fitter (DAF)"<<std::endl;
+            //if (debug) std::cout<<"Starting the fitter (DAF)"<<std::endl;
             //daf.processTrack.processTrack(fitTrack, rep);
             //break;
           default:
-            std::cerr<<"no fitter selected!"<<std::endl;
+            std::cout<<"no fitter selected!"<<std::endl;
 
         }
 
-        if (debug) std::cerr<<"fitter is finished!"<<std::endl;
+        if (debug) std::cout<<"fitter is finished!"<<std::endl;
       }
       catch(genfit::Exception& e){
         std::cerr << e.what();
@@ -581,6 +581,7 @@ int main() {
       //choose trackrep to check
       genfit::AbsTrackRep* repCheck = fitTrack->getTrackRep(0);
 
+      // FIXME
       // check if fit was successfull
       /*if(repCheck->getStatusFlag() != 0 ) {
         continue;
@@ -590,7 +591,7 @@ int main() {
 #ifndef VALGRIND
       // add track to event display
       std::vector<genfit::Track*> event;
-      event.push_back(fitTrack);
+      event.push_back(new genfit::Track(*fitTrack)); // FIXME memleak
       display->addEvent(event);
 #endif
 
@@ -694,14 +695,14 @@ int main() {
 
   }// end loop over events
 
-  std::cerr<<"maxWeight = " << maxWeight << std::endl;
+  std::cout<<"maxWeight = " << maxWeight << std::endl;
 
 #ifndef VALGRIND
-  if (debug) std::cerr<<"Write Tree ...";
+  /*if (debug) std::cout<<"Write Tree ...";
   tree->Write();
-  if (debug) std::cerr<<"... done"<<std::endl;
+  if (debug) std::cout<<"... done"<<std::endl;
 
-  if (debug) std::cerr<<"Draw histograms ...";
+  if (debug) std::cout<<"Draw histograms ...";
   // fit and draw histograms
   TCanvas* c1 = new TCanvas();
   c1->Divide(2,3);
@@ -759,18 +760,18 @@ int main() {
 
   c2->Write();
 
-  if (debug) std::cerr<<"... done"<<std::endl;
+  if (debug) std::cout<<"... done"<<std::endl;*/
 
   // open event display
-  display->setOptions("THDPMAG"); // G show geometry
+  display->setOptions("THDPMA"); // G show geometry
   display->open();
 
-  rootapp->Run();
+  //rootapp->Run();
 
-  file->Close();
+  //file->Close();
 #endif
 
-  if (debug) std::cerr<<"... closed file"<<std::endl;
+  if (debug) std::cout<<"... closed file"<<std::endl;
 
 }
 

@@ -111,6 +111,9 @@ void KalmanFitterRefTrack::processTrack(Track* tr, AbsTrackRep* rep)
 
   }
 
+  // check
+  assert(tr->checkConsistency());
+
 }
 
 
@@ -193,9 +196,6 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
       prevRefState->setBackwardSegmentLength(-segmentLen);
       prevRefState->setBackwardTransportMatrix(BTransportMatrix);
       prevRefState->setBackwardNoiseMatrix(BNoiseMatrix);
-
-      // check
-      assert(prevFitterInfo->checkConsistency());
     }
 
 
@@ -224,7 +224,7 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
   prevRefState->setBackwardNoiseMatrix(BNoiseMatrix);
 
   // check
-  assert(prevFitterInfo->checkConsistency());
+  assert(tr->checkConsistency());
 }
 
 

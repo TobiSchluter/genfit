@@ -122,22 +122,13 @@ class EventDisplay : public TNamed {
 		/** @brief Open the event display.*/
 		void open();
 	
-		/** @brief Add a vector of space point hits.
-		 *
-		 * The format is (x, y, z, simga_x, sigma_y, sigma_z).
-		 * Use addHits at the same time like addEvent, because Hits and Events
-		 * must have the same size.
-		 *
-		 *  */
-		void addHits(std::vector< std::vector<double> > hits);
 
 	private:
-		static EventDisplay* eventDisplay;
-		int fEventId;
-		double fErrorScale;
-		std::string fOption;
-		std::vector< std::vector<Track*>* > fEvents;
-		std::vector< std::vector< std::vector<double> > > fHits;
+		static EventDisplay* eventDisplay_;
+		int eventId_;
+		double errorScale_;
+		std::string option_;
+		std::vector< std::vector<Track*>* > events_;
 
 		/** @brief Build the buttons for event navigation.*/
 		void makeGui();
