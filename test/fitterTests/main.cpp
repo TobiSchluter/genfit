@@ -147,7 +147,7 @@ int main() {
 
   const bool HelixTest = false;      // use helix for creating measurements
 
-  const bool matFX = true;         // include material effects; can only be disabled for RKTrackRep!
+  const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
 
   const bool debug = true;
 
@@ -277,20 +277,20 @@ int main() {
 
 
       // trackrep for creating measurements
-      genfit::AbsTrackRep* repRef = new genfit::RKTrackRep(pdg);
-      genfit::StateOnPlane stateRef(repRef);
-      repRef->setPosMom(&stateRef, pos, mom);
+      genfit::AbsTrackRep* rep = new genfit::RKTrackRep(pdg);
+      genfit::StateOnPlane stateRef(rep);
+      rep->setPosMom(&stateRef, pos, mom);
 
       // smeared start state
-      genfit::StateOnPlane stateSmeared(repRef);
-      repRef->setPosMom(&stateSmeared, posM, momM);
+      genfit::StateOnPlane stateSmeared(rep);
+      rep->setPosMom(&stateSmeared, posM, momM);
 
-      //repRef->setPropDir(1);
+      //rep->setPropDir(1);
 
       if (!matFX) genfit::MaterialEffects::getInstance()->setNoEffects();
 
       // remember original initial state
-      const genfit::StateOnPlane stateRefOrig(repRef);
+      const genfit::StateOnPlane stateRefOrig(rep);
 
       // create smeared measurements
       std::vector<genfit::AbsMeasurement*> measurements;
@@ -305,7 +305,7 @@ int main() {
         for (unsigned int i=0; i<measurementTypes.size(); ++i){
           // get current position and momentum
           if (!HelixTest) {
-            repRef->getPosMom(&stateRef, point, dir);
+            rep->getPosMom(&stateRef, point, dir);
             dir.SetMag(1);
           }
           else {
@@ -506,7 +506,7 @@ int main() {
             // stepalong (approximately)
             dir.SetMag(pointDist);
             genfit::SharedPlanePtr pl(new genfit::DetPlane(point+dir, dir));
-            repRef->extrapolateToPlane(&stateRef, pl);
+            rep->extrapolateToPlane(&stateRef, pl);
           }
         }
 
@@ -522,10 +522,6 @@ int main() {
 
 
 
-      // trackrep to be fitted and tested
-      genfit::AbsTrackRep* rep;
-      rep = new genfit::RKTrackRep(pdg);
-
       // create track
       if (fitTrack != NULL) delete fitTrack;
       fitTrack = new genfit::Track(rep, rep->get6DState(&stateSmeared)); //initialized with smeared rep
@@ -539,7 +535,7 @@ int main() {
       }
 
       // print trackCand
-      if (debug) fitTrack->Print();
+      //if (debug) fitTrack->Print();
 
 
 
@@ -573,9 +569,7 @@ int main() {
         continue;
       }
 
-      if (debug) {
-        fitTrack->Print();
-      }
+      if (debug) fitTrack->Print();
 
 
       //choose trackrep to check
@@ -595,37 +589,34 @@ int main() {
       display->addEvent(event);
 #endif
 
-      /*if (debug) {
-        std::cout << "cov before extrapolating back to reference plane \n";
-        repCheck->getCov().Print();
-
-        std::cout << "pos before extrapolating back to reference plane \n";
-        repCheck->getPos().Print();
+   /*   genfit::KalmanFittedStateOnPlane* kfsop = new genfit::KalmanFittedStateOnPlane(*(static_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
+      if (debug) {
+        std::cout << "state before extrapolating back to reference plane \n";
+        kfsop->Print();
       }
 
       // extrapolate back to reference plane.
       try{
-        repCheck->extrapolate(referencePlane);
+        rep->extrapolateToPlane(kfsop, stateRefOrig.getPlane());;
       }
-      catch(Exception& e){
+      catch(genfit::Exception& e){
         std::cerr<<"Exception, next track"<<std::endl;
         e.what();
         continue; // here is a memleak!
       }
+*/
 
 
-      // check getPos etc methods
-      const double epsilon = 1E-3;
-      TVector3 getPos, getMom;
-
-
-      // calculate pulls
-      TVectorT<double> state(repCheck->getState());
-      TMatrixTSym<double> cov(repCheck->getCov());*/
 
 
 #ifndef VALGRIND
-      /*hmomRes->Fill( (charge/state[0]-momentum));
+      // calculate pulls
+      /*const TVectorD& referenceState = stateRefOrig.getState();
+
+      const TVectorD& state = kfsop->getState();
+      const TMatrixDSym& cov = kfsop->getCov();
+
+      hmomRes->Fill( (charge/state[0]-momentum));
       hupRes->Fill(  (state[1]-referenceState[1]));
       hvpRes->Fill(  (state[2]-referenceState[2]));
       huRes->Fill(   (state[3]-referenceState[3]));

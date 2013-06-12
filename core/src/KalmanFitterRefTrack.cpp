@@ -41,7 +41,11 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, AbsTrackRep* rep, double& chi2, s
   chi2 = 0;
   ndf = 0;
   KalmanFitterInfo* prevFi(nullptr);
+
+#ifdef DEBUG
   std::cout << tr->getNumPoints() << " TrackPoints with measurements in this track." << std::endl;
+#endif
+
   for (size_t i = 0; i < tr->getNumPointsWithMeasurement(); ++i) {
       TrackPoint *tp = 0;
       assert(direction == +1 || direction == -1);
@@ -50,7 +54,7 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, AbsTrackRep* rep, double& chi2, s
       else if (direction == -1)
         tp = tr->getPointWithMeasurement(-i-1);
 
-      KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(-1));
+      KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep, -1));
       processTrackPoint(fi, prevFi, chi2, ndf, direction);
       prevFi = fi;
   }
@@ -86,7 +90,7 @@ void KalmanFitterRefTrack::processTrack(Track* tr, AbsTrackRep* rep)
     fitTrack(tr, rep, chi2FW, ndfFW, +1);
 
     // fit backward
-    KalmanFitterInfo* lastInfo = static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(-1)->getFitterInfo(-1));
+    KalmanFitterInfo* lastInfo = static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(-1)->getFitterInfo(rep, -1));
     lastInfo->setBackwardPrediction(new MeasuredStateOnPlane(*(lastInfo->getForwardUpdate())));
     lastInfo->getBackwardPrediction()->getCov() *= blowUpFactor_;  // blow up cov
 
@@ -95,11 +99,12 @@ void KalmanFitterRefTrack::processTrack(Track* tr, AbsTrackRep* rep)
 
 #ifdef DEBUG
     std::cout << "Track after fit:"; tr->Print();
-#endif
 
 
     std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
         << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
+#endif
+
     if (fabs(oldChi2BW - chi2BW) < deltaChi2_)  {
       // Finished
       break;
@@ -122,14 +127,13 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
   std::unique_ptr<MeasuredStateOnPlane> seedState;
 
   // get seed state from previous fit if there is one
-  if (tr->getPointWithMeasurement(0)->hasFitterInfos()) {
+  if (tr->getPointWithMeasurement(0)->hasFitterInfos(rep)) {
     KalmanFitterInfo* fitterInfo(nullptr);
 
     // get the last fitter info with the correct TrackRep and see if it has the right type
-    std::vector< genfit::AbsFitterInfo* >& fitterInfos = tr->getPointWithMeasurement(0)->getFitterInfos();
+    const std::vector< AbsFitterInfo* >& fitterInfos = tr->getPointWithMeasurement(0)->getFitterInfos(rep);
     for (int i=fitterInfos.size()-1; i>-1; --i) {
-      if (fitterInfos[i]->getRep() == rep)
-        fitterInfo = dynamic_cast<KalmanFitterInfo*>(fitterInfos[i]);
+      fitterInfo = dynamic_cast<KalmanFitterInfo*>(fitterInfos[i]);
       if (fitterInfo) {
         if (fitterInfo->hasBackwardUpdate()) {
           seedState = std::unique_ptr<MeasuredStateOnPlane>(new MeasuredStateOnPlane(*(fitterInfo->getBackwardUpdate())));

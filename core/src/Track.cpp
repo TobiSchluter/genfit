@@ -43,35 +43,26 @@ Track::Track(const TrackCand& trackCand) :
 Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
   cardinalRep_(0), stateSeed_(stateSeed)
 {
-  trackReps_.push_back(trackRep);
+  trackReps_.push_back(std::unique_ptr<AbsTrackRep>(trackRep));
 }
 
 
 Track::Track(const Track& rhs)
-  : stateSeed_(rhs.stateSeed_)
+  : cardinalRep_(rhs.cardinalRep_), stateSeed_(rhs.stateSeed_)
 {
   std::map<const AbsTrackRep*, AbsTrackRep*> oldRepNewRep;
 
-  for (AbsTrackRep* rhsRep : rhs.trackReps_) {
-    AbsTrackRep* newRep = rhsRep->clone();
-    trackReps_.push_back(newRep);
-    oldRepNewRep[rhsRep] = newRep;
+  for (auto it=rhs.trackReps_.begin(); it!=rhs.trackReps_.end(); ++it) {
+    AbsTrackRep* newRep = it->get()->clone();
+    addTrackRep(newRep);
+    oldRepNewRep[it->get()] = newRep;
   }
 
-  for (TrackPoint* rhsPoint : rhs.trackPoints_) {
-    trackPoints_.push_back(new TrackPoint(*rhsPoint));
-    trackPoints_.back()->setTrack(this);
+  for (auto it=rhs.trackPoints_.begin(); it!=rhs.trackPoints_.end(); ++it) {
+    insertPoint(new TrackPoint(*(it->get()), oldRepNewRep));
   }
 
-  // set reps for the new TrackPoints
-  for (TrackPoint* tp : trackPoints_) {
-    for (AbsFitterInfo* fi : tp->getFitterInfos()) {
-      fi->setRep(oldRepNewRep.at(fi->getRep()));
-    }
-  }
-
-  cardinalRep_ = rhs.cardinalRep_;
-
+  // self test
   assert(checkConsistency());
 }
 
@@ -108,15 +99,7 @@ Track::Track(const Track& rhs)
 
 
 Track::~Track() {
-  for (TrackPoint* point : trackPoints_) {
-    if (point != nullptr)
-      delete point;
-  }
-
-  for (AbsTrackRep* rep : trackReps_) {
-    if (rep != nullptr)
-      delete rep;
-  }
+  ; // smart pointers take care
 }
 
 
@@ -124,7 +107,19 @@ TrackPoint* Track::getPoint(int id) const {
   if (id < 0)
     id += trackPoints_.size();
 
-  return trackPoints_.at(id);
+  return trackPoints_.at(id).get();
+}
+
+
+std::vector< TrackPoint* > Track::getPoints() const {
+  std::vector< TrackPoint* > retVal;
+  retVal.reserve(trackPoints_.size());
+
+  for (auto it = trackPoints_.begin(); it != trackPoints_.end(); ++it) {
+    retVal.push_back(it->get());
+  }
+
+  return retVal;
 }
 
 
@@ -137,7 +132,7 @@ TrackPoint* Track::getPointWithMeasurement(int id) const {
   for (unsigned int i=0; i<trackPoints_.size(); ++i) {
     if (trackPoints_[i]->hasRawMeasurements()) {
       if (id == idMeas)
-        return trackPoints_.at(i);
+        return trackPoints_.at(i).get();
       ++idMeas;
     }
   }
@@ -149,9 +144,9 @@ TrackPoint* Track::getPointWithMeasurement(int id) const {
 std::vector<TrackPoint*> Track::getPointsWithMeasurement() const {
   std::vector<TrackPoint*> retVal;
 
-  for (unsigned int i=0; i<trackPoints_.size(); ++i) {
-    if (trackPoints_[i]->hasRawMeasurements()) {
-      retVal.push_back(trackPoints_[i]);
+  for (auto it = trackPoints_.begin(); it != trackPoints_.end(); ++it) {
+    if ((*it)->hasRawMeasurements()) {
+      retVal.push_back(it->get());
     }
   }
 
@@ -162,8 +157,8 @@ std::vector<TrackPoint*> Track::getPointsWithMeasurement() const {
 unsigned int Track::getNumPointsWithMeasurement() const {
   unsigned int retVal(0);
 
-  for (unsigned int i=0; i<trackPoints_.size(); ++i) {
-    if (trackPoints_[i]->hasRawMeasurements()) {
+  for (auto it = trackPoints_.begin(); it != trackPoints_.end(); ++it) {
+    if ((*it)->hasRawMeasurements()) {
       ++retVal;
     }
   }
@@ -174,11 +169,10 @@ unsigned int Track::getNumPointsWithMeasurement() const {
 
 void Track::insertPoint(TrackPoint* point, int id) {
   // TODO: test
+  point->setTrack(this);
 
-  if (trackPoints_.size() == 0) {
-    assert(id == -1 || id == 0);
-    trackPoints_.insert(trackPoints_.begin(), point);
-    point->setTrack(this);
+  if (id == -1 || trackPoints_.size() == 0) {
+    trackPoints_.push_back(std::unique_ptr<TrackPoint>(point));
     return;
   }
 
@@ -194,8 +188,7 @@ void Track::insertPoint(TrackPoint* point, int id) {
     deleteBackwardInfo(0, id-1);
   }
 
-  trackPoints_.insert(trackPoints_.begin() + id + 1, point);  // insert inserts BEFORE
-  point->setTrack(this);
+  trackPoints_.insert(trackPoints_.begin() + id + 1, std::unique_ptr<TrackPoint>(point));  // insert inserts BEFORE
 }
 
 
@@ -210,7 +203,6 @@ void Track::deletePoint(int id) {
       deleteForwardInfo(id, -1);
       deleteBackwardInfo(0, id-1);
     }
-    delete trackPoints_[id];
   }
   trackPoints_.erase (trackPoints_.begin()+id);
 }
@@ -222,10 +214,7 @@ void Track::mergeTrack(int i, Track other) {
 
 
 void Track::addTrackRep(AbsTrackRep* trackRep) {
-  // TODO: Test
-  trackReps_.push_back(trackRep);
-
-  // the fitter has to take care of adding fitterInfos
+  trackReps_.push_back(std::unique_ptr<AbsTrackRep>(trackRep));
 }
 
 
@@ -234,7 +223,7 @@ void Track::deleteTrackRep(int id) {
   if (id < 0)
     id += trackReps_.size();
 
-  AbsTrackRep* rep = trackReps_.at(id);
+  AbsTrackRep* rep = trackReps_.at(id).get();
 
   // update cardinalRep_
   if (int(cardinalRep_) == id)
@@ -243,9 +232,11 @@ void Track::deleteTrackRep(int id) {
     --cardinalRep_; // make cardinalRep_ point to the same TrackRep before and after deletion
 
   // delete FitterInfos related to the deleted TrackRep
-  for (auto pointIt = begin(trackPoints_); pointIt != end(trackPoints_); ++pointIt) {
-    (*pointIt)->deleteFitterInfo(rep);
+  for (auto pointIt = trackPoints_.begin(); pointIt != trackPoints_.end(); ++pointIt) {
+    (*pointIt)->deleteFitterInfos(rep);
   }
+
+  trackReps_.erase(trackReps_.begin()+id);
 }
 
 
@@ -369,22 +360,27 @@ bool Track::checkConsistency() const {
   }
 
   // check TrackPoints
-  for (TrackPoint* tp : trackPoints_) {
+  for (auto tp = trackPoints_.begin(); tp != trackPoints_.end(); ++tp) {
     // check if trackPoint points bach to this track
-    if (tp->getTrack() != this) {
+    if ((*tp)->getTrack() != this) {
       std::cerr << "Track::checkConsistency(): TrackPoint does not point back to this track" << std::endl;
       return false;
     }
 
     // check fitterInfos
-    for (AbsFitterInfo* fi : tp->getFitterInfos()) {
+    for (AbsFitterInfo* fi : (*tp)->getFitterInfos()) {
       if (!fi->checkConsistency()) {
         std::cerr << "Track::checkConsistency(): FitterInfo not consistent" << std::endl;
         return false;
       }
 
       // check if fitterInfos point to valid TrackReps in trackReps_
-      int mycount = std::count (trackReps_.begin(), trackReps_.end(), fi->getRep());
+      int mycount (0);
+      for (auto rep = trackReps_.begin(); rep != trackReps_.end(); ++rep) {
+        if (rep->get() == fi->getRep()) {
+          ++mycount;
+        }
+      }
       if (mycount ==  0) {
         std::cerr << "Track::checkConsistency(): fitterInfo points to TrackRep which is not in Track" << std::endl;
         return false;

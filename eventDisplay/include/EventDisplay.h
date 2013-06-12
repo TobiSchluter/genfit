@@ -141,6 +141,9 @@ class EventDisplay : public TNamed {
 		 */
 		TEveBox* boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth);
 
+
+	public:
+		//ClassDef(EventDisplay,1)
 };
 
 }

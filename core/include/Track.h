@@ -36,14 +36,14 @@ class Track : public TObject {
 
 
   TrackPoint* getPoint(int id) const;
-  const std::vector< TrackPoint* >& getPoints() {return trackPoints_;}
+  std::vector< TrackPoint* > getPoints() const;
   unsigned int getNumPoints() const {return trackPoints_.size();}
 
   TrackPoint* getPointWithMeasurement(int id) const;
   std::vector< TrackPoint* > getPointsWithMeasurement() const;
   unsigned int getNumPointsWithMeasurement() const;
 
-  AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id);}
+  AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id).get();}
   unsigned int getNumReps() const {return trackReps_.size();}
 
   /** @brief Get cardinal track representation
@@ -52,7 +52,7 @@ class Track : public TObject {
    * best one after the fit. E.g. the track representation giving the
    * smallest chi2 could be chosen. By default the first in the list is returned.
    */
-  AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_);}
+  AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_).get();}
   unsigned int getCardinalRepID() const {return cardinalRep_;}
 
   const TVectorD& getStateSeed() const {return stateSeed_;}
@@ -60,6 +60,8 @@ class Track : public TObject {
 
   /** Insert TrackPoint before TrackPoint with position id.
    * Id -1 means after last TrackPoint.
+   * Also deletes backwardInfos before new point and forwardInfos after new point.
+   * Also sets Track backpointer of point accordingly.
    */
   void insertPoint(TrackPoint* point, int id = -1);
 
@@ -88,9 +90,10 @@ class Track : public TObject {
 
  private:
 
-  std::vector< TrackPoint* > trackPoints_; // Ownership
 
-  std::vector< AbsTrackRep* > trackReps_; // Ownership
+  std::vector< std::unique_ptr<TrackPoint> > trackPoints_; // Ownership
+
+  std::vector< std::unique_ptr<AbsTrackRep> > trackReps_; // Ownership
   unsigned int cardinalRep_; // THE selected rep, default = 0;
 
   TVectorD stateSeed_; // 6D: position, momentum

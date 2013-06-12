@@ -36,6 +36,25 @@ INCLUDE_DIRECTORIES(
 	$ENV{GENFIT}/eventDisplay/include
 )
 
+
+#SET(MYDICT myDict.cxx)
+#SET(MYLINKDEF linkdef.h)
+#SET(DICTHEADERS 
+#	$ENV{GENFIT}/eventDisplay/include/EventDisplay.h
+#)
+#FIND_PROGRAM(ROOT_CINT_EXECUTABLE
+#	NAMES rootcint
+#	PATHS $ENV{ROOTSYS}/bin
+#	NO_DEFAULT_PATH)
+#
+#ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/${MYDICT}
+#	COMMAND ${ROOT_CINT_EXECUTABLE}
+#      	ARGS -f ${CMAKE_BINARY_DIR}/${MYDICT} -c -I$ENV{GENFIT}/core/include -DHAVE_CONFIG_H
+#      	${DICTHEADERS} ${MYLINKDEF}
+#      	DEPENDS ${DICTHEADERS} ${MYLINKDEF})
+#      	
+      	
+
 ADD_EXECUTABLE(main 
 	main.cpp
 	$ENV{GENFIT}/eventDisplay/include/EventDisplay.h

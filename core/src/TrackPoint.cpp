@@ -39,75 +39,89 @@ TrackPoint::TrackPoint(Track* track) :
 }
 
 TrackPoint::TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurements, Track* track) :
-  sortingParameter_(0), track_(track), rawMeasurements_(rawMeasurements)//, material_(nullptr)
+  sortingParameter_(0), track_(track)//, material_(nullptr)
 {
-  for (AbsMeasurement* measurement : rawMeasurements_) {
-    measurement->setTrackPoint(this);
+  rawMeasurements_.reserve(rawMeasurements.size());
+
+  for (AbsMeasurement* m : rawMeasurements) {
+    m->setTrackPoint(this);
+    rawMeasurements_.push_back(std::unique_ptr<AbsMeasurement>(m));
   }
 }
 
 
-TrackPoint::TrackPoint(const TrackPoint& rhs) {
-  track_ = rhs.track_;
-
-  for (AbsMeasurement* rhsMeasurement : rhs.rawMeasurements_) {
-    AbsMeasurement* tp = rhsMeasurement->clone();
+TrackPoint::TrackPoint(const TrackPoint& rhs) :
+  sortingParameter_(rhs.sortingParameter_), track_(rhs.track_)
+{
+  // clone rawMeasurements
+  for (auto it = rhs.rawMeasurements_.begin(); it!=rhs.rawMeasurements_.end(); ++it) {
+    AbsMeasurement* tp = it->get()->clone();
     tp->setTrackPoint(this);
-    rawMeasurements_.push_back(tp);
+    addRawMeasurement(tp);
   }
 
-  for (AbsFitterInfo* rhsFitterInfo : rhs.fitterInfos_) {
-    AbsFitterInfo* fi = rhsFitterInfo->clone();
-    fi->setTrackPoint(this);
-    fitterInfos_.push_back(fi);
+  // copy fitterInfos
+  for (auto it = rhs.fitterInfos_.begin(); it != rhs.fitterInfos_.end();  ++it ) {
+    for (auto it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
+      AbsFitterInfo* fi = it2->get()->clone();
+      fi->setTrackPoint(this);
+      fitterInfos_[it->first].push_back(std::unique_ptr<AbsFitterInfo>(fi));
+    }
   }
-
-  //material_ = new MaterialInfo(*(rhs.material_));
 }
+
+TrackPoint::TrackPoint(const TrackPoint& rhs, const std::map<const AbsTrackRep*, AbsTrackRep*>& map) :
+  sortingParameter_(rhs.sortingParameter_), track_(rhs.track_)
+{
+  // clone rawMeasurements
+  for (auto it = rhs.rawMeasurements_.begin(); it!=rhs.rawMeasurements_.end(); ++it) {
+    AbsMeasurement* tp = it->get()->clone();
+    tp->setTrackPoint(this);
+    addRawMeasurement(tp);
+  }
+
+  // copy fitterInfos
+  for (auto it = rhs.fitterInfos_.begin(); it != rhs.fitterInfos_.end();  ++it ) {
+    for (auto it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
+      AbsFitterInfo* fi = it2->get()->clone();
+      fi->setRep(map.at(it->first));
+      fi->setTrackPoint(this);
+      fitterInfos_[map.at(it->first)].push_back(std::unique_ptr<AbsFitterInfo>(fi));
+    }
+  }
+}
+
 
 TrackPoint& TrackPoint::operator=(const TrackPoint& rhs) {
+
+  sortingParameter_ = rhs.sortingParameter_;
   track_ = rhs.track_;
 
-  for (AbsMeasurement* measurement : rawMeasurements_) {
-    if (measurement != nullptr)
-      delete measurement;
-  }
   rawMeasurements_.clear();
-
-  for (AbsMeasurement* rhsMeasurement : rhs.rawMeasurements_) {
-    rawMeasurements_.push_back(rhsMeasurement->clone());
-  }
-
-  for (AbsFitterInfo* fitterInfo : fitterInfos_) {
-    if (fitterInfo != nullptr)
-      delete fitterInfo;
-  }
   fitterInfos_.clear();
 
-  for (AbsFitterInfo* rhsFitterInfo : rhs.fitterInfos_) {
-    fitterInfos_.push_back(rhsFitterInfo->clone());
+  // clone rawMeasurements
+  for (auto it = rhs.rawMeasurements_.begin(); it!=rhs.rawMeasurements_.end(); ++it) {
+    AbsMeasurement* tp = it->get()->clone();
+    tp->setTrackPoint(this);
+    addRawMeasurement(tp);
   }
 
-  //if (material_ != nullptr)
-  //  delete material_;
+  // copy fitterInfos
+  for (auto it = rhs.fitterInfos_.begin(); it != rhs.fitterInfos_.end();  ++it ) {
+    for (auto it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
+      AbsFitterInfo* fi = it2->get()->clone();
+      fi->setTrackPoint(this);
+      fitterInfos_[it->first].push_back(std::unique_ptr<AbsFitterInfo>(fi));
+    }
+  }
 
   return *this;
 }
 
 
 TrackPoint::~TrackPoint() {
-  for (AbsMeasurement* measurement : rawMeasurements_) {
-    if (measurement != nullptr)
-      delete measurement;
-  }
-
-  for (AbsFitterInfo* fitterInfo : fitterInfos_) {
-    if (fitterInfo != nullptr)
-      delete fitterInfo;
-  }
-
-  //if (material_ != nullptr)
-  //  delete material_;
+  ; // smart pointers take care of everything
 }
 
 
@@ -118,69 +132,95 @@ TrackPoint::~TrackPoint() {
 }*/
 
 
-AbsMeasurement* TrackPoint::getRawMeasurement(int i) {
+std::vector< genfit::AbsMeasurement* > TrackPoint::getRawMeasurements() const {
+  std::vector< genfit::AbsMeasurement* > retVal;
+  retVal.reserve(rawMeasurements_.size());
+
+  for (auto it = rawMeasurements_.begin(); it!=rawMeasurements_.end(); ++it) {
+    retVal.push_back(it->get());
+  }
+
+  return retVal;
+}
+
+
+AbsMeasurement* TrackPoint::getRawMeasurement(int i) const {
   if (i < 0)
     i += rawMeasurements_.size();
 
-  return rawMeasurements_.at(i);
+  return rawMeasurements_.at(i).get();
 }
 
 
-AbsFitterInfo* TrackPoint::getFitterInfo(int i) {
-  if (i < 0)
-    i += fitterInfos_.size();
+std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos() const {
+  std::vector< AbsFitterInfo* > retVal;
 
-  return fitterInfos_.at(i);
-}
-
-
-AbsFitterInfo* TrackPoint::getFitterInfo(const AbsTrackRep* rep, int i) {
-  int n(0);
-  for (AbsFitterInfo* fitterInfo : fitterInfos_) {
-    if (fitterInfo->getRep() == rep) {
-      if (i == n) {
-        return fitterInfo;
-      }
-      ++n;
+  for (auto it = fitterInfos_.begin(); it != fitterInfos_.end();  ++it ) {
+    for (auto it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
+      retVal.push_back(it2->get());
     }
   }
 
-  if (n == 0 || i > n-1) {
-    Exception exc("TrackPoint::getFitterInfo ==> cannot get fitter info",__LINE__,__FILE__);
-    throw exc;
+  return retVal;
+}
+
+std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos(AbsTrackRep* rep) const {
+  std::vector< AbsFitterInfo* > retVal;
+
+  auto it = fitterInfos_.find(rep);
+
+  if (it != fitterInfos_.end()) {
+    for (auto it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
+      retVal.push_back(it2->get());
+    }
   }
 
-  if (i<0)
-    return getFitterInfo(rep, i+n);
+  return retVal;
+}
 
-  Exception exc("TrackPoint::getFitterInfo ==> cannot get fitter info",__LINE__,__FILE__);
+
+AbsFitterInfo* TrackPoint::getFitterInfo(const AbsTrackRep* rep, int i) const {
+  auto it = fitterInfos_.find(rep);
+
+  if (it != fitterInfos_.end()) {
+    if (i < 0)
+      i += it->second.size();
+    return it->second.at(i).get();
+  }
+
+  Exception exc("TrackPoint::getFitterInfo ==> no FitterInfo for given TrackRep",__LINE__,__FILE__);
   throw exc;
 }
 
 
-void TrackPoint::deleteFitterInfo(int i) {
-  if (i < 0)
-    i += fitterInfos_.size();
+bool TrackPoint::hasFitterInfos(AbsTrackRep* rep) const {
+  auto it = fitterInfos_.find(rep);
+  if (it == fitterInfos_.end())
+    return false;
 
-  if (fitterInfos_.at(i) != nullptr) {
-    delete fitterInfos_[i];
-  }
-  fitterInfos_.erase(begin(fitterInfos_) + i);
+  return (it->second.size() > 0);
 }
 
-void TrackPoint::deleteFitterInfo(const AbsTrackRep* rep) {
-  for (unsigned int i=0; i<fitterInfos_.size(); ++i){
-    if (fitterInfos_[i]->getRep() == rep) {
-      deleteFitterInfo(i);
-      --i;
-    }
+
+void TrackPoint::deleteFitterInfo(AbsTrackRep* rep, int i) {
+  auto it = fitterInfos_.find(rep);
+
+  if (it != fitterInfos_.end()) {
+    if (i < 0)
+      i += it->second.size();
+
+    it->second.erase(it->second.begin()+i);
   }
+}
+
+void TrackPoint::deleteFitterInfos(const AbsTrackRep* rep) {
+  fitterInfos_.erase(rep);
 }
 
 
 void TrackPoint::Print(const Option_t*) const {
   std::cout << "genfit::TrackPoint, belonging to Track " << track_ << "; sorting parameter = " << sortingParameter_ << "\n";
-  std::cout << "contains " << rawMeasurements_.size() << " rawMeasurements and " << fitterInfos_.size() << " fitterInfos.\n";
+  std::cout << "contains " << rawMeasurements_.size() << " rawMeasurements and " << getFitterInfos().size() << " fitterInfos for " << fitterInfos_.size() << " TrackReps.\n";
 
   for (unsigned int i=0; i<rawMeasurements_.size(); ++i) {
     std::cout << "RawMeasurement Nr. " << i << "\n";
@@ -188,11 +228,16 @@ void TrackPoint::Print(const Option_t*) const {
     std::cout << "............\n";
   }
 
-  for (unsigned int i=0; i<fitterInfos_.size(); ++i) {
-    std::cout << "FitterInfo Nr. " << i << "\n";
-    fitterInfos_[i]->Print();
-    std::cout << "............\n";
+  for (auto it = fitterInfos_.begin(); it != fitterInfos_.end();  ++it ) {
+
+    for (unsigned int i=0; i<it->second.size(); ++i) {
+      std::cout << "FitterInfo Nr. " << i << " for TrackRep " << it->first << "\n";
+      it->second[i]->Print();
+      std::cout << "............\n";
+    }
+
   }
+
 
 }
 

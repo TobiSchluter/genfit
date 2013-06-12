@@ -24,13 +24,15 @@
 #ifndef genfit_TrackPoint_h
 #define genfit_TrackPoint_h
 
-#include <vector>
-
-#include <TObject.h>
-
 #include "AbsMeasurement.h"
 #include "KalmanFitterInfo.h"
 #include "MaterialInfo.h"
+
+#include <TObject.h>
+
+#include <map>
+#include <memory>
+#include <vector>
 
 
 namespace genfit {
@@ -46,6 +48,7 @@ class TrackPoint : public TObject {
 
   /**
    * Contructor taking list of measurements. The #setTrackPoint() of each measurement will be called.
+   * TrackPoint takes ownership over rawMeasurements.
    */
   TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurements, Track* track);
 
@@ -54,34 +57,39 @@ class TrackPoint : public TObject {
   TrackPoint& operator=(const TrackPoint&); // assignment operator
   TrackPoint& operator=(TrackPoint&&) = default; // move assignment operator
 
+  TrackPoint(const TrackPoint&, const std::map<const AbsTrackRep*, AbsTrackRep*>&); // custom copy constructor where all TrackRep pointers are exchanged according to the map.
+
   ~TrackPoint();
 
 
-  double getSortingParameter() {return sortingParameter_;}
+  double getSortingParameter() const {return sortingParameter_;}
 
   Track* getTrack() const {return track_;}
   void setTrack(Track* track) {track_ = track;}
 
-  std::vector< genfit::AbsMeasurement* >& getRawMeasurements() {return rawMeasurements_;}
-  AbsMeasurement* getRawMeasurement(int i = 0);
-  unsigned int getNumRawMeasurements() {return rawMeasurements_.size();}
-  bool hasRawMeasurements() {return (rawMeasurements_.size() > 0);}
-
-  std::vector< genfit::AbsFitterInfo* >& getFitterInfos() {return fitterInfos_;}
-  AbsFitterInfo* getFitterInfo(int i);
-  AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep, int i = -1);
-  unsigned int getNumFitterInfos() {return fitterInfos_.size();}
-  bool hasFitterInfos() {return (fitterInfos_.size() > 0);}
+  std::vector< genfit::AbsMeasurement* > getRawMeasurements() const;
+  AbsMeasurement* getRawMeasurement(int i = 0) const;
+  unsigned int getNumRawMeasurements() const {return rawMeasurements_.size();}
+  bool hasRawMeasurements() const {return (rawMeasurements_.size() > 0);}
+  //! Get list of all fitterInfos of all TrackReps
+  std::vector< AbsFitterInfo* > getFitterInfos() const;
+  //! Get list of fitterInfos of a one TrackRep
+  std::vector< AbsFitterInfo* > getFitterInfos(AbsTrackRep* rep) const;
+  AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep, int i = -1) const;
+  unsigned int getNumFitterInfos(AbsTrackRep* rep) const {return fitterInfos_.at(rep).size();}
+  bool hasFitterInfos(AbsTrackRep* rep) const;
 
   //MaterialInfo* getMaterialInfo() {return material_;}
   //bool hasMaterialInfo() {return material_ != nullptr;}
 
 
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
-  void addRawMeasurement(AbsMeasurement* rawMeasurement) {rawMeasurements_.push_back(rawMeasurement);}
-  size_t addFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_.push_back(fitterInfo); return fitterInfos_.size();}
-  void deleteFitterInfo(int i);
-  void deleteFitterInfo(const AbsTrackRep* rep);
+  //! Takes ownership
+  void addRawMeasurement(AbsMeasurement* rawMeasurement) {rawMeasurements_.push_back(std::unique_ptr<AbsMeasurement>(rawMeasurement));}
+  //! Takes Ownership
+  size_t addFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_[fitterInfo->getRep()].push_back(std::unique_ptr<AbsFitterInfo>(fitterInfo)); return fitterInfos_[fitterInfo->getRep()].size();}
+  void deleteFitterInfo(AbsTrackRep* rep, int i);
+  void deleteFitterInfos(const AbsTrackRep* rep);
   //void setMaterial(MaterialInfo* material);
 
   void Print(const Option_t* = "") const override;
@@ -89,18 +97,16 @@ class TrackPoint : public TObject {
  private:
   double sortingParameter_;
 
-  /**
-   * Pointer to Track where TrackPoint belongs to
-   */
+  //! Pointer to Track where TrackPoint belongs to
   Track* track_; // No ownership
 
   /** 
    *  Can be more than one, e.g. multiple measurements in the same Si detector, left and right measurements of a wire detector etc.
    * @element-type AbsMeasurement
    */
-  std::vector< AbsMeasurement* > rawMeasurements_; // Ownership
+  std::vector< std::unique_ptr<AbsMeasurement> > rawMeasurements_; // Ownership
 
-  std::vector< AbsFitterInfo* > fitterInfos_; // Ownership
+  std::map< const AbsTrackRep*, std::vector< std::unique_ptr<AbsFitterInfo> > > fitterInfos_; // Ownership over FitterInfos
 
   //MaterialInfo* material_; // Ownership
 
