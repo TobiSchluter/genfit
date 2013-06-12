@@ -57,36 +57,35 @@ DetPlane::DetPlane(const TVector3& o,
 
 
 DetPlane::~DetPlane(){
-  if(finitePlane_ != nullptr)
-    delete finitePlane_;
+  ;
 }
 
 
-DetPlane::DetPlane(const DetPlane& rhs) {
-  if(rhs.finitePlane_ != nullptr)
-    finitePlane_ = rhs.finitePlane_->clone();
-  else finitePlane_ = nullptr;
-  o_ = rhs.o_;
-  u_ = rhs.u_;
-  v_ = rhs.v_;
+DetPlane::DetPlane(const DetPlane& rhs) :
+  o_(rhs.o_),
+  u_(rhs.u_),
+  v_(rhs.v_)
+{
+  if(rhs.finitePlane_)
+    finitePlane_.reset(rhs.finitePlane_->clone());
+  else finitePlane_.reset();
 }
 
 
 DetPlane& DetPlane::operator=(const DetPlane& rhs) {
   if (this == &rhs)
     return *this;
-  if(finitePlane_ != nullptr) {
-    delete finitePlane_;
-  }
+
   if(rhs.finitePlane_ != nullptr){
-    finitePlane_ = rhs.finitePlane_->clone();
+    finitePlane_.reset(rhs.finitePlane_->clone());
   }
   else{
-    finitePlane_ = nullptr;
+    finitePlane_.reset();
   }
   o_ = rhs.o_;
   u_ = rhs.u_;
   v_ = rhs.v_;
+
   return *this;
 }
 
@@ -320,10 +319,7 @@ void DetPlane::reset() {
   o_.SetXYZ(0.,0.,0.);
   u_.SetXYZ(1.,0.,0.);
   v_.SetXYZ(0.,1.,0.);
-  if(finitePlane_ != nullptr) {
-    delete finitePlane_;
-    finitePlane_ = nullptr;
-  }
+  finitePlane_.reset();
 }
 
 } /* End of namespace genfit */

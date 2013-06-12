@@ -37,6 +37,8 @@
 
 #include "AbsFinitePlane.h"
 
+#include <memory>
+
 
 namespace genfit {
 
@@ -99,7 +101,7 @@ class DetPlane : public TObject {
   //! Optionally, set the finite plane definition. This is most important for
   //! avoiding fake intersection points in fitting of curlers. This should
   //! be implemented for silicon detectors most importantly.
-  void setFinitePlane(AbsFinitePlane* finite){finitePlane_=finite;}
+  void setFinitePlane(AbsFinitePlane* finite){finitePlane_.reset(finite);}
 
   // Operations ----------------------
   TVector3 getNormal() const;
@@ -142,14 +144,14 @@ class DetPlane : public TObject {
 
   //! intersect in the active area? C.f. AbsFinitePlane
   bool isInActive(const TVector3& point, const TVector3& dir) const {
-    if(finitePlane_ == nullptr) return true;
+    if(!finitePlane_) return true;
     return this->isInActive( this->straightLineToPlane(point,dir));
   }
 
   //! intersect in the active area? C.f. AbsFinitePlane
   bool isInActive(const double& posX, const double& posY, const double& posZ,
                   const double& dirX, const double& dirY, const double& dirZ) const {
-    if(finitePlane_ == nullptr) return true;
+    if(!finitePlane_) return true;
     double u, v;
     this->straightLineToPlane(posX, posY, posZ, dirX, dirY, dirZ, u, v);
     return this->isInActive(u, v);
@@ -157,7 +159,7 @@ class DetPlane : public TObject {
 
   //! isInActive methods refer to finite plane. C.f. AbsFinitePlane
   bool isInActive(double u, double v) const{
-    if(finitePlane_==nullptr) return true;
+    if(!finitePlane_) return true;
     return finitePlane_->isInActive(u,v);
   }
 
@@ -167,8 +169,7 @@ class DetPlane : public TObject {
   }
 
   bool isFinite() const {
-    if (finitePlane_ != nullptr) return true;
-    return false;
+    return (!finitePlane_);
   }
 
   // delete finitePlane_ and set O, U, V to default values
@@ -183,7 +184,7 @@ class DetPlane : public TObject {
   TVector3 u_;
   TVector3 v_;
 
-  AbsFinitePlane* finitePlane_; // Ownership
+  std::unique_ptr<AbsFinitePlane> finitePlane_; // Ownership
 
 
   //ClassDef(DetPlane,1)
