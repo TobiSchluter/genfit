@@ -52,40 +52,39 @@ KalmanFitterInfo::KalmanFitterInfo(const TrackPoint* trackPoint, const AbsTrackR
 }
 
 KalmanFitterInfo::~KalmanFitterInfo() {
-  if (referenceState_ != nullptr)
-    delete referenceState_;
-  if (forwardPrediction_ != nullptr)
-    delete forwardPrediction_;
-  if (forwardUpdate_ != nullptr)
-    delete forwardUpdate_;
-  if (backwardPrediction_ != nullptr)
-    delete backwardPrediction_;
-  if (backwardUpdate_ != nullptr)
-    delete backwardUpdate_;
-
-  for (MeasurementOnPlane* m : measurementsOnPlane_) {
-    if (m != nullptr)
-      delete m;
-  }
+  ;
 }
 
 
 KalmanFitterInfo* KalmanFitterInfo::clone() const {
   KalmanFitterInfo* retVal = new KalmanFitterInfo(this->getTrackPoint(), this->getRep());
-  if (this->referenceState_ != nullptr)
-    retVal->referenceState_ = new ReferenceStateOnPlane(*(this->referenceState_));
-  if (this->forwardPrediction_ != nullptr)
-    retVal->forwardPrediction_ = new MeasuredStateOnPlane(*(this->forwardPrediction_));
-  if (this->forwardUpdate_ != nullptr)
-    retVal->forwardUpdate_ = new KalmanFittedStateOnPlane(*(this->forwardUpdate_));
-  if (this->backwardPrediction_ != nullptr)
-    retVal->backwardPrediction_ = new MeasuredStateOnPlane(*(this->backwardPrediction_));
-  if (this->backwardUpdate_ != nullptr)
-    retVal->backwardUpdate_ = new KalmanFittedStateOnPlane(*(this->backwardUpdate_));
+  if (this->referenceState_)
+    retVal->referenceState_.reset(new ReferenceStateOnPlane(*(this->referenceState_)));
+  if (this->forwardPrediction_)
+    retVal->forwardPrediction_.reset(new MeasuredStateOnPlane(*(this->forwardPrediction_)));
+  if (this->forwardUpdate_)
+    retVal->forwardUpdate_.reset(new KalmanFittedStateOnPlane(*(this->forwardUpdate_)));
+  if (this->backwardPrediction_)
+    retVal->backwardPrediction_.reset(new MeasuredStateOnPlane(*(this->backwardPrediction_)));
+  if (this->backwardUpdate_)
+    retVal->backwardUpdate_.reset(new KalmanFittedStateOnPlane(*(this->backwardUpdate_)));
 
   retVal->measurementsOnPlane_.reserve(this->measurementsOnPlane_.size());
-  for (MeasurementOnPlane* mop : this->measurementsOnPlane_)
-    retVal->measurementsOnPlane_.push_back(new MeasurementOnPlane(*mop));
+  for (auto it = this->measurementsOnPlane_.begin(); it != this->measurementsOnPlane_.end(); ++it) {
+    retVal->addMeasurementOnPlane(new MeasurementOnPlane(*(it->get())));
+  }
+
+  return retVal;
+}
+
+
+std::vector< genfit::MeasurementOnPlane* > KalmanFitterInfo::getMeasurementsOnPlane() const {
+  std::vector< genfit::MeasurementOnPlane* > retVal;
+  retVal.reserve(measurementsOnPlane_.size());
+
+  for (auto it = measurementsOnPlane_.begin(); it != measurementsOnPlane_.end(); ++it) {
+    retVal.push_back(it->get());
+  }
 
   return retVal;
 }
@@ -145,7 +144,7 @@ MeasuredStateOnPlane KalmanFitterInfo::getFittedState(bool biased) const {
     else if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(0) == this->getTrackPoint()) // first measurement
       return MeasuredStateOnPlane(*backwardUpdate_);
 
-    return calcAverageState(forwardUpdate_, backwardPrediction_);
+    return calcAverageState(forwardUpdate_.get(), backwardPrediction_.get());
   }
   else { // unbiased
     if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(-1) == this->getTrackPoint()) // last measurement
@@ -153,7 +152,7 @@ MeasuredStateOnPlane KalmanFitterInfo::getFittedState(bool biased) const {
     else if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(0) == this->getTrackPoint()) // first measurement
       return MeasuredStateOnPlane(*backwardPrediction_);
 
-    return calcAverageState(forwardPrediction_, backwardPrediction_);
+    return calcAverageState(forwardPrediction_.get(), backwardPrediction_.get());
   }
 
 }
@@ -163,7 +162,7 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeas
   // TODO: Test
 
   MeasuredStateOnPlane smoothedState = getFittedState(biased);
-  const MeasurementOnPlane* measurement = measurementsOnPlane_.at(iMeasurement);
+  const MeasurementOnPlane* measurement = measurementsOnPlane_.at(iMeasurement).get();
   SharedPlanePtr plane = measurement->getPlane();
 
   // check equality of planes and reps
@@ -188,97 +187,51 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeas
 }
 
 
-void KalmanFitterInfo::setReferenceState(ReferenceStateOnPlane* referenceState) {
-  if (referenceState_ != nullptr)
-    delete referenceState_;
-  referenceState_ = referenceState;
-}
-
-void KalmanFitterInfo::setForwardPrediction(MeasuredStateOnPlane* forwardPrediction) {
-  if (forwardPrediction_ != nullptr)
-    delete forwardPrediction_;
-  forwardPrediction_ = forwardPrediction;
-}
-
-void KalmanFitterInfo::setForwardUpdate(KalmanFittedStateOnPlane* forwardUpdate) {
-  if (forwardUpdate_ != nullptr)
-    delete forwardUpdate_;
-  forwardUpdate_ = forwardUpdate;
-}
-
-void KalmanFitterInfo::setBackwardPrediction(MeasuredStateOnPlane* backwardPrediction) {
-  if (backwardPrediction_ != nullptr)
-    delete backwardPrediction_;
-  backwardPrediction_ = backwardPrediction;
-}
-
-void KalmanFitterInfo::setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate) {
-  if (backwardUpdate_ != nullptr)
-    delete backwardUpdate_;
-  backwardUpdate_ = backwardUpdate;
-}
-
-
 void KalmanFitterInfo::setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane) {
-  for (MeasurementOnPlane* m : measurementsOnPlane_) {
-    if (m != nullptr)
-      delete m;
-  }
+  measurementsOnPlane_.clear();
 
-  measurementsOnPlane_ = measurementsOnPlane;
+  for (MeasurementOnPlane* m : measurementsOnPlane) {
+    addMeasurementOnPlane(m);
+  }
 }
 
 
 void KalmanFitterInfo::setRep(const AbsTrackRep* rep) {
   rep_ = rep;
 
-  if (referenceState_ != nullptr)
+  if (referenceState_)
     referenceState_->setRep(rep);
 
-  if (forwardPrediction_ != nullptr)
+  if (forwardPrediction_)
     forwardPrediction_->setRep(rep);
 
-  if (forwardUpdate_ != nullptr)
+  if (forwardUpdate_)
     forwardUpdate_->setRep(rep);
 
-  if (backwardPrediction_ != nullptr)
+  if (backwardPrediction_)
     backwardPrediction_->setRep(rep);
 
-  if (backwardUpdate_ != nullptr)
+  if (backwardUpdate_)
     backwardUpdate_->setRep(rep);
 
-  for (MeasurementOnPlane* m : measurementsOnPlane_)
-    m->setRep(rep);
+  for (auto it = measurementsOnPlane_.begin(); it != measurementsOnPlane_.end(); ++it) {
+    (*it)->setRep(rep);
+  }
 }
 
 
 void KalmanFitterInfo::deleteForwardInfo() {
-  if (forwardPrediction_ != nullptr) {
-    delete forwardPrediction_;
-    forwardPrediction_ = nullptr;
-  }
-  if (forwardUpdate_ != nullptr) {
-    delete forwardUpdate_;
-    forwardUpdate_ = nullptr;
-  }
+  forwardPrediction_.reset();
+  forwardUpdate_.reset();
 }
 
 void KalmanFitterInfo::deleteBackwardInfo() {
-  if (backwardPrediction_ != nullptr) {
-    delete backwardPrediction_;
-    backwardPrediction_ = nullptr;
-  }
-  if (backwardUpdate_ != nullptr) {
-    delete backwardUpdate_;
-    backwardUpdate_ = nullptr;
-  }
+  backwardPrediction_.reset();
+  backwardUpdate_.reset();
 }
 
 void KalmanFitterInfo::deleteReferenceInfo() {
-  if (referenceState_ != nullptr) {
-    delete referenceState_;
-    referenceState_ = nullptr;
-  }
+  referenceState_.reset();
 }
 
 void KalmanFitterInfo::deleteMeasurementInfo() {
@@ -321,19 +274,19 @@ void KalmanFitterInfo::Print(const Option_t*) const {
     std::cout << "MeasurementOnPlane Nr " << i <<": "; measurementsOnPlane_[i]->Print();
   }
 
-  if (referenceState_ != nullptr) {
+  if (referenceState_) {
     std::cout << "Reference state: "; referenceState_->Print();
   }
-  if (forwardPrediction_ != nullptr) {
+  if (forwardPrediction_) {
     std::cout << "Forward prediction_: "; forwardPrediction_->Print();
   }
-  if (forwardUpdate_ != nullptr) {
+  if (forwardUpdate_) {
     std::cout << "Forward update: "; forwardUpdate_->Print();
   }
-  if (backwardPrediction_ != nullptr) {
+  if (backwardPrediction_) {
     std::cout << "Backward prediction_: "; backwardPrediction_->Print();
   }
-  if (backwardUpdate_ != nullptr) {
+  if (backwardUpdate_) {
     std::cout << "Backward update: "; backwardUpdate_->Print();
   }
 
@@ -404,17 +357,16 @@ bool KalmanFitterInfo::checkConsistency() const {
     }
   }
 
-  for (MeasurementOnPlane* m : measurementsOnPlane_){
-    if(m->getPlane() != plane) {
+  for (auto it = measurementsOnPlane_.begin(); it != measurementsOnPlane_.end(); ++it) {
+    if((*it)->getPlane() != plane) {
       std::cerr << "KalmanFitterInfo::checkConsistency(): measurement is not defined with the correct plane" << std::endl;
       return false;
     }
-    if(m->getRep() != rep_) {
+    if((*it)->getRep() != rep_) {
       std::cerr << "KalmanFitterInfo::checkConsistency(): measurement is not defined with the correct TrackRep" << std::endl;
       return false;
     }
   }
-
 
   // see if there is an update w/o prediction
   if (forwardUpdate_ && !forwardPrediction_) {

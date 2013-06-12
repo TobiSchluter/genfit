@@ -50,25 +50,25 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
   virtual KalmanFitterInfo* clone() const override;
 
-  ReferenceStateOnPlane* getReferenceState() const {return referenceState_;}
-  MeasuredStateOnPlane* getForwardPrediction() const {return forwardPrediction_;}
-  MeasuredStateOnPlane* getBackwardPrediction() const {return backwardPrediction_;}
-  MeasuredStateOnPlane* getPrediction(int direction) const {if (direction >=0) return forwardPrediction_; return backwardPrediction_;}
-  KalmanFittedStateOnPlane* getForwardUpdate() const {return forwardUpdate_;}
-  KalmanFittedStateOnPlane* getBackwardUpdate() const {return backwardUpdate_;}
-  KalmanFittedStateOnPlane* getUpdate(int direction) const {if (direction >=0) return forwardUpdate_; return backwardUpdate_;}
-  const std::vector< genfit::MeasurementOnPlane* >& getMeasurementsOnPlane() const {return measurementsOnPlane_;}
-  const MeasurementOnPlane* getMeasurementOnPlane(int i = 0) const {if (i<0) i += measurementsOnPlane_.size(); return measurementsOnPlane_.at(i);}
+  ReferenceStateOnPlane* getReferenceState() const {return referenceState_.get();}
+  MeasuredStateOnPlane* getForwardPrediction() const {return forwardPrediction_.get();}
+  MeasuredStateOnPlane* getBackwardPrediction() const {return backwardPrediction_.get();}
+  MeasuredStateOnPlane* getPrediction(int direction) const {if (direction >=0) return forwardPrediction_.get(); return backwardPrediction_.get();}
+  KalmanFittedStateOnPlane* getForwardUpdate() const {return forwardUpdate_.get();}
+  KalmanFittedStateOnPlane* getBackwardUpdate() const {return backwardUpdate_.get();}
+  KalmanFittedStateOnPlane* getUpdate(int direction) const {if (direction >=0) return forwardUpdate_.get(); return backwardUpdate_.get();}
+  std::vector< genfit::MeasurementOnPlane* > getMeasurementsOnPlane() const;
+  const MeasurementOnPlane* getMeasurementOnPlane(int i = 0) const {if (i<0) i += measurementsOnPlane_.size(); return measurementsOnPlane_.at(i).get();}
   /**
    * Get weighted mean of all measurements.
    */
   MeasurementOnPlane getAvgWeightedMeasurementOnPlane() const;
 
-  bool hasReferenceState() const {return (referenceState_ != nullptr);}
-  bool hasForwardPrediction() const {return (forwardPrediction_ != nullptr);}
-  bool hasBackwardPrediction() const {return (backwardPrediction_ != nullptr);}
-  bool hasForwardUpdate() const {return (forwardUpdate_ != nullptr);}
-  bool hasBackwardUpdate() const {return (backwardUpdate_ != nullptr);}
+  bool hasReferenceState() const {return bool(referenceState_);}
+  bool hasForwardPrediction() const {return bool(forwardPrediction_);}
+  bool hasBackwardPrediction() const {return bool(backwardPrediction_);}
+  bool hasForwardUpdate() const {return bool(forwardUpdate_);}
+  bool hasBackwardUpdate() const {return bool(backwardUpdate_);}
   unsigned int getNumMeasurements() {return measurementsOnPlane_.size();}
 
   /** Get unbiased (default) or biased smoothed state
@@ -78,15 +78,15 @@ class KalmanFitterInfo : public AbsFitterInfo {
    */
   MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const override; // also calculates covariance of the residual
 
-  void setReferenceState(ReferenceStateOnPlane* referenceState);
-  void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction);
-  void setBackwardPrediction(MeasuredStateOnPlane* backwardPrediction);
+  void setReferenceState(ReferenceStateOnPlane* referenceState) {referenceState_.reset(referenceState);}
+  void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction) {forwardPrediction_.reset(forwardPrediction);}
+  void setBackwardPrediction(MeasuredStateOnPlane* backwardPrediction) {backwardPrediction_.reset(backwardPrediction);}
   void setPrediction(MeasuredStateOnPlane* prediction, int direction)  {if (direction >=0) setForwardPrediction(prediction); else setBackwardPrediction(prediction);}
-  void setForwardUpdate(KalmanFittedStateOnPlane* forwardUpdate);
-  void setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate);
+  void setForwardUpdate(KalmanFittedStateOnPlane* forwardUpdate) {forwardUpdate_.reset(forwardUpdate);}
+  void setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate) {backwardUpdate_.reset(backwardUpdate);}
   void setUpdate(KalmanFittedStateOnPlane* update, int direction)  {if (direction >=0) setForwardUpdate(update); else setBackwardUpdate(update);}
   void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
-  void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) {measurementsOnPlane_.push_back(measurementOnPlane);}
+  void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) {measurementsOnPlane_.push_back(std::unique_ptr<MeasurementOnPlane>(measurementOnPlane));}
 
   void setRep(const AbsTrackRep* rep) override;
 
@@ -103,17 +103,17 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
   MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const;
 
-  ReferenceStateOnPlane* referenceState_; // Ownership
-  MeasuredStateOnPlane* forwardPrediction_; // Ownership
-  KalmanFittedStateOnPlane* forwardUpdate_; // Ownership
-  MeasuredStateOnPlane* backwardPrediction_; // Ownership
-  KalmanFittedStateOnPlane* backwardUpdate_; // Ownership
+  std::unique_ptr<ReferenceStateOnPlane> referenceState_; // Ownership
+  std::unique_ptr<MeasuredStateOnPlane> forwardPrediction_; // Ownership
+  std::unique_ptr<KalmanFittedStateOnPlane> forwardUpdate_; // Ownership
+  std::unique_ptr<MeasuredStateOnPlane> backwardPrediction_; // Ownership
+  std::unique_ptr<KalmanFittedStateOnPlane> backwardUpdate_; // Ownership
 
   /** 
    *  Number of measurements must be equal to size of #fRawMeasurements in #GFTrackPoint.
    * @element-type MeasurementOnPlane
    */
-  std::vector< genfit::MeasurementOnPlane* > measurementsOnPlane_; // Ownership
+  std::vector< std::unique_ptr<MeasurementOnPlane> > measurementsOnPlane_; // Ownership
 
 
   //ClassDef(KalmanFitterInfo,1)
