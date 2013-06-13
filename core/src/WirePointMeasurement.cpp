@@ -34,7 +34,7 @@ WirePointMeasurement::WirePointMeasurement(int nDim)
 }
 
 WirePointMeasurement::WirePointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
-  : WirePointMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint)
+  : WireMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint)
 {
   assert(rawHitCoords_.GetNrows() >= 8);
 }

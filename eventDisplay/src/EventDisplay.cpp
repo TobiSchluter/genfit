@@ -232,8 +232,6 @@ void EventDisplay::drawEvent(unsigned int id) {
 
   for(unsigned int i = 0; i < events_[id]->size(); i++) { // loop over all tracks in an event
 
-    std::cout << " draw track " << i << std::endl;
-
     Track* track = events_[id]->at(i);
 
     AbsTrackRep* rep(track->getCardinalRep());
@@ -247,8 +245,6 @@ void EventDisplay::drawEvent(unsigned int id) {
 
 
     for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
-
-      std::cout << " draw hit " << j << std::endl;
 
       // get the fitter infos ------------------------------------------------------------------
       AbsFitterInfo* fitterInfo = track->getPointWithMeasurement(j)->getFitterInfo(rep, -1);
@@ -510,6 +506,7 @@ void EventDisplay::drawEvent(unsigned int id) {
                 pseudo_res_1 *= cor;
                 pseudo_res_2 *= cor;
                 std::cout << " to " << errorScale_ << std::endl;
+
               }
             }
           }
@@ -517,14 +514,15 @@ void EventDisplay::drawEvent(unsigned int id) {
 
           // rotate and translate -------------------------------------------------------
           TGeoGenTrans det_trans(o(0),o(1),o(2),
-                                 std::sqrt(pseudo_res_0/pseudo_res_1/pseudo_res_2), std::sqrt(pseudo_res_1/pseudo_res_0/pseudo_res_2), std::sqrt(pseudo_res_2/pseudo_res_0/pseudo_res_1), // this workaround is necessary due to the "normalization" performed in  TGeoGenTrans::SetScale
+                                 //std::sqrt(pseudo_res_0/pseudo_res_1/pseudo_res_2), std::sqrt(pseudo_res_1/pseudo_res_0/pseudo_res_2), std::sqrt(pseudo_res_2/pseudo_res_0/pseudo_res_1), // this workaround is necessary due to the "normalization" performed in  TGeoGenTrans::SetScale
                                  //1/(pseudo_res_0),1/(pseudo_res_1),1/(pseudo_res_2),
+                                 pseudo_res_0, pseudo_res_1, pseudo_res_2,
                                  &det_rot);
           det_shape->SetTransMatrix(det_trans);
           // finished rotating and translating ------------------------------------------
 
           det_shape->SetMainColor(kYellow);
-          det_shape->SetMainTransparency(0);
+          det_shape->SetMainTransparency(10);
           gEve->AddElement(det_shape);
         }
         // finished drawing spacepoint hits -----------------------------------------------

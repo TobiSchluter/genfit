@@ -117,10 +117,10 @@ int randomSign() {
 int main() {
   std::cout<<"main"<<std::endl;
 
-  const unsigned int nEvents = 1;
+  const unsigned int nEvents = 1000;
   const double BField = 15.;       // kGauss
   const double momentum = 0.1;     // GeV
-  const double theta = 90;         // degree
+  const double theta = 110;         // degree
   const double thetaDetPlane = 90;         // degree
   const double phiDetPlane = 0;         // degree
   const double pointDist = 5;      // cm; approx. distance between measurements generated w/ RKTrackRep
@@ -149,7 +149,7 @@ int main() {
 
   const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
 
-  const bool debug = true;
+  const bool debug = false;
 
   // 0: PixMeasurement
   // 1: SpacepointMeasurement
@@ -162,10 +162,21 @@ int main() {
   measurementTypes.push_back(0);
   measurementTypes.push_back(0);
   measurementTypes.push_back(0);
-  measurementTypes.push_back(0);
-  /*measurementTypes.push_back(0);
-  measurementTypes.push_back(0);
-  measurementTypes.push_back(0);*/
+  measurementTypes.push_back(1);
+  measurementTypes.push_back(1);
+  measurementTypes.push_back(1);
+  measurementTypes.push_back(2);
+  measurementTypes.push_back(2);
+  measurementTypes.push_back(2);
+  measurementTypes.push_back(3);
+  measurementTypes.push_back(3);
+  measurementTypes.push_back(3);
+  measurementTypes.push_back(4);
+  measurementTypes.push_back(4);
+  measurementTypes.push_back(4);
+  measurementTypes.push_back(5);
+  measurementTypes.push_back(5);
+  measurementTypes.push_back(5);
 
 
 
@@ -220,7 +231,7 @@ int main() {
   TH1D *hvRes = new TH1D("hvRes","v res",2000,-0.05,0.05);
 
   TH1D *hqopPu = new TH1D("hqopPu","q/p pull",200,-6.,6.);
-  TH1D *pVal = new TH1D("pVal","p-value",100,0.,1.);
+  TH1D *pVal = new TH1D("pVal","p-value",100,0.,1.00000001);
   TH1D *hupPu = new TH1D("hupPu","u' pull",200,-6.,6.);
   TH1D *hvpPu = new TH1D("hvpPu","v' pull",200,-6.,6.);
   TH1D *huPu = new TH1D("huPu","u pull",200,-6.,6.);
@@ -290,7 +301,7 @@ int main() {
       if (!matFX) genfit::MaterialEffects::getInstance()->setNoEffects();
 
       // remember original initial state
-      const genfit::StateOnPlane stateRefOrig(rep);
+      const genfit::StateOnPlane stateRefOrig(stateSmeared);
 
       // create smeared measurements
       std::vector<genfit::AbsMeasurement*> measurements;
@@ -357,6 +368,8 @@ int main() {
 
           switch(measurementTypes[i]){
             case 0: {// 0: PixHit
+              if (debug) std::cerr << "create PixHit" << std::endl;
+
               genfit::SharedPlanePtr plane(new genfit::DetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)));
 
               TVectorD hitCoords(2);
@@ -373,6 +386,8 @@ int main() {
             break;
 
             case 1: {// 1: SpacepointHit
+              if (debug) std::cerr << "create SpacepointHit" << std::endl;
+
               TVectorD hitCoords(3);
               hitCoords(0) = gRandom->Gaus(point.X(),resolution);
               hitCoords(1) = gRandom->Gaus(point.Y(),resolution);
@@ -388,6 +403,8 @@ int main() {
             break;
 
             case 2: {// 2: ProlateSpacepointHit
+              if (debug) std::cerr << "create ProlateSpacepointHit" << std::endl;
+
               TVectorD hitCoords(3);
               hitCoords(0) = point.X();
               hitCoords(1) = point.Y();
@@ -431,6 +448,8 @@ int main() {
             break;
 
             case 3: {// 3: StripHit
+              if (debug) std::cerr << "create StripHit" << std::endl;
+
               genfit::SharedPlanePtr plane(new genfit::DetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)));
 
               TVectorD hitCoords(1);
@@ -445,6 +464,8 @@ int main() {
             break;
 
             case 4: {// 4: WireHit
+              if (debug) std::cerr << "create WireHit" << std::endl;
+
               TVectorD hitCoords(7);
               hitCoords(0) = (point-wirePerp-currentWireDir).X();
               hitCoords(1) = (point-wirePerp-currentWireDir).Y();
@@ -469,6 +490,7 @@ int main() {
             break;
 
             case 5: {// 5: WirePointHit
+              if (debug) std::cerr << "create WirePointHit" << std::endl;
 
               TVectorD hitCoords(8);
               hitCoords(0) = (point-wirePerp-currentWireDir).X();
@@ -500,7 +522,9 @@ int main() {
           }
           measurements.push_back(measurement);
 
-          if (debug) {std::cout << "(smeared) measurement coordinates"; measurement->getRawHitCoords().Print();}
+          if (debug) {
+            std::cout << "(smeared) measurement coordinates"; measurement->getRawHitCoords().Print();
+          }
 
           if (!HelixTest) {
             // stepalong (approximately)
@@ -589,11 +613,12 @@ int main() {
       display->addEvent(event);
 #endif
 
-   /*   genfit::KalmanFittedStateOnPlane* kfsop = new genfit::KalmanFittedStateOnPlane(*(static_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
+      genfit::KalmanFittedStateOnPlane* kfsop = new genfit::KalmanFittedStateOnPlane(*(static_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(0)->getFitterInfo(repCheck))->getBackwardUpdate()));
       if (debug) {
         std::cout << "state before extrapolating back to reference plane \n";
         kfsop->Print();
       }
+
 
       // extrapolate back to reference plane.
       try{
@@ -604,17 +629,19 @@ int main() {
         e.what();
         continue; // here is a memleak!
       }
-*/
+
 
 
 
 
 #ifndef VALGRIND
       // calculate pulls
-      /*const TVectorD& referenceState = stateRefOrig.getState();
+      const TVectorD& referenceState = stateRefOrig.getState();
 
       const TVectorD& state = kfsop->getState();
       const TMatrixDSym& cov = kfsop->getCov();
+
+      double pval = kalmanFitterRefTrack.getPVal(fitTrack, repCheck); // FIXME choose fitter that has been used
 
       hmomRes->Fill( (charge/state[0]-momentum));
       hupRes->Fill(  (state[1]-referenceState[1]));
@@ -622,14 +649,12 @@ int main() {
       huRes->Fill(   (state[3]-referenceState[3]));
       hvRes->Fill(   (state[4]-referenceState[4]));
 
-      if (cov[0][0]>0) {
-        hqopPu->Fill( (state[0]-referenceState[0]) / sqrt(cov[0][0]) );
-        pVal->Fill(   repCheck->getPVal());
-        hupPu->Fill(  (state[1]-referenceState[1]) / sqrt(cov[1][1]) );
-        hvpPu->Fill(  (state[2]-referenceState[2]) / sqrt(cov[2][2]) );
-        huPu->Fill(   (state[3]-referenceState[3]) / sqrt(cov[3][3]) );
-        hvPu->Fill(   (state[4]-referenceState[4]) / sqrt(cov[4][4]) );
-      }
+      hqopPu->Fill( (state[0]-referenceState[0]) / sqrt(cov[0][0]) );
+      pVal->Fill(   pval);
+      hupPu->Fill(  (state[1]-referenceState[1]) / sqrt(cov[1][1]) );
+      hvpPu->Fill(  (state[2]-referenceState[2]) / sqrt(cov[2][2]) );
+      huPu->Fill(   (state[3]-referenceState[3]) / sqrt(cov[3][3]) );
+      hvPu->Fill(   (state[4]-referenceState[4]) / sqrt(cov[4][4]) );
 
       // print covariance
       if (debug) cov.Print();
@@ -638,7 +663,7 @@ int main() {
 
 
       // check l/r resolution
-      if (smoothing && useDaf) {
+     /* if (fitterId == 3) {
         for (unsigned int i=0; i<leftRightTrue.size(); ++i){
           int trueSide = leftRightTrue[i];
           if (trueSide == 0) continue; // not a wire measurement
@@ -664,23 +689,10 @@ int main() {
         }
 
       }
-
-
-      if (debug && smoothing){
-        std::cout << "smoothed positions \n";
-        DetPlane plane;
-        for(unsigned int j = 0; j < measurementTypes.size(); j++) { // loop over all measurements in the track
-          TVectorT<double> state;
-          TMatrixTSym<double> cov;
-          TMatrixT<double> auxInfo;
-          Tools::getBiasedSmoothedData(fitTrack, 0, j, state, cov, plane, auxInfo);
-          repCheck->setData(state, plane, &cov, &auxInfo);
-          repCheck->getPos(plane).Print();
-        }
-      }
+*/
 
       if (debug) std::cerr<<"Fill Tree ..." << std::endl;
-      tree->Fill();*/
+      tree->Fill();
 #endif
 
 
@@ -689,7 +701,7 @@ int main() {
   std::cout<<"maxWeight = " << maxWeight << std::endl;
 
 #ifndef VALGRIND
-  /*if (debug) std::cout<<"Write Tree ...";
+  if (debug) std::cout<<"Write Tree ...";
   tree->Write();
   if (debug) std::cout<<"... done"<<std::endl;
 
@@ -751,7 +763,7 @@ int main() {
 
   c2->Write();
 
-  if (debug) std::cout<<"... done"<<std::endl;*/
+  if (debug) std::cout<<"... done"<<std::endl;
 
   // open event display
   display->setOptions("THDPMA"); // G show geometry
