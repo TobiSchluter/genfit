@@ -31,12 +31,15 @@
 #include "KalmanFitterRefTrack.h"
 #include "KalmanFitterInfo.h"
 
+#include <Math/ProbFunc.h>
+
+
 #define DEBUG
 
 using namespace genfit;
 
 
-void KalmanFitterRefTrack::fitTrack(Track* tr, AbsTrackRep* rep, double& chi2, size_t& ndf, int direction)
+void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, size_t& ndf, int direction)
 {
   chi2 = 0;
   ndf = 0;
@@ -122,7 +125,7 @@ void KalmanFitterRefTrack::processTrack(Track* tr, AbsTrackRep* rep)
 }
 
 
-void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
+void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
 
   std::unique_ptr<MeasuredStateOnPlane> seedState;
 
@@ -229,6 +232,79 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, AbsTrackRep* rep) {
 
   // check
   assert(tr->checkConsistency());
+}
+
+
+void KalmanFitterRefTrack::getChiSquNdf(const Track* tr, const AbsTrackRep* rep, double& bChi2, double& fChi2, double& bNdf,  double& fNdf) const {
+  bChi2 = 0;
+  fChi2 = 0;
+  bNdf = -1. * rep->getDim();
+  fNdf = -1. * rep->getDim();
+
+  for (TrackPoint* tp : tr->getPointsWithMeasurement()) {
+    AbsFitterInfo* afi = tp->getFitterInfo(rep);
+    KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>(afi);
+    if (!fi) {
+      Exception exc("KalmanFitterRefTrack::getChiSqu(): fitterInfo is not a KalmanFitterInfo", __LINE__,__FILE__);
+      throw exc;
+    }
+
+    KalmanFittedStateOnPlane* fup = fi->getForwardUpdate();
+    KalmanFittedStateOnPlane* bup = fi->getBackwardUpdate();
+
+    bChi2 += bup->getChiSquareIncrement();
+    fChi2 += fup->getChiSquareIncrement();
+
+    bNdf += bup->getNdf();
+    fNdf += fup->getNdf();
+  }
+
+  if (bNdf < 0)
+    bNdf = 0;
+
+  if (fNdf < 0)
+    fNdf = 0;
+}
+
+
+double KalmanFitterRefTrack::getChiSqu(const Track* tr, const AbsTrackRep* rep, int direction) const {
+  double bChi2(0), fChi2(0), bNdf(0), fNdf(0);
+
+  getChiSquNdf(tr, rep, bChi2, fChi2, bNdf, fNdf);
+
+  if (direction < 0)
+    return bChi2;
+  return fChi2;
+}
+
+double KalmanFitterRefTrack::getNdf(const Track* tr, const AbsTrackRep* rep, int direction) const {
+  double bChi2(0), fChi2(0), bNdf(0), fNdf(0);
+
+  getChiSquNdf(tr, rep, bChi2, fChi2, bNdf, fNdf);
+
+  if (direction < 0)
+    return bNdf;
+  return fNdf;
+}
+
+double KalmanFitterRefTrack::getRedChiSqu(const Track* tr, const AbsTrackRep* rep, int direction) const {
+  double bChi2(0), fChi2(0), bNdf(0), fNdf(0);
+
+  getChiSquNdf(tr, rep, bChi2, fChi2, bNdf, fNdf);
+
+  if (direction < 0)
+    return bChi2/bNdf;
+  return fChi2/fNdf;
+}
+
+double KalmanFitterRefTrack::getPVal(const Track* tr, const AbsTrackRep* rep, int direction) const {
+  double bChi2(0), fChi2(0), bNdf(0), fNdf(0);
+
+  getChiSquNdf(tr, rep, bChi2, fChi2, bNdf, fNdf);
+
+  if (direction < 0)
+    return ROOT::Math::chisquared_cdf_c(bChi2, bNdf);
+  return ROOT::Math::chisquared_cdf_c(fChi2, fNdf);
 }
 
 

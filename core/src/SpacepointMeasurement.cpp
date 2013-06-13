@@ -63,7 +63,7 @@ MeasurementOnPlane SpacepointMeasurement::constructMeasurementOnPlane(const AbsT
        plane, rep, getHMatrix(rep));
 
   TVectorD& m = mop.getState();
-  TMatrixDSym V = mop.getCov();
+  TMatrixDSym& V = mop.getCov();
 
   const TVector3& o(plane->getO());
   const TVector3& u(plane->getU());

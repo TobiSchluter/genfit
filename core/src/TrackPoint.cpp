@@ -164,7 +164,7 @@ std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos() const {
   return retVal;
 }
 
-std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos(AbsTrackRep* rep) const {
+std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos(const AbsTrackRep* rep) const {
   std::vector< AbsFitterInfo* > retVal;
 
   auto it = fitterInfos_.find(rep);
@@ -193,7 +193,7 @@ AbsFitterInfo* TrackPoint::getFitterInfo(const AbsTrackRep* rep, int i) const {
 }
 
 
-bool TrackPoint::hasFitterInfos(AbsTrackRep* rep) const {
+bool TrackPoint::hasFitterInfos(const AbsTrackRep* rep) const {
   auto it = fitterInfos_.find(rep);
   if (it == fitterInfos_.end())
     return false;

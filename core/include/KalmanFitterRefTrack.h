@@ -40,11 +40,19 @@ class KalmanFitterRefTrack : public AbsFitter {
   /**
    * Needs a prepared track!
    */
-  void fitTrack(Track* tr, AbsTrackRep* rep, double& chi2, size_t& ndf, int direction);
+  void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, size_t& ndf, int direction);
 
   void processTrack(Track* tr, AbsTrackRep* rep) override;
 
-  void prepareTrack(Track* tr, AbsTrackRep* rep);
+  void prepareTrack(Track* tr, const AbsTrackRep* rep);
+
+
+  void getChiSquNdf(const Track* tr, const AbsTrackRep* rep, double& bChi2, double& fChi2, double& bNdf,  double& fNdf) const;
+  double getChiSqu(const Track* tr, const AbsTrackRep* rep, int direction = -1) const;
+  double getNdf(const Track* tr, const AbsTrackRep* rep, int direction = -1) const;
+  double getRedChiSqu(const Track* tr, const AbsTrackRep* rep, int direction = -1) const;
+  double getPVal(const Track* tr, const AbsTrackRep* rep, int direction = -1) const;
+
 
  private:
   void processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, size_t& ndf, int direction);
