@@ -26,7 +26,6 @@ set(GENFIT_INCS
   ${CMAKE_CURRENT_SOURCE_DIR}/ReferenceStateOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SharedMaterialPropertiesPtr.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SharedPlanePtr.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/SimpleKalmanFitterInfo.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SpacepointMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/StateOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Tools.h

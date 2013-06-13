@@ -22,7 +22,6 @@ set(GENFIT_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/ProlateSpacepointMeasurement.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/RectangularFinitePlane.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ReferenceStateOnPlane.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/SimpleKalmanFitterInfo.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/SpacepointMeasurement.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/StateOnPlane.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Tools.cpp

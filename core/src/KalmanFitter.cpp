@@ -28,7 +28,7 @@
 #include "Exception.h"
 
 #include "KalmanFitter.h"
-#include "SimpleKalmanFitterInfo.h"
+#include "KalmanFitterInfo.h"
 
 using namespace genfit;
 
@@ -41,12 +41,16 @@ void KalmanFitter::fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf
   for (size_t i = 0; i < tr->getNumPoints(); ++i)
     {
       TrackPoint *tp = 0;
+      KalmanFitterInfo* fi;
       assert(direction == +1 || direction == -1);
-      if (direction == +1)
-	tp = tr->getPoint(i);
-      else if (direction == -1)
-	tp = tr->getPoint(-i-1);
-      SimpleKalmanFitterInfo* fi = new SimpleKalmanFitterInfo(tp, rep);
+      if (direction == +1) {
+        tp = tr->getPoint(i);
+        fi = new KalmanFitterInfo(tp, rep);
+      }
+      else {
+        tp = tr->getPoint(-i-1);
+        fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep));
+      }
       tp->addFitterInfo(fi);
       processTrackPoint(tr, tp, fi, rep, chi2, ndf, direction);
     }
@@ -110,7 +114,7 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
 }
 
 void
-KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInfo* fi,
+KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
 				AbsTrackRep* rep, double& chi2, size_t& ndf, int direction)
 {
   if (!tp->hasRawMeasurements())
@@ -121,13 +125,13 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInf
   // Extrapolate to TrackPoint.
   MeasuredStateOnPlane* state = new MeasuredStateOnPlane(*currentState);
   //state.Print();
-  if (fi->measurements_.size() == 0) {
+  if (fi->getNumMeasurements() == 0) {
     const AbsMeasurement* m = tp->getRawMeasurement(0);
     SharedPlanePtr plane = m->constructPlane(currentState);
-    fi->measurements_.push_back(m->constructMeasurementOnPlane(rep, plane));
+    fi->addMeasurementOnPlane(new MeasurementOnPlane(m->constructMeasurementOnPlane(rep, plane)));
   }
-  const MeasurementOnPlane& mOnPlane = fi->measurements_[0];
-  const SharedPlanePtr plane = mOnPlane.getPlane();
+  const MeasurementOnPlane* mOnPlane = fi->getMeasurementOnPlane(0);
+  const SharedPlanePtr plane = mOnPlane->getPlane();
 
   std::cout << "its plane is at R = " << plane->getO().Perp()
 	    << " with normal pointing along (" << plane->getNormal().X() << ", " << plane->getNormal().Y() << ", " << plane->getNormal().Z() << ")" << std::endl;
@@ -146,16 +150,13 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInf
 
   // unique_ptr takes care of disposing of the old prediction, takes ownership of state.
   assert(direction == -1 || direction == +1);
-  if (direction == +1)
-    fi->fwPrediction_ = std::unique_ptr<MeasuredStateOnPlane>(state);
-  else if (direction == -1)
-    fi->bwPrediction_ = std::unique_ptr<MeasuredStateOnPlane>(state);
+  fi->setPrediction(state, direction);
 
   TVectorD stateVector(state->getState());
   TMatrixDSym cov(state->getCov());
-  const TVectorD& measurement(mOnPlane.getState());
-  const TMatrixDSym& V(mOnPlane.getCov());
-  const TMatrixD& H(mOnPlane.getHMatrix());
+  const TVectorD& measurement(mOnPlane->getState());
+  const TMatrixDSym& V(mOnPlane->getCov());
+  const TMatrixD& H(mOnPlane->getHMatrix());
   std::cout << "State prediction: "; stateVector.Print();
   std::cout << "Cov prediction: "; state->getCov().Print();
   //cov.Print();
@@ -225,7 +226,14 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, SimpleKalmanFitterInf
   TDecompChol decompNew(HCHt);
   TMatrixDSym HCHtInv(decompNew.Invert());
 
-  chi2 += HCHtInv.Similarity(resNew);
-  ndf += measurement.GetNrows();
+  double chi2inc = HCHtInv.Similarity(resNew);
+  chi2 += chi2inc;
+
+  double ndfInc = measurement.GetNrows();
+  ndf += ndfInc;
   std::cout << "chi² = " << HCHtInv.Similarity(resNew) << std::endl;
+
+  // set update
+  KalmanFittedStateOnPlane* updateSOP = new KalmanFittedStateOnPlane(*currentState, chi2inc, ndfInc);
+  fi->setUpdate(updateSOP, direction);
 }

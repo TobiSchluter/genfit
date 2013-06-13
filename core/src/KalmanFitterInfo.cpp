@@ -302,17 +302,29 @@ bool KalmanFitterInfo::checkConsistency() const {
   }
 
   // check if there is a reference state
-  if (!referenceState_) {
+  /*if (!referenceState_) {
     std::cerr << "KalmanFitterInfo::checkConsistency(): referenceState_ is NULL" << std::endl;
+    return false;
+  }*/
+
+  SharedPlanePtr plane;
+  if (referenceState_) {
+    plane = referenceState_->getPlane();
+  }
+  else if (measurementsOnPlane_.size() > 0) {
+    plane = measurementsOnPlane_[0]->getPlane();
+  }
+  else if (forwardUpdate_ || backwardUpdate_) {
+    std::cerr << "KalmanFitterInfo::checkConsistency(): update w/o prediction or measurement" << std::endl;
     return false;
   }
 
-  SharedPlanePtr plane = referenceState_->getPlane();
-
   // see if everything else is defined wrt this plane and rep_
-  if (referenceState_->getRep() != rep_) {
-    std::cerr << "KalmanFitterInfo::checkConsistency(): referenceState_ is not defined with the correct TrackRep" << std::endl;
-    return false;
+  if (referenceState_) {
+    if (referenceState_->getRep() != rep_) {
+      std::cerr << "KalmanFitterInfo::checkConsistency(): referenceState_ is not defined with the correct TrackRep" << std::endl;
+      return false;
+    }
   }
 
   if (forwardPrediction_) {
@@ -368,14 +380,25 @@ bool KalmanFitterInfo::checkConsistency() const {
     }
   }
 
-  // see if there is an update w/o prediction
+  // see if there is an update w/o prediction or measurement
   if (forwardUpdate_ && !forwardPrediction_) {
     std::cerr << "KalmanFitterInfo::checkConsistency(): forwardUpdate_ w/o forwardPrediction_" << std::endl;
     return false;
   }
 
+  if (forwardUpdate_ && measurementsOnPlane_.size() == 0) {
+    std::cerr << "KalmanFitterInfo::checkConsistency(): forwardUpdate_ w/o measurement" << std::endl;
+    return false;
+  }
+
+
   if (backwardUpdate_ && !backwardPrediction_) {
     std::cerr << "KalmanFitterInfo::checkConsistency(): backwardUpdate_ w/o backwardPrediction_" << std::endl;
+    return false;
+  }
+
+  if (backwardUpdate_ && measurementsOnPlane_.size() == 0) {
+    std::cerr << "KalmanFitterInfo::checkConsistency(): backwardUpdate_ w/o measurement" << std::endl;
     return false;
   }
 

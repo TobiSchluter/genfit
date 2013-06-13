@@ -258,7 +258,9 @@ void EventDisplay::drawEvent(unsigned int id) {
       KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(fitterInfo);
       MeasuredStateOnPlane fittedState = fi->getFittedState(true);
       track_pos = rep->getPos(&fittedState);
-      track_posRef = rep->getPos(fi->getReferenceState());
+      if (fi->hasReferenceState()) {
+        track_posRef = rep->getPos(fi->getReferenceState());
+      }
 
       double charge = rep->getCharge(&fittedState);
 
@@ -353,7 +355,7 @@ void EventDisplay::drawEvent(unsigned int id) {
       }
       // finished drawing track -------------------------------------------------------------
        // draw reference track if corresponding option is set ------------------------------------------
-        if(drawTrack) {
+        if(drawTrack && fi->hasReferenceState()) {
           if(track_linesRef == nullptr) track_linesRef = new TEveStraightLineSet;
           if(j > 0) track_linesRef->AddLine(old_track_posRef(0), old_track_posRef(1), old_track_posRef(2), track_posRef(0), track_posRef(1), track_posRef(2));
           old_track_posRef = track_posRef;

@@ -252,6 +252,11 @@ void KalmanFitterRefTrack::getChiSquNdf(const Track* tr, const AbsTrackRep* rep,
     KalmanFittedStateOnPlane* fup = fi->getForwardUpdate();
     KalmanFittedStateOnPlane* bup = fi->getBackwardUpdate();
 
+    if (fup == nullptr || bup == nullptr) {
+      Exception exc("KalmanFitterRefTrack::getChiSqu(): fup == nullptr || bup == nullptr", __LINE__,__FILE__);
+      throw exc;
+    }
+
     bChi2 += bup->getChiSquareIncrement();
     fChi2 += fup->getChiSquareIncrement();
 
