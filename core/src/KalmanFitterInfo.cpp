@@ -30,23 +30,13 @@
 namespace genfit {
 
 KalmanFitterInfo::KalmanFitterInfo() :
-  AbsFitterInfo(),
-  referenceState_(nullptr),
-  forwardPrediction_(nullptr),
-  forwardUpdate_(nullptr),
-  backwardPrediction_(nullptr),
-  backwardUpdate_(nullptr)
+  AbsFitterInfo()
 {
   ;
 }
 
 KalmanFitterInfo::KalmanFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep)  :
-  AbsFitterInfo(trackPoint, rep),
-  referenceState_(nullptr),
-  forwardPrediction_(nullptr),
-  forwardUpdate_(nullptr),
-  backwardPrediction_(nullptr),
-  backwardUpdate_(nullptr)
+  AbsFitterInfo(trackPoint, rep)
 {
   ;
 }
