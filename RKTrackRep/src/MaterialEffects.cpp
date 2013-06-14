@@ -115,13 +115,13 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
                                 M7x7* noise)
 {
 
+  if (noEffects_) return 0.;
+
   if (materialInterface_ == nullptr) {
     std::string msg("MaterialEffects hasn't been initialized with a correct AbsMaterialInterface pointer!");
     std::runtime_error err(msg);
     throw err;
   }
-
-  if (noEffects_) return 0.;
 
   bool doNoise(noise != nullptr);
 
@@ -188,14 +188,14 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
   // Trivial cases
 
+  if (noEffects_)
+    return;
+
   if (materialInterface_ == nullptr) {
     std::string msg("MaterialEffects hasn't been initialized with a correct AbsMaterialInterface pointer!");
     std::runtime_error err(msg);
     throw err;
   }
-
-  if (noEffects_)
-    return;
 
   if (relMomLoss > maxRelMomLoss) {
     limits.setLimit(stp_momLoss, 0);

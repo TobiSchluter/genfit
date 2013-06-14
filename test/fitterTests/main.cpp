@@ -59,6 +59,8 @@
 #include <TMath.h>
 #include <TString.h>
 
+#include <memory>
+
 
 void handler(int sig) {
   void *array[10];
@@ -112,15 +114,15 @@ int randomSign() {
 //---------------------------------------------------------------------------------------------------------
 
 
-//#define VALGRIND
+#define VALGRIND
 
 int main() {
   std::cout<<"main"<<std::endl;
 
-  const unsigned int nEvents = 1000;
+  const unsigned int nEvents = 2;
   const double BField = 15.;       // kGauss
   const double momentum = 0.1;     // GeV
-  const double theta = 110;         // degree
+  const double theta = 150;         // degree
   const double thetaDetPlane = 90;         // degree
   const double phiDetPlane = 0;         // degree
   const double pointDist = 5;      // cm; approx. distance between measurements generated w/ RKTrackRep
@@ -136,7 +138,7 @@ int main() {
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
-  const int fitterId = 2; // 1 = SimpleKalman; 2 = KalmanFitterRefTrack; 3 = DAF
+  const int fitterId = 1; // 1 = SimpleKalman; 2 = KalmanFitterRefTrack; 3 = DAF
 
   const int pdg = 13;               // particle pdg code
 
@@ -149,7 +151,7 @@ int main() {
 
   const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
 
-  const bool debug = false;
+  const bool debug = true;
 
   // 0: PixMeasurement
   // 1: SpacepointMeasurement
@@ -162,27 +164,16 @@ int main() {
   measurementTypes.push_back(0);
   measurementTypes.push_back(0);
   measurementTypes.push_back(0);
-  measurementTypes.push_back(1);
-  measurementTypes.push_back(1);
-  measurementTypes.push_back(1);
-  measurementTypes.push_back(2);
-  measurementTypes.push_back(2);
-  measurementTypes.push_back(2);
-  measurementTypes.push_back(3);
-  measurementTypes.push_back(3);
-  measurementTypes.push_back(3);
-  measurementTypes.push_back(4);
-  measurementTypes.push_back(4);
-  measurementTypes.push_back(4);
-  measurementTypes.push_back(5);
-  measurementTypes.push_back(5);
-  measurementTypes.push_back(5);
+  measurementTypes.push_back(0);
+  //measurementTypes.push_back(0);
+  //measurementTypes.push_back(0);
+
 
 
 
   // init fitters
-  genfit::KalmanFitter simpleKalman;
-  genfit::KalmanFitterRefTrack kalmanFitterRefTrack;
+  genfit::KalmanFitter simpleKalman(6);
+  genfit::KalmanFitterRefTrack kalmanFitterRefTrack(1);
 
 
   gRandom->SetSeed(10);
@@ -205,8 +196,7 @@ int main() {
 
 
   // prepare output tree for Tracks
-  genfit::Track* trueTrack = new genfit::Track();
-  genfit::Track* fitTrack = new genfit::Track();
+  std::unique_ptr<genfit::Track> fitTrack(new genfit::Track());
 #ifndef VALGRIND
   // init rootapp (for drawing histograms)
   TApplication* rootapp = new TApplication("rootapp", 0, 0);
@@ -215,7 +205,6 @@ int main() {
   outname += ".root";
   TFile *file = TFile::Open(outname,"RECREATE");
   TTree *tree = new TTree("t","Tracks");
-  tree->Branch("trueTracks","Track",&trueTrack);
   tree->Branch("fitTracks","Track",&fitTrack);
 
 
@@ -547,15 +536,16 @@ int main() {
 
 
       // create track
-      if (fitTrack != NULL) delete fitTrack;
-      fitTrack = new genfit::Track(rep, rep->get6DState(&stateSmeared)); //initialized with smeared rep
+      std::cout << "fitTrack before resetting"; fitTrack->Print();
+      fitTrack.reset(new genfit::Track(rep, rep->get6DState(&stateSmeared))); //initialized with smeared rep
+
       //fitTrack->addTrackRep(rep->clone()); // check if everything works fine with more than one rep
 
       // add measurements
       for(unsigned int i=0; i<measurements.size(); ++i){
         std::vector<genfit::AbsMeasurement*> measVec;
         measVec.push_back(measurements[i]);
-        fitTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack));
+        fitTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack.get()));
       }
 
       // print trackCand
@@ -568,12 +558,12 @@ int main() {
         switch (fitterId) {
           case 1:
             if (debug) std::cout<<"Starting the fitter (simple Kalman)"<<std::endl;
-            simpleKalman.processTrack(fitTrack, rep);
+            simpleKalman.processTrack(fitTrack.get(), rep);
             break;
 
           case 2:
             if (debug) std::cout<<"Starting the fitter (reference track Kalman)"<<std::endl;
-            kalmanFitterRefTrack.processTrack(fitTrack, rep);
+            kalmanFitterRefTrack.processTrack(fitTrack.get(), rep);
             break;
 
           case 3:
@@ -641,7 +631,7 @@ int main() {
       const TVectorD& state = kfsop->getState();
       const TMatrixDSym& cov = kfsop->getCov();
 
-      double pval = kalmanFitterRefTrack.getPVal(fitTrack, repCheck); // FIXME choose fitter that has been used
+      double pval = kalmanFitterRefTrack.getPVal(fitTrack.get(), repCheck); // FIXME choose fitter that has been used
 
       hmomRes->Fill( (charge/state[0]-momentum));
       hupRes->Fill(  (state[1]-referenceState[1]));

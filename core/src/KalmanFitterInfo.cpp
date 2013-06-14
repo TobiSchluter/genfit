@@ -48,18 +48,18 @@ KalmanFitterInfo::~KalmanFitterInfo() {
 
 KalmanFitterInfo* KalmanFitterInfo::clone() const {
   KalmanFitterInfo* retVal = new KalmanFitterInfo(this->getTrackPoint(), this->getRep());
-  if (this->referenceState_)
-    retVal->referenceState_.reset(new ReferenceStateOnPlane(*(this->referenceState_)));
-  if (this->forwardPrediction_)
-    retVal->forwardPrediction_.reset(new MeasuredStateOnPlane(*(this->forwardPrediction_)));
-  if (this->forwardUpdate_)
-    retVal->forwardUpdate_.reset(new KalmanFittedStateOnPlane(*(this->forwardUpdate_)));
-  if (this->backwardPrediction_)
-    retVal->backwardPrediction_.reset(new MeasuredStateOnPlane(*(this->backwardPrediction_)));
-  if (this->backwardUpdate_)
-    retVal->backwardUpdate_.reset(new KalmanFittedStateOnPlane(*(this->backwardUpdate_)));
+  if (hasReferenceState())
+    retVal->setReferenceState(new ReferenceStateOnPlane(*getReferenceState()));
+  if (hasForwardPrediction())
+    retVal->setForwardPrediction(new MeasuredStateOnPlane(*getForwardPrediction()));
+  if (hasForwardUpdate())
+    retVal->setForwardUpdate(new KalmanFittedStateOnPlane(*getForwardUpdate()));
+  if (hasBackwardPrediction())
+    retVal->setBackwardPrediction(new MeasuredStateOnPlane(*getBackwardPrediction()));
+  if (hasBackwardUpdate())
+    retVal->setBackwardUpdate(new KalmanFittedStateOnPlane(*getBackwardUpdate()));
 
-  retVal->measurementsOnPlane_.reserve(this->measurementsOnPlane_.size());
+  retVal->measurementsOnPlane_.reserve(getNumMeasurements());
   for (auto it = this->measurementsOnPlane_.begin(); it != this->measurementsOnPlane_.end(); ++it) {
     retVal->addMeasurementOnPlane(new MeasurementOnPlane(*(it->get())));
   }

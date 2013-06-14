@@ -92,12 +92,6 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
     currentState->Print();
     std::cout << "\033[0m";
 
-    ++nIt;
-    if (nIt > maxIterations_) {
-      // FIXME throw exception
-      Exception exc("Track fit didn't converge in max iterations.",__LINE__,__FILE__);
-      throw exc;
-    }
     std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
 	      << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
     if (fabs(oldChi2BW - chi2BW) < deltaChi2_)  {
@@ -108,6 +102,12 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
       oldChi2BW = chi2BW;
       oldChi2FW = chi2FW;
       currentState->getCov() *= blowUpFactor_;  // blow up cov
+    }
+
+    if (++nIt > maxIterations_) {
+      delete currentState;
+      Exception exc("Track fit didn't converge in max iterations.",__LINE__,__FILE__);
+      throw exc;
     }
   }
   delete currentState;
@@ -234,6 +234,10 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   std::cout << "chi² = " << HCHtInv.Similarity(resNew) << std::endl;
 
   // set update
-  KalmanFittedStateOnPlane* updateSOP = new KalmanFittedStateOnPlane(*currentState, chi2inc, ndfInc);
-  fi->setUpdate(updateSOP, direction);
+  KalmanFittedStateOnPlane* updatedSOP = new KalmanFittedStateOnPlane(*currentState, chi2inc, ndfInc);
+  fi->setUpdate(updatedSOP, direction);
+
+  //KalmanFittedStateOnPlane* updatedSOP = new KalmanFittedStateOnPlane(stateVector, cov, plane, rep, chi2inc, ndfInc);
+  //updatedSOP->setAuxInfo(currentState->getAuxInfo());
+  //fi->setUpdate(updatedSOP, direction);
 }

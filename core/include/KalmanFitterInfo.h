@@ -69,7 +69,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   bool hasBackwardPrediction() const {return bool(backwardPrediction_);}
   bool hasForwardUpdate() const {return bool(forwardUpdate_);}
   bool hasBackwardUpdate() const {return bool(backwardUpdate_);}
-  unsigned int getNumMeasurements() {return measurementsOnPlane_.size();}
+  unsigned int getNumMeasurements() const {return measurementsOnPlane_.size();}
 
   /** Get unbiased (default) or biased smoothed state
    */
