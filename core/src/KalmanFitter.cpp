@@ -46,12 +46,12 @@ void KalmanFitter::fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf
       if (direction == +1) {
         tp = tr->getPoint(i);
         fi = new KalmanFitterInfo(tp, rep);
+        tp->addFitterInfo(fi);
       }
       else {
         tp = tr->getPoint(-i-1);
         fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep));
       }
-      tp->addFitterInfo(fi);
       processTrackPoint(tr, tp, fi, rep, chi2, ndf, direction);
     }
 }
