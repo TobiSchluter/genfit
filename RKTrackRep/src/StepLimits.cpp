@@ -24,6 +24,8 @@
 #include <iostream>
 #include <limits>
 
+#include <math.h>
+
 namespace genfit {
 
 
