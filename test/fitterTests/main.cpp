@@ -114,7 +114,7 @@ int randomSign() {
 //---------------------------------------------------------------------------------------------------------
 
 
-#define VALGRIND
+//#define VALGRIND
 
 int main() {
   std::cout<<"main"<<std::endl;
@@ -153,21 +153,15 @@ int main() {
 
   const bool debug = true;
 
-  // 0: PixMeasurement
-  // 1: SpacepointMeasurement
-  // 2: ProlateSpacepointMeasurement
-  // 3: StripMeasurement
-  // 4: WireMeasurement
-  // 5: WirePointMeasurement
+  enum eMeasurementType { Pixel = 0,
+			  Spacepoint,
+			  ProlateSpacepoint,
+			  Strip,
+			  Wire,
+			  WirePoint, };
   std::vector<unsigned int> measurementTypes;
-
-  measurementTypes.push_back(0);
-  measurementTypes.push_back(0);
-  measurementTypes.push_back(0);
-  measurementTypes.push_back(0);
-  //measurementTypes.push_back(0);
-  //measurementTypes.push_back(0);
-
+  for (int i = 0; i < 4; ++i)
+    measurementTypes.push_back(Pixel);
 
 
 
@@ -356,7 +350,7 @@ int main() {
           else leftRightTrue.push_back(0);
 
           switch(measurementTypes[i]){
-            case 0: {// 0: PixHit
+            case Pixel: {
               if (debug) std::cerr << "create PixHit" << std::endl;
 
               genfit::SharedPlanePtr plane(new genfit::DetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)));
@@ -374,7 +368,7 @@ int main() {
             }
             break;
 
-            case 1: {// 1: SpacepointHit
+            case Spacepoint: {
               if (debug) std::cerr << "create SpacepointHit" << std::endl;
 
               TVectorD hitCoords(3);
@@ -391,7 +385,7 @@ int main() {
             }
             break;
 
-            case 2: {// 2: ProlateSpacepointHit
+            case ProlateSpacepoint: {
               if (debug) std::cerr << "create ProlateSpacepointHit" << std::endl;
 
               TVectorD hitCoords(3);
@@ -436,7 +430,7 @@ int main() {
             }
             break;
 
-            case 3: {// 3: StripHit
+            case Strip: {
               if (debug) std::cerr << "create StripHit" << std::endl;
 
               genfit::SharedPlanePtr plane(new genfit::DetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)));
@@ -452,7 +446,7 @@ int main() {
             }
             break;
 
-            case 4: {// 4: WireHit
+            case Wire: {
               if (debug) std::cerr << "create WireHit" << std::endl;
 
               TVectorD hitCoords(7);
@@ -478,7 +472,7 @@ int main() {
             }
             break;
 
-            case 5: {// 5: WirePointHit
+            case WirePoint: {
               if (debug) std::cerr << "create WirePointHit" << std::endl;
 
               TVectorD hitCoords(8);
