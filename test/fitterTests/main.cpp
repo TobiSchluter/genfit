@@ -337,7 +337,8 @@ int main() {
 
           int lr = 1;
           TVector3 wirePerp;
-          if (measurementTypes[i] == 4 || measurementTypes[i] == 5){
+          if (measurementTypes[i] == Wire
+	      || measurementTypes[i] == WirePoint){
             wirePerp = dir.Cross(currentWireDir);
             if (gRandom->Uniform(-1,1) >= 0) {
               wirePerp *= -1.;
