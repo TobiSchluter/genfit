@@ -58,7 +58,15 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& c
         tp = tr->getPointWithMeasurement(-i-1);
 
       KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep, -1));
-      processTrackPoint(fi, prevFi, chi2, ndf, direction);
+      try {
+        processTrackPoint(fi, prevFi, chi2, ndf, direction);
+      }
+      catch (genfit::Exception& e) {
+        fi->setStatusFlag(1);
+        std::cerr << e.what();
+        return;
+      }
+
       prevFi = fi;
   }
 }
@@ -179,45 +187,52 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
     KalmanFitterInfo* fitterInfo = new KalmanFitterInfo(trackPoint, rep);
     trackPoint->addFitterInfo(fitterInfo);
 
-    // Construct plane
-    SharedPlanePtr plane = trackPoint->getRawMeasurement(0)->constructPlane(&*seedState);
+    try {
+      // Construct plane
+      SharedPlanePtr plane = trackPoint->getRawMeasurement(0)->constructPlane(&*seedState);
 
-    // do extrapolation and set reference state infos
-    double segmentLen = rep->extrapolateToPlane(&*seedState, plane);
-    if (i>0) rep->getForwardJacobianAndNoise(FTransportMatrix, FNoiseMatrix);
-    rep->getBackwardJacobianAndNoise(BTransportMatrix, BNoiseMatrix);
+      // do extrapolation and set reference state infos
+      double segmentLen = rep->extrapolateToPlane(&*seedState, plane);
+      if (i>0) rep->getForwardJacobianAndNoise(FTransportMatrix, FNoiseMatrix);
+      rep->getBackwardJacobianAndNoise(BTransportMatrix, BNoiseMatrix);
 
-    ReferenceStateOnPlane* refState = new ReferenceStateOnPlane(*seedState);
-    fitterInfo->setReferenceState(refState);
+      ReferenceStateOnPlane* refState = new ReferenceStateOnPlane(*seedState);
+      fitterInfo->setReferenceState(refState);
 
-    if (i==0) { // if we are at first measurement and seed state is defined somewhere else, still set forward info to default
-      segmentLen = 0;
+      if (i==0) { // if we are at first measurement and seed state is defined somewhere else, still set forward info to default
+        segmentLen = 0;
+      }
+
+      refState->setForwardSegmentLength(segmentLen);
+      refState->setForwardTransportMatrix(FTransportMatrix);
+      refState->setForwardNoiseMatrix(FNoiseMatrix);
+
+      if (prevFitterInfo != nullptr) {
+        ReferenceStateOnPlane* prevRefState =  prevFitterInfo->getReferenceState();
+        prevRefState->setBackwardSegmentLength(-segmentLen);
+        prevRefState->setBackwardTransportMatrix(BTransportMatrix);
+        prevRefState->setBackwardNoiseMatrix(BNoiseMatrix);
+      }
+
+
+      prevFitterInfo = fitterInfo;
+
+
+
+      // set seed as prediction if at first measurement
+      if (i==0) {
+        fitterInfo->setForwardPrediction(new MeasuredStateOnPlane(*seedState));
+      }
+
+      // get MeasurementsInPlane
+      for (AbsMeasurement* measurement : trackPoint->getRawMeasurements()) {
+        fitterInfo->addMeasurementOnPlane(new MeasurementOnPlane(measurement->constructMeasurementOnPlane(rep, plane)));
+      }
     }
-
-    refState->setForwardSegmentLength(segmentLen);
-    refState->setForwardTransportMatrix(FTransportMatrix);
-    refState->setForwardNoiseMatrix(FNoiseMatrix);
-
-    if (prevFitterInfo != nullptr) {
-      ReferenceStateOnPlane* prevRefState =  prevFitterInfo->getReferenceState();
-      prevRefState->setBackwardSegmentLength(-segmentLen);
-      prevRefState->setBackwardTransportMatrix(BTransportMatrix);
-      prevRefState->setBackwardNoiseMatrix(BNoiseMatrix);
-    }
-
-
-    prevFitterInfo = fitterInfo;
-
-
-
-    // set seed as prediction if at first measurement
-    if (i==0) {
-      fitterInfo->setForwardPrediction(new MeasuredStateOnPlane(*seedState));
-    }
-
-    // get MeasurementsInPlane
-    for (AbsMeasurement* measurement : trackPoint->getRawMeasurements()) {
-      fitterInfo->addMeasurementOnPlane(new MeasurementOnPlane(measurement->constructMeasurementOnPlane(rep, plane)));
+    catch (genfit::Exception& e) {
+      fitterInfo->setStatusFlag(1);
+      std::cerr << e.what();
+      return;
     }
 
   }
@@ -230,8 +245,9 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
   BNoiseMatrix.Zero();
   prevRefState->setBackwardNoiseMatrix(BNoiseMatrix);
 
-  // check
+  // self check
   assert(tr->checkConsistency());
+  assert(isTrackPrepared(tr, rep));
 }
 
 
@@ -310,6 +326,58 @@ double KalmanFitterRefTrack::getPVal(const Track* tr, const AbsTrackRep* rep, in
   if (direction < 0)
     return ROOT::Math::chisquared_cdf_c(bChi2, bNdf);
   return ROOT::Math::chisquared_cdf_c(fChi2, fNdf);
+}
+
+
+bool KalmanFitterRefTrack::isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const {
+  std::vector< TrackPoint* > points = tr->getPointsWithMeasurement();
+
+  if (points.size() == 0)
+    return true;
+
+  for (TrackPoint* p : points) {
+    KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>(p->getFitterInfo(rep));
+    if (!fi)
+      return false;
+
+    if (!(fi->checkConsistency()))
+      return false;
+
+    if (fi->getStatusFlag() != 0)
+      return false;
+
+    if (!(fi->hasReferenceState()))
+      return false;
+  }
+
+  return true;
+}
+
+bool KalmanFitterRefTrack::isTrackFitted(const Track* tr, const AbsTrackRep* rep) const {
+  std::vector< TrackPoint* > points = tr->getPointsWithMeasurement();
+
+  if (points.size() == 0)
+    return true;
+
+  for (TrackPoint* p : points) {
+    KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>(p->getFitterInfo(rep));
+    if (!fi)
+      return false;
+
+    if (!(fi->checkConsistency()))
+      return false;
+
+    if (fi->getStatusFlag() != 0)
+      return false;
+
+    if (!(fi->hasForwardUpdate()))
+      return false;
+
+    if (!(fi->hasBackwardUpdate()))
+      return false;
+  }
+
+  return true;
 }
 
 

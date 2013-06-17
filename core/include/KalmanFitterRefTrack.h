@@ -53,6 +53,9 @@ class KalmanFitterRefTrack : public AbsFitter {
   double getRedChiSqu(const Track* tr, const AbsTrackRep* rep, int direction = -1) const;
   double getPVal(const Track* tr, const AbsTrackRep* rep, int direction = -1) const;
 
+  bool isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const;
+  bool isTrackFitted(const Track* tr, const AbsTrackRep* rep) const;
+
 
  private:
   void processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, size_t& ndf, int direction);

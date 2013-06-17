@@ -193,6 +193,14 @@ AbsFitterInfo* TrackPoint::getFitterInfo(const AbsTrackRep* rep, int i) const {
 }
 
 
+unsigned int TrackPoint::getNumFitterInfos(const AbsTrackRep* rep) const {
+  if (!(hasFitterInfos(rep)))
+    return 0;
+
+  return fitterInfos_.at(rep).size();
+}
+
+
 bool TrackPoint::hasFitterInfos(const AbsTrackRep* rep) const {
   auto it = fitterInfos_.find(rep);
   if (it == fitterInfos_.end())

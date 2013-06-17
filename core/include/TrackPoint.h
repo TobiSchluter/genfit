@@ -76,7 +76,7 @@ class TrackPoint : public TObject {
   //! Get list of fitterInfos of a one TrackRep
   std::vector< AbsFitterInfo* > getFitterInfos(const AbsTrackRep* rep) const;
   AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep, int i = -1) const;
-  unsigned int getNumFitterInfos(const AbsTrackRep* rep) const {return fitterInfos_.at(rep).size();}
+  unsigned int getNumFitterInfos(const AbsTrackRep* rep) const;
   bool hasFitterInfos(const AbsTrackRep* rep) const;
 
   //MaterialInfo* getMaterialInfo() {return material_;}
