@@ -27,7 +27,7 @@
 namespace genfit {
 
 TrackPoint::TrackPoint() :
-  sortingParameter_(0), track_(nullptr)//, material_(nullptr)
+  sortingParameter_(0), track_(_GFNULLPTR)//, material_(nullptr)
 {
   ;
 }

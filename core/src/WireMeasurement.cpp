@@ -22,12 +22,12 @@
 
 #include "WireMeasurement.h"
 
-#include <math.h>
+#include <cmath>
 
 #include "Exception.h"
 #include "RKTrackRep.h"
 
-#include <assert.h>
+#include <cassert>
 
 
 namespace genfit {
@@ -112,7 +112,7 @@ MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRe
 
 
 const TMatrixD& WireMeasurement::getHMatrix(const AbsTrackRep* rep) const {
-  if (dynamic_cast<const RKTrackRep*>(rep) != nullptr) {
+  if (dynamic_cast<const RKTrackRep*>(rep) != _GFNULLPTR) {
     static const double HMatrixContent[5] = {0, 0, 0, 1, 0};
     static const TMatrixT<double> HMatrix(1,5, HMatrixContent);
 

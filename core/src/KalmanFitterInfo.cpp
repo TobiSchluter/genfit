@@ -19,7 +19,7 @@
 
 #include "KalmanFitterInfo.h"
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 
 #include "Exception.h"
@@ -230,7 +230,7 @@ void KalmanFitterInfo::deleteMeasurementInfo() {
 
 
 MeasuredStateOnPlane KalmanFitterInfo::calcAverageState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const {
-  if (forwardState == nullptr || backwardState == nullptr) {
+  if (forwardState == _GFNULLPTR || backwardState == _GFNULLPTR) {
     Exception e("KalmanFitterInfo::calcAverageState: forwardState or backwardState is NULL.", __LINE__,__FILE__);
     throw e;
   }

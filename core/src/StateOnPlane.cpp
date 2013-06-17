@@ -20,7 +20,7 @@
 #include "StateOnPlane.h"
 #include "AbsTrackRep.h"
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 
 namespace genfit {
@@ -28,7 +28,7 @@ namespace genfit {
 StateOnPlane::StateOnPlane(const AbsTrackRep* rep) :
   state_(0), auxInfo_(0), sharedPlane_(), rep_(rep)
 {
-  if (rep != nullptr) {
+  if (rep != _GFNULLPTR) {
     state_.ResizeTo(rep->getDim());
   }
 }
@@ -36,14 +36,14 @@ StateOnPlane::StateOnPlane(const AbsTrackRep* rep) :
 StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr plane, const AbsTrackRep* rep) :
   state_(state), sharedPlane_(plane), rep_(rep)
 {
-  assert(rep != nullptr);
+  assert(rep != _GFNULLPTR);
   //assert(state_.GetNrows() == (signed)rep->getDim());
 }
 
 void StateOnPlane::Print(Option_t* option) const {
   std::cout << "genfit::StateOnPlane ";
   std::cout << " state vector: "; state_.Print();
-  if (sharedPlane_ != nullptr) {
+  if (sharedPlane_ != _GFNULLPTR) {
     std::cout << " defined in plane "; sharedPlane_->Print();
     TVector3 pos, mom;
     getRep()->getPosMom(this, pos, mom);

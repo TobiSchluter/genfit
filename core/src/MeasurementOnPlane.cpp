@@ -40,7 +40,7 @@ void MeasurementOnPlane::Print(Option_t* option) const
   std::cout << "genfit::MeasuredStateOnPlane ";
   std::cout << " state vector: "; state_.Print();
   std::cout << " covariance matrix: "; cov_.Print();
-  if (sharedPlane_ != nullptr)
+  if (sharedPlane_ != _GFNULLPTR)
     std::cout << " defined in plane "; sharedPlane_->Print();
   std::cout << " hMatrix: "; hMatrix_.Print();
 
