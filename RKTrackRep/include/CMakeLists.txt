@@ -1,8 +1,0 @@
-cmake_minimum_required(VERSION 2.8)
-
-set(GENFIT_INCS RKTrackRep.h AbsMaterialInterface.h StepLimits.h TGeoMaterialInterface.h MaterialEffects.h)
-
-INSTALL(FILES ${GENFIT_INCS} DESTINATION ${GENFITINCINSTALLDIR})
-
-SET(INCLUDE_DIRECTORIES ${INCLUDE_DIRECTORIES} ${CMAKE_CURRENT_SOURCE_DIR}
-    PARENT_SCOPE)

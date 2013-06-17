@@ -1,0 +1,18 @@
+To build GENFIT cmake is needed in version 2.8 or higher.
+
+To create the library, create a build directory and change into it. E.g.
+ mkdir build; cd build
+ 
+Now create the Makefiles by invoking:
+ cmake ..
+
+And build:
+ make
+ 
+The libraries are created in the subdirectory lib/ of the build directory.
+
+To install the libraries and copy all header files into the directories lib/ and
+include/ in the root directory of the project, invoke
+ make install
+
+Generation of examples is still under construction.

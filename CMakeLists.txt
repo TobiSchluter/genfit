@@ -1,75 +1,54 @@
-cmake_minimum_required(VERSION 2.8)
+# #require a certain version
+CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
 
-IF(NOT DEFINED ENV{ROOTSYS})
-   MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
-ENDIF(NOT DEFINED ENV{ROOTSYS})
+# declare the project name
+PROJECT(genfit)
 
-IF(NOT DEFINED ENV{GENFIT})
-   MESSAGE(FATAL_ERROR "You did not set the environment variable GENFIT.") 
-ENDIF(NOT DEFINED ENV{GENFIT})
+# set project version
+SET( ${PROJECT_NAME}_VERSION_MAJOR 2 )
+SET( ${PROJECT_NAME}_VERSION_MINOR 0 )
+SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
 
-#IF(NOT DEFINED ENV{GLOGPATH})
-#   MESSAGE(FATAL_ERROR "You did not set the environment variable GLOGPATH. Please install the Google Logging Library (glog) and set GLOGPATH.") 
-#ENDIF(NOT DEFINED ENV{GLOGPATH})
+# define path to macros and settings
+LIST( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
+# include the macros and settings
+INCLUDE(settings)
+INCLUDE(macros)
 
-FIND_PROGRAM(ROOT_CONFIG root-config $ENV{ROOTSYS}/bin)
+FIND_PACKAGE(ROOT REQUIRED)
 
-IF(ROOT_CONFIG MATCHES "ROOT_CONFIG-NOTFOUND")
-  MESSAGE(FATAL_ERROR "Could not find root-config executable.")
-ENDIF(ROOT_CONFIG MATCHES "ROOT_CONFIG-NOTFOUND")
+# require proper c++
+ADD_DEFINITIONS( "-O2 -Wall -g -ansi -pedantic -Wno-long-long -std=c++11 -Wshadow -pedantic -ftree-vectorize -ftree-vectorizer-verbose=0 "   )
 
-Execute_process(COMMAND ${ROOT_CONFIG} --cflags
-	OUTPUT_VARIABLE ROOT_CFLAGS
-    	OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-Execute_process(COMMAND ${ROOT_CONFIG} --glibs --ldflags --evelibs
-	OUTPUT_VARIABLE ROOT_LIBS
-    	OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-Execute_process(COMMAND ${ROOT_CONFIG} --incdir
-	OUTPUT_VARIABLE ROOT_INCDIR
-    	OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-#include(macros.cmake)
-
-#SET(CMAKE_VERBOSE_MAKEFILE ON)
-
-SET(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wshadow -std=c++11 -pedantic -ftree-vectorize -ftree-vectorizer-verbose=0 ${ROOT_CFLAGS}")
+# include directories -- for now both core and RKTrackRep
+INCLUDE_DIRECTORIES( BEFORE ./core/include ./RKTrackRep/include ${ROOT_INCLUDE_DIRS})
+INSTALL( DIRECTORY ./core/include ./RKTrackRep/include  DESTINATION . PATTERN ".svn" EXCLUDE )
 
 
-include(CheckCXXCompilerFlag)
-check_cxx_compiler_flag(-march=native HAS_MARCH_NATIVE)
-IF(HAS_MARCH_NATIVE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-ENDIF(HAS_MARCH_NATIVE)
+## normally this would then stand inside an if clause
+#INCLUDE_DIRECTORIES( BEFORE  ./RKTrackRep/include)
+#INSTALL( DIRECTORY ./RKTrackRep/include  DESTINATION . PATTERN ".svn" EXCLUDE )
+## and this as well
+#INCLUDE_DIRECTORIES( BEFORE  ./eventDisplay/include)
+#INSTALL( DIRECTORY ./eventDisplay/include  DESTINATION . PATTERN ".svn" EXCLUDE )
 
-IF(NOT DEFINED ENV{GENFIT})
-  SET(ENV{GENFIT} "${CMAKE_SOURCE_DIR}")
-ENDIF(NOT DEFINED ENV{GENFIT})
-get_filename_component(GENFIT $ENV{GENFIT} REALPATH)
 
-SET(GENFITLIBDIR ${GENFIT}/lib)
-SET(GENFITLIBINSTALLDIR ${GENFITLIBDIR})
-SET(LIBRARY_OUTPUT_PATH ${GENFITLIBDIR})
+# declare the stupid ROOT library path
+LINK_DIRECTORIES(${ROOT_LIBRARY_DIR})
 
-SET(GENFITINCDIR ${GENFIT}/include/genfit2)
-SET(GENFITINCINSTALLDIR ${GENFITINCDIR})
-SET(INCLUDE_OUTPUT_PATH ${GENFITINCDIR})
+# add library
+AUX_SOURCE_DIRECTORY( ./core/src  library_sources )
 
-INCLUDE_DIRECTORIES(
-	${GENFIT}/core/include
-	${GENFIT}/RKTrackRep/include
-	${GENFIT}/MeasurementExamples/include
-	${ROOT_INCDIR}
-	$ENV{GLOGPATH}/include
-)
-add_subdirectory(core/src)
-add_subdirectory(RKTrackRep/src)
-add_subdirectory(core/include)
-add_subdirectory(RKTrackRep/include)
-#add_subdirectory(GFRave)
+## and again if-clauses:
+AUX_SOURCE_DIRECTORY( ./RKTrackRep/src  library_sources )
 
-ADD_LIBRARY(genfit2 SHARED ${GENFIT_SRCS})
-TARGET_LINK_LIBRARIES(genfit2 ${ROOT_LIBS})
-INSTALL(TARGETS genfit2 DESTINATION ${GENFITLIBINSTALLDIR})
+ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources} )
+INSTALL( TARGETS ${PROJECT_NAME} DESTINATION lib )
 
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ROOT_LIBS})
+
+# the examples, build with "make examples"
+#ADD_SUBDIRECTORY( examples/ )
+
+# generate and install following configuration files
+#GENERATE_PACKAGE_CONFIGURATION_FILES( genfitConfig.cmake genfitConfigVersion.cmake )
