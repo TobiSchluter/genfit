@@ -64,16 +64,16 @@ class DetPlane : public TObject {
  public:
 
   // Constructors/Destructors ---------
-  DetPlane(AbsFinitePlane* finite = nullptr);
+  DetPlane(AbsFinitePlane* finite = _GFNULLPTR);
 
   DetPlane(const TVector3& o,
              const TVector3& u,
              const TVector3& v,
-             AbsFinitePlane* finite = nullptr);
+             AbsFinitePlane* finite = _GFNULLPTR);
 
   DetPlane(const TVector3& o,
              const TVector3& n,
-             AbsFinitePlane* finite = nullptr);
+             AbsFinitePlane* finite = _GFNULLPTR);
 
   virtual ~DetPlane();
 
@@ -129,7 +129,7 @@ class DetPlane : public TObject {
                            const double& dirX, const double& dirY, const double& dirZ,
                            double& u, double& v) const;
 
-  void Print(const Option_t* = "") const override;
+  void Print(const Option_t* = "") const _GFOVERRIDE;
 
   //! this operator is called very often in Kalman filtering. It checks equality of planes
   //! by comparing the 9 double values that define them.

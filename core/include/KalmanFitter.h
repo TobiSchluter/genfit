@@ -39,7 +39,7 @@ class KalmanFitter : public AbsFitter {
 
   void fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf, int direction);
 
-  void processTrack(Track* tr, AbsTrackRep* rep) override;
+  void processTrack(Track* tr, AbsTrackRep* rep) _GFOVERRIDE;
 
  private:
   void processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,

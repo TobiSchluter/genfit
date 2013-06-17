@@ -71,14 +71,14 @@ class AbsMeasurement : public TObject {
 
   virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const = 0;
 
-  virtual void Print(const Option_t* = "") const override;
+  virtual void Print(const Option_t* = "") const _GFOVERRIDE;
 
  protected:
 
   // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
-  AbsMeasurement(const AbsMeasurement&) = default;
+  AbsMeasurement(const AbsMeasurement&);
 #ifndef __CINT__
-  AbsMeasurement& operator=(const AbsMeasurement&) = delete; // default cannot work because TVector and TMatrix = operators don't do resizing
+  AbsMeasurement& operator=(const AbsMeasurement&); // default cannot work because TVector and TMatrix = operators don't do resizing
 #endif
 
   TVectorD rawHitCoords_;

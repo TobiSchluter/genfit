@@ -48,7 +48,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   KalmanFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep);
   ~KalmanFitterInfo();
 
-  virtual KalmanFitterInfo* clone() const override;
+  virtual KalmanFitterInfo* clone() const _GFOVERRIDE;
 
   ReferenceStateOnPlane* getReferenceState() const {return referenceState_.get();}
   MeasuredStateOnPlane* getForwardPrediction() const {return forwardPrediction_.get();}
@@ -73,10 +73,10 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
   /** Get unbiased (default) or biased smoothed state
    */
-  MeasuredStateOnPlane getFittedState(bool biased = false) const override;
+  MeasuredStateOnPlane getFittedState(bool biased = false) const _GFOVERRIDE;
   /** Get unbiased (default) or biased residual from ith measurement
    */
-  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const override; // also calculates covariance of the residual
+  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const _GFOVERRIDE; // also calculates covariance of the residual
 
   void setReferenceState(ReferenceStateOnPlane* referenceState) {referenceState_.reset(referenceState);}
   void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction) {forwardPrediction_.reset(forwardPrediction);}
@@ -88,16 +88,16 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
   void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) {measurementsOnPlane_.push_back(std::unique_ptr<MeasurementOnPlane>(measurementOnPlane));}
 
-  void setRep(const AbsTrackRep* rep) override;
+  void setRep(const AbsTrackRep* rep) _GFOVERRIDE;
 
-  void deleteForwardInfo() override;
-  void deleteBackwardInfo() override;
-  void deleteReferenceInfo() override;
-  void deleteMeasurementInfo() override;
+  void deleteForwardInfo() _GFOVERRIDE;
+  void deleteBackwardInfo() _GFOVERRIDE;
+  void deleteReferenceInfo() _GFOVERRIDE;
+  void deleteMeasurementInfo() _GFOVERRIDE;
 
-  virtual void Print(const Option_t* = "") const override;
+  virtual void Print(const Option_t* = "") const _GFOVERRIDE;
 
-  virtual bool checkConsistency() const override;
+  virtual bool checkConsistency() const _GFOVERRIDE;
 
  private:
 

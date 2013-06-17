@@ -54,11 +54,11 @@ class WirePointMeasurement : public WireMeasurement {
   WirePointMeasurement(int nDim = 8);
   WirePointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
 
-  virtual AbsMeasurement* clone() const override {return new WirePointMeasurement(*this);}
+  virtual AbsMeasurement* clone() const _GFOVERRIDE {return new WirePointMeasurement(*this);}
 
-  virtual MeasurementOnPlane constructMeasurementOnPlane(const AbsTrackRep*, const SharedPlanePtr) const override;
+  virtual MeasurementOnPlane constructMeasurementOnPlane(const AbsTrackRep*, const SharedPlanePtr) const _GFOVERRIDE;
 
-  virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const override;
+  virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const _GFOVERRIDE;
 
 };
 

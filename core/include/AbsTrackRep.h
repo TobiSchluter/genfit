@@ -97,13 +97,13 @@ class AbsTrackRep : public TObject {
   //! Switch propagation direction. Has no effect if propDir_ is set to 0.
   void switchPropDir(){propDir_ = -1*propDir_;}
 
-  virtual void Print(const Option_t* = "") const override;
+  virtual void Print(const Option_t* = "") const _GFOVERRIDE;
 
  protected:
 
   // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
-  AbsTrackRep(const AbsTrackRep&) = default; // copy constructor
-  AbsTrackRep& operator=(const AbsTrackRep&) = default; // assignment operator
+  AbsTrackRep(const AbsTrackRep&); // copy constructor
+  AbsTrackRep& operator=(const AbsTrackRep&); // assignment operator
 
 
   int pdgCode_;

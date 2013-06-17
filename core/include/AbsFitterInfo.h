@@ -46,10 +46,8 @@ class AbsFitterInfo : public TObject {
   AbsFitterInfo();
   AbsFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep);
 
-  AbsFitterInfo(const AbsFitterInfo&) = delete; // copy constructor
-  AbsFitterInfo(AbsFitterInfo&&) = default; // move constructor
-  AbsFitterInfo& operator=(const AbsFitterInfo&) = delete; // assignment operator
-  AbsFitterInfo& operator=(AbsFitterInfo&&) = default; // move assignment operator
+  AbsFitterInfo(AbsFitterInfo&&); // move constructor
+  AbsFitterInfo& operator=(AbsFitterInfo&&); // move assignment operator
 
   virtual ~AbsFitterInfo() {};
 
@@ -72,7 +70,7 @@ class AbsFitterInfo : public TObject {
   virtual MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const = 0;
   int getStatusFlag() const {return statusFlag_;}
 
-  virtual void Print(const Option_t* = "") const override {;}
+  virtual void Print(const Option_t* = "") const _GFOVERRIDE {;}
 
   virtual bool checkConsistency() const = 0;
 
@@ -90,6 +88,9 @@ class AbsFitterInfo : public TObject {
 
   //ClassDef(AbsFitterInfo,1)
 
+ private:
+  AbsFitterInfo(const AbsFitterInfo&); // copy constructor
+  AbsFitterInfo& operator=(const AbsFitterInfo&); // assignment operator
 };
 
 } /* End of namespace genfit */

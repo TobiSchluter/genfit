@@ -77,7 +77,7 @@ class ReferenceStateOnPlane : public StateOnPlane {
   const TMatrixDSym& getBackwardNoiseMatrix() const {return backwardNoiseMatrix_;}
   const TMatrixDSym& getNoiseMatrix(int direction) const {if (direction >= 0) return forwardNoiseMatrix_; return backwardNoiseMatrix_;}
 
-  virtual void Print(Option_t* option = "") const override;
+  virtual void Print(Option_t* option = "") const _GFOVERRIDE;
 
  protected:
 

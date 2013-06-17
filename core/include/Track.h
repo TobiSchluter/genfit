@@ -28,8 +28,7 @@ class Track : public TObject {
   Track(AbsTrackRep* trackRep, const TVectorD& stateSeed);
 
   Track(const Track&); // copy constructor
-  Track(Track&&) = default; // move constructor
-  Track& operator=(const Track&) = delete; // assignment operator  // delete until properly implemented
+  Track(Track&&); // move constructor
   //Track& operator=(Track&&) = default; // move assignment operator
 
   ~Track();
@@ -84,12 +83,13 @@ class Track : public TObject {
   void deleteReferenceInfo(int startId, int endId);
   void deleteMeasurementInfo(int startId, int endId);
 
-  void Print(const Option_t* = "") const override;
+  void Print(const Option_t* = "") const _GFOVERRIDE;
 
   bool checkConsistency() const;
 
  private:
 
+  Track& operator=(const Track&); // assignment operator  // delete until properly implemented
 
   std::vector< std::unique_ptr<TrackPoint> > trackPoints_; // Ownership
 

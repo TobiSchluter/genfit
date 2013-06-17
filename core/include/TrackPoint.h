@@ -53,9 +53,9 @@ class TrackPoint : public TObject {
   TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurements, Track* track);
 
   TrackPoint(const TrackPoint&); // copy constructor
-  TrackPoint(TrackPoint&&) = default; // move constructor
+  TrackPoint(TrackPoint&&); // move constructor
   TrackPoint& operator=(const TrackPoint&); // assignment operator
-  TrackPoint& operator=(TrackPoint&&) = default; // move assignment operator
+  TrackPoint& operator=(TrackPoint&&); // move assignment operator
 
   TrackPoint(const TrackPoint&, const std::map<const AbsTrackRep*, AbsTrackRep*>&); // custom copy constructor where all TrackRep pointers are exchanged according to the map.
 
@@ -92,7 +92,7 @@ class TrackPoint : public TObject {
   void deleteFitterInfos(const AbsTrackRep* rep);
   //void setMaterial(MaterialInfo* material);
 
-  void Print(const Option_t* = "") const override;
+  void Print(const Option_t* = "") const _GFOVERRIDE;
 
  private:
   double sortingParameter_;

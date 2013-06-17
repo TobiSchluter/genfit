@@ -48,13 +48,13 @@ class SpacepointMeasurement : public AbsMeasurement {
   SpacepointMeasurement(int nDim = 3);
   SpacepointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
 
-  virtual AbsMeasurement* clone() const override {return new SpacepointMeasurement(*this);}
+  virtual AbsMeasurement* clone() const _GFOVERRIDE {return new SpacepointMeasurement(*this);}
 
-  virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const override;
+  virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const _GFOVERRIDE;
 
-  virtual MeasurementOnPlane constructMeasurementOnPlane(const AbsTrackRep*, const SharedPlanePtr) const override;
+  virtual MeasurementOnPlane constructMeasurementOnPlane(const AbsTrackRep*, const SharedPlanePtr) const _GFOVERRIDE;
 
-  virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const override;
+  virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const _GFOVERRIDE;
 
 };
 
