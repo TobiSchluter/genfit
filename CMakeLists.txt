@@ -22,7 +22,7 @@ ADD_DEFINITIONS( "-O2 -Wall -g -ansi -pedantic -Wno-long-long -std=c++11 -Wshado
 
 # include directories -- for now both core and RKTrackRep
 INCLUDE_DIRECTORIES( BEFORE ./core/include ./RKTrackRep/include ${ROOT_INCLUDE_DIRS})
-INSTALL( DIRECTORY ./core/include ./RKTrackRep/include  DESTINATION . PATTERN ".svn" EXCLUDE )
+INSTALL( DIRECTORY ./core/include/ ./RKTrackRep/include/  DESTINATION ./include/genfit PATTERN ".svn" EXCLUDE )
 
 
 ## normally this would then stand inside an if clause
