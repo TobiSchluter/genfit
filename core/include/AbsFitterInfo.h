@@ -93,5 +93,6 @@ class AbsFitterInfo : public TObject {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_AbsFitterInfo_h

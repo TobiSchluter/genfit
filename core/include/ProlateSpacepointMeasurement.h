@@ -63,5 +63,6 @@ class ProlateSpacepointMeasurement : public SpacepointMeasurement {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_ProlateSpacepointMeasurement_h

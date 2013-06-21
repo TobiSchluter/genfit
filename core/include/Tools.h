@@ -39,5 +39,6 @@ namespace tools {
 
 } /* End of namespace tools */
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_Tools_h

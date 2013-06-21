@@ -37,5 +37,6 @@ class AbsFitter {
 };
 
 }  /* End of namespace genfit */
+/** @} */
 
 #endif //genfit_AbsFitter_h

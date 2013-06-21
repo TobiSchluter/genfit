@@ -77,5 +77,6 @@ class TrackCandHit : public TObject {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_TrackCandHit_h

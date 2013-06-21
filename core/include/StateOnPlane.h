@@ -80,5 +80,6 @@ class StateOnPlane : public TObject {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_StateOnPlane_h

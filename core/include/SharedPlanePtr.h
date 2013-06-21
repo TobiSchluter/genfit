@@ -37,5 +37,6 @@ typedef const genfit::DetPlane* SharedPlanePtr;
 #endif
 
 }
+/** @} */
 
 #endif // genfit_SharedPlanePtr_h

@@ -64,5 +64,6 @@ class PlanarMeasurement : public AbsMeasurement {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_PlanarMeasurement_h

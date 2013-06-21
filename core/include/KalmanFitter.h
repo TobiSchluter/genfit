@@ -59,5 +59,6 @@ class KalmanFitter : public AbsFitter {
 };
 
 }
+/** @} */
 
 #endif //genfit_KalmanFitter_h

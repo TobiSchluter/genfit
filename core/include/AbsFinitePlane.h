@@ -62,5 +62,6 @@ class AbsFinitePlane : public TObject {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_AbsFinitePlane_h

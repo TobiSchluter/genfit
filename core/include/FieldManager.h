@@ -108,5 +108,6 @@ class FieldManager {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_FieldManager_h

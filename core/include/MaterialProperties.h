@@ -83,5 +83,6 @@ class MaterialProperties : public TObject {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_MaterialProperties_h

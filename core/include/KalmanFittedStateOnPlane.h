@@ -63,5 +63,6 @@ class KalmanFittedStateOnPlane : public MeasuredStateOnPlane {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_KalmanFittedStateOnPlane_h

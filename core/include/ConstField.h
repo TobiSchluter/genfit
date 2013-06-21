@@ -55,5 +55,6 @@ class ConstField : public AbsBField {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_ConstField_h

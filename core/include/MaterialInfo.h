@@ -54,5 +54,6 @@ class MaterialInfo : public TObject {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_MaterialInfo_h
