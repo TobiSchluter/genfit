@@ -1,5 +1,5 @@
 # #require a certain version
-CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
+CMAKE_MINIMUM_REQUIRED( VERSION 2.6 )
 
 # declare the project name
 PROJECT(genfit)
