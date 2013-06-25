@@ -24,7 +24,7 @@
 #define genfit_KalmanFitterInfo_h
 
 #include <vector>
-
+#include "boost/scoped_ptr.hpp"
 
 #include "AbsFitterInfo.h"
 #include "KalmanFittedStateOnPlane.h"
@@ -64,11 +64,11 @@ class KalmanFitterInfo : public AbsFitterInfo {
    */
   MeasurementOnPlane getAvgWeightedMeasurementOnPlane() const;
 
-  bool hasReferenceState() const {return bool(referenceState_);}
-  bool hasForwardPrediction() const {return bool(forwardPrediction_);}
-  bool hasBackwardPrediction() const {return bool(backwardPrediction_);}
-  bool hasForwardUpdate() const {return bool(forwardUpdate_);}
-  bool hasBackwardUpdate() const {return bool(backwardUpdate_);}
+  bool hasReferenceState() const {return (referenceState_.get() != NULL);}
+  bool hasForwardPrediction() const {return (forwardPrediction_.get()  != NULL);}
+  bool hasBackwardPrediction() const {return (backwardPrediction_.get() != NULL);}
+  bool hasForwardUpdate() const {return (forwardUpdate_.get() != NULL);}
+  bool hasBackwardUpdate() const {return (backwardUpdate_.get() != NULL);}
   unsigned int getNumMeasurements() const {return measurementsOnPlane_.size();}
 
   /** Get unbiased (default) or biased smoothed state
@@ -86,7 +86,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate) {backwardUpdate_.reset(backwardUpdate);}
   void setUpdate(KalmanFittedStateOnPlane* update, int direction)  {if (direction >=0) setForwardUpdate(update); else setBackwardUpdate(update);}
   void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
-  void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) {measurementsOnPlane_.push_back(std::unique_ptr<MeasurementOnPlane>(measurementOnPlane));}
+  void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) {measurementsOnPlane_.push_back(boost::scoped_ptr<MeasurementOnPlane>(measurementOnPlane));}
 
   void setRep(const AbsTrackRep* rep) _GFOVERRIDE;
 
@@ -103,17 +103,17 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
   MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const;
 
-  std::unique_ptr<ReferenceStateOnPlane> referenceState_; // Ownership
-  std::unique_ptr<MeasuredStateOnPlane> forwardPrediction_; // Ownership
-  std::unique_ptr<KalmanFittedStateOnPlane> forwardUpdate_; // Ownership
-  std::unique_ptr<MeasuredStateOnPlane> backwardPrediction_; // Ownership
-  std::unique_ptr<KalmanFittedStateOnPlane> backwardUpdate_; // Ownership
+  boost::scoped_ptr<ReferenceStateOnPlane> referenceState_; // Ownership
+  boost::scoped_ptr<MeasuredStateOnPlane> forwardPrediction_; // Ownership
+  boost::scoped_ptr<KalmanFittedStateOnPlane> forwardUpdate_; // Ownership
+  boost::scoped_ptr<MeasuredStateOnPlane> backwardPrediction_; // Ownership
+  boost::scoped_ptr<KalmanFittedStateOnPlane> backwardUpdate_; // Ownership
 
   /** 
    *  Number of measurements must be equal to size of #fRawMeasurements in #GFTrackPoint.
    * @element-type MeasurementOnPlane
    */
-  std::vector< std::unique_ptr<MeasurementOnPlane> > measurementsOnPlane_; // Ownership
+  std::vector< boost::scoped_ptr<MeasurementOnPlane> > measurementsOnPlane_; // Ownership
 
 
   //ClassDef(KalmanFitterInfo,1)

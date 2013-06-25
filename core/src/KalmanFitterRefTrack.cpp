@@ -135,7 +135,7 @@ void KalmanFitterRefTrack::processTrack(Track* tr, AbsTrackRep* rep)
 
 void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
 
-  std::unique_ptr<MeasuredStateOnPlane> seedState;
+  std::auto_ptr<MeasuredStateOnPlane> seedState;
 
   // get seed state from previous fit if there is one
   if (tr->getPointWithMeasurement(0)->hasFitterInfos(rep)) {
@@ -147,15 +147,15 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
       fitterInfo = dynamic_cast<KalmanFitterInfo*>(fitterInfos[i]);
       if (fitterInfo) {
         if (fitterInfo->hasBackwardUpdate()) {
-          seedState = std::unique_ptr<MeasuredStateOnPlane>(new MeasuredStateOnPlane(*(fitterInfo->getBackwardUpdate())));
+          seedState = std::auto_ptr<MeasuredStateOnPlane>(new MeasuredStateOnPlane(*(fitterInfo->getBackwardUpdate())));
           break;
         }
       }
     }
   }
   // else create seed state from seed info of track
-  if (!seedState) {
-    seedState = std::unique_ptr<MeasuredStateOnPlane>(new MeasuredStateOnPlane(rep));
+  if (seedState.get() == NULL) {
+    seedState = std::auto_ptr<MeasuredStateOnPlane>(new MeasuredStateOnPlane(rep));
     TMatrixDSym cov(rep->getDim());
     cov.UnitMatrix();
     cov *= blowUpFactor_;
@@ -225,8 +225,9 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
       }
 
       // get MeasurementsInPlane
-      for (AbsMeasurement* measurement : trackPoint->getRawMeasurements()) {
-        fitterInfo->addMeasurementOnPlane(new MeasurementOnPlane(measurement->constructMeasurementOnPlane(rep, plane)));
+     for ( std::vector< genfit::AbsMeasurement* >::iterator measurement = (trackPoint->getRawMeasurements()).begin(), lastMeasurement =(trackPoint->getRawMeasurements()).end(); measurement != lastMeasurement; ++measurement)
+      {
+       fitterInfo->addMeasurementOnPlane(new MeasurementOnPlane((*measurement)->constructMeasurementOnPlane(rep, plane)));
       }
     }
     catch (genfit::Exception& e) {
@@ -257,8 +258,8 @@ void KalmanFitterRefTrack::getChiSquNdf(const Track* tr, const AbsTrackRep* rep,
   bNdf = -1. * rep->getDim();
   fNdf = -1. * rep->getDim();
 
-  for (TrackPoint* tp : tr->getPointsWithMeasurement()) {
-    AbsFitterInfo* afi = tp->getFitterInfo(rep);
+  for (std::vector<TrackPoint*>::const_iterator tpIter = (tr->getPointsWithMeasurement()).begin(), endIter = (tr->getPointsWithMeasurement()).end(); tpIter != endIter; ++tpIter) {
+    AbsFitterInfo* afi = (*tpIter)->getFitterInfo(rep);
     KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>(afi);
     if (!fi) {
       Exception exc("KalmanFitterRefTrack::getChiSqu(): fitterInfo is not a KalmanFitterInfo", __LINE__,__FILE__);
@@ -335,8 +336,8 @@ bool KalmanFitterRefTrack::isTrackPrepared(const Track* tr, const AbsTrackRep* r
   if (points.size() == 0)
     return true;
 
-  for (TrackPoint* p : points) {
-    KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>(p->getFitterInfo(rep));
+  for (std::vector<TrackPoint*>::const_iterator pIt = points.begin(), pEnd = points.end(); pIt != pEnd; ++pIt) {
+    KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>((*pIt)->getFitterInfo(rep));
     if (!fi)
       return false;
 
@@ -359,8 +360,8 @@ bool KalmanFitterRefTrack::isTrackFitted(const Track* tr, const AbsTrackRep* rep
   if (points.size() == 0)
     return true;
 
-  for (TrackPoint* p : points) {
-    KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>(p->getFitterInfo(rep));
+  for (std::vector<TrackPoint*>::const_iterator pIt = points.begin(), pEnd = points.end(); pIt != pEnd; ++pIt) {
+    KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>((*pIt)->getFitterInfo(rep));
     if (!fi)
       return false;
 

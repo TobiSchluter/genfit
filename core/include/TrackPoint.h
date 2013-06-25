@@ -31,9 +31,8 @@
 #include <TObject.h>
 
 #include <map>
-#include <memory>
 #include <vector>
-
+#include <memory>
 
 namespace genfit {
 
@@ -53,9 +52,7 @@ class TrackPoint : public TObject {
   TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurements, Track* track);
 
   TrackPoint(const TrackPoint&); // copy constructor
-  TrackPoint(TrackPoint&&); // move constructor
   TrackPoint& operator=(const TrackPoint&); // assignment operator
-  TrackPoint& operator=(TrackPoint&&); // move assignment operator
 
   TrackPoint(const TrackPoint&, const std::map<const AbsTrackRep*, AbsTrackRep*>&); // custom copy constructor where all TrackRep pointers are exchanged according to the map.
 
@@ -85,9 +82,9 @@ class TrackPoint : public TObject {
 
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
   //! Takes ownership
-  void addRawMeasurement(AbsMeasurement* rawMeasurement) {rawMeasurements_.push_back(std::unique_ptr<AbsMeasurement>(rawMeasurement));}
+  void addRawMeasurement(AbsMeasurement* rawMeasurement) {rawMeasurements_.push_back(std::auto_ptr<AbsMeasurement>(rawMeasurement));}
   //! Takes Ownership
-  size_t addFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_[fitterInfo->getRep()].push_back(std::unique_ptr<AbsFitterInfo>(fitterInfo)); return fitterInfos_[fitterInfo->getRep()].size();}
+  size_t addFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_[fitterInfo->getRep()].push_back(std::auto_ptr<AbsFitterInfo>(fitterInfo)); return fitterInfos_[fitterInfo->getRep()].size();}
   void deleteFitterInfo(AbsTrackRep* rep, int i);
   void deleteFitterInfos(const AbsTrackRep* rep);
   //void setMaterial(MaterialInfo* material);
@@ -104,9 +101,9 @@ class TrackPoint : public TObject {
    *  Can be more than one, e.g. multiple measurements in the same Si detector, left and right measurements of a wire detector etc.
    * @element-type AbsMeasurement
    */
-  std::vector< std::unique_ptr<AbsMeasurement> > rawMeasurements_; // Ownership
+  std::vector< std::auto_ptr<AbsMeasurement> > rawMeasurements_; // Ownership
 
-  std::map< const AbsTrackRep*, std::vector< std::unique_ptr<AbsFitterInfo> > > fitterInfos_; // Ownership over FitterInfos
+  std::map< const AbsTrackRep*, std::vector< std::auto_ptr<AbsFitterInfo> > > fitterInfos_; // Ownership over FitterInfos
 
   //MaterialInfo* material_; // Ownership
 

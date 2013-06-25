@@ -35,10 +35,9 @@
 #include <TObject.h>
 #include <TVector3.h>
 
-#include "AbsFinitePlane.h"
-
 #include <memory>
 
+#include "AbsFinitePlane.h"
 
 namespace genfit {
 
@@ -144,14 +143,14 @@ class DetPlane : public TObject {
 
   //! intersect in the active area? C.f. AbsFinitePlane
   bool isInActive(const TVector3& point, const TVector3& dir) const {
-    if(!finitePlane_) return true;
+    if(finitePlane_.get() != _GFNULLPTR) return true;
     return this->isInActive( this->straightLineToPlane(point,dir));
   }
 
   //! intersect in the active area? C.f. AbsFinitePlane
   bool isInActive(const double& posX, const double& posY, const double& posZ,
                   const double& dirX, const double& dirY, const double& dirZ) const {
-    if(!finitePlane_) return true;
+    if(finitePlane_.get() != _GFNULLPTR) return true;
     double u, v;
     this->straightLineToPlane(posX, posY, posZ, dirX, dirY, dirZ, u, v);
     return this->isInActive(u, v);
@@ -159,7 +158,7 @@ class DetPlane : public TObject {
 
   //! isInActive methods refer to finite plane. C.f. AbsFinitePlane
   bool isInActive(double u, double v) const{
-    if(!finitePlane_) return true;
+    if(finitePlane_.get() != _GFNULLPTR) return true;
     return finitePlane_->isInActive(u,v);
   }
 
@@ -169,7 +168,7 @@ class DetPlane : public TObject {
   }
 
   bool isFinite() const {
-    return (!finitePlane_);
+    return (finitePlane_.get() != _GFNULLPTR);
   }
 
   // delete finitePlane_ and set O, U, V to default values
@@ -184,7 +183,7 @@ class DetPlane : public TObject {
   TVector3 u_;
   TVector3 v_;
 
-  std::unique_ptr<AbsFinitePlane> finitePlane_; // Ownership
+  std::auto_ptr<AbsFinitePlane> finitePlane_; // Ownership
 
 
   //ClassDef(DetPlane,1)

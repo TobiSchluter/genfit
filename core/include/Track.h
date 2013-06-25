@@ -2,6 +2,7 @@
 #define genfit_Track_h
 
 #include <vector>
+#include <memory>
 
 #include "AbsTrackRep.h"
 #include "Track.h"
@@ -28,8 +29,6 @@ class Track : public TObject {
   Track(AbsTrackRep* trackRep, const TVectorD& stateSeed);
 
   Track(const Track&); // copy constructor
-  Track(Track&&); // move constructor
-  //Track& operator=(Track&&) = default; // move assignment operator
 
   ~Track();
 
@@ -91,9 +90,9 @@ class Track : public TObject {
 
   Track& operator=(const Track&); // assignment operator  // delete until properly implemented
 
-  std::vector< std::unique_ptr<TrackPoint> > trackPoints_; // Ownership
+  std::vector< std::auto_ptr<TrackPoint> > trackPoints_; // Ownership
 
-  std::vector< std::unique_ptr<AbsTrackRep> > trackReps_; // Ownership
+  std::vector< std::auto_ptr<AbsTrackRep> > trackReps_; // Ownership
   unsigned int cardinalRep_; // THE selected rep, default = 0;
 
   TVectorD stateSeed_; // 6D: position, momentum

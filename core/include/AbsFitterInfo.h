@@ -46,9 +46,6 @@ class AbsFitterInfo : public TObject {
   AbsFitterInfo();
   AbsFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep);
 
-  AbsFitterInfo(AbsFitterInfo&&); // move constructor
-  AbsFitterInfo& operator=(AbsFitterInfo&&); // move assignment operator
-
   virtual ~AbsFitterInfo() {};
 
   //! Deep copy ctor for polymorphic class.

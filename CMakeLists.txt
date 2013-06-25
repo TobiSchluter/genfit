@@ -17,12 +17,30 @@ INCLUDE(macros)
 
 FIND_PACKAGE(ROOT REQUIRED)
 
+
+#search for boost, provide some information to user
+FIND_PACKAGE(Boost)
+IF (Boost_FOUND)
+    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+    MESSAGE("-- Boost is found at: ${Boost_INCLUDE_DIR}")
+ELSE()
+    MESSAGE( " Boost was not found on your system, using specified path in CMakeLists.txt file.")
+    SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/include")
+ENDIF()
+
+
 # require proper c++
-ADD_DEFINITIONS( "-O2 -Wall -g -ansi -pedantic -Wno-long-long -std=c++11 -Wshadow -pedantic -ftree-vectorize -ftree-vectorizer-verbose=0 "   )
+ADD_DEFINITIONS( "-O2 -Wall -g -ansi -pedantic -Wno-long-long -Wshadow -pedantic -ftree-vectorize -ftree-vectorizer-verbose=0 "   )
+
+ADD_DEFINITIONS("-std=c++03")
+ADD_DEFINITIONS(-D_GFOVERRIDE=)
+ADD_DEFINITIONS(-D_GFNULLPTR=NULL)
 
 # include directories -- for now both core and RKTrackRep
-INCLUDE_DIRECTORIES( BEFORE ./core/include ./RKTrackRep/include ${ROOT_INCLUDE_DIRS})
-INSTALL( DIRECTORY ./core/include ./RKTrackRep/include  DESTINATION . PATTERN ".svn" EXCLUDE )
+INCLUDE_DIRECTORIES( BEFORE ./core/include  ${ROOT_INCLUDE_DIRS})
+INSTALL( DIRECTORY ./core/include/ ./RKTrackRep/include/  DESTINATION ./include/genfit PATTERN ".svn" EXCLUDE )
+#INCLUDE_DIRECTORIES( BEFORE ./core/include ./RKTrackRep/include ${ROOT_INCLUDE_DIRS})
+#INSTALL( DIRECTORY ./core/include ./RKTrackRep/include  DESTINATION . PATTERN ".svn" EXCLUDE )
 
 
 ## normally this would then stand inside an if clause

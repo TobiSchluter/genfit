@@ -24,14 +24,14 @@
 #ifndef genfit_SharedPlanePtr_h
 #define genfit_SharedPlanePtr_h
 
-#include <memory>
+#include "boost/shared_ptr.hpp"
 
 #include "DetPlane.h"
 
 namespace genfit {
 
 #ifndef __CINT__
-typedef std::shared_ptr< const genfit::DetPlane > SharedPlanePtr;
+typedef boost::shared_ptr< const genfit::DetPlane > SharedPlanePtr;
 #else
 typedef const genfit::DetPlane* SharedPlanePtr;
 #endif
