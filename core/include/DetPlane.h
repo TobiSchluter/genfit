@@ -191,5 +191,6 @@ class DetPlane : public TObject {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_DetPlane_h

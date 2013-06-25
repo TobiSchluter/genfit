@@ -113,5 +113,6 @@ class TrackPoint : public TObject {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_TrackPoint_h

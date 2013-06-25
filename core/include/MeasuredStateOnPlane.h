@@ -62,5 +62,6 @@ class MeasuredStateOnPlane : public StateOnPlane {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_MeasuredStateOnPlane_h

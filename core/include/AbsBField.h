@@ -50,5 +50,6 @@ public:
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_AbsBField_h

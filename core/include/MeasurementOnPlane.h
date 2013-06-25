@@ -57,5 +57,6 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
 };
 
 } /* End of namespace   */
+/** @} */
 
 #endif //  _MeasurementOnPlane_h

@@ -37,11 +37,8 @@ ADD_DEFINITIONS(-D_GFOVERRIDE=)
 ADD_DEFINITIONS(-D_GFNULLPTR=NULL)
 
 # include directories -- for now both core and RKTrackRep
-INCLUDE_DIRECTORIES( BEFORE ./core/include  ${ROOT_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES( BEFORE ./core/include ./RKTrackRep/include ${ROOT_INCLUDE_DIRS})
 INSTALL( DIRECTORY ./core/include/ ./RKTrackRep/include/  DESTINATION ./include/genfit PATTERN ".svn" EXCLUDE )
-#INCLUDE_DIRECTORIES( BEFORE ./core/include ./RKTrackRep/include ${ROOT_INCLUDE_DIRS})
-#INSTALL( DIRECTORY ./core/include ./RKTrackRep/include  DESTINATION . PATTERN ".svn" EXCLUDE )
-
 
 ## normally this would then stand inside an if clause
 #INCLUDE_DIRECTORIES( BEFORE  ./RKTrackRep/include)
@@ -49,6 +46,24 @@ INSTALL( DIRECTORY ./core/include/ ./RKTrackRep/include/  DESTINATION ./include/
 ## and this as well
 #INCLUDE_DIRECTORIES( BEFORE  ./eventDisplay/include)
 #INSTALL( DIRECTORY ./eventDisplay/include  DESTINATION . PATTERN ".svn" EXCLUDE )
+
+# add a target to generate API documentation with Doxygen
+FIND_PACKAGE(Doxygen)
+
+if(DOXYGEN_FOUND)
+    
+    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile @ONLY)
+
+    ADD_CUSTOM_TARGET(doc
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc
+        COMMENT "Generating API documentation with Doxygen" VERBATIM
+    )
+
+ELSE()
+    MESSAGE( STATUS "Doxygen not installed or found -- API documentation can't be generatred!" )
+
+ENDIF(DOXYGEN_FOUND)
 
 
 # declare the stupid ROOT library path

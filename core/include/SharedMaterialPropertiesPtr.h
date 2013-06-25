@@ -33,5 +33,6 @@ typedef boost::shared_ptr< const genfit::MaterialProperties > SharedMaterialProp
 #else
 typedef const genfit::MaterialProperties* SharedMaterialPropertiesPrt;
 #endif
+/** @} */
 
 #endif // genfit_SharedMaterialPropertiesPtr_h

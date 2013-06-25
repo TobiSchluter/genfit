@@ -751,7 +751,7 @@ int main() {
   if (debug) std::cout<<"... done"<<std::endl;
 
   // open event display
-  display->setOptions("THDPMA"); // G show geometry
+  display->setOptions("THDPMABF"); // G show geometry
   display->open();
 
   //rootapp->Run();

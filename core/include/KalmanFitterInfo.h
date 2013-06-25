@@ -121,5 +121,6 @@ class KalmanFitterInfo : public AbsFitterInfo {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_KalmanFitterInfo_h

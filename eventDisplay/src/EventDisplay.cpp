@@ -208,7 +208,9 @@ void EventDisplay::drawEvent(unsigned int id) {
 
   // parse the option string ------------------------------------------------------------------------
   bool drawAutoScale = false;
+  bool drawBackward = false;
   bool drawDetectors = false;
+  bool drawForward = false;
   bool drawHits = false;
   bool drawScaleMan = false;
   bool drawTrackMarkers = false;
@@ -218,7 +220,9 @@ void EventDisplay::drawEvent(unsigned int id) {
   if(option_ != "") {
     for(size_t i = 0; i < option_.length(); i++) {
       if(option_[i] == 'A') drawAutoScale = true;
+      if(option_[i] == 'B') drawBackward = true;
       if(option_[i] == 'D') drawDetectors = true;
+      if(option_[i] == 'F') drawForward = true;
       if(option_[i] == 'H') drawHits = true;
       if(option_[i] == 'M') drawTrackMarkers = true;
       if(option_[i] == 'P') drawPlanes = true;
@@ -238,9 +242,12 @@ void EventDisplay::drawEvent(unsigned int id) {
 
     unsigned int numhits = track->getNumPointsWithMeasurement();
 
-    TVector3 track_pos, track_posRef, old_track_pos, old_track_posRef;
+    TVector3 track_pos, track_posRef, track_posFwd, track_posBwd;
+    TVector3 old_track_pos, old_track_posRef, old_track_posFwd, old_track_posBwd;
 
     TEveStraightLineSet* track_lines = nullptr;
+    TEveStraightLineSet* track_linesFwd = nullptr;
+    TEveStraightLineSet* track_linesBwd = nullptr;
     TEveStraightLineSet* track_linesRef = nullptr;
 
 
@@ -258,6 +265,8 @@ void EventDisplay::drawEvent(unsigned int id) {
       KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(fitterInfo);
       MeasuredStateOnPlane fittedState = fi->getFittedState(true);
       track_pos = rep->getPos(&fittedState);
+      track_posFwd = rep->getPos(fi->getForwardUpdate());
+      track_posBwd = rep->getPos(fi->getBackwardUpdate());
       if (fi->hasReferenceState()) {
         track_posRef = rep->getPos(fi->getReferenceState());
       }
@@ -339,38 +348,43 @@ void EventDisplay::drawEvent(unsigned int id) {
       // finished drawing planes ------------------------------------------------------------
 
       // draw track if corresponding option is set ------------------------------------------
+      struct makeLinesClass {
+	void operator()(TEveStraightLineSet **pls, const TVector3& vOld, const TVector3& vNew,
+			const Color_t& color, const Style_t& style, bool drawMarkers)
+	{
+	  if (*pls == nullptr) *pls = new TEveStraightLineSet;
+	  TEveStraightLineSet *ls = *pls;
+	  ls->AddLine(vOld(0), vOld(1), vOld(2), vNew(0), vNew(1), vNew(2));
+	  ls->SetLineColor(color);
+	  ls->SetLineStyle(style);
+	  ls->SetLineWidth(2);
+	  if (drawMarkers)
+	    ls->AddMarker(vNew(0), vNew(1), vNew(2));
+	}
+      } makeLines;
       if(drawTrack) {
-        if(track_lines == nullptr) track_lines = new TEveStraightLineSet;
-        if(j > 0) track_lines->AddLine(old_track_pos(0), old_track_pos(1), old_track_pos(2), track_pos(0), track_pos(1), track_pos(2));
-        old_track_pos = track_pos;
-        if(charge > 0) {
-          track_lines->SetLineColor(kRed);
-        } else {
-          track_lines->SetLineColor(kBlue);
-        }
-        track_lines->SetLineWidth(2);
-        if(drawTrackMarkers) {
-          track_lines->AddMarker(track_pos(0), track_pos(1), track_pos(2));
-        }
+	if (j > 0)
+	  makeLines(&track_lines, old_track_pos, track_pos, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers);
+	old_track_pos = track_pos;
+      }
+      if (drawForward) {
+	if (j > 0)
+	  makeLines(&track_linesFwd, old_track_posFwd, track_posFwd, charge > 0 ? kRed + 1 : kBlue + 1, 1, drawTrackMarkers);
+	old_track_posFwd = track_posFwd;
+      }
+      if (drawBackward) {
+	if (j > 0)
+	  makeLines(&track_linesBwd, old_track_posBwd, track_posBwd, charge > 0 ? kRed + 3 : kBlue + 3, 1, drawTrackMarkers);
+	old_track_posBwd = track_posBwd;
       }
       // finished drawing track -------------------------------------------------------------
-       // draw reference track if corresponding option is set ------------------------------------------
-        if(drawTrack && fi->hasReferenceState()) {
-          if(track_linesRef == nullptr) track_linesRef = new TEveStraightLineSet;
-          if(j > 0) track_linesRef->AddLine(old_track_posRef(0), old_track_posRef(1), old_track_posRef(2), track_posRef(0), track_posRef(1), track_posRef(2));
-          old_track_posRef = track_posRef;
-          if(charge > 0) {
-            track_linesRef->SetLineColor(kRed+2);
-          } else {
-            track_linesRef->SetLineColor(kBlue+2);
-          }
-          track_linesRef->SetLineWidth(2);
-          track_linesRef->SetLineStyle(2);
-          if(drawTrackMarkers) {
-            //track_linesRef->AddMarker(track_posRef(0), track_posRef(1), track_posRef(2));
-          }
-        }
-        // finished drawing reference track -------------------------------------------------------------
+      // draw reference track if corresponding option is set ------------------------------------------
+      if(drawTrack && fi->hasReferenceState()) {
+	if (j > 0)
+	  makeLines(&track_linesRef, old_track_posRef, track_posRef, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers);
+	old_track_posRef = track_posRef;
+      }
+      // finished drawing reference track -------------------------------------------------------------
 
       // draw detectors if option is set, only important for wire hits ----------------------
       if(drawDetectors) {
@@ -589,6 +603,8 @@ void EventDisplay::drawEvent(unsigned int id) {
     }
 
     if(track_lines != nullptr) gEve->AddElement(track_lines);
+    if(track_linesFwd != nullptr) gEve->AddElement(track_linesFwd);
+    if(track_linesBwd != nullptr) gEve->AddElement(track_linesBwd);
     if(track_linesRef != nullptr) gEve->AddElement(track_linesRef);
 
   }

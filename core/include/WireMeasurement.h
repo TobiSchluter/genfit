@@ -81,5 +81,6 @@ class WireMeasurement : public AbsMeasurement {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_WireMeasurement_h

@@ -73,5 +73,6 @@ class KalmanFitterRefTrack : public AbsFitter {
 };
 
 }
+/** @} */
 
 #endif //genfit_KalmanFitterRefTrack_h

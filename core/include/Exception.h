@@ -102,5 +102,6 @@ class Exception : public TObject {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_Exception_h

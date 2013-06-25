@@ -94,5 +94,6 @@ class ReferenceStateOnPlane : public StateOnPlane {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_ReferenceStateOnPlane_h

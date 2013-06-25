@@ -133,3 +133,4 @@ void WireMeasurement::setLeftRightResolution(int lr){
 
 
 } /* End of namespace genfit */
+/** @} */
