@@ -172,6 +172,9 @@ class DetPlane : public TObject {
     return (!finitePlane_);
   }
 
+  //! rotate u and v around normal. Angle is in rad. More for debugging than for actual use.
+  void rotate(double angle);
+
   // delete finitePlane_ and set O, U, V to default values
   void reset();
 

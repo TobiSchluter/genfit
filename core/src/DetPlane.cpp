@@ -218,10 +218,10 @@ void DetPlane::sane(){
 void DetPlane::Print(const Option_t* option) const
 {
   std::cout<<"DetPlane: "
-     <<"O("<<o_.X()<<","<<o_.Y()<<","<<o_.Z()<<") "
-     <<"u("<<u_.X()<<","<<u_.Y()<<","<<u_.Z()<<") "
-     <<"v("<<v_.X()<<","<<v_.Y()<<","<<v_.Z()<<") "
-     <<"n("<<getNormal().X()<<","<<getNormal().Y()<<","<<getNormal().Z()<<") "
+     <<"O("<<o_.X()<<", "<<o_.Y()<<", "<<o_.Z()<<") "
+     <<"u("<<u_.X()<<", "<<u_.Y()<<", "<<u_.Z()<<") "
+     <<"v("<<v_.X()<<", "<<v_.Y()<<", "<<v_.Z()<<") "
+     <<"n("<<getNormal().X()<<", "<<getNormal().Y()<<", "<<getNormal().Z()<<") "
        <<std::endl;
   if(finitePlane_ != nullptr) {
     finitePlane_->Print(option);
@@ -312,6 +312,15 @@ void DetPlane::straightLineToPlane(const double& posX, const double& posY, const
 
   u = u_.X()*posOnPlaneX + u_.Y()*posOnPlaneY + u_.Z()*posOnPlaneZ;
   v = v_.X()*posOnPlaneX + v_.Y()*posOnPlaneY + v_.Z()*posOnPlaneZ;
+}
+
+
+void DetPlane::rotate(double angle) {
+  TVector3 normal = getNormal();
+  u_.Rotate(angle, normal);
+  v_.Rotate(angle, normal);
+
+  sane();
 }
 
 
