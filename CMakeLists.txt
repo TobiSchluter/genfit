@@ -63,7 +63,7 @@ AUX_SOURCE_DIRECTORY( ./RKTrackRep/src  library_sources )
 ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources} )
 INSTALL( TARGETS ${PROJECT_NAME} DESTINATION lib )
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ROOT_LIBS})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ROOT_LIBS} -lGeom -lEG)
 
 # the examples, build with "make examples"
 #ADD_SUBDIRECTORY( examples/ )
