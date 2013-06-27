@@ -119,7 +119,7 @@ int randomSign() {
 int main() {
   std::cout<<"main"<<std::endl;
 
-  const unsigned int nEvents = 2;
+  const unsigned int nEvents = 10000;
   const double BField = 15.;       // kGauss
   const double momentum = 0.1;     // GeV
   const double theta = 150;         // degree
@@ -151,7 +151,7 @@ int main() {
 
   const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
 
-  const bool debug = true;
+  const bool debug = false;
 
   enum eMeasurementType { Pixel = 0,
 			  Spacepoint,
@@ -160,14 +160,16 @@ int main() {
 			  Wire,
 			  WirePoint, };
   std::vector<unsigned int> measurementTypes;
-  for (int i = 0; i < 4; ++i)
+
+
+  for (int i = 0; i < 5; ++i)
     measurementTypes.push_back(Pixel);
 
 
 
   // init fitters
-  genfit::KalmanFitter simpleKalman(6);
-  genfit::KalmanFitterRefTrack kalmanFitterRefTrack(1);
+  genfit::KalmanFitter simpleKalman;
+  genfit::KalmanFitterRefTrack kalmanFitterRefTrack;
 
 
   gRandom->SetSeed(10);
@@ -194,12 +196,12 @@ int main() {
 #ifndef VALGRIND
   // init rootapp (for drawing histograms)
   TApplication* rootapp = new TApplication("rootapp", 0, 0);
-  TString outname = "out_Rep";
+  /*TString outname = "out_Rep";
   outname += "_degPlane";
   outname += ".root";
   TFile *file = TFile::Open(outname,"RECREATE");
   TTree *tree = new TTree("t","Tracks");
-  tree->Branch("fitTracks","Track",&fitTrack);
+  tree->Branch("fitTracks","Track", fitTrack->get());*/
 
 
   // create histograms
@@ -314,6 +316,7 @@ int main() {
             dir.SetPhi(mom.Phi()+(angle-alpha0));
             dir.SetMag(1);
           }
+
 
           // create measurement
           genfit::AbsMeasurement* measurement;
@@ -531,7 +534,6 @@ int main() {
 
 
       // create track
-      std::cout << "fitTrack before resetting"; fitTrack->Print();
       fitTrack.reset(new genfit::Track(rep, rep->get6DState(&stateSmeared))); //initialized with smeared rep
 
       //fitTrack->addTrackRep(rep->clone()); // check if everything works fine with more than one rep
@@ -581,14 +583,12 @@ int main() {
       if (debug) fitTrack->Print();
 
 
-      //choose trackrep to check
-      genfit::AbsTrackRep* repCheck = fitTrack->getTrackRep(0);
 
-      // FIXME
-      // check if fit was successfull
-      /*if(repCheck->getStatusFlag() != 0 ) {
+      // check if fit was successful
+      if (!kalmanFitterRefTrack.isTrackFitted(fitTrack.get(), rep)) {
+        std::cout << "Track could not be fitted successfully! \n";
         continue;
-      }*/
+      }
 
 
 #ifndef VALGRIND
@@ -598,12 +598,13 @@ int main() {
       display->addEvent(event);
 #endif
 
-      genfit::KalmanFittedStateOnPlane* kfsop = new genfit::KalmanFittedStateOnPlane(*(static_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(0)->getFitterInfo(repCheck))->getBackwardUpdate()));
+
+
+      genfit::KalmanFittedStateOnPlane* kfsop = new genfit::KalmanFittedStateOnPlane(*(static_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
       if (debug) {
         std::cout << "state before extrapolating back to reference plane \n";
         kfsop->Print();
       }
-
 
       // extrapolate back to reference plane.
       try{
@@ -615,10 +616,6 @@ int main() {
         continue; // here is a memleak!
       }
 
-
-
-
-
 #ifndef VALGRIND
       // calculate pulls
       const TVectorD& referenceState = stateRefOrig.getState();
@@ -626,7 +623,7 @@ int main() {
       const TVectorD& state = kfsop->getState();
       const TMatrixDSym& cov = kfsop->getCov();
 
-      double pval = kalmanFitterRefTrack.getPVal(fitTrack.get(), repCheck); // FIXME choose fitter that has been used
+      double pval = kalmanFitterRefTrack.getPVal(fitTrack.get(), rep); // FIXME choose fitter that has been used
 
       hmomRes->Fill( (charge/state[0]-momentum));
       hupRes->Fill(  (state[1]-referenceState[1]));
@@ -676,8 +673,8 @@ int main() {
       }
 */
 
-      if (debug) std::cerr<<"Fill Tree ..." << std::endl;
-      tree->Fill();
+     /* if (debug) std::cerr<<"Fill Tree ..." << std::endl;
+      tree->Fill();*/
 #endif
 
 
@@ -686,9 +683,9 @@ int main() {
   std::cout<<"maxWeight = " << maxWeight << std::endl;
 
 #ifndef VALGRIND
-  if (debug) std::cout<<"Write Tree ...";
+  /*if (debug) std::cout<<"Write Tree ...";
   tree->Write();
-  if (debug) std::cout<<"... done"<<std::endl;
+  if (debug) std::cout<<"... done"<<std::endl;*/
 
   if (debug) std::cout<<"Draw histograms ...";
   // fit and draw histograms
@@ -759,7 +756,7 @@ int main() {
   //file->Close();
 #endif
 
-  if (debug) std::cout<<"... closed file"<<std::endl;
+  //if (debug) std::cout<<"... closed file"<<std::endl;
 
 }
 
