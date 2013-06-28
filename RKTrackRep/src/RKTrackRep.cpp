@@ -1694,7 +1694,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
 
     if(fillExtrapSteps){
-      // calc J_pM for later calculation of 5D Jacobian
+      // calc J_Mp for later calculation of 5D Jacobian
       if (numIt == 1) { // first iteration
         calcJ_Mp_7x5(startPlane.getU(), startPlane.getV(), startPlane.getNormal(), *((M1x3*) &state7[3]));
       }
@@ -1766,8 +1766,8 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     if (fillExtrapSteps) {
       ExtrapStep extrapStep;
 
-      // calc J_Mp
-      if (atPlane) {
+      // calc J_pM
+      if (atPlane) { //FIXME also calculate jacobians correctly if onlyOneStep or stopAtBoundary
         if (!checkJacProj) {
           Exception exc("RKTrackRep::Extrap ==> checkJacProj is false",__LINE__,__FILE__);
           exc.setFatal();
