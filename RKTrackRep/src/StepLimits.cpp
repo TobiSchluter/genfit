@@ -42,7 +42,7 @@ StepLimits::StepLimits() :
 
 
 double StepLimits::getLimit(StepLimitType type) const {
-  auto it = limits_.find(type);
+  std::map<StepLimitType, double>::const_iterator it = limits_.find(type);
 
   if (it == limits_.end()) {
     return std::numeric_limits<double>::max();
@@ -57,11 +57,11 @@ std::pair<StepLimitType, double> StepLimits::getLowestLimit(double margin) const
     return std::pair<StepLimitType, double>(stp_noLimit, std::numeric_limits<double>::max());
   }
 
-  auto itMedium = limits_.upper_bound(stp_noLimit);
-  auto itHard   = limits_.upper_bound(stp_sMax);
+  std::map<StepLimitType, double>::const_iterator itMedium = limits_.upper_bound(stp_noLimit);
+  std::map<StepLimitType, double>::const_iterator itHard   = limits_.upper_bound(stp_sMax);
 
   // find minimum medium limit
-  auto itMinMedium = *min_element(itMedium, itHard, pairCompare );
+   const std::pair<const genfit::StepLimitType, double> itMinMedium = *min_element(itMedium, itHard, pairCompare );
 
   // case 2: medium limits, no hard limits
   if (itHard == limits_.end()) {
@@ -69,7 +69,7 @@ std::pair<StepLimitType, double> StepLimits::getLowestLimit(double margin) const
   }
 
   // find minimum hard limit
-  auto itMinHard = *min_element(itHard, limits_.end(), pairCompare );
+  const std::pair<const genfit::StepLimitType, double> itMinHard = *min_element(itHard, limits_.end(), pairCompare );
 
   // case 3: hard limits -> ignore soft limits, lowest hard limit may exceed lowest soft limit by up to #margin
   if (itMinHard.second <= (1+margin)*itMinMedium.second)
@@ -119,7 +119,7 @@ void StepLimits::setStepSign(double signedVal) {
 
 
 void StepLimits::Print() {
-  for (auto it = limits_.begin(); it != limits_.end(); ++it) {
+  for (std::map<StepLimitType, double>::const_iterator it = limits_.begin(); it != limits_.end(); ++it) {
     std::cout << "   | " << it->second << " cm due to ";
     switch (it->first) {
     case stp_noLimit:

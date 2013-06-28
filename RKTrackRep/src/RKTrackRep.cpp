@@ -27,6 +27,7 @@
 #include <TDecompLU.h>
 #include <TMath.h>
 
+#include "boost/shared_ptr.hpp"
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
 //#define DEBUG
@@ -125,7 +126,7 @@ std::cout << "RKTrackRep::extrapolateToLine()\n";
   bool isAtBoundary(false);
 
   DetPlane startPlane(*(state->getPlane()));
-  std::shared_ptr<genfit::DetPlane> plane(new DetPlane(linePoint, dir.Cross(lineDirection), lineDirection));
+  boost::shared_ptr<genfit::DetPlane> plane(new DetPlane(linePoint, dir.Cross(lineDirection), lineDirection));
   unsigned int iterations(0);
 
   while(true){
@@ -206,7 +207,7 @@ std::cout << "RKTrackRep::extrapolateToPoint()\n";
   bool isAtBoundary(false);
 
   DetPlane startPlane(*(state->getPlane()));
-  std::shared_ptr<genfit::DetPlane> plane(new DetPlane(point, dir));
+  boost::shared_ptr<genfit::DetPlane> plane(new DetPlane(point, dir));
   unsigned int iterations(0);
 
   while(true){
@@ -288,7 +289,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane* state,
   bool isAtBoundary(false);
 
   DetPlane startPlane(*(state->getPlane()));
-  std::shared_ptr<genfit::DetPlane> plane(new DetPlane());
+  boost::shared_ptr<genfit::DetPlane> plane(new DetPlane());
   unsigned int iterations(0);
 
   while(true){
@@ -447,14 +448,14 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
   }
 
   jacobian.ResizeTo(5,5);
-  jacobian.SetMatrixArray(ExtrapSteps_.back().jac_.data());
+  jacobian.SetMatrixArray(ExtrapSteps_.back().jac_);
 
   noise.ResizeTo(5,5);
-  noise.SetMatrixArray(ExtrapSteps_.back().noise_.data());
+  noise.SetMatrixArray(ExtrapSteps_.back().noise_);
 
   for (unsigned int i=ExtrapSteps_.size()-2; i!=std::numeric_limits<unsigned int>::max(); --i) {
-    noise += TMatrixDSym(5, ExtrapSteps_[i].noise_.data()).Similarity(jacobian);
-    jacobian *= TMatrixD(5,5, ExtrapSteps_[i].jac_.data());
+    noise += TMatrixDSym(5, ExtrapSteps_[i].noise_).Similarity(jacobian);
+    jacobian *= TMatrixD(5,5, ExtrapSteps_[i].jac_);
   }
 
 #ifdef DEBUG
@@ -477,7 +478,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
   }
 
   jacobian.ResizeTo(5,5);
-  jacobian.SetMatrixArray(ExtrapSteps_.front().jac_.data());
+  jacobian.SetMatrixArray(ExtrapSteps_.front().jac_);
 
   TDecompLU invertAlgo(jacobian);
   bool status = invertAlgo.Invert(jacobian);
@@ -492,11 +493,11 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 #endif
 
   noise.ResizeTo(5,5);
-  noise.SetMatrixArray(ExtrapSteps_.front().noise_.data());
+  noise.SetMatrixArray(ExtrapSteps_.front().noise_);
   noise.Similarity(jacobian);
 
   for (unsigned int i=1; i!=ExtrapSteps_.size(); ++i) {
-    TMatrixD nextJac(5,5, ExtrapSteps_[i].jac_.data());
+    TMatrixD nextJac(5,5, ExtrapSteps_[i].jac_);
     TDecompLU invertAlgo2(nextJac);
     status = invertAlgo2.Invert(nextJac);
     if(status == 0){
@@ -510,7 +511,7 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 #endif
 
     jacobian *= nextJac;
-    noise += (TMatrixDSym(5, ExtrapSteps_[i].noise_.data())).Similarity(jacobian);
+    noise += (TMatrixDSym(5, ExtrapSteps_[i].noise_)).Similarity(jacobian);
   }
 
 #ifdef DEBUG
@@ -694,8 +695,8 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   M1x3&   R           = *((M1x3*) &state7[0]);       // Start coordinates  [cm]  (x,  y,  z)
   M1x3&   A           = *((M1x3*) &state7[3]);       // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
   double  S3(0), S4(0), PS2(0);
-  M1x3     H0 = {{0.,0.,0.}}, H1 = {{0.,0.,0.}}, H2 = {{0.,0.,0.}};
-  M1x3     r = {{0.,0.,0.}};
+  M1x3     H0 = {0.,0.,0.}, H1 = {0.,0.,0.}, H2 = {0.,0.,0.};
+  M1x3     r = {0.,0.,0.};
   // Variables for Runge Kutta solver
   double   A0(0), A1(0), A2(0), A3(0), A4(0), A5(0), A6(0);
   double   B0(0), B1(0), B2(0), B3(0), B4(0), B5(0), B6(0);
@@ -722,7 +723,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
     FieldManager::getFieldVal(r[0], r[1], r[2], H1[0], H1[1], H1[2]);
     H1[0] *= PS2; H1[1] *= PS2; H1[2] *= PS2; // H1 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * [(A0, B0, C0) + 2*(ax, ay, az)]
   }
-  else H1 = H0;
+  else { H1[0] = H0[0]; H1[1] = H0[1]; H1[2] = H0[2];  }; // invalid: H1 = H0; !!
   A3 = B2*H1[2]-C2*H1[1]+A[0]; B3 = C2*H1[0]-A2*H1[2]+A[1]; C3 = A2*H1[1]-B2*H1[0]+A[2]; // (A2, B2, C2) x H1 + (ax, ay, az)
   A4 = B3*H1[2]-C3*H1[1]+A[0]; B4 = C3*H1[0]-A3*H1[2]+A[1]; C4 = A3*H1[1]-B3*H1[0]+A[2]; // (A3, B3, C3) x H1 + (ax, ay, az)
   A5 = A4-A[0]+A4            ; B5 = B4-A[1]+B4            ; C5 = C4-A[2]+C4            ; //    2*(A4, B4, C4) - (ax, ay, az)
@@ -733,7 +734,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
     FieldManager::getFieldVal(r[0], r[1], r[2], H2[0], H2[1], H2[2]);
     H2[0] *= PS2; H2[1] *= PS2; H2[2] *= PS2; // H2 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * (A4, B4, C4)
   }
-  else H2 = H0;
+  else { H2[0] = H0[0]; H2[1] = H0[1]; H2[2] = H0[2];  }; // invalid: H2 = H0; !!
   A6 = B5*H2[2]-C5*H2[1]; B6 = C5*H2[0]-A5*H2[2]; C6 = A5*H2[1]-B5*H2[0]; // (A5, B5, C5) x H2
 
 
@@ -848,13 +849,19 @@ double RKTrackRep::RKPropagate(M1x7& state7,
 
 
 void RKTrackRep::initArrays() const {
-  noiseArray_.fill(0);
-  J_MMT_.fill(0);
-
-  J_pM_5x7_.fill(0);
-  J_pM_5x6_.fill(0);
-  J_Mp_7x5_.fill(0);
-  J_Mp_6x5_.fill(0);
+  //! now invalid:
+  //~ noiseArray_.fill(0);
+  //~ J_MMT_.fill(0);
+  //~ J_pM_5x7_.fill(0);
+  //~ J_pM_5x6_.fill(0);
+  //~ J_Mp_7x5_.fill(0);
+  //~ J_Mp_6x5_.fill(0);
+  for(int i = 0; i < 7*7; ++i) noiseArray_[i] = 0;
+  for(int i = 0; i < 7*7; ++i) J_MMT_[i] = 0;
+  for(int i = 0; i < 5*7; ++i) J_pM_5x7_[i] = 0;
+  for(int i = 0; i < 5*6; ++i) J_pM_5x6_[i] = 0;
+  for(int i = 0; i < 7*5; ++i) J_Mp_7x5_[i] = 0;
+  for(int i = 0; i < 6*5; ++i) J_Mp_6x5_[i] = 0;
 }
 
 
@@ -1191,7 +1198,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
   // Aux parameters
   M1x3&   R           = *((M1x3*) &state7[0]);  // Start coordinates  [cm]  (x,  y,  z)
   M1x3&   A           = *((M1x3*) &state7[3]);  // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
-  M1x3    SA          = {{0.,0.,0.}};             // Start directions derivatives dA/S
+  M1x3    SA          = {0.,0.,0.};             // Start directions derivatives dA/S
   double  Way         = 0.;                     // Sum of absolute values of all extrapolation steps [cm]
   double  momentum   = fabs(charge/state7[6]);// momentum [GeV]
   double  relMomLoss = 0;                      // relative momentum loss in RKutta
@@ -1240,7 +1247,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       std::cout << "------ RKutta main loop nr. " << counter-1 << " ------\n";
     #endif
 
-    M1x3 ABefore(A);
+    M1x3 ABefore = { A[0], A[1], A[2] }; // M1x3 ABefore(A);
     RKPropagate(state7, jacobianT, SA, S); // the actual Runge Kutta propagation
 
     // update paths
@@ -1475,7 +1482,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   std::map<double, double> distVsStep; // keys: straight line distances to plane; values: RK steps
 
   while (fabs(fieldCurvLimit) > MINSTEP) {
-    M1x7 state7_temp(state7);
+    M1x7 state7_temp = { state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] }; // invalid: M1x7 state7_temp(state7);
     M1x3 SA;
 
     double q = RKPropagate(state7_temp, nullptr, SA, fieldCurvLimit, true);
@@ -1557,12 +1564,13 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
   // call stepper and reduce stepsize if step not too small
   RKSteps_.push_back( RKStep() );
-  RKSteps_.back().state7_ = state7;
+  //!invalid:  RKSteps_.back().state7_ = { state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] };
+  for(int n = 0; n < 1*7; ++n) RKSteps_.back().state7_[n] = state7[n];
   ++RKStepsFXStop_;
   if (/*!fNoMaterial*/ true){
 
     if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
-      M1x7 state7_temp(state7);
+      M1x7 state7_temp = {  state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] }; // invalid: ... = (state7);
 
       MaterialEffects::getInstance()->stepper(this,
                                               state7_temp,
@@ -1629,7 +1637,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
   TMatrixD noiseProjection(7,7);
 
   const TVector3 W(destPlane.getNormal());
-  M1x4 SU = {{W.X(), W.Y(), W.Z(), destPlane.distance(0., 0., 0.)}};
+  M1x4 SU = {W.X(), W.Y(), W.Z(), destPlane.distance(0., 0., 0.)};
 
   // make SU vector point away from origin
   if (W*destPlane.getO() < 0) {
@@ -1653,7 +1661,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     }
 
     // initialize jacobianT with unit matrix
-    J_MMT_.fill(0);
+    for(int i = 0; i < 7*7; ++i) J_MMT_[i] = 0; // invalid: J_MMT_.fill(0);
     for(int i=0; i<7; ++i) J_MMT_[8*i] = 1.;
 
     M7x7* noise = nullptr;
@@ -1663,7 +1671,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     if(fillExtrapSteps){
       // calc J_pM for later calculation of 5D Jacobian
       if (numIt == 1) { // first iteration
-        M1x3 pTilde = {{state7[3], state7[4], state7[5]}};
+        M1x3 pTilde = {state7[3], state7[4], state7[5]};
         double pTildeW = pTilde[0] * W.X() + pTilde[1] * W.Y() + pTilde[2] * W.Z();
         double spu = 1;
         if (pTildeW < 0) {
@@ -1710,7 +1718,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     // call MatFX
     if(fillExtrapSteps) {
       noise = &noiseArray_;
-      noiseArray_.fill(0); // set noiseArray_ to 0
+      for(int i = 0; i < 7*7; ++i) noiseArray_[i] = 0; // invalid: noiseArray_.fill(0); // set noiseArray_ to 0
     }
     unsigned int nPoints(RKStepsFXStop_ - RKStepsFXStart_);
     if (/*!fNoMaterial*/ true && nPoints>0){
@@ -1765,7 +1773,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       if( checkJacProj == true ){
         //project the noise onto the destPlane
         TMatrixDSym projectedNoise(7);
-        projectedNoise.SetMatrixArray(noiseArray_.data());
+        projectedNoise.SetMatrixArray(noiseArray_);
         projectedNoise.SimilarityT(noiseProjection);
       }
 
@@ -1778,8 +1786,8 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 #ifdef DEBUG
     std::cout<<"ExtrapSteps \n";
     for (auto it = ExtrapSteps_.begin(); it != ExtrapSteps_.end(); ++it){
-      std::cout << "5D Jacobian: "; RKTools::printDim((it->jac_).data(), 5,5);
-      std::cout << "5D noise:    "; RKTools::printDim((it->noise_).data(), 5,5);
+      std::cout << "5D Jacobian: "; RKTools::printDim((it->jac_), 5,5);
+      std::cout << "5D noise:    "; RKTools::printDim((it->noise_), 5,5);
     }
     std::cout<<"\n";
 #endif

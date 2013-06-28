@@ -130,7 +130,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
 
   double momLoss = 0.;
 
-  for (auto it = steps.begin() + materialsFXStart; it !=  steps.begin() + materialsFXStop; ++it) { // loop over steps
+  for ( std::vector<RKStep>::const_iterator it = steps.begin() + materialsFXStart; it !=  steps.begin() + materialsFXStop; ++it) { // loop over steps
 
 #ifdef DEBUG
     std::cerr << "     calculate matFX ";

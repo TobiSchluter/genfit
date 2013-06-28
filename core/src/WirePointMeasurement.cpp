@@ -20,7 +20,7 @@
 #include "WirePointMeasurement.h"
 
 #include "Exception.h"
-/*#include "RKTrackRep.h"*/
+#include "RKTrackRep.h"
 
 #include <cassert>
 
@@ -57,7 +57,6 @@ MeasurementOnPlane WirePointMeasurement::constructMeasurementOnPlane(const AbsTr
   return mop;
 }
 
-/* CR: debugging the changes; is this cast really needed?
 const TMatrixD& WirePointMeasurement::getHMatrix(const AbsTrackRep* rep) const {
   if (dynamic_cast<const RKTrackRep*>(rep) != _GFNULLPTR) {
     static const double HMatrixContent[10] = {0, 0, 0, 1, 0,
@@ -71,6 +70,5 @@ const TMatrixD& WirePointMeasurement::getHMatrix(const AbsTrackRep* rep) const {
     throw exc;
   }
 }
-*/
 
 } /* End of namespace genfit */

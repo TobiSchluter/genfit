@@ -102,7 +102,7 @@ class AbsTrackRep : public TObject {
  protected:
 
   // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
-  AbsTrackRep(const AbsTrackRep&); // copy constructor
+  AbsTrackRep(const AbsTrackRep&) {;}; // copy constructor
   AbsTrackRep& operator=(const AbsTrackRep&); // assignment operator
 
 

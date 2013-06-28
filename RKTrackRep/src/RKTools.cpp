@@ -421,7 +421,8 @@ void RKTools::J_MMxJ_MM(M7x7& J_MM, const M7x7& J_MM_old){
   // x x x x x x 0
   // x x x x x x x
 
-  M7x7 J_MM_temp(J_MM);
+  M7x7 J_MM_temp;
+  memcpy(J_MM_temp, J_MM, 7*7*sizeof(double));
 
   /*J_MM[0] = 1;
   J_MM[1] = 0;
@@ -523,14 +524,14 @@ void RKTools::J_pMxJ_MMTxJ_Mp(const M5x7& J_pM, const M7x7& J_MMT, const M7x5& J
   // 0 x x 0 0
   // 1 0 0 0 0
 
-  TMatrixD JpM(5, 7, J_pM.data());
-  TMatrixD JMM(7, 7, J_MMT.data());
+  TMatrixD JpM(5, 7, J_pM);
+  TMatrixD JMM(7, 7, J_MMT);
   JMM.Transpose(JMM);
-  TMatrixD JMp(7, 5, J_Mp.data());
+  TMatrixD JMp(7, 5, J_Mp);
 
   TMatrixD Jpp =  (JpM * JMM) * JMp;
 
-  memcpy(J_pp.data(), Jpp.GetMatrixArray(), 5*5*sizeof(double));
+  memcpy(J_pp, Jpp.GetMatrixArray(), 5*5*sizeof(double));
 
   //std::cout << "J_pp: "; printDim(J_pp.data(), 5,5);
 

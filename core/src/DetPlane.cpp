@@ -19,7 +19,7 @@
 
 #include "DetPlane.h"
 
-#include <assert>
+#include <cassert>
 #include <iostream>
 #include <cmath>
 #include <TMath.h>

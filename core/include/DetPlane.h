@@ -35,7 +35,7 @@
 #include <TObject.h>
 #include <TVector3.h>
 
-#include <memory>
+#include "boost/scoped_ptr.hpp"
 
 #include "AbsFinitePlane.h"
 
@@ -183,7 +183,7 @@ class DetPlane : public TObject {
   TVector3 u_;
   TVector3 v_;
 
-  std::auto_ptr<AbsFinitePlane> finitePlane_; // Ownership
+  boost::scoped_ptr<AbsFinitePlane> finitePlane_; // Ownership
 
 
   //ClassDef(DetPlane,1)

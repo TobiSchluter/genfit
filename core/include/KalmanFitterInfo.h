@@ -24,6 +24,7 @@
 #define genfit_KalmanFitterInfo_h
 
 #include <vector>
+
 #include "boost/scoped_ptr.hpp"
 
 #include "AbsFitterInfo.h"
@@ -58,7 +59,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   KalmanFittedStateOnPlane* getBackwardUpdate() const {return backwardUpdate_.get();}
   KalmanFittedStateOnPlane* getUpdate(int direction) const {if (direction >=0) return forwardUpdate_.get(); return backwardUpdate_.get();}
   std::vector< genfit::MeasurementOnPlane* > getMeasurementsOnPlane() const;
-  const MeasurementOnPlane* getMeasurementOnPlane(int i = 0) const {if (i<0) i += measurementsOnPlane_.size(); return measurementsOnPlane_.at(i).get();}
+  const MeasurementOnPlane* getMeasurementOnPlane(int i = 0) const {if (i<0) i += measurementsOnPlane_.size(); return measurementsOnPlane_.at(i);}
   /**
    * Get weighted mean of all measurements.
    */
@@ -86,7 +87,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate) {backwardUpdate_.reset(backwardUpdate);}
   void setUpdate(KalmanFittedStateOnPlane* update, int direction)  {if (direction >=0) setForwardUpdate(update); else setBackwardUpdate(update);}
   void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
-  void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) {measurementsOnPlane_.push_back(boost::scoped_ptr<MeasurementOnPlane>(measurementOnPlane));}
+  void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) { measurementsOnPlane_.push_back(measurementOnPlane); }
 
   void setRep(const AbsTrackRep* rep) _GFOVERRIDE;
 
@@ -109,11 +110,27 @@ class KalmanFitterInfo : public AbsFitterInfo {
   boost::scoped_ptr<MeasuredStateOnPlane> backwardPrediction_; // Ownership
   boost::scoped_ptr<KalmanFittedStateOnPlane> backwardUpdate_; // Ownership
 
+ //> TODO ! ptr implement: to the special ownership version
+  /* class owned_pointer_vector : private std::vector<MeasuredStateOnPlane*> {
+   public: 
+    ~owned_pointer_vector() { for (size_t i = 0; i < this->size(); ++i)
+                         delete this[i]; }
+    size_t size() const { return this->size(); };
+    void push_back(MeasuredStateOnPlane* measuredState) { this->push_back(measuredState); };
+    const  MeasuredStateOnPlane* at(size_t i)  const { return this->at(i); }; 
+	//owned_pointer_vector::iterator erase(owned_pointer_vector::iterator position) ;
+	//owned_pointer_vector::iterator erase(owned_pointer_vector::iterator first, owned_pointer_vector::iterator last);
+};
+	*/
+
+
+
   /** 
    *  Number of measurements must be equal to size of #fRawMeasurements in #GFTrackPoint.
    * @element-type MeasurementOnPlane
    */
-  std::vector< boost::scoped_ptr<MeasurementOnPlane> > measurementsOnPlane_; // Ownership
+  std::vector<MeasurementOnPlane*> measurementsOnPlane_; // Ownership
+
 
 
   //ClassDef(KalmanFitterInfo,1)

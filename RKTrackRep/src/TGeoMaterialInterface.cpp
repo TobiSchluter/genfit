@@ -72,7 +72,8 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
   const double delta(1.E-2); // cm
   double s(0), safety(0), slDist(0);
   M1x3 SA;
-  M1x7 stateOrig(state7);
+  M1x7 stateOrig;
+  memcpy(stateOrig, state7, sizeof(state7));
 
   int stepSign(1);
   if (sMax < 0) stepSign = -1;
@@ -130,7 +131,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
         safe = true;
 
       if (!safe) {
-        state7 = stateOrig; // propagate complete way from original start
+        memcpy(state7, stateOrig, sizeof(state7)); // propagate complete way from original start
         rep->RKPropagate(state7, NULL, SA, s+tryStep, varField);
         initTrack(stateOrig[0], stateOrig[1], stateOrig[2],
                   state7[0]-stateOrig[0], state7[1]-stateOrig[1], state7[2]-stateOrig[2]);
@@ -144,7 +145,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
       }
       else {
         s += stepSign*safety;
-        state7 = stateOrig; // propagate complete way from original start
+        memcpy(state7, stateOrig, sizeof(state7)); // propagate complete way from original start
         rep->RKPropagate(state7, NULL, SA, s, varField);
         initTrack(state7[0], state7[1], state7[2],  stepSign*state7[3], stepSign*state7[4], stepSign*state7[5]);
 #ifdef DEBUG

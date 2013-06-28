@@ -82,9 +82,9 @@ class TrackPoint : public TObject {
 
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
   //! Takes ownership
-  void addRawMeasurement(AbsMeasurement* rawMeasurement) {rawMeasurements_.push_back(std::auto_ptr<AbsMeasurement>(rawMeasurement));}
+  void addRawMeasurement(AbsMeasurement* rawMeasurement) {rawMeasurements_.push_back(rawMeasurement);}
   //! Takes Ownership
-  size_t addFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_[fitterInfo->getRep()].push_back(std::auto_ptr<AbsFitterInfo>(fitterInfo)); return fitterInfos_[fitterInfo->getRep()].size();}
+  size_t addFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_[fitterInfo->getRep()].push_back( fitterInfo); return fitterInfos_[fitterInfo->getRep()].size();}
   void deleteFitterInfo(AbsTrackRep* rep, int i);
   void deleteFitterInfos(const AbsTrackRep* rep);
   //void setMaterial(MaterialInfo* material);
@@ -101,9 +101,9 @@ class TrackPoint : public TObject {
    *  Can be more than one, e.g. multiple measurements in the same Si detector, left and right measurements of a wire detector etc.
    * @element-type AbsMeasurement
    */
-  std::vector< std::auto_ptr<AbsMeasurement> > rawMeasurements_; // Ownership
+  std::vector<AbsMeasurement*> rawMeasurements_; // Ownership
 
-  std::map< const AbsTrackRep*, std::vector< std::auto_ptr<AbsFitterInfo> > > fitterInfos_; // Ownership over FitterInfos
+  std::map< const AbsTrackRep*, std::vector<AbsFitterInfo*> > fitterInfos_; // Ownership over FitterInfos
 
   //MaterialInfo* material_; // Ownership
 

@@ -60,8 +60,8 @@ KalmanFitterInfo* KalmanFitterInfo::clone() const {
     retVal->setBackwardUpdate(new KalmanFittedStateOnPlane(*getBackwardUpdate()));
 
   retVal->measurementsOnPlane_.reserve(getNumMeasurements());
-  for (auto it = this->measurementsOnPlane_.begin(); it != this->measurementsOnPlane_.end(); ++it) {
-    retVal->addMeasurementOnPlane(new MeasurementOnPlane(*(it->get())));
+  for (std::vector<MeasurementOnPlane*>::const_iterator it = this->measurementsOnPlane_.begin(); it != this->measurementsOnPlane_.end(); ++it) {
+    retVal->addMeasurementOnPlane(new MeasurementOnPlane(**it));
   }
 
   return retVal;
@@ -72,8 +72,8 @@ std::vector< genfit::MeasurementOnPlane* > KalmanFitterInfo::getMeasurementsOnPl
   std::vector< genfit::MeasurementOnPlane* > retVal;
   retVal.reserve(measurementsOnPlane_.size());
 
-  for (auto it = measurementsOnPlane_.begin(); it != measurementsOnPlane_.end(); ++it) {
-    retVal.push_back(it->get());
+  for (std::vector<MeasurementOnPlane*>::const_iterator it = measurementsOnPlane_.begin(); it != measurementsOnPlane_.end(); ++it) {
+    retVal.push_back(*it);
   }
 
   return retVal;
@@ -152,7 +152,7 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeas
   // TODO: Test
 
   MeasuredStateOnPlane smoothedState = getFittedState(biased);
-  const MeasurementOnPlane* measurement = measurementsOnPlane_.at(iMeasurement).get();
+  const MeasurementOnPlane* measurement = measurementsOnPlane_.at(iMeasurement);
   SharedPlanePtr plane = measurement->getPlane();
 
   // check equality of planes and reps
@@ -180,8 +180,8 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeas
 void KalmanFitterInfo::setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane) {
   measurementsOnPlane_.clear();
 
-  for (MeasurementOnPlane* m : measurementsOnPlane) {
-    addMeasurementOnPlane(m);
+  for (std::vector<MeasurementOnPlane*>::const_iterator m = measurementsOnPlane.begin(), mend = measurementsOnPlane.end(); m < mend; ++m) {
+    addMeasurementOnPlane(*m);
   }
 }
 
@@ -204,7 +204,7 @@ void KalmanFitterInfo::setRep(const AbsTrackRep* rep) {
   if (backwardUpdate_)
     backwardUpdate_->setRep(rep);
 
-  for (auto it = measurementsOnPlane_.begin(); it != measurementsOnPlane_.end(); ++it) {
+  for (std::vector<MeasurementOnPlane*>::iterator it = measurementsOnPlane_.begin(); it != measurementsOnPlane_.end(); ++it) {
     (*it)->setRep(rep);
   }
 }
@@ -359,7 +359,7 @@ bool KalmanFitterInfo::checkConsistency() const {
     }
   }
 
-  for (auto it = measurementsOnPlane_.begin(); it != measurementsOnPlane_.end(); ++it) {
+  for (std::vector<MeasurementOnPlane*>::const_iterator it = measurementsOnPlane_.begin(); it != measurementsOnPlane_.end(); ++it) {
     if((*it)->getPlane() != plane) {
       std::cerr << "KalmanFitterInfo::checkConsistency(): measurement is not defined with the correct plane" << std::endl;
       return false;

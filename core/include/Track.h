@@ -2,7 +2,6 @@
 #define genfit_Track_h
 
 #include <vector>
-#include <memory>
 
 #include "AbsTrackRep.h"
 #include "Track.h"
@@ -41,7 +40,7 @@ class Track : public TObject {
   std::vector< TrackPoint* > getPointsWithMeasurement() const;
   unsigned int getNumPointsWithMeasurement() const;
 
-  AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id).get();}
+  AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id);}
   unsigned int getNumReps() const {return trackReps_.size();}
 
   /** @brief Get cardinal track representation
@@ -50,7 +49,7 @@ class Track : public TObject {
    * best one after the fit. E.g. the track representation giving the
    * smallest chi2 could be chosen. By default the first in the list is returned.
    */
-  AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_).get();}
+  AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_);}
   unsigned int getCardinalRepID() const {return cardinalRep_;}
 
   const TVectorD& getStateSeed() const {return stateSeed_;}
@@ -90,9 +89,9 @@ class Track : public TObject {
 
   Track& operator=(const Track&); // assignment operator  // delete until properly implemented
 
-  std::vector< std::auto_ptr<TrackPoint> > trackPoints_; // Ownership
+  std::vector<TrackPoint*> trackPoints_; // Ownership
 
-  std::vector< std::auto_ptr<AbsTrackRep> > trackReps_; // Ownership
+  std::vector<AbsTrackRep*> trackReps_; // Ownership
   unsigned int cardinalRep_; // THE selected rep, default = 0;
 
   TVectorD stateSeed_; // 6D: position, momentum

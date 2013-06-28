@@ -110,7 +110,6 @@ MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRe
   return mop;
 }
 
-
 const TMatrixD& WireMeasurement::getHMatrix(const AbsTrackRep* rep) const {
   if (dynamic_cast<const RKTrackRep*>(rep) != _GFNULLPTR) {
     static const double HMatrixContent[5] = {0, 0, 0, 1, 0};
@@ -123,7 +122,6 @@ const TMatrixD& WireMeasurement::getHMatrix(const AbsTrackRep* rep) const {
     throw exc;
   }
 }
-
 
 void WireMeasurement::setLeftRightResolution(int lr){
   if (lr==0) leftRight_ = 0;

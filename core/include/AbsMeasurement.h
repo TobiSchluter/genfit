@@ -76,7 +76,7 @@ class AbsMeasurement : public TObject {
  protected:
 
   // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
-  AbsMeasurement(const AbsMeasurement&);
+  AbsMeasurement(const AbsMeasurement&) {;};
 #ifndef __CINT__
   AbsMeasurement& operator=(const AbsMeasurement&); // default cannot work because TVector and TMatrix = operators don't do resizing
 #endif
