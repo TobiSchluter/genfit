@@ -537,7 +537,7 @@ int main() {
 
 
       // create track
-      fitTrack.reset(new genfit::Track(rep, rep->get6DState(&stateSmeared))); //initialized with smeared rep
+      fitTrack = new genfit::Track(rep, rep->get6DState(&stateSmeared)); //initialized with smeared rep
 
       //fitTrack->addTrackRep(rep->clone()); // check if everything works fine with more than one rep
 
@@ -588,7 +588,7 @@ int main() {
 
 
       // check if fit was successful
-      if (!kalmanFitterRefTrack.isTrackFitted(fitTrack.get(), rep)) {
+      if (!kalmanFitterRefTrack.isTrackFitted(fitTrack, rep)) {
         std::cout << "Track could not be fitted successfully! \n";
         continue;
       }
@@ -626,7 +626,7 @@ int main() {
       const TVectorD& state = kfsop->getState();
       const TMatrixDSym& cov = kfsop->getCov();
 
-      double pval = kalmanFitterRefTrack.getPVal(fitTrack.get(), rep); // FIXME choose fitter that has been used
+      double pval = kalmanFitterRefTrack.getPVal(fitTrack, rep); // FIXME choose fitter that has been used
 
       hmomRes->Fill( (charge/state[0]-momentum));
       hupRes->Fill(  (state[1]-referenceState[1]));
