@@ -21,8 +21,6 @@
  * @{
  */
 
-#include <array>
-
 #ifndef genfit_RKTools_h
 #define genfit_RKTools_h
 
@@ -30,18 +28,18 @@ namespace genfit {
 
 // Array Matrix typedefs. They are needed for SSE optimization:
 // gcc can vectorize loops only if the array sizes are known.
-typedef std::array<double, 1*3> M1x3;
-typedef std::array<double, 1*4> M1x4;
-typedef std::array<double, 1*6> M1x6;
-typedef std::array<double, 1*7> M1x7;
-typedef std::array<double, 5*5> M5x5;
-typedef std::array<double, 6*6> M6x6;
-typedef std::array<double, 7*7> M7x7;
-typedef std::array<double, 8*7> M8x7;
-typedef std::array<double, 6*5> M6x5;
-typedef std::array<double, 7*5> M7x5;
-typedef std::array<double, 5*6> M5x6;
-typedef std::array<double, 5*7> M5x7;
+typedef double M1x3[1*3];
+typedef double M1x4[1*4];
+typedef double M1x6[1*6];
+typedef double M1x7[1*7];
+typedef double M5x5[5*5];
+typedef double M6x6[6*6];
+typedef double M7x7[7*7];
+typedef double M8x7[8*7];
+typedef double M6x5[6*5];
+typedef double M7x5[7*5];
+typedef double M5x6[5*6];
+typedef double M5x7[5*7];
 
 namespace RKTools {
 

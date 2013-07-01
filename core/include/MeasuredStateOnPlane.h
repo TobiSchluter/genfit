@@ -39,7 +39,7 @@ class MeasuredStateOnPlane : public StateOnPlane {
 
  public:
 
-  MeasuredStateOnPlane(const AbsTrackRep* rep = nullptr);
+  MeasuredStateOnPlane(const AbsTrackRep* rep = _GFNULLPTR);
   MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep);
   MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov);
 
@@ -50,7 +50,7 @@ class MeasuredStateOnPlane : public StateOnPlane {
   void setStateCovPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane) {setStatePlane(state, plane); setCov(cov);}
   void setCov(const TMatrixDSym& cov) {if(cov_.GetNrows() == 0) cov_.ResizeTo(cov); cov_ = cov;}
 
-  virtual void Print(Option_t* option = "") const override;
+  virtual void Print(Option_t* option = "") const _GFOVERRIDE;
 
  protected:
 

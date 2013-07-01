@@ -20,7 +20,7 @@
 
 namespace genfit {
 
-FieldManager* FieldManager::instance_ = nullptr;
-AbsBField* FieldManager::field_ = nullptr;
+FieldManager* FieldManager::instance_ = _GFNULLPTR;
+AbsBField* FieldManager::field_ = _GFNULLPTR;
 
 } /* End of namespace genfit */

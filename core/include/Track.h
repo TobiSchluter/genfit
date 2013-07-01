@@ -28,9 +28,6 @@ class Track : public TObject {
   Track(AbsTrackRep* trackRep, const TVectorD& stateSeed);
 
   Track(const Track&); // copy constructor
-  Track(Track&&) = default; // move constructor
-  Track& operator=(const Track&) = delete; // assignment operator  // delete until properly implemented
-  //Track& operator=(Track&&) = default; // move assignment operator
 
   ~Track();
 
@@ -43,7 +40,7 @@ class Track : public TObject {
   std::vector< TrackPoint* > getPointsWithMeasurement() const;
   unsigned int getNumPointsWithMeasurement() const;
 
-  AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id).get();}
+  AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id);}
   unsigned int getNumReps() const {return trackReps_.size();}
 
   /** @brief Get cardinal track representation
@@ -52,7 +49,7 @@ class Track : public TObject {
    * best one after the fit. E.g. the track representation giving the
    * smallest chi2 could be chosen. By default the first in the list is returned.
    */
-  AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_).get();}
+  AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_);}
   unsigned int getCardinalRepID() const {return cardinalRep_;}
 
   const TVectorD& getStateSeed() const {return stateSeed_;}
@@ -84,16 +81,17 @@ class Track : public TObject {
   void deleteReferenceInfo(int startId, int endId);
   void deleteMeasurementInfo(int startId, int endId);
 
-  void Print(const Option_t* = "") const override;
+  void Print(const Option_t* = "") const _GFOVERRIDE;
 
   bool checkConsistency() const;
 
  private:
 
+  Track& operator=(const Track&); // assignment operator  // delete until properly implemented
 
-  std::vector< std::unique_ptr<TrackPoint> > trackPoints_; // Ownership
+  std::vector<TrackPoint*> trackPoints_; // Ownership
 
-  std::vector< std::unique_ptr<AbsTrackRep> > trackReps_; // Ownership
+  std::vector<AbsTrackRep*> trackReps_; // Ownership
   unsigned int cardinalRep_; // THE selected rep, default = 0;
 
   TVectorD stateSeed_; // 6D: position, momentum

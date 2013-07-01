@@ -24,12 +24,12 @@
 #ifndef genfit_SharedMaterialPropertiesPtr_h
 #define genfit_SharedMaterialPropertiesPtr_h
 
-#include <memory>
+#include "boost/shared_ptr.hpp"
 
 #include "MaterialProperties.h"
 
 #ifndef __CINT__
-typedef std::shared_ptr< const genfit::MaterialProperties > SharedMaterialPropertiesPtr;
+typedef boost::shared_ptr< const genfit::MaterialProperties > SharedMaterialPropertiesPtr;
 #else
 typedef const genfit::MaterialProperties* SharedMaterialPropertiesPrt;
 #endif

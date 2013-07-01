@@ -43,7 +43,7 @@ class StateOnPlane : public TObject {
 
  public:
 
-  StateOnPlane(const AbsTrackRep* rep = nullptr);
+  StateOnPlane(const AbsTrackRep* rep = _GFNULLPTR);
   StateOnPlane(const TVectorD& state, SharedPlanePtr plane, const AbsTrackRep* rep);
 
 
@@ -60,7 +60,7 @@ class StateOnPlane : public TObject {
   void setAuxInfo(const TVectorD& auxInfo) {if(auxInfo_.GetNrows() == 0) auxInfo_.ResizeTo(auxInfo); auxInfo_ = auxInfo;}
   void setRep(const AbsTrackRep* rep) {rep_ = rep;}
 
-  virtual void Print(Option_t* option = "") const override;
+  virtual void Print(Option_t* option = "") const _GFOVERRIDE;
 
  protected:
 

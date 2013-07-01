@@ -25,6 +25,7 @@
 
 #include <vector>
 
+#include "boost/scoped_ptr.hpp"
 
 #include "AbsFitterInfo.h"
 #include "KalmanFittedStateOnPlane.h"
@@ -48,7 +49,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   KalmanFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep);
   ~KalmanFitterInfo();
 
-  virtual KalmanFitterInfo* clone() const override;
+  virtual KalmanFitterInfo* clone() const _GFOVERRIDE;
 
   ReferenceStateOnPlane* getReferenceState() const {return referenceState_.get();}
   MeasuredStateOnPlane* getForwardPrediction() const {return forwardPrediction_.get();}
@@ -58,25 +59,25 @@ class KalmanFitterInfo : public AbsFitterInfo {
   KalmanFittedStateOnPlane* getBackwardUpdate() const {return backwardUpdate_.get();}
   KalmanFittedStateOnPlane* getUpdate(int direction) const {if (direction >=0) return forwardUpdate_.get(); return backwardUpdate_.get();}
   std::vector< genfit::MeasurementOnPlane* > getMeasurementsOnPlane() const;
-  const MeasurementOnPlane* getMeasurementOnPlane(int i = 0) const {if (i<0) i += measurementsOnPlane_.size(); return measurementsOnPlane_.at(i).get();}
+  const MeasurementOnPlane* getMeasurementOnPlane(int i = 0) const {if (i<0) i += measurementsOnPlane_.size(); return measurementsOnPlane_.at(i);}
   /**
    * Get weighted mean of all measurements.
    */
   MeasurementOnPlane getAvgWeightedMeasurementOnPlane() const;
 
-  bool hasReferenceState() const {return bool(referenceState_);}
-  bool hasForwardPrediction() const {return bool(forwardPrediction_);}
-  bool hasBackwardPrediction() const {return bool(backwardPrediction_);}
-  bool hasForwardUpdate() const {return bool(forwardUpdate_);}
-  bool hasBackwardUpdate() const {return bool(backwardUpdate_);}
+  bool hasReferenceState() const {return (referenceState_.get() != _GFNULLPTR);}
+  bool hasForwardPrediction() const {return (forwardPrediction_.get()  != _GFNULLPTR);}
+  bool hasBackwardPrediction() const {return (backwardPrediction_.get() != _GFNULLPTR);}
+  bool hasForwardUpdate() const {return (forwardUpdate_.get() != _GFNULLPTR);}
+  bool hasBackwardUpdate() const {return (backwardUpdate_.get() != _GFNULLPTR);}
   unsigned int getNumMeasurements() const {return measurementsOnPlane_.size();}
 
   /** Get unbiased (default) or biased smoothed state
    */
-  MeasuredStateOnPlane getFittedState(bool biased = false) const override;
+  MeasuredStateOnPlane getFittedState(bool biased = false) const _GFOVERRIDE;
   /** Get unbiased (default) or biased residual from ith measurement
    */
-  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const override; // also calculates covariance of the residual
+  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const _GFOVERRIDE; // also calculates covariance of the residual
 
   void setReferenceState(ReferenceStateOnPlane* referenceState) {referenceState_.reset(referenceState);}
   void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction) {forwardPrediction_.reset(forwardPrediction);}
@@ -86,34 +87,50 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate) {backwardUpdate_.reset(backwardUpdate);}
   void setUpdate(KalmanFittedStateOnPlane* update, int direction)  {if (direction >=0) setForwardUpdate(update); else setBackwardUpdate(update);}
   void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
-  void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) {measurementsOnPlane_.push_back(std::unique_ptr<MeasurementOnPlane>(measurementOnPlane));}
+  void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) { measurementsOnPlane_.push_back(measurementOnPlane); }
 
-  void setRep(const AbsTrackRep* rep) override;
+  void setRep(const AbsTrackRep* rep) _GFOVERRIDE;
 
-  void deleteForwardInfo() override;
-  void deleteBackwardInfo() override;
-  void deleteReferenceInfo() override;
-  void deleteMeasurementInfo() override;
+  void deleteForwardInfo() _GFOVERRIDE;
+  void deleteBackwardInfo() _GFOVERRIDE;
+  void deleteReferenceInfo() _GFOVERRIDE;
+  void deleteMeasurementInfo() _GFOVERRIDE;
 
-  virtual void Print(const Option_t* = "") const override;
+  virtual void Print(const Option_t* = "") const _GFOVERRIDE;
 
-  virtual bool checkConsistency() const override;
+  virtual bool checkConsistency() const _GFOVERRIDE;
 
  private:
 
   MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const;
 
-  std::unique_ptr<ReferenceStateOnPlane> referenceState_; // Ownership
-  std::unique_ptr<MeasuredStateOnPlane> forwardPrediction_; // Ownership
-  std::unique_ptr<KalmanFittedStateOnPlane> forwardUpdate_; // Ownership
-  std::unique_ptr<MeasuredStateOnPlane> backwardPrediction_; // Ownership
-  std::unique_ptr<KalmanFittedStateOnPlane> backwardUpdate_; // Ownership
+  boost::scoped_ptr<ReferenceStateOnPlane> referenceState_; // Ownership
+  boost::scoped_ptr<MeasuredStateOnPlane> forwardPrediction_; // Ownership
+  boost::scoped_ptr<KalmanFittedStateOnPlane> forwardUpdate_; // Ownership
+  boost::scoped_ptr<MeasuredStateOnPlane> backwardPrediction_; // Ownership
+  boost::scoped_ptr<KalmanFittedStateOnPlane> backwardUpdate_; // Ownership
+
+ //> TODO ! ptr implement: to the special ownership version
+  /* class owned_pointer_vector : private std::vector<MeasuredStateOnPlane*> {
+   public: 
+    ~owned_pointer_vector() { for (size_t i = 0; i < this->size(); ++i)
+                         delete this[i]; }
+    size_t size() const { return this->size(); };
+    void push_back(MeasuredStateOnPlane* measuredState) { this->push_back(measuredState); };
+    const  MeasuredStateOnPlane* at(size_t i)  const { return this->at(i); }; 
+	//owned_pointer_vector::iterator erase(owned_pointer_vector::iterator position) ;
+	//owned_pointer_vector::iterator erase(owned_pointer_vector::iterator first, owned_pointer_vector::iterator last);
+};
+	*/
+
+
 
   /** 
    *  Number of measurements must be equal to size of #fRawMeasurements in #GFTrackPoint.
    * @element-type MeasurementOnPlane
    */
-  std::vector< std::unique_ptr<MeasurementOnPlane> > measurementsOnPlane_; // Ownership
+  std::vector<MeasurementOnPlane*> measurementsOnPlane_; // Ownership
+
 
 
   //ClassDef(KalmanFitterInfo,1)

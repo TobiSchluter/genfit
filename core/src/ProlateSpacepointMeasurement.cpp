@@ -19,7 +19,7 @@
 
 #include "ProlateSpacepointMeasurement.h"
 
-#include <math.h>
+#include <cmath>
 
 #include "Exception.h"
 #include "RKTrackRep.h"

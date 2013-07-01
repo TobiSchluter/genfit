@@ -22,8 +22,8 @@
 namespace genfit {
 
 AbsFitterInfo::AbsFitterInfo() :
-  trackPoint_(nullptr),
-  rep_(nullptr),
+  trackPoint_(_GFNULLPTR),
+  rep_(_GFNULLPTR),
   statusFlag_(0)
 {
   ;

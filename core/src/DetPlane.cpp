@@ -19,7 +19,7 @@
 
 #include "DetPlane.h"
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 #include <cmath>
 #include <TMath.h>
@@ -76,7 +76,7 @@ DetPlane& DetPlane::operator=(const DetPlane& rhs) {
   if (this == &rhs)
     return *this;
 
-  if(rhs.finitePlane_ != nullptr){
+  if(rhs.finitePlane_ != _GFNULLPTR){
     finitePlane_.reset(rhs.finitePlane_->clone());
   }
   else{
@@ -223,7 +223,7 @@ void DetPlane::Print(const Option_t* option) const
      <<"v("<<v_.X()<<", "<<v_.Y()<<", "<<v_.Z()<<") "
      <<"n("<<getNormal().X()<<", "<<getNormal().Y()<<", "<<getNormal().Z()<<") "
        <<std::endl;
-  if(finitePlane_ != nullptr) {
+  if(finitePlane_ != _GFNULLPTR) {
     finitePlane_->Print(option);
   }
 

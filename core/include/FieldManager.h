@@ -43,7 +43,7 @@ class FieldManager {
  public:
 
   AbsBField* getField(){
-    if(field_==NULL){
+    if(field_==_GFNULLPTR){
       std::cerr << "FieldManager hasn't been initialized with a correct AbsBField pointer!" << std::endl;
       std::string msg("FieldManager hasn't been initialized with a correct AbsBField pointer!");
       std::runtime_error err(msg);
@@ -53,13 +53,13 @@ class FieldManager {
   }
 
   static TVector3 getFieldVal(const TVector3& position){
-    if(instance_==NULL){
+    if(instance_==_GFNULLPTR){
       std::cerr << "FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!" << std::endl;
       std::string msg("FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!");
       std::runtime_error err(msg);
       throw err;
     }
-    if(field_==NULL){
+    if(field_==_GFNULLPTR){
       std::cerr << "FieldManager hasn't been initialized with a correct AbsBField pointer!" << std::endl;
       std::string msg("FieldManager hasn't been initialized with a correct AbsBField pointer!");
       std::runtime_error err(msg);
@@ -69,13 +69,13 @@ class FieldManager {
   }
 
   static void getFieldVal(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz){
-    if(instance_==NULL){
+    if(instance_==_GFNULLPTR){
       std::cerr << "FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!" << std::endl;
       std::string msg("FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!");
       std::runtime_error err(msg);
       throw err;
     }
-    if(field_==NULL){
+    if(field_==_GFNULLPTR){
       std::cerr << "FieldManager hasn't been initialized with a correct AbsBField pointer!" << std::endl;
       std::string msg("FieldManager hasn't been initialized with a correct AbsBField pointer!");
       std::runtime_error err(msg);
@@ -89,10 +89,10 @@ class FieldManager {
     field_=b;
   }
 
-  bool isInitialized() { return field_ != nullptr; }
+  bool isInitialized() { return field_ != _GFNULLPTR; }
 
   static FieldManager* getInstance(){
-    if(instance_ == nullptr) {
+    if(instance_ == _GFNULLPTR) {
       instance_ = new FieldManager();
     }
     return instance_;

@@ -42,7 +42,7 @@ class KalmanFitterRefTrack : public AbsFitter {
    */
   void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, size_t& ndf, int direction);
 
-  void processTrack(Track* tr, AbsTrackRep* rep) override;
+  void processTrack(Track* tr, AbsTrackRep* rep) _GFOVERRIDE;
 
   void prepareTrack(Track* tr, const AbsTrackRep* rep);
 

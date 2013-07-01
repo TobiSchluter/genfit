@@ -1,4 +1,4 @@
-To build GENFIT cmake is needed in version 2.8 or higher.
+To build GENFIT cmake is needed in version 2.6 or higher.
 
 To create the library, create a build directory and change into it. E.g.
  mkdir build; cd build

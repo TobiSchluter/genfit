@@ -420,6 +420,9 @@ bool compareForthBackJacNoise() {
     delete rep;
     return false;
   }
+  // manual calculation
+  TMatrixD jac_f_man;
+  manualJacobian(&origState, plane, rep, jac_f_man);
 
   // manual calculation
   TMatrixD jac_f_man;

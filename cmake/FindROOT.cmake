@@ -192,7 +192,7 @@ IF( ROOT_CONFIG_EXECUTABLE )
     # ========== standard root libraries =================
 
     # brrr, hate to do this:
-    EXECUTE_PROCESS( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --noauxlibs --libs
+    EXECUTE_PROCESS( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --noauxlibs --evelibs
         OUTPUT_VARIABLE ROOT_LIBS
         RESULT_VARIABLE _exit_code
         OUTPUT_STRIP_TRAILING_WHITESPACE

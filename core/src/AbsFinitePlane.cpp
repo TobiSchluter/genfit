@@ -17,7 +17,7 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <AbsFinitePlane.h>
+#include "AbsFinitePlane.h"
 
 namespace genfit {
 

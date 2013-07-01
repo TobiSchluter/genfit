@@ -35,10 +35,9 @@
 #include <TObject.h>
 #include <TVector3.h>
 
+#include "boost/scoped_ptr.hpp"
+
 #include "AbsFinitePlane.h"
-
-#include <memory>
-
 
 namespace genfit {
 
@@ -64,16 +63,16 @@ class DetPlane : public TObject {
  public:
 
   // Constructors/Destructors ---------
-  DetPlane(AbsFinitePlane* finite = nullptr);
+  DetPlane(AbsFinitePlane* finite = _GFNULLPTR);
 
   DetPlane(const TVector3& o,
              const TVector3& u,
              const TVector3& v,
-             AbsFinitePlane* finite = nullptr);
+             AbsFinitePlane* finite = _GFNULLPTR);
 
   DetPlane(const TVector3& o,
              const TVector3& n,
-             AbsFinitePlane* finite = nullptr);
+             AbsFinitePlane* finite = _GFNULLPTR);
 
   virtual ~DetPlane();
 
@@ -129,7 +128,7 @@ class DetPlane : public TObject {
                            const double& dirX, const double& dirY, const double& dirZ,
                            double& u, double& v) const;
 
-  void Print(const Option_t* = "") const override;
+  void Print(const Option_t* = "") const _GFOVERRIDE;
 
   //! this operator is called very often in Kalman filtering. It checks equality of planes
   //! by comparing the 9 double values that define them.
@@ -144,14 +143,14 @@ class DetPlane : public TObject {
 
   //! intersect in the active area? C.f. AbsFinitePlane
   bool isInActive(const TVector3& point, const TVector3& dir) const {
-    if(!finitePlane_) return true;
+    if(finitePlane_.get() != _GFNULLPTR) return true;
     return this->isInActive( this->straightLineToPlane(point,dir));
   }
 
   //! intersect in the active area? C.f. AbsFinitePlane
   bool isInActive(const double& posX, const double& posY, const double& posZ,
                   const double& dirX, const double& dirY, const double& dirZ) const {
-    if(!finitePlane_) return true;
+    if(finitePlane_.get() != _GFNULLPTR) return true;
     double u, v;
     this->straightLineToPlane(posX, posY, posZ, dirX, dirY, dirZ, u, v);
     return this->isInActive(u, v);
@@ -159,7 +158,7 @@ class DetPlane : public TObject {
 
   //! isInActive methods refer to finite plane. C.f. AbsFinitePlane
   bool isInActive(double u, double v) const{
-    if(!finitePlane_) return true;
+    if(finitePlane_.get() != _GFNULLPTR) return true;
     return finitePlane_->isInActive(u,v);
   }
 
@@ -169,7 +168,7 @@ class DetPlane : public TObject {
   }
 
   bool isFinite() const {
-    return (!finitePlane_);
+    return (finitePlane_.get() != _GFNULLPTR);
   }
 
   //! rotate u and v around normal. Angle is in rad. More for debugging than for actual use.
@@ -187,7 +186,7 @@ class DetPlane : public TObject {
   TVector3 u_;
   TVector3 v_;
 
-  std::unique_ptr<AbsFinitePlane> finitePlane_; // Ownership
+  boost::scoped_ptr<AbsFinitePlane> finitePlane_; // Ownership
 
 
   //ClassDef(DetPlane,1)

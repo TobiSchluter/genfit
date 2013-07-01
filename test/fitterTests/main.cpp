@@ -158,7 +158,9 @@ int main() {
 			  ProlateSpacepoint,
 			  Strip,
 			  Wire,
-			  WirePoint, };
+			  WirePoint };
+
+
   std::vector<unsigned int> measurementTypes;
 
 
@@ -191,8 +193,9 @@ int main() {
   const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
 
 
-  // prepare output tree for Tracks
-  std::unique_ptr<genfit::Track> fitTrack(new genfit::Track());
+  // prepare output tree for Tracks 
+  // std::unique_ptr<genfit::Track> fitTrack(new genfit::Track());
+  genfit::Track* fitTrack = new genfit::Track();
 #ifndef VALGRIND
   // init rootapp (for drawing histograms)
   TApplication* rootapp = new TApplication("rootapp", 0, 0);
@@ -542,7 +545,7 @@ int main() {
       for(unsigned int i=0; i<measurements.size(); ++i){
         std::vector<genfit::AbsMeasurement*> measVec;
         measVec.push_back(measurements[i]);
-        fitTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack.get()));
+        fitTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack));
       }
 
       // print trackCand
@@ -555,12 +558,12 @@ int main() {
         switch (fitterId) {
           case 1:
             if (debug) std::cout<<"Starting the fitter (simple Kalman)"<<std::endl;
-            simpleKalman.processTrack(fitTrack.get(), rep);
+            simpleKalman.processTrack(fitTrack, rep);
             break;
 
           case 2:
             if (debug) std::cout<<"Starting the fitter (reference track Kalman)"<<std::endl;
-            kalmanFitterRefTrack.processTrack(fitTrack.get(), rep);
+            kalmanFitterRefTrack.processTrack(fitTrack, rep);
             break;
 
           case 3:
