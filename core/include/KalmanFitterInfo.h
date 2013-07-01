@@ -65,11 +65,11 @@ class KalmanFitterInfo : public AbsFitterInfo {
    */
   MeasurementOnPlane getAvgWeightedMeasurementOnPlane() const;
 
-  bool hasReferenceState() const {return (referenceState_.get() != NULL);}
-  bool hasForwardPrediction() const {return (forwardPrediction_.get()  != NULL);}
-  bool hasBackwardPrediction() const {return (backwardPrediction_.get() != NULL);}
-  bool hasForwardUpdate() const {return (forwardUpdate_.get() != NULL);}
-  bool hasBackwardUpdate() const {return (backwardUpdate_.get() != NULL);}
+  bool hasReferenceState() const {return (referenceState_.get() != _GFNULLPTR);}
+  bool hasForwardPrediction() const {return (forwardPrediction_.get()  != _GFNULLPTR);}
+  bool hasBackwardPrediction() const {return (backwardPrediction_.get() != _GFNULLPTR);}
+  bool hasForwardUpdate() const {return (forwardUpdate_.get() != _GFNULLPTR);}
+  bool hasBackwardUpdate() const {return (backwardUpdate_.get() != _GFNULLPTR);}
   unsigned int getNumMeasurements() const {return measurementsOnPlane_.size();}
 
   /** Get unbiased (default) or biased smoothed state

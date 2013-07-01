@@ -103,6 +103,7 @@ int randomSign() {
 
 
 bool compareMatrices(TMatrixTBase<double>& A, TMatrixTBase<double>& B, double maxAbsErr, double maxRelErr) {
+  bool retVal = true;
   for (int i=0; i<A.GetNrows(); ++i) {
     for (int j=0; j<A.GetNcols(); ++j) {
       double absErr = A(i,j) - B(i,j);
@@ -110,12 +111,12 @@ bool compareMatrices(TMatrixTBase<double>& A, TMatrixTBase<double>& B, double ma
         double relErr = A(i,j)/B(i,j) - 1;
         if ( fabs(relErr) > maxRelErr ) {
           std::cout << "compareMatrices: A("<<i<<","<<j<<") = " << A(i,j) << "  B("<<i<<","<<j<<") = " << B(i,j) << "     absErr = " << absErr << "    relErr = " << relErr << "\n";
-          return false;
+          retVal = false;
         }
       }
     }
   }
-  return true;
+  return retVal;
 }
 
 bool isCovMatrix(TMatrixTBase<double>& cov) {
@@ -140,6 +141,136 @@ bool isCovMatrix(TMatrixTBase<double>& cov) {
 
   return true;
 }
+
+
+void manualJacobian(const genfit::StateOnPlane* origState,
+                     const genfit::SharedPlanePtr destPlane,
+                     const genfit::AbsTrackRep* rep,
+                     TMatrixD& transport)
+{
+  // Find the transport matrix for track propagation from origState to destPlane
+  // I.e. this finds
+  //            d statedestPlane / d origState |_origState
+
+  transport.ResizeTo(5, 5);
+  // no science behind these values, I verified that forward and
+  // backward propagation yield inverse matrices to good approximation.
+  double stepX[5] = { 1e-6, 1e-4, 1e-4, 1e-6, 1e-6, };
+
+  // Calculate derivative for all three dimensions successively.
+  // The algorithm follows the one in TF1::Derivative() :
+  //   df(x) = (4 D(h/2) - D(h)) / 3
+  // with D(h) = (f(x + h) - f(x - h)) / (2 h).
+  //
+  // Could perhaps do better by also using f(x) which would be stB.
+  const TVectorD& stA = origState->getState();
+  TVectorD rightShort(5), rightFull(5);
+  TVectorD leftShort(5), leftFull(5);
+  for (size_t i = 0; i < 5; i++) {
+    {
+      genfit::StateOnPlane stateCopy(*origState);
+      (stateCopy.getState())(i) = stA(i) + stepX[i] / 2;
+      rep->extrapolateToPlane(&stateCopy, destPlane);
+      rightShort = stateCopy.getState();
+    }
+    {
+      genfit::StateOnPlane stateCopy(*origState);
+      (stateCopy.getState())(i) = stA(i) - stepX[i] / 2;
+      rep->extrapolateToPlane(&stateCopy, destPlane);
+      leftShort = stateCopy.getState();
+    }
+    {
+      genfit::StateOnPlane stateCopy(*origState);
+      (stateCopy.getState())(i) = stA(i) + stepX[i];
+      rep->extrapolateToPlane(&stateCopy, destPlane);
+      rightFull = stateCopy.getState();
+    }
+    {
+      genfit::StateOnPlane stateCopy(*origState);
+      (stateCopy.getState())(i) = stA(i) - stepX[i];
+      rep->extrapolateToPlane(&stateCopy, destPlane);
+      leftFull = stateCopy.getState();
+    }
+
+    // Calculate the derivatives for the individual components of
+    // the track parameters.
+    for (size_t j = 0; j < 5; j++) {
+      double derivFull = (rightFull(j) - leftFull(j)) / 2 / stepX[i];
+      double derivShort = (rightShort(j) - leftShort(j)) / stepX[i];
+
+      transport(j, i) = 1./3.*(4*derivShort - derivFull);
+    }
+  }
+}
+
+
+
+bool checkSetGetPosMom() {
+
+  double epsilonLen = 1.E-10;
+  double epsilonMom = 1.E-10;
+
+  int pdg = randomPdg();
+  genfit::AbsTrackRep* rep;
+  rep = new genfit::RKTrackRep(pdg);
+
+  //TVector3 pos(0,0,0);
+  TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,gRandom->Gaus(0,0.3));
+  mom.SetMag(0.5);
+  mom *= randomSign();
+
+
+  genfit::StateOnPlane state(rep);
+  rep->setPosMom(&state, pos, mom);
+
+  // check if we can set another position in the same plane
+  if (randomSign() == 1) {
+    genfit::SharedPlanePtr plane = state.getPlane();
+    const TVector3& u = plane->getU();
+    const TVector3& v = plane->getV();
+
+    // random position on plane
+    pos += gRandom->Gaus() * u;
+    pos += gRandom->Gaus() * v;
+
+    // new random momentum
+    mom.SetXYZ(0,0.5,gRandom->Gaus(0,0.3));
+    mom.SetMag(0.5);
+    mom *= randomSign();
+
+    rep->setPosMom(&state, pos, mom);
+
+    // check if plane has changed
+    if (state.getPlane() != plane) {
+      std::cout << "plane has changed unexpectedly! \n";
+      delete rep;
+      return false;
+    }
+  }
+
+
+  // compare
+  if ((pos - rep->getPos(&state)).Mag() > epsilonLen ||
+      (mom - rep->getMom(&state)).Mag() > epsilonMom) {
+
+    state.Print();
+
+    std::cout << "pos difference = " << (pos - rep->getPos(&state)).Mag() << "\n";
+    std::cout << "mom difference = " << (mom - rep->getMom(&state)).Mag() << "\n";
+
+    std::cout << std::endl;
+
+    delete rep;
+    return false;
+  }
+
+  delete rep;
+  return true;
+
+}
+
+
 
 
 bool compareForthBackExtrapolation() {
@@ -216,35 +347,57 @@ bool compareForthBackExtrapolation() {
 
 bool compareForthBackJacNoise() {
 
-  double epsilonJac = 5.E-2; // absolute
-  double deltaJac = 0.1; // relative
-  double epsilonNoise = 1.E-3;
-  double deltaNoise = 0.01;
+  double epsilonJac = 5.E-5; // absolute  // best reached: 5.E-5
+  double deltaJac = 0.01; // relative     // best reached: 0.01
+  double epsilonNoise = 2.E-3;
+  double deltaNoise = 0.02;
 
   int pdg = randomPdg();
   genfit::AbsTrackRep* rep;
   rep = new genfit::RKTrackRep(pdg);
 
   //TVector3 pos(0,0,0);
+  //TVector3 mom(0,1,2);
   TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
-  TVector3 mom(0,0.5,gRandom->Gaus(0,0.1));
+  TVector3 mom(0, 0.5, gRandom->Gaus(0, 1));
   mom *= randomSign();
 
   TMatrixD jac_f, jac_fi, jac_b, jac_bi;
   TMatrixDSym noise_f, noise_fi, noise_b, noise_bi;
 
 
+  // original state and plane
   genfit::MeasuredStateOnPlane state(rep);
   rep->setPosMom(&state, pos, mom);
 
-  genfit::SharedPlanePtr origPlane = state.getPlane();
-  genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,randomSign()*10,0), TVector3(0,randomSign()*1,0)));
+  genfit::DetPlane* origPlanePtr = new genfit::DetPlane (pos, TVector3(randomSign(),0,0), TVector3(0,0,randomSign()));
+  double rotAngleOrig = gRandom->Uniform(2.*TMath::Pi());
+  origPlanePtr->rotate(rotAngleOrig);
+  genfit::SharedPlanePtr origPlane(origPlanePtr);
+  //genfit::SharedPlanePtr origPlane = state.getPlane();
+  rep->extrapolateToPlane(&state, origPlane);
 
-  genfit::StateOnPlane origState(state);
+  const genfit::StateOnPlane origState(state);
+
+
+  // dest plane
+  genfit::DetPlane* planePtr = new genfit::DetPlane (TVector3(0,randomSign()*10,0), TVector3(randomSign(),0,0), TVector3(0,0,randomSign()));
+  double rotAngle = gRandom->Uniform(2.*TMath::Pi());
+  planePtr->rotate(rotAngle);
+  genfit::SharedPlanePtr plane(planePtr);
+
+ /* genfit::DetPlane* planePtr = new genfit::DetPlane (*origPlane);
+  planePtr->setO(TVector3(0,randomSign()*10,0));
+  //planePtr->rotate(rotAngle);
+  genfit::SharedPlanePtr plane(planePtr);
+*/
+  double extrapLen(0);
 
   // forth
   try {
-    rep->extrapolateToPlane(&state, plane);
+    std::cout << "DO FORTH EXTRAPOLATION \n";
+    extrapLen = rep->extrapolateToPlane(&state, plane);
+    std::cout << "GET INFO FOR FORTH EXTRAPOLATION \n";
     rep->getForwardJacobianAndNoise(jac_f, noise_f);
     rep->getBackwardJacobianAndNoise(jac_fi, noise_fi);
   }
@@ -257,7 +410,9 @@ bool compareForthBackJacNoise() {
 
   // back
   try {
+    std::cout << "DO BACK EXTRAPOLATION \n";
     rep->extrapolateToPlane(&state, origPlane);
+    std::cout << "GET INFO FOR BACK EXTRAPOLATION \n";
     rep->getForwardJacobianAndNoise(jac_b, noise_b);
     rep->getBackwardJacobianAndNoise(jac_bi, noise_bi);
   }
@@ -267,17 +422,29 @@ bool compareForthBackJacNoise() {
     delete rep;
     return false;
   }
+  // manual calculation
+  TMatrixD jac_f_man;
+  manualJacobian(&origState, plane, rep, jac_f_man);
+
+  std::cout << "origPlane "; origPlane->Print();
+  std::cout << "plane "; plane->Print();
 
   // compare
   if (!isCovMatrix(state.getCov()) ||
       !compareMatrices(jac_f, jac_bi, epsilonJac, deltaJac) ||
       !compareMatrices(jac_b, jac_fi, epsilonJac, deltaJac) ||
       !compareMatrices(noise_f, noise_bi, epsilonNoise, deltaNoise) ||
-      !compareMatrices(noise_b, noise_fi, epsilonNoise, deltaNoise) ) {
+      !compareMatrices(noise_b, noise_fi, epsilonNoise, deltaNoise)) {
+
+    double rotAngleDeg = rotAngle / TMath::Pi() * 180;
+    if (rotAngleDeg > 180) rotAngleDeg -= 360;
+    std::cout << "rotAngle = " << rotAngleDeg << " ° \n";
+    std::cout << "extrapLen = " << extrapLen << " cm \n";
 
     origState.Print();
     state.Print();
 
+    std::cout << "jac_f_man = "; jac_f_man.Print();
     std::cout << "jac_f = "; jac_f.Print();
     std::cout << "jac_bi = "; jac_bi.Print();
     std::cout << "jac_b = "; jac_b.Print();
@@ -288,10 +455,10 @@ bool compareForthBackJacNoise() {
     std::cout << "noise_b = "; noise_b.Print();
     std::cout << "noise_fi = "; noise_fi.Print();
 
-    std::cout << "jac difference (jac_f - jac_bi) = "; (jac_f - jac_bi).Print();
+    /*std::cout << "jac difference (jac_f - jac_bi) = "; (jac_f - jac_bi).Print();
     std::cout << "jac difference (jac_b - jac_fi) = "; (jac_b - jac_fi).Print();
     std::cout << "noise difference (noise_f - noise_bi) = "; (noise_f - noise_bi).Print();
-    std::cout << "noise difference (noise_b - noise_fi) = "; (noise_b - noise_fi).Print();
+    std::cout << "noise difference (noise_b - noise_fi) = "; (noise_b - noise_fi).Print();*/
 
     std::cout << std::endl;
 
@@ -642,6 +809,11 @@ int main() {
   unsigned int nTests(100);
 
   for (unsigned int i=0; i<nTests; ++i) {
+
+    if (!checkSetGetPosMom()) {
+      std::cout << "failed checkSetGetPosMom nr" << i << "\n";
+      ++nFailed;
+    }
 
     if (!compareForthBackExtrapolation()) {
       std::cout << "failed compareForthBackExtrapolation nr" << i << "\n";

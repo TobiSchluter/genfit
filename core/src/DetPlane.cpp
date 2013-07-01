@@ -315,6 +315,15 @@ void DetPlane::straightLineToPlane(const double& posX, const double& posY, const
 }
 
 
+void DetPlane::rotate(double angle) {
+  TVector3 normal = getNormal();
+  u_.Rotate(angle, normal);
+  v_.Rotate(angle, normal);
+
+  sane();
+}
+
+
 void DetPlane::reset() {
   o_.SetXYZ(0.,0.,0.);
   u_.SetXYZ(1.,0.,0.);

@@ -159,15 +159,18 @@ int main() {
 			  Strip,
 			  Wire,
 			  WirePoint };
+
+
   std::vector<unsigned int> measurementTypes;
-  for (int i = 0; i < 4; ++i)
+
+  for (int i = 0; i < 5; ++i)
     measurementTypes.push_back(Pixel);
 
 
 
   // init fitters
-  genfit::KalmanFitter simpleKalman(6);
-  genfit::KalmanFitterRefTrack kalmanFitterRefTrack(1);
+  genfit::KalmanFitter simpleKalman;
+  genfit::KalmanFitterRefTrack kalmanFitterRefTrack;
 
 
   gRandom->SetSeed(10);
@@ -195,12 +198,12 @@ int main() {
 #ifndef VALGRIND
   // init rootapp (for drawing histograms)
   TApplication* rootapp = new TApplication("rootapp", 0, 0);
-  TString outname = "out_Rep";
+  /*TString outname = "out_Rep";
   outname += "_degPlane";
   outname += ".root";
   TFile *file = TFile::Open(outname,"RECREATE");
   TTree *tree = new TTree("t","Tracks");
-  tree->Branch("fitTracks","Track",&fitTrack);
+  tree->Branch("fitTracks","Track",&fitTrack);*/
 
 
   // create histograms
@@ -532,12 +535,9 @@ int main() {
 
 
       // create track
-      std::cout << "fitTrack before resetting"; fitTrack->Print();
-      //! fitTrack is now a standard pointer, no more reset() ! 
-      //if(fitTrack != _GFNULLPTR) {
-		   delete fitTrack;
-		   fitTrack = new genfit::Track(rep, rep->get6DState(&stateSmeared)); //initialized with smeared rep
-	   //}
+		  delete fitTrack;
+		  fitTrack = new genfit::Track(rep, rep->get6DState(&stateSmeared)); //initialized with smeared rep
+
       //fitTrack->addTrackRep(rep->clone()); // check if everything works fine with more than one rep
 
       // add measurements
@@ -585,14 +585,11 @@ int main() {
       if (debug) fitTrack->Print();
 
 
-      //choose trackrep to check
-      genfit::AbsTrackRep* repCheck = fitTrack->getTrackRep(0);
-
-      // FIXME
-      // check if fit was successfull
-      /*if(repCheck->getStatusFlag() != 0 ) {
+      // check if fit was successful
+      if (!kalmanFitterRefTrack.isTrackFitted(fitTrack, rep)) {
+        std::cout << "Track could not be fitted successfully! \n";
         continue;
-      }*/
+      }
 
 
 #ifndef VALGRIND
@@ -602,7 +599,7 @@ int main() {
       display->addEvent(event);
 #endif
 
-      genfit::KalmanFittedStateOnPlane* kfsop = new genfit::KalmanFittedStateOnPlane(*(static_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(0)->getFitterInfo(repCheck))->getBackwardUpdate()));
+      genfit::KalmanFittedStateOnPlane* kfsop = new genfit::KalmanFittedStateOnPlane(*(static_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
       if (debug) {
         std::cout << "state before extrapolating back to reference plane \n";
         kfsop->Print();
@@ -630,7 +627,7 @@ int main() {
       const TVectorD& state = kfsop->getState();
       const TMatrixDSym& cov = kfsop->getCov();
 
-      double pval = kalmanFitterRefTrack.getPVal(fitTrack, repCheck); // FIXME choose fitter that has been used
+      double pval = kalmanFitterRefTrack.getPVal(fitTrack, rep); // FIXME choose fitter that has been used
 
       hmomRes->Fill( (charge/state[0]-momentum));
       hupRes->Fill(  (state[1]-referenceState[1]));
@@ -680,8 +677,8 @@ int main() {
       }
 */
 
-      if (debug) std::cerr<<"Fill Tree ..." << std::endl;
-      tree->Fill();
+     /* if (debug) std::cerr<<"Fill Tree ..." << std::endl;
+      tree->Fill();*/
 #endif
 
 
@@ -690,9 +687,9 @@ int main() {
   std::cout<<"maxWeight = " << maxWeight << std::endl;
 
 #ifndef VALGRIND
-  if (debug) std::cout<<"Write Tree ...";
+  /*if (debug) std::cout<<"Write Tree ...";
   tree->Write();
-  if (debug) std::cout<<"... done"<<std::endl;
+  if (debug) std::cout<<"... done"<<std::endl;*/
 
   if (debug) std::cout<<"Draw histograms ...";
   // fit and draw histograms
@@ -763,7 +760,7 @@ int main() {
   //file->Close();
 #endif
 
-  if (debug) std::cout<<"... closed file"<<std::endl;
+  //if (debug) std::cout<<"... closed file"<<std::endl;
 
 }
 

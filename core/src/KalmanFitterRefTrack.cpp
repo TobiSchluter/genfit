@@ -154,7 +154,7 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
     }
   }
   // else create seed state from seed info of track
-  if (seedState.get() == NULL) {
+  if (seedState.get() == _GFNULLPTR) {
     seedState = std::auto_ptr<MeasuredStateOnPlane>(new MeasuredStateOnPlane(rep));
     TMatrixDSym cov(rep->getDim());
     cov.UnitMatrix();
