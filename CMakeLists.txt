@@ -70,16 +70,16 @@ INSTALL( TARGETS ${PROJECT_NAME} DESTINATION lib )
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ROOT_LIBS} -lGeom)
 
 # the examples, build with "make tests"
-ADD_CUSTOM_TARGET( tests )
-MACRO( ADD_GENFIT_TEST _testname )
-   INCLUDE_DIRECTORIES( BEFORE eventDisplay/include)
-   ADD_EXECUTABLE( ${_testname} ${ARGN} )
-   ADD_DEPENDENCIES( tests  ${_testname} )
-   TARGET_LINK_LIBRARIES( ${_testname} ${PROJECT_NAME}  ${ROOT_LIBS} -lGeom )
+#ADD_CUSTOM_TARGET( tests )
+#MACRO( ADD_GENFIT_TEST _testname )
+#   INCLUDE_DIRECTORIES( BEFORE eventDisplay/include)
+#   ADD_EXECUTABLE( ${_testname} ${ARGN} )
+#   ADD_DEPENDENCIES( tests  ${_testname} )
+#   TARGET_LINK_LIBRARIES( ${_testname} ${PROJECT_NAME}  ${ROOT_LIBS} -lGeom )
     #INSTALL( TARGETS ${_testname} DESTINATION ${EXECUTABLE_INSTALL_DIR})
-ENDMACRO( ADD_GENFIT_TEST )
+#ENDMACRO( ADD_GENFIT_TEST )
 
-ADD_GENFIT_TEST( fitterTests test/fitterTests/main.cpp eventDisplay/src/EventDisplay.cpp)
+#ADD_GENFIT_TEST( fitterTests test/fitterTests/main.cpp eventDisplay/src/EventDisplay.cpp)
 
 
 # generate and install following configuration files
