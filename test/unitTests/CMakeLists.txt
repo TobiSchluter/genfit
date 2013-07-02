@@ -42,6 +42,6 @@ ADD_EXECUTABLE(main
 TARGET_LINK_LIBRARIES(main 
 	${ROOT_LIBS} 
 	-L$ENV{GENFIT}/lib
-	-lgenfit2 
+	-lgenfit 
 )
 

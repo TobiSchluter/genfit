@@ -143,7 +143,7 @@ bool isCovMatrix(TMatrixTBase<double>& cov) {
 }
 
 
-void manualJacobian(const genfit::StateOnPlane* origState,
+void numericJacobian(const genfit::StateOnPlane* origState,
                      const genfit::SharedPlanePtr destPlane,
                      const genfit::AbsTrackRep* rep,
                      TMatrixD& transport)
@@ -163,38 +163,37 @@ void manualJacobian(const genfit::StateOnPlane* origState,
   // with D(h) = (f(x + h) - f(x - h)) / (2 h).
   //
   // Could perhaps do better by also using f(x) which would be stB.
-  const TVectorD& stA = origState->getState();
   TVectorD rightShort(5), rightFull(5);
   TVectorD leftShort(5), leftFull(5);
-  for (size_t i = 0; i < 5; i++) {
+  for (size_t i = 0; i < 5; ++i) {
     {
       genfit::StateOnPlane stateCopy(*origState);
-      (stateCopy.getState())(i) = stA(i) + stepX[i] / 2;
+      (stateCopy.getState())(i) += stepX[i] / 2;
       rep->extrapolateToPlane(&stateCopy, destPlane);
       rightShort = stateCopy.getState();
     }
     {
       genfit::StateOnPlane stateCopy(*origState);
-      (stateCopy.getState())(i) = stA(i) - stepX[i] / 2;
+      (stateCopy.getState())(i) -= stepX[i] / 2;
       rep->extrapolateToPlane(&stateCopy, destPlane);
       leftShort = stateCopy.getState();
     }
     {
       genfit::StateOnPlane stateCopy(*origState);
-      (stateCopy.getState())(i) = stA(i) + stepX[i];
+      (stateCopy.getState())(i) += stepX[i];
       rep->extrapolateToPlane(&stateCopy, destPlane);
       rightFull = stateCopy.getState();
     }
     {
       genfit::StateOnPlane stateCopy(*origState);
-      (stateCopy.getState())(i) = stA(i) - stepX[i];
+      (stateCopy.getState())(i) -= stepX[i];
       rep->extrapolateToPlane(&stateCopy, destPlane);
       leftFull = stateCopy.getState();
     }
 
     // Calculate the derivatives for the individual components of
     // the track parameters.
-    for (size_t j = 0; j < 5; j++) {
+    for (size_t j = 0; j < 5; ++j) {
       double derivFull = (rightFull(j) - leftFull(j)) / 2 / stepX[i];
       double derivShort = (rightShort(j) - leftShort(j)) / stepX[i];
 
@@ -389,6 +388,11 @@ bool compareForthBackJacNoise() {
   //planePtr->rotate(rotAngle);
   genfit::SharedPlanePtr plane(planePtr);
 */
+
+  // manual calculation
+  TMatrixD jac_f_man;
+  numericJacobian(&origState, plane, rep, jac_f_man);
+
   double extrapLen(0);
 
   // forth
@@ -420,10 +424,6 @@ bool compareForthBackJacNoise() {
     delete rep;
     return false;
   }
-  // manual calculation
-  TMatrixD jac_f_man;
-  manualJacobian(&origState, plane, rep, jac_f_man);
-
   // manual calculation
   TMatrixD jac_f_man;
   manualJacobian(&origState, plane, rep, jac_f_man);
@@ -788,7 +788,7 @@ int main() {
   genfit::MaterialEffects::getInstance()->setNoiseCoulomb(false);
   genfit::MaterialEffects::getInstance()->setEnergyLossBrems(false);
   genfit::MaterialEffects::getInstance()->setNoiseBrems(false);*/
-
+  //genfit::MaterialEffects::getInstance()->setNoEffects();
   /*genfit::Track* testTrack = new genfit::Track();
 
 
@@ -808,7 +808,7 @@ int main() {
 
 
   unsigned int nFailed(0);
-  unsigned int nTests(1);
+  const unsigned int nTests(100);
 
   for (unsigned int i=0; i<nTests; ++i) {
 
