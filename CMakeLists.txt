@@ -17,16 +17,28 @@ INCLUDE(macros)
 
 FIND_PACKAGE(ROOT REQUIRED)
 
+SET(GF_INC_DIRS
+	./core/include/ 
+	./fields/include 
+	./finitePlanes/include 
+	./fitters/include 
+	./measurements/include 
+	./trackReps/include 
+)
+
 #search for boost, provide some information to user
 FIND_PACKAGE(Boost)
 IF (Boost_FOUND)
     INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
     MESSAGE("-- Boost is found at: ${Boost_INCLUDE_DIR}")
-    INSTALL( DIRECTORY ./core/include/ ./RKTrackRep/include/  DESTINATION ./include/genfit PATTERN ".svn" EXCLUDE )
+    INSTALL( DIRECTORY 
+	    ${GF_INC_DIRS}
+	    DESTINATION ./include/genfit PATTERN ".svn" EXCLUDE 
+	 )
 ELSE()
     MESSAGE( " Boost was not found on your system, using the one shipped with GENFIT.")
     INCLUDE_DIRECTORIES(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/extern/ )
-    INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/extern/ ./core/include/ ./RKTrackRep/include/  DESTINATION ./include/genfit PATTERN ".svn" EXCLUDE )
+    INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/extern/ ${GF_INC_DIRS}  DESTINATION ./include/genfit PATTERN ".svn" EXCLUDE )
 ENDIF()
 
 # require proper c++, standard is C++03, flag reads: c++98
@@ -36,12 +48,7 @@ ADD_DEFINITIONS("-std=c++03")
 # include directories 
 INCLUDE_DIRECTORIES( 
 	BEFORE 
-	./core/include 
-	./fields/include 
-	./finitePlanes/include 
-	./fitters/include 
-	./measurements/include 
-	./trackReps/include 
+	${GF_INC_DIRS}
 	${ROOT_INCLUDE_DIRS})
 # and this is the rest:
 #INCLUDE_DIRECTORIES( BEFORE  ./eventDisplay/include)
