@@ -25,7 +25,7 @@
 #define genfit_TrackPoint_h
 
 #include "AbsMeasurement.h"
-#include "KalmanFitterInfo.h"
+#include "AbsFitterInfo.h"
 #include "MaterialInfo.h"
 
 #include <TObject.h>
