@@ -30,11 +30,19 @@ ELSE()
 ENDIF()
 
 # require proper c++, standard is C++03, flag reads: c++98
-ADD_DEFINITIONS( " -Wall -g -ansi -pedantic -Wno-long-long -Wshadow -pedantic -ftree-vectorize -ftree-vectorizer-verbose=0 "   )
+ADD_DEFINITIONS( " -Wall -g3 -ansi -pedantic -Wno-long-long -Wshadow "   )
 ADD_DEFINITIONS("-std=c++03")
 
-# include directories -- for now both core and RKTrackRep
-INCLUDE_DIRECTORIES( BEFORE ./core/include ./RKTrackRep/include ${ROOT_INCLUDE_DIRS})
+# include directories 
+INCLUDE_DIRECTORIES( 
+	BEFORE 
+	./core/include 
+	./fields/include 
+	./finitePlanes/include 
+	./fitters/include 
+	./measurements/include 
+	./trackReps/include 
+	${ROOT_INCLUDE_DIRS})
 # and this is the rest:
 #INCLUDE_DIRECTORIES( BEFORE  ./eventDisplay/include)
 #INSTALL( DIRECTORY ./eventDisplay/include  DESTINATION . PATTERN ".svn" EXCLUDE )
@@ -54,17 +62,21 @@ ELSE()
 ENDIF(DOXYGEN_FOUND)
 
 
-# declare the stupid ROOT library path
+# declare the ROOT library path
 LINK_DIRECTORIES(${ROOT_LIBRARY_DIR})
 
 # add the list of source code files -- careful, when a new file is added!
 AUX_SOURCE_DIRECTORY( ./core/src  library_sources )
-AUX_SOURCE_DIRECTORY( ./RKTrackRep/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./fields/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./finitePlanes/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./fitters/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./measurements/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./trackReps/src  library_sources )
 
 ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources} )
 INSTALL( TARGETS ${PROJECT_NAME} DESTINATION lib )
 
-# wtf I hate root
+# link ROOT libraries
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ROOT_LIBS} -lGeom)
 
 # the examples, build with "make tests"
