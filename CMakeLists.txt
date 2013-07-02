@@ -19,11 +19,11 @@ FIND_PACKAGE(ROOT REQUIRED)
 
 SET(GF_INC_DIRS
 	./core/include/ 
-	./fields/include 
-	./finitePlanes/include 
-	./fitters/include 
-	./measurements/include 
-	./trackReps/include 
+	./fields/include/
+	./finitePlanes/include/ 
+	./fitters/include/
+	./measurements/include/ 
+	./trackReps/include/
 )
 
 #search for boost, provide some information to user
