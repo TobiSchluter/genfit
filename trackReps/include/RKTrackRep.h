@@ -55,7 +55,7 @@ class RKTrackRep : public AbsTrackRep {
 
   virtual ~RKTrackRep();
 
-  virtual AbsTrackRep* clone() const _GFOVERRIDE {return new RKTrackRep(*this);}
+  virtual AbsTrackRep* clone() const {return new RKTrackRep(*this);}
 
   /** Extrapolates the stateInput to plane, and returns the extrapolation length
    * and, via reference, the extrapolated statePrediction.
@@ -63,27 +63,27 @@ class RKTrackRep : public AbsTrackRep {
    */
   virtual double extrapolateToPlane(StateOnPlane* state,
       SharedPlanePtr plane,
-      bool stopAtBoundary = false) const _GFOVERRIDE;
+      bool stopAtBoundary = false) const;
 
   virtual double extrapolateToLine(StateOnPlane* state,
       const TVector3& linePoint,
       const TVector3& lineDirection,
-      bool stopAtBoundary = false) const _GFOVERRIDE;
+      bool stopAtBoundary = false) const;
 
   virtual double extrapolateToPoint(StateOnPlane* state,
       const TVector3& point,
-      bool stopAtBoundary = false) const _GFOVERRIDE;
+      bool stopAtBoundary = false) const;
 
   virtual double extrapolateToCylinder(StateOnPlane* state,
       double radius,
       const TVector3& linePoint = TVector3(0.,0.,0.),
       const TVector3& lineDirection = TVector3(0.,0.,1.),
-      bool stopAtBoundary = false) const _GFOVERRIDE;
+      bool stopAtBoundary = false) const;
 
   virtual double extrapolateToSphere(StateOnPlane* state,
       double radius,
       const TVector3& point = TVector3(0.,0.,0.),
-      bool stopAtBoundary = false) const _GFOVERRIDE;
+      bool stopAtBoundary = false) const;
 
   /**
    * Use the Material information stored in the #TrackPoints
@@ -93,28 +93,28 @@ class RKTrackRep : public AbsTrackRep {
 
   unsigned int getDim() const {return 5;}
 
-  virtual TVector3 getPos(const StateOnPlane* stateInput) const _GFOVERRIDE;
+  virtual TVector3 getPos(const StateOnPlane* stateInput) const;
 
-  virtual TVector3 getMom(const StateOnPlane* stateInput) const _GFOVERRIDE;
-  virtual void getPosMom(const StateOnPlane* stateInput, TVector3& pos, TVector3& mom) const _GFOVERRIDE;
+  virtual TVector3 getMom(const StateOnPlane* stateInput) const;
+  virtual void getPosMom(const StateOnPlane* stateInput, TVector3& pos, TVector3& mom) const;
 
   /** Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance */
-  virtual void getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const _GFOVERRIDE;
-  virtual double getCharge(const StateOnPlane* state) const _GFOVERRIDE;
+  virtual void getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const;
+  virtual double getCharge(const StateOnPlane* state) const;
   double getSpu(const StateOnPlane* state) const;
 
   /** Get the jacobian and noise matrix of the last extrapolation  */
-  virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const _GFOVERRIDE;
+  virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const;
 
   /** Get the jacobian and noise matrix of the last extrapolation if it would have been done in opposite direction  */
-  virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const _GFOVERRIDE;
+  virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const;
 
 
-  virtual void setPosMom(StateOnPlane* state, const TVector3& pos, const TVector3& mom) const _GFOVERRIDE;
-  virtual void setPosMom(StateOnPlane* stateInput, const TVectorD& state6) const _GFOVERRIDE;
-  virtual void setPosMomErr(MeasuredStateOnPlane* state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const _GFOVERRIDE;
-  virtual void setPosMomCov(MeasuredStateOnPlane* state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const _GFOVERRIDE;
-  virtual void setPosMomCov(MeasuredStateOnPlane* state, const TVectorD& state6, const TMatrixDSym& cov6x6) const _GFOVERRIDE;
+  virtual void setPosMom(StateOnPlane* state, const TVector3& pos, const TVector3& mom) const;
+  virtual void setPosMom(StateOnPlane* stateInput, const TVectorD& state6) const;
+  virtual void setPosMomErr(MeasuredStateOnPlane* state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const;
+  virtual void setPosMomCov(MeasuredStateOnPlane* state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const;
+  virtual void setPosMomCov(MeasuredStateOnPlane* state, const TVectorD& state6, const TMatrixDSym& cov6x6) const;
 
 
   void setCharge(StateOnPlane* state, double charge) const {(state->getAuxInfo())(0) = charge;}
