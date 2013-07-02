@@ -67,7 +67,7 @@ class AbsFitterInfo : public TObject {
   virtual MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const = 0;
   int getStatusFlag() const {return statusFlag_;}
 
-  virtual void Print(const Option_t* = "") const _GFOVERRIDE {;}
+  virtual void Print(const Option_t* = "") const {;}
 
   virtual bool checkConsistency() const = 0;
 

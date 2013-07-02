@@ -128,7 +128,7 @@ class DetPlane : public TObject {
                            const double& dirX, const double& dirY, const double& dirZ,
                            double& u, double& v) const;
 
-  void Print(const Option_t* = "") const _GFOVERRIDE;
+  void Print(const Option_t* = "") const;
 
   //! this operator is called very often in Kalman filtering. It checks equality of planes
   //! by comparing the 9 double values that define them.

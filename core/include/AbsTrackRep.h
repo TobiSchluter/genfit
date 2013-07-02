@@ -97,7 +97,7 @@ class AbsTrackRep : public TObject {
   //! Switch propagation direction. Has no effect if propDir_ is set to 0.
   void switchPropDir(){propDir_ = -1*propDir_;}
 
-  virtual void Print(const Option_t* = "") const _GFOVERRIDE;
+  virtual void Print(const Option_t* = "") const;
 
  protected:
 

@@ -71,7 +71,7 @@ class AbsMeasurement : public TObject {
 
   virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const = 0;
 
-  virtual void Print(const Option_t* = "") const _GFOVERRIDE;
+  virtual void Print(const Option_t* = "") const;
 
  protected:
 

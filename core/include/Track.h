@@ -81,7 +81,7 @@ class Track : public TObject {
   void deleteReferenceInfo(int startId, int endId);
   void deleteMeasurementInfo(int startId, int endId);
 
-  void Print(const Option_t* = "") const _GFOVERRIDE;
+  void Print(const Option_t* = "") const;
 
   bool checkConsistency() const;
 

@@ -60,7 +60,7 @@ class StateOnPlane : public TObject {
   void setAuxInfo(const TVectorD& auxInfo) {if(auxInfo_.GetNrows() == 0) auxInfo_.ResizeTo(auxInfo); auxInfo_ = auxInfo;}
   void setRep(const AbsTrackRep* rep) {rep_ = rep;}
 
-  virtual void Print(Option_t* option = "") const _GFOVERRIDE;
+  virtual void Print(Option_t* option = "") const;
 
  protected:
 

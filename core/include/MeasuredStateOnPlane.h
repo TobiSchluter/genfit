@@ -50,7 +50,7 @@ class MeasuredStateOnPlane : public StateOnPlane {
   void setStateCovPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane) {setStatePlane(state, plane); setCov(cov);}
   void setCov(const TMatrixDSym& cov) {if(cov_.GetNrows() == 0) cov_.ResizeTo(cov); cov_ = cov;}
 
-  virtual void Print(Option_t* option = "") const _GFOVERRIDE;
+  virtual void Print(Option_t* option = "") const;
 
  protected:
 

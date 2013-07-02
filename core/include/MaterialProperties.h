@@ -66,7 +66,7 @@ class MaterialProperties : public TObject {
   void setSegmentLength(const double& segmentLength) {segmentLength_ = segmentLength;}
   void addToSegmentLength(const double& deltaSegmentLength) {segmentLength_ += deltaSegmentLength;}
 
-  void Print(const Option_t* = "") const _GFOVERRIDE;
+  void Print(const Option_t* = "") const;
 
  private:
 

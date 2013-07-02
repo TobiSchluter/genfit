@@ -13,13 +13,13 @@ class RectangularFinitePlane : public AbsFinitePlane {
   //! give dimensions of finite rectangle: u1,u2,v1,v2
   RectangularFinitePlane(const double&, const double&, const double&, const double&);
   RectangularFinitePlane();
-  virtual ~RectangularFinitePlane() _GFOVERRIDE;
+  virtual ~RectangularFinitePlane();
 
   //override inActive & Print methods
-  bool isInActive(double u, double v) const _GFOVERRIDE;
-  void Print(const Option_t* = "") const _GFOVERRIDE;
+  bool isInActive(double u, double v) const;
+  void Print(const Option_t* = "") const;
 
-  AbsFinitePlane* clone() const _GFOVERRIDE {
+  AbsFinitePlane* clone() const {
     return new RectangularFinitePlane(*this);
   }
 

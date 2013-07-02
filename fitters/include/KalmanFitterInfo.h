@@ -49,7 +49,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   KalmanFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep);
   ~KalmanFitterInfo();
 
-  virtual KalmanFitterInfo* clone() const _GFOVERRIDE;
+  virtual KalmanFitterInfo* clone() const;
 
   ReferenceStateOnPlane* getReferenceState() const {return referenceState_.get();}
   MeasuredStateOnPlane* getForwardPrediction() const {return forwardPrediction_.get();}
@@ -74,10 +74,10 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
   /** Get unbiased (default) or biased smoothed state
    */
-  MeasuredStateOnPlane getFittedState(bool biased = false) const _GFOVERRIDE;
+  MeasuredStateOnPlane getFittedState(bool biased = false) const;
   /** Get unbiased (default) or biased residual from ith measurement
    */
-  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const _GFOVERRIDE; // also calculates covariance of the residual
+  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const; // also calculates covariance of the residual
 
   void setReferenceState(ReferenceStateOnPlane* referenceState) {referenceState_.reset(referenceState);}
   void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction) {forwardPrediction_.reset(forwardPrediction);}
@@ -89,16 +89,16 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
   void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) { measurementsOnPlane_.push_back(measurementOnPlane); }
 
-  void setRep(const AbsTrackRep* rep) _GFOVERRIDE;
+  void setRep(const AbsTrackRep* rep);
 
-  void deleteForwardInfo() _GFOVERRIDE;
-  void deleteBackwardInfo() _GFOVERRIDE;
-  void deleteReferenceInfo() _GFOVERRIDE;
-  void deleteMeasurementInfo() _GFOVERRIDE;
+  void deleteForwardInfo();
+  void deleteBackwardInfo();
+  void deleteReferenceInfo();
+  void deleteMeasurementInfo();
 
-  virtual void Print(const Option_t* = "") const _GFOVERRIDE;
+  virtual void Print(const Option_t* = "") const;
 
-  virtual bool checkConsistency() const _GFOVERRIDE;
+  virtual bool checkConsistency() const;
 
  private:
 
