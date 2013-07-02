@@ -424,9 +424,6 @@ bool compareForthBackJacNoise() {
     delete rep;
     return false;
   }
-  // manual calculation
-  TMatrixD jac_f_man;
-  manualJacobian(&origState, plane, rep, jac_f_man);
 
   std::cout << "origPlane "; origPlane->Print();
   std::cout << "plane "; plane->Print();
@@ -434,9 +431,9 @@ bool compareForthBackJacNoise() {
   // compare
   if (!isCovMatrix(state.getCov()) ||
       !compareMatrices(jac_f, jac_bi, epsilonJac, deltaJac) ||
-      !compareMatrices(jac_b, jac_fi, epsilonJac, deltaJac) /*||
+      !compareMatrices(jac_b, jac_fi, epsilonJac, deltaJac) ||
       !compareMatrices(noise_f, noise_bi, epsilonNoise, deltaNoise) ||
-      !compareMatrices(noise_b, noise_fi, epsilonNoise, deltaNoise) */) {
+      !compareMatrices(noise_b, noise_fi, epsilonNoise, deltaNoise)) {
 
     double rotAngleDeg = rotAngle / TMath::Pi() * 180;
     if (rotAngleDeg > 180) rotAngleDeg -= 360;
