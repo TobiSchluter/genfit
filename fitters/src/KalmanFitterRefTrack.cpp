@@ -43,7 +43,7 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& c
 {
   chi2 = 0;
   ndf = 0;
-  KalmanFitterInfo* prevFi(_GFNULLPTR);
+  KalmanFitterInfo* prevFi(NULL);
 
 #ifdef DEBUG
   std::cout << tr->getNumPoints() << " TrackPoints with measurements in this track." << std::endl;
@@ -139,7 +139,7 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
 
   // get seed state from previous fit if there is one
   if (tr->getPointWithMeasurement(0)->hasFitterInfos(rep)) {
-    KalmanFitterInfo* fitterInfo(_GFNULLPTR);
+    KalmanFitterInfo* fitterInfo(NULL);
 
     // get the last fitter info with the correct TrackRep and see if it has the right type
     const std::vector< AbsFitterInfo* >& fitterInfos = tr->getPointWithMeasurement(0)->getFitterInfos(rep);
@@ -154,7 +154,7 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
     }
   }
   // else create seed state from seed info of track
-  if (seedState.get() == _GFNULLPTR) {
+  if (seedState.get() == NULL) {
     seedState = std::auto_ptr<MeasuredStateOnPlane>(new MeasuredStateOnPlane(rep));
     TMatrixDSym cov(rep->getDim());
     cov.UnitMatrix();
@@ -174,7 +174,7 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
   TMatrixDSym FNoiseMatrix(rep->getDim());
   TMatrixDSym BNoiseMatrix(rep->getDim());
 
-  KalmanFitterInfo* prevFitterInfo(_GFNULLPTR);
+  KalmanFitterInfo* prevFitterInfo(NULL);
 
   for (unsigned int i=0; i<tr->getNumPoints(); ++i){
     TrackPoint* trackPoint = tr->getPoint(i);
@@ -207,7 +207,7 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
       refState->setForwardTransportMatrix(FTransportMatrix);
       refState->setForwardNoiseMatrix(FNoiseMatrix);
 
-      if (prevFitterInfo != _GFNULLPTR) {
+      if (prevFitterInfo != NULL) {
         ReferenceStateOnPlane* prevRefState =  prevFitterInfo->getReferenceState();
         prevRefState->setBackwardSegmentLength(-segmentLen);
         prevRefState->setBackwardTransportMatrix(BTransportMatrix);
@@ -269,8 +269,8 @@ void KalmanFitterRefTrack::getChiSquNdf(const Track* tr, const AbsTrackRep* rep,
     KalmanFittedStateOnPlane* fup = fi->getForwardUpdate();
     KalmanFittedStateOnPlane* bup = fi->getBackwardUpdate();
 
-    if (fup == _GFNULLPTR || bup == _GFNULLPTR) {
-      Exception exc("KalmanFitterRefTrack::getChiSqu(): fup == _GFNULLPTR || bup == _GFNULLPTR", __LINE__,__FILE__);
+    if (fup == NULL || bup == NULL) {
+      Exception exc("KalmanFitterRefTrack::getChiSqu(): fup == NULL || bup == NULL", __LINE__,__FILE__);
       throw exc;
     }
 
@@ -392,7 +392,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   TMatrixDSym C(m.getHMatrix().GetNcols()); // C_{k|k-1}
 
   // predict
-  if (prevFi != _GFNULLPTR) {
+  if (prevFi != NULL) {
     const TMatrixD& F = fi->getReferenceState()->getTransportMatrix(direction); // Transport matrix
     const TMatrixDSym& N = fi->getReferenceState()->getNoiseMatrix(direction); // Noise matrix
     dp = F * (prevFi->getUpdate(direction)->getState() - prevFi->getReferenceState()->getState());

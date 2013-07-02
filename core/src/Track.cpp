@@ -137,7 +137,7 @@ TrackPoint* Track::getPointWithMeasurement(int id) const {
     }
   }
 
-  return _GFNULLPTR;
+  return NULL;
 }
 
 
@@ -197,7 +197,7 @@ void Track::deletePoint(int id) {
   if (id < 0)
     id += trackPoints_.size();
 
-  if (trackPoints_.at(id) != _GFNULLPTR) {
+  if (trackPoints_.at(id) != NULL) {
     // delete fitter infos if deleted point has a measurement
     if (trackPoints_[id]->hasRawMeasurements()) {
       deleteForwardInfo(id, -1);

@@ -43,7 +43,7 @@ class StateOnPlane : public TObject {
 
  public:
 
-  StateOnPlane(const AbsTrackRep* rep = _GFNULLPTR);
+  StateOnPlane(const AbsTrackRep* rep = NULL);
   StateOnPlane(const TVectorD& state, SharedPlanePtr plane, const AbsTrackRep* rep);
 
 

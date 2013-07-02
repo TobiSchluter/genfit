@@ -28,7 +28,7 @@ namespace genfit {
 MeasuredStateOnPlane::MeasuredStateOnPlane(const AbsTrackRep* rep) :
   StateOnPlane(rep), cov_(0,0)
 {
-  if (rep != _GFNULLPTR) {
+  if (rep != NULL) {
     cov_.ResizeTo(rep->getDim(), rep->getDim());
   }
 }
@@ -36,7 +36,7 @@ MeasuredStateOnPlane::MeasuredStateOnPlane(const AbsTrackRep* rep) :
 MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep) :
   StateOnPlane(state, plane, rep), cov_(cov)
 {
-  assert(rep != _GFNULLPTR);
+  assert(rep != NULL);
   //assert(cov_.GetNcols() == (signed)rep->getDim());
 }
 
@@ -50,7 +50,7 @@ void MeasuredStateOnPlane::Print(Option_t* option) const {
   std::cout << "genfit::MeasuredStateOnPlane ";
   std::cout << " state vector: "; state_.Print();
   std::cout << " covariance matrix: "; cov_.Print();
-  if (sharedPlane_ != _GFNULLPTR) {
+  if (sharedPlane_ != NULL) {
     std::cout << " defined in plane "; sharedPlane_->Print();
     TVector3 pos, mom;
     TMatrixDSym cov(6,6);

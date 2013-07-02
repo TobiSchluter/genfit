@@ -61,7 +61,7 @@ MeasurementOnPlane PlanarMeasurement::constructMeasurementOnPlane(const AbsTrack
 
 const TMatrixD& PlanarMeasurement::getHMatrix(const AbsTrackRep* rep) const {
 
-  if (dynamic_cast<const RKTrackRep*>(rep) != _GFNULLPTR) {
+  if (dynamic_cast<const RKTrackRep*>(rep) != NULL) {
     switch(rawHitCoords_.GetNrows()) {
     case 1:
       static const double HMatrixContent1[5] = {0, 0, 0, 1, 0};

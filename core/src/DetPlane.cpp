@@ -76,7 +76,7 @@ DetPlane& DetPlane::operator=(const DetPlane& rhs) {
   if (this == &rhs)
     return *this;
 
-  if(rhs.finitePlane_ != _GFNULLPTR){
+  if(rhs.finitePlane_ != NULL){
     finitePlane_.reset(rhs.finitePlane_->clone());
   }
   else{
@@ -223,7 +223,7 @@ void DetPlane::Print(const Option_t* option) const
      <<"v("<<v_.X()<<", "<<v_.Y()<<", "<<v_.Z()<<") "
      <<"n("<<getNormal().X()<<", "<<getNormal().Y()<<", "<<getNormal().Z()<<") "
        <<std::endl;
-  if(finitePlane_ != _GFNULLPTR) {
+  if(finitePlane_ != NULL) {
     finitePlane_->Print(option);
   }
 

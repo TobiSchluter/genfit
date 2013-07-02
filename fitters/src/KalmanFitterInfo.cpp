@@ -230,7 +230,7 @@ void KalmanFitterInfo::deleteMeasurementInfo() {
 
 
 MeasuredStateOnPlane KalmanFitterInfo::calcAverageState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const {
-  if (forwardState == _GFNULLPTR || backwardState == _GFNULLPTR) {
+  if (forwardState == NULL || backwardState == NULL) {
     Exception e("KalmanFitterInfo::calcAverageState: forwardState or backwardState is NULL.", __LINE__,__FILE__);
     throw e;
   }

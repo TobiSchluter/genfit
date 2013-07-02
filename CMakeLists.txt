@@ -32,7 +32,6 @@ ENDIF()
 # require proper c++, standard is C++03, flag reads: c++98
 ADD_DEFINITIONS( " -Wall -g -ansi -pedantic -Wno-long-long -Wshadow -pedantic -ftree-vectorize -ftree-vectorizer-verbose=0 "   )
 ADD_DEFINITIONS("-std=c++03")
-ADD_DEFINITIONS(-D_GFNULLPTR=NULL)
 
 # include directories -- for now both core and RKTrackRep
 INCLUDE_DIRECTORIES( BEFORE ./core/include ./RKTrackRep/include ${ROOT_INCLUDE_DIRS})

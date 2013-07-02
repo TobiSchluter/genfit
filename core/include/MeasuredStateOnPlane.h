@@ -39,7 +39,7 @@ class MeasuredStateOnPlane : public StateOnPlane {
 
  public:
 
-  MeasuredStateOnPlane(const AbsTrackRep* rep = _GFNULLPTR);
+  MeasuredStateOnPlane(const AbsTrackRep* rep = NULL);
   MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep);
   MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov);
 

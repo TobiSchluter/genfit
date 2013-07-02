@@ -58,7 +58,7 @@ MeasurementOnPlane WirePointMeasurement::constructMeasurementOnPlane(const AbsTr
 }
 
 const TMatrixD& WirePointMeasurement::getHMatrix(const AbsTrackRep* rep) const {
-  if (dynamic_cast<const RKTrackRep*>(rep) != _GFNULLPTR) {
+  if (dynamic_cast<const RKTrackRep*>(rep) != NULL) {
     static const double HMatrixContent[10] = {0, 0, 0, 1, 0,
                                               0, 0, 0, 0, 1};
     static const TMatrixT<double> HMatrix(2,5, HMatrixContent);

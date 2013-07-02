@@ -32,10 +32,10 @@ namespace tools {
   /** @brief Invert a matrix, throwing GFException when inversion fails.
    * Optional calculation of determinant.
    */
-  void invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* determinant = _GFNULLPTR);
+  void invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* determinant = NULL);
   /** @brief Same, replacing its argument.
    */
-  void invertMatrix(TMatrixDSym& mat, double* determinant = _GFNULLPTR);
+  void invertMatrix(TMatrixDSym& mat, double* determinant = NULL);
 
 } /* End of namespace tools */
 } /* End of namespace genfit */
