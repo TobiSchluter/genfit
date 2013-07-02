@@ -89,7 +89,7 @@ class TrackPoint : public TObject {
   void deleteFitterInfos(const AbsTrackRep* rep);
   //void setMaterial(MaterialInfo* material);
 
-  void Print(const Option_t* = "") const _GFOVERRIDE;
+  void Print(const Option_t* = "") const;
 
  private:
   double sortingParameter_;
