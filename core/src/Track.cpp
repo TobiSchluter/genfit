@@ -377,14 +377,30 @@ bool Track::checkConsistency() const {
       return false;
     }
 
+    // check rawMeasurements
+    std::vector<AbsMeasurement*> rawMeasurements = (*tp)->getRawMeasurements();
+    for (std::vector<AbsMeasurement*>::const_iterator m = rawMeasurements.begin(); m != rawMeasurements.end(); ++m) {
+      // check for NULL
+      if ((*m) == NULL) {
+        std::cerr << "Track::checkConsistency(): Measurement is NULL" << std::endl;
+        return false;
+      }
+      // check if measurement points back to TrackPoint
+      if ((*m)->getTrackPoint() != *tp) {
+        std::cerr << "Track::checkConsistency(): Measurement does not point back to correct TrackPoint" << std::endl;
+        return false;
+      }
+    }
+
     // check fitterInfos
-    for (std::vector<AbsFitterInfo*>::const_iterator fi = ((*tp)->getFitterInfos()).begin(), fiend = ((*tp)->getFitterInfos()).end(); 
-			fi < fiend; ++fi) {
+    std::vector<AbsFitterInfo*> fitterInfos = (*tp)->getFitterInfos();
+    for (std::vector<AbsFitterInfo*>::const_iterator fi = fitterInfos.begin(); fi != fitterInfos.end(); ++fi) {
       // check for NULL
       if ((*fi) == NULL) {
         std::cerr << "Track::checkConsistency(): FitterInfo is NULL" << std::endl;
         return false;
       }
+
       if (!( (*fi)->checkConsistency() ) ) {
         std::cerr << "Track::checkConsistency(): FitterInfo not consistent" << std::endl;
         return false;

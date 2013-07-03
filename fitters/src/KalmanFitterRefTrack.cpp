@@ -225,9 +225,12 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
       }
 
       // get MeasurementsInPlane
-     for ( std::vector< genfit::AbsMeasurement* >::iterator measurement = (trackPoint->getRawMeasurements()).begin(), lastMeasurement =(trackPoint->getRawMeasurements()).end(); measurement != lastMeasurement; ++measurement)
+      std::vector<AbsMeasurement*> rawMeasurements = trackPoint->getRawMeasurements();
+      for ( std::vector< genfit::AbsMeasurement* >::iterator measurement = rawMeasurements.begin(), lastMeasurement =rawMeasurements.end(); measurement != lastMeasurement; ++measurement)
       {
-       fitterInfo->addMeasurementOnPlane(new MeasurementOnPlane((*measurement)->constructMeasurementOnPlane(rep, plane)));
+       assert((*measurement) != NULL);
+       MeasurementOnPlane* mop = new MeasurementOnPlane((*measurement)->constructMeasurementOnPlane(rep, plane));
+       fitterInfo->addMeasurementOnPlane(mop);
       }
     }
     catch (genfit::Exception& e) {
@@ -258,7 +261,8 @@ void KalmanFitterRefTrack::getChiSquNdf(const Track* tr, const AbsTrackRep* rep,
   bNdf = -1. * rep->getDim();
   fNdf = -1. * rep->getDim();
 
-  for (std::vector<TrackPoint*>::const_iterator tpIter = (tr->getPointsWithMeasurement()).begin(), endIter = (tr->getPointsWithMeasurement()).end(); tpIter != endIter; ++tpIter) {
+  std::vector<TrackPoint*> pointsWM = tr->getPointsWithMeasurement();
+  for (std::vector<TrackPoint*>::const_iterator tpIter = pointsWM.begin(), endIter = pointsWM.end(); tpIter != endIter; ++tpIter) {
     AbsFitterInfo* afi = (*tpIter)->getFitterInfo(rep);
     KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>(afi);
     if (!fi) {
@@ -333,7 +337,7 @@ double KalmanFitterRefTrack::getPVal(const Track* tr, const AbsTrackRep* rep, in
 bool KalmanFitterRefTrack::isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const {
   std::vector< TrackPoint* > points = tr->getPointsWithMeasurement();
 
-  if (points.size() == 0)
+  if (points.empty())
     return true;
 
   for (std::vector<TrackPoint*>::const_iterator pIt = points.begin(), pEnd = points.end(); pIt != pEnd; ++pIt) {
@@ -357,7 +361,7 @@ bool KalmanFitterRefTrack::isTrackPrepared(const Track* tr, const AbsTrackRep* r
 bool KalmanFitterRefTrack::isTrackFitted(const Track* tr, const AbsTrackRep* rep) const {
   std::vector< TrackPoint* > points = tr->getPointsWithMeasurement();
 
-  if (points.size() == 0)
+  if (points.empty())
     return true;
 
   for (std::vector<TrackPoint*>::const_iterator pIt = points.begin(), pEnd = points.end(); pIt != pEnd; ++pIt) {

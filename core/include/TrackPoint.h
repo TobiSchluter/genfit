@@ -67,7 +67,7 @@ class TrackPoint : public TObject {
   std::vector< genfit::AbsMeasurement* > getRawMeasurements() const;
   AbsMeasurement* getRawMeasurement(int i = 0) const;
   unsigned int getNumRawMeasurements() const {return rawMeasurements_.size();}
-  bool hasRawMeasurements() const {return (rawMeasurements_.size() > 0);}
+  bool hasRawMeasurements() const {return (! rawMeasurements_.empty());}
   //! Get list of all fitterInfos of all TrackReps
   std::vector< AbsFitterInfo* > getFitterInfos() const;
   //! Get list of fitterInfos of a one TrackRep
@@ -82,7 +82,7 @@ class TrackPoint : public TObject {
 
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
   //! Takes ownership
-  void addRawMeasurement(AbsMeasurement* rawMeasurement) {rawMeasurements_.push_back(rawMeasurement);}
+  void addRawMeasurement(AbsMeasurement* rawMeasurement) {assert(rawMeasurement!=NULL); rawMeasurements_.push_back(rawMeasurement);}
   //! Takes Ownership
   size_t addFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_[fitterInfo->getRep()].push_back( fitterInfo); return fitterInfos_[fitterInfo->getRep()].size();}
   void deleteFitterInfo(AbsTrackRep* rep, int i);

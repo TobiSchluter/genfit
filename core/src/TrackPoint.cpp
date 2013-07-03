@@ -43,7 +43,8 @@ TrackPoint::TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurem
 {
   rawMeasurements_.reserve(rawMeasurements.size());
 
-  for (std::vector<AbsMeasurement*>::const_iterator m = rawMeasurements.begin(), mend = rawMeasurements.end(); m < mend; ++m) {
+  for (std::vector<AbsMeasurement*>::const_iterator m = rawMeasurements.begin(); m != rawMeasurements.end(); ++m) {
+    assert(*m != NULL);
     (*m)->setTrackPoint(this);
     rawMeasurements_.push_back(*m);
   }
@@ -54,7 +55,7 @@ TrackPoint::TrackPoint(const TrackPoint& rhs) :
   sortingParameter_(rhs.sortingParameter_), track_(rhs.track_)
 {
   // clone rawMeasurements
-  for (std::vector<AbsMeasurement*>::const_iterator it = rhs.rawMeasurements_.begin(); it!=rhs.rawMeasurements_.end(); ++it) {
+  for (std::vector<AbsMeasurement*>::const_iterator it = rhs.rawMeasurements_.begin(); it != rhs.rawMeasurements_.end(); ++it) {
     AbsMeasurement* tp = (*it)->clone();
     tp->setTrackPoint(this);
     addRawMeasurement(tp);
@@ -133,14 +134,16 @@ TrackPoint::~TrackPoint() {
 
 
 std::vector< genfit::AbsMeasurement* > TrackPoint::getRawMeasurements() const {
-  std::vector< genfit::AbsMeasurement* > retVal;
+  return rawMeasurements_;
+
+  /*std::vector< genfit::AbsMeasurement* > retVal;
   retVal.reserve(rawMeasurements_.size());
 
   for (std::vector<AbsMeasurement*>::const_iterator it = rawMeasurements_.begin(); it!=rawMeasurements_.end(); ++it) {
     retVal.push_back(*it);
   }
 
-  return retVal;
+  return retVal;*/
 }
 
 
@@ -171,6 +174,7 @@ std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos(const AbsTrackRep* rep)
 
   if (it != fitterInfos_.end()) {
     for (std::vector<AbsFitterInfo*>::const_iterator it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
+      assert(*it2 != NULL);
       retVal.push_back(*it2);
     }
   }
