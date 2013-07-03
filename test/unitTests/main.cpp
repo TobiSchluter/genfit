@@ -143,66 +143,6 @@ bool isCovMatrix(TMatrixTBase<double>& cov) {
 }
 
 
-void numericJacobian(const genfit::StateOnPlane* origState,
-                     const genfit::SharedPlanePtr destPlane,
-                     const genfit::AbsTrackRep* rep,
-                     TMatrixD& transport)
-{
-  // Find the transport matrix for track propagation from origState to destPlane
-  // I.e. this finds
-  //            d statedestPlane / d origState |_origState
-
-  transport.ResizeTo(5, 5);
-  // no science behind these values, I verified that forward and
-  // backward propagation yield inverse matrices to good approximation.
-  double stepX[5] = { 1e-6, 1e-4, 1e-4, 1e-6, 1e-6, };
-
-  // Calculate derivative for all three dimensions successively.
-  // The algorithm follows the one in TF1::Derivative() :
-  //   df(x) = (4 D(h/2) - D(h)) / 3
-  // with D(h) = (f(x + h) - f(x - h)) / (2 h).
-  //
-  // Could perhaps do better by also using f(x) which would be stB.
-  TVectorD rightShort(5), rightFull(5);
-  TVectorD leftShort(5), leftFull(5);
-  for (size_t i = 0; i < 5; ++i) {
-    {
-      genfit::StateOnPlane stateCopy(*origState);
-      (stateCopy.getState())(i) += stepX[i] / 2;
-      rep->extrapolateToPlane(&stateCopy, destPlane);
-      rightShort = stateCopy.getState();
-    }
-    {
-      genfit::StateOnPlane stateCopy(*origState);
-      (stateCopy.getState())(i) -= stepX[i] / 2;
-      rep->extrapolateToPlane(&stateCopy, destPlane);
-      leftShort = stateCopy.getState();
-    }
-    {
-      genfit::StateOnPlane stateCopy(*origState);
-      (stateCopy.getState())(i) += stepX[i];
-      rep->extrapolateToPlane(&stateCopy, destPlane);
-      rightFull = stateCopy.getState();
-    }
-    {
-      genfit::StateOnPlane stateCopy(*origState);
-      (stateCopy.getState())(i) -= stepX[i];
-      rep->extrapolateToPlane(&stateCopy, destPlane);
-      leftFull = stateCopy.getState();
-    }
-
-    // Calculate the derivatives for the individual components of
-    // the track parameters.
-    for (size_t j = 0; j < 5; ++j) {
-      double derivFull = (rightFull(j) - leftFull(j)) / 2 / stepX[i];
-      double derivShort = (rightShort(j) - leftShort(j)) / stepX[i];
-
-      transport(j, i) = 1./3.*(4*derivShort - derivFull);
-    }
-  }
-}
-
-
 
 bool checkSetGetPosMom() {
 
@@ -408,7 +348,7 @@ bool compareForthBackJacNoise() {
 
   // manual calculation
   TMatrixD jac_f_man;
-  numericJacobian(&origState, plane, rep, jac_f_man);
+  rep->numericJacobian(&origState, plane, jac_f_man);
 
   double extrapLen(0);
 

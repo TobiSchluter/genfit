@@ -77,6 +77,66 @@ void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane* stateInput, TVectorD
 }
 
 
+void AbsTrackRep::numericJacobian(const genfit::StateOnPlane* origState,
+                                      const genfit::SharedPlanePtr destPlane,
+                                      TMatrixD& jacobian) {
+
+  // Find the transport matrix for track propagation from origState to destPlane
+  // I.e. this finds
+  //            d stateDestPlane / d origState |_origState
+
+  jacobian.ResizeTo(getDim(), getDim());
+
+  // no science behind these values, I verified that forward and
+  // backward propagation yield inverse matrices to good approximation.
+  const double stepX = 1.E-5;
+
+  // Calculate derivative for all three dimensions successively.
+  // The algorithm follows the one in TF1::Derivative() :
+  //   df(x) = (4 D(h/2) - D(h)) / 3
+  // with D(h) = (f(x + h) - f(x - h)) / (2 h).
+  //
+  // Could perhaps do better by also using f(x) which would be stB.
+  TVectorD rightShort(getDim()), rightFull(getDim());
+  TVectorD leftShort(getDim()), leftFull(getDim());
+  for (size_t i = 0; i < getDim(); ++i) {
+    {
+      genfit::StateOnPlane stateCopy(*origState);
+      (stateCopy.getState())(i) += stepX / 2;
+      extrapolateToPlane(&stateCopy, destPlane);
+      rightShort = stateCopy.getState();
+    }
+    {
+      genfit::StateOnPlane stateCopy(*origState);
+      (stateCopy.getState())(i) -= stepX / 2;
+      extrapolateToPlane(&stateCopy, destPlane);
+      leftShort = stateCopy.getState();
+    }
+    {
+      genfit::StateOnPlane stateCopy(*origState);
+      (stateCopy.getState())(i) += stepX;
+      extrapolateToPlane(&stateCopy, destPlane);
+      rightFull = stateCopy.getState();
+    }
+    {
+      genfit::StateOnPlane stateCopy(*origState);
+      (stateCopy.getState())(i) -= stepX;
+      extrapolateToPlane(&stateCopy, destPlane);
+      leftFull = stateCopy.getState();
+    }
+
+    // Calculate the derivatives for the individual components of
+    // the track parameters.
+    for (size_t j = 0; j < getDim(); ++j) {
+      double derivFull = (rightFull(j) - leftFull(j)) / 2 / stepX;
+      double derivShort = (rightShort(j) - leftShort(j)) / stepX;
+
+      jacobian(j, i) = 1./3.*(4*derivShort - derivFull);
+    }
+  }
+}
+
+
 void AbsTrackRep::Print(const Option_t*) const {
   std::cout << "genfit::TrackRep, pdgCode = " << pdgCode_ << ". PropDir = " << (int)propDir_ << "\n";
 }

@@ -80,6 +80,10 @@ class AbsTrackRep : public TObject {
   /** Get the jacobian and noise matrix of the last extrapolation if it would have been done in opposite direction  */
   virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const = 0;
 
+  /** Calculate Jacobian of transportation numerically. Slow but accurate. Can be used to validate (semi)analytic calculations. */
+  void numericJacobian(const genfit::StateOnPlane* origState,
+                          const genfit::SharedPlanePtr destPlane,
+                          TMatrixD& jacobian);
 
   virtual void setPosMom(StateOnPlane* stateInput, const TVector3& pos, const TVector3& mom) const = 0;
   virtual void setPosMom(StateOnPlane* stateInput, const TVectorD& state6) const = 0;
