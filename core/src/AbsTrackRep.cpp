@@ -36,6 +36,12 @@ AbsTrackRep::AbsTrackRep(int pdgCode, char propDir) :
   ;
 }
 
+AbsTrackRep::AbsTrackRep(const AbsTrackRep& rep) :
+  TObject(rep), pdgCode_(rep.pdgCode_), propDir_(rep.propDir_)
+{
+  ;
+}
+
 
 TVectorD AbsTrackRep::get6DState(const StateOnPlane* stateInput) const {
   TVector3 pos, mom;

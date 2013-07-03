@@ -23,6 +23,8 @@
 #include <iostream>
 #include <map>
 
+#include <TDatabasePDG.h>
+
 //#include <glog/logging.h>
 
 
@@ -362,6 +364,21 @@ bool Track::checkConsistency() const {
   if (cardinalRep_ >= trackReps_.size()) {
     std::cerr << "Track::checkConsistency(): cardinalRep id out of bounds" << std::endl;
     return false;
+  }
+
+  for (std::vector<AbsTrackRep*>::const_iterator rep = trackReps_.begin(); rep != trackReps_.end(); ++rep) {
+    // check for NULL
+    if ((*rep) == NULL) {
+      std::cerr << "Track::checkConsistency(): TrackRep is NULL" << std::endl;
+      return false;
+    }
+
+    // check for valid pdg code
+    TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle((*rep)->getPDG());
+    if (particle == NULL) {
+      std::cerr << "Track::checkConsistency(): TrackRep pdg ID is not valid" << std::endl;
+      return false;
+    }
   }
 
   // check TrackPoints
