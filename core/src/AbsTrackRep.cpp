@@ -77,9 +77,9 @@ void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane* stateInput, TVectorD
 }
 
 
-void AbsTrackRep::numericJacobian(const genfit::StateOnPlane* origState,
-                                      const genfit::SharedPlanePtr destPlane,
-                                      TMatrixD& jacobian) {
+void AbsTrackRep::calcJacobianNumerically(const genfit::StateOnPlane* origState,
+                                               const genfit::SharedPlanePtr destPlane,
+                                               TMatrixD& jacobian) {
 
   // Find the transport matrix for track propagation from origState to destPlane
   // I.e. this finds

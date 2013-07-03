@@ -348,7 +348,7 @@ bool compareForthBackJacNoise() {
 
   // manual calculation
   TMatrixD jac_f_man;
-  rep->numericJacobian(&origState, plane, jac_f_man);
+  rep->calcJacobianNumerically(&origState, plane, jac_f_man);
 
   double extrapLen(0);
 
