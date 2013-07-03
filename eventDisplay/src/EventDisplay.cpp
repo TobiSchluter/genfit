@@ -18,6 +18,7 @@
 #include <Exception.h>
 #include <FieldManager.h>
 #include <Tools.h>
+#include <KalmanFitterInfo.h>
 
 #include <TApplication.h>
 #include <TEveBrowser.h>
