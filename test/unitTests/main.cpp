@@ -344,8 +344,8 @@ bool compareForthBackExtrapolation() {
 
 bool compareForthBackJacNoise() {
 
-  double epsilonJac = 5.E-5; // absolute  // best reached: 5.E-5
-  double deltaJac = 0.01; // relative     // best reached: 0.01
+  double epsilonJac = 0.004; // absolute  // best reached: 5.E-5
+  double deltaJac = 0.11; // relative     // best reached: 0.01
   double epsilonNoise = 2.E-3;
   double deltaNoise = 0.02;
 
@@ -358,6 +358,8 @@ bool compareForthBackJacNoise() {
   TVector3 pos(gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1),gRandom->Gaus(0,0.1));
   TVector3 mom(0, 0.5, gRandom->Gaus(0, 1));
   mom *= randomSign();
+  mom.SetMag(gRandom->Uniform(2)+0.3);
+  //mom.SetMag(3);
 
   TMatrixD jac_f, jac_fi, jac_b, jac_bi;
   TMatrixDSym noise_f, noise_fi, noise_b, noise_bi;
@@ -367,7 +369,14 @@ bool compareForthBackJacNoise() {
   genfit::MeasuredStateOnPlane state(rep);
   rep->setPosMom(&state, pos, mom);
 
-  genfit::DetPlane* origPlanePtr = new genfit::DetPlane (pos, TVector3(randomSign(),0,0), TVector3(0,0,randomSign()));
+  static const double smear = 0.2;
+  TVector3 normal(mom);
+  normal.SetMag(1);
+  normal.SetXYZ(gRandom->Gaus(normal.X(), smear),
+      gRandom->Gaus(normal.Y(), smear),
+      gRandom->Gaus(normal.Z(), smear));
+  genfit::DetPlane* origPlanePtr = new genfit::DetPlane (pos, normal);
+  //genfit::DetPlane* origPlanePtr = new genfit::DetPlane (pos, TVector3(1,0,0), TVector3(0,0,1));
   double rotAngleOrig = gRandom->Uniform(2.*TMath::Pi());
   origPlanePtr->rotate(rotAngleOrig);
   genfit::SharedPlanePtr origPlane(origPlanePtr);
@@ -378,7 +387,15 @@ bool compareForthBackJacNoise() {
 
 
   // dest plane
-  genfit::DetPlane* planePtr = new genfit::DetPlane (TVector3(0,randomSign()*10,0), TVector3(randomSign(),0,0), TVector3(0,0,randomSign()));
+  normal = mom;
+  normal.SetMag(1);
+  normal.SetXYZ(gRandom->Gaus(normal.X(), smear),
+      gRandom->Gaus(normal.Y(), smear),
+      gRandom->Gaus(normal.Z(), smear));
+  TVector3 dest(mom);
+  dest.SetMag(10);
+  genfit::DetPlane* planePtr = new genfit::DetPlane (dest, normal);
+  //genfit::DetPlane* planePtr = new genfit::DetPlane (dest, TVector3(1,0,0), TVector3(0,0,1));
   double rotAngle = gRandom->Uniform(2.*TMath::Pi());
   planePtr->rotate(rotAngle);
   genfit::SharedPlanePtr plane(planePtr);
@@ -397,9 +414,9 @@ bool compareForthBackJacNoise() {
 
   // forth
   try {
-    std::cout << "DO FORTH EXTRAPOLATION \n";
+    //std::cout << "DO FORTH EXTRAPOLATION \n";
     extrapLen = rep->extrapolateToPlane(&state, plane);
-    std::cout << "GET INFO FOR FORTH EXTRAPOLATION \n";
+    //std::cout << "GET INFO FOR FORTH EXTRAPOLATION \n";
     rep->getForwardJacobianAndNoise(jac_f, noise_f);
     rep->getBackwardJacobianAndNoise(jac_fi, noise_fi);
   }
@@ -412,9 +429,9 @@ bool compareForthBackJacNoise() {
 
   // back
   try {
-    std::cout << "DO BACK EXTRAPOLATION \n";
+    //std::cout << "DO BACK EXTRAPOLATION \n";
     rep->extrapolateToPlane(&state, origPlane);
-    std::cout << "GET INFO FOR BACK EXTRAPOLATION \n";
+    //std::cout << "GET INFO FOR BACK EXTRAPOLATION \n";
     rep->getForwardJacobianAndNoise(jac_b, noise_b);
     rep->getBackwardJacobianAndNoise(jac_bi, noise_bi);
   }
@@ -425,11 +442,10 @@ bool compareForthBackJacNoise() {
     return false;
   }
 
-  std::cout << "origPlane "; origPlane->Print();
-  std::cout << "plane "; plane->Print();
 
   // compare
   if (!isCovMatrix(state.getCov()) ||
+      !compareMatrices(jac_f, jac_f_man, 2*epsilonJac, 2*deltaJac) ||
       !compareMatrices(jac_f, jac_bi, epsilonJac, deltaJac) ||
       !compareMatrices(jac_b, jac_fi, epsilonJac, deltaJac) ||
       !compareMatrices(noise_f, noise_bi, epsilonNoise, deltaNoise) ||
@@ -442,6 +458,9 @@ bool compareForthBackJacNoise() {
 
     origState.Print();
     state.Print();
+
+    std::cout << "origPlane "; origPlane->Print();
+    std::cout << "plane "; plane->Print();
 
     std::cout << "jac_f_man = "; jac_f_man.Print();
     std::cout << "jac_f = "; jac_f.Print();
