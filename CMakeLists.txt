@@ -43,7 +43,7 @@ ENDIF()
 
 # require proper c++, standard is C++03, flag reads: c++98
 ADD_DEFINITIONS( " -Wall -g3 -ansi -pedantic -Wno-long-long -Wshadow "   )
-ADD_DEFINITIONS("-std=c++03")
+ADD_DEFINITIONS("--std=c++03")
 
 # include directories 
 INCLUDE_DIRECTORIES( 
