@@ -50,6 +50,8 @@ Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
 Track::Track(const Track& rhs)
   : cardinalRep_(rhs.cardinalRep_), stateSeed_(rhs.stateSeed_)
 {
+  assert(rhs.checkConsistency());
+
   std::map<const AbsTrackRep*, AbsTrackRep*> oldRepNewRep;
 
   for (std::vector<AbsTrackRep*>::const_iterator it=rhs.trackReps_.begin(); it!=rhs.trackReps_.end(); ++it) {
@@ -169,6 +171,8 @@ unsigned int Track::getNumPointsWithMeasurement() const {
 
 void Track::insertPoint(TrackPoint* point, int id) {
   // TODO: test
+  assert(point!=NULL);
+
   point->setTrack(this);
 
   if (id == -1 || trackPoints_.size() == 0) {
@@ -347,7 +351,7 @@ void Track::Print(const Option_t*) const {
 
 
 bool Track::checkConsistency() const {
-   
+
   // check if seed is 6D
   if (stateSeed_.GetNrows() != 6) {
     std::cerr << "Track::checkConsistency(): stateSeed_ dimension != 6" << std::endl;
@@ -362,7 +366,12 @@ bool Track::checkConsistency() const {
 
   // check TrackPoints
   for (std::vector<TrackPoint*>::const_iterator tp = trackPoints_.begin(); tp != trackPoints_.end(); ++tp) {
-    // check if trackPoint points bach to this track
+    // check for NULL
+    if ((*tp) == NULL) {
+      std::cerr << "Track::checkConsistency(): TrackPoint is NULL" << std::endl;
+      return false;
+    }
+    // check if trackPoint points back to this track
     if ((*tp)->getTrack() != this) {
       std::cerr << "Track::checkConsistency(): TrackPoint does not point back to this track" << std::endl;
       return false;
@@ -371,6 +380,11 @@ bool Track::checkConsistency() const {
     // check fitterInfos
     for (std::vector<AbsFitterInfo*>::const_iterator fi = ((*tp)->getFitterInfos()).begin(), fiend = ((*tp)->getFitterInfos()).end(); 
 			fi < fiend; ++fi) {
+      // check for NULL
+      if ((*fi) == NULL) {
+        std::cerr << "Track::checkConsistency(): FitterInfo is NULL" << std::endl;
+        return false;
+      }
       if (!( (*fi)->checkConsistency() ) ) {
         std::cerr << "Track::checkConsistency(): FitterInfo not consistent" << std::endl;
         return false;
