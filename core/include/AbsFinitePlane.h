@@ -53,7 +53,7 @@ class AbsFinitePlane : public TObject {
  protected:
 
   // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
-  AbsFinitePlane(const AbsFinitePlane&) {;};
+  AbsFinitePlane(const AbsFinitePlane& o) : TObject(o) {;}
   AbsFinitePlane& operator=(const AbsFinitePlane&);
 
 
