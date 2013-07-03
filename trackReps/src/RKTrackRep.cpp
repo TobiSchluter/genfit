@@ -419,8 +419,12 @@ double RKTrackRep::getCharge(const StateOnPlane* state) const
   const TVectorD& auxInfo = state->getAuxInfo();
   if (auxInfo.GetNrows() == 2)
     return (state->getAuxInfo())(0);
-  else
-    return TDatabasePDG::Instance()->GetParticle(pdgCode_)->Charge()/(3.);
+  else {
+    TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(pdgCode_);
+    std::cerr<<"pdg "<<pdgCode_<<std::endl;
+    assert(particle != NULL);
+    return particle->Charge()/(3.);
+  }
 }
 
 
@@ -1724,11 +1728,22 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     if(fillExtrapSteps){
       // calc J_Mp for later calculation of 5D Jacobian
       if (numIt == 1) { // first iteration
-        calcJ_Mp_7x5(startPlane.getU(), startPlane.getV(), startPlane.getNormal(), *((M1x3*) &state7[3]));
-      }
+        M1x3 pTilde = {state7[3], state7[4], state7[5]};
+        TVector3 normal = startPlane.getNormal();
+        double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
+        double spu = 1;
+        if (pTildeW < 0) {
+          spu = -1;
+          pTildeW *= -1.;
+        }
+
+        for (unsigned int i=0; i<3; ++i) {
+          pTilde[i] *= 1./pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
+        }
+
+        calcJ_pM_5x7(startPlane.getU(), startPlane.getV(), pTilde, spu);      }
       else {
-        calcJ_Mp_7x5(intermediatePlane.getU(), intermediatePlane.getV(), intermediatePlane.getNormal(), *((M1x3*) &state7[3]));
-      }
+        calcJ_pM_5x7(intermediatePlane.getU(), intermediatePlane.getV(), *((M1x3*) &state7[3]), 1.);      }
     }
 
     // propagation
@@ -1801,24 +1816,11 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
           exc.setFatal();
           throw exc;
         }
-        M1x3 pTilde = {state7[3], state7[4], state7[5]};
-        TVector3 normal = destPlane.getNormal();
-        double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
-        double spu = 1;
-        if (pTildeW < 0) {
-          spu = -1;
-          pTildeW *= -1.;
-        }
-
-        for (unsigned int i=0; i<3; ++i) {
-          pTilde[i] *= 1./pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
-        }
-
-        calcJ_pM_5x7(destPlane.getU(), destPlane.getV(), pTilde, spu);
+        calcJ_Mp_7x5(destPlane.getU(), destPlane.getV(), W, *((M1x3*) &state7[3]));
       }
       else {
         intermediatePlane.setON(TVector3(state7[0], state7[1], state7[2]), TVector3(state7[3], state7[4], state7[5]));
-        calcJ_pM_5x7(intermediatePlane.getU(), intermediatePlane.getV(), *((M1x3*) &state7[3]), 1);
+        calcJ_Mp_7x5(intermediatePlane.getU(), intermediatePlane.getV(), intermediatePlane.getNormal(), *((M1x3*) &state7[3]));
       }
 
       RKTools::J_pMxJ_MMTxJ_Mp(J_pM_5x7_, J_MMT_, J_Mp_7x5_, extrapStep.jac_, checkJacProj);

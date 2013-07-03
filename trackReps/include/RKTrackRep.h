@@ -228,10 +228,10 @@ class RKTrackRep : public AbsTrackRep {
   mutable M7x7 noiseArray_; //! noise matrix of the last extrapolation
   mutable M7x7 J_MMT_; //!
   // needed in transform...
-  mutable M5x7 J_pM_5x7_; //!
-  mutable M5x6 J_pM_5x6_; //!
-  mutable M7x5 J_Mp_7x5_; //!
-  mutable M6x5 J_Mp_6x5_; //!
+  mutable M5x7 J_pM_5x7_; //!  // FIXME this is actually (J_Mp)^T
+  mutable M5x6 J_pM_5x6_; //!  // FIXME this is actually (J_Mp)^T
+  mutable M7x5 J_Mp_7x5_; //!  // FIXME this is actually (J_pM)^T
+  mutable M6x5 J_Mp_6x5_; //!  // FIXME this is actually (J_pM)^T
 
 };
 

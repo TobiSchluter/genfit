@@ -525,11 +525,15 @@ void RKTools::J_pMxJ_MMTxJ_Mp(const M5x7& J_pM, const M7x7& J_MMT, const M7x5& J
   // 1 0 0 0 0
 
   TMatrixD JpM(5, 7, J_pM);
+  JpM.Transpose(JpM);
+
   TMatrixD JMM(7, 7, J_MMT);
   JMM.Transpose(JMM);
-  TMatrixD JMp(7, 5, J_Mp);
 
-  TMatrixD Jpp =  (JpM * JMM) * JMp;
+  TMatrixD JMp(7, 5, J_Mp);
+  JMp.Transpose(JMp);
+
+  TMatrixD Jpp =  (JMp * JMM) * JpM;
 
   memcpy(J_pp, Jpp.GetMatrixArray(), 5*5*sizeof(double));
 
