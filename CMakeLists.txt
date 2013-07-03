@@ -43,7 +43,16 @@ ENDIF()
 
 # require proper c++, standard is C++03, flag reads: c++98
 ADD_DEFINITIONS( " -Wall -g3 -ansi -pedantic -Wno-long-long -Wshadow "   )
-ADD_DEFINITIONS("--std=c++03")
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag(-std=c++03 HAS_STD_FLAG)
+check_cxx_compiler_flag(--std=c++03 HAS_STD_FLAG_ALTERNATIVE)
+if (HAS_STD_FLAG)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++03")
+elseif (HAS_STD_FLAG_ALTERNATIVE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++03")
+else()
+  message("Neither --std=c++03 nor -std=c++03 seem to work.  Moving on.")
+endif()
 
 # include directories 
 INCLUDE_DIRECTORIES( 
