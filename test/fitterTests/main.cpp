@@ -156,7 +156,8 @@ int main() {
   enum eMeasurementType { Pixel = 0,
 			  Spacepoint,
 			  ProlateSpacepoint,
-			  Strip,
+			  StripU,
+			  StripV,
 			  Wire,
 			  WirePoint };
 
@@ -164,8 +165,11 @@ int main() {
   std::vector<unsigned int> measurementTypes;
 
 
-  for (int i = 0; i < 5; ++i)
-    measurementTypes.push_back(Pixel);
+  for (int i = 0; i < 4; ++i)
+    {
+      measurementTypes.push_back(StripU);
+      measurementTypes.push_back(StripV);
+    }
 
 
 
@@ -437,10 +441,18 @@ int main() {
             }
             break;
 
-            case Strip: {
+	  case StripU: case StripV: {
               if (debug) std::cerr << "create StripHit" << std::endl;
 
-              genfit::SharedPlanePtr plane(new genfit::DetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)));
+	      TVector3 vU, vV;
+	      if (measurementTypes[i] == StripU) {
+		vU = planeNorm.Cross(z);
+		vV = (planeNorm.Cross(z)).Cross(planeNorm);
+	      } else {
+		vU = (planeNorm.Cross(z)).Cross(planeNorm);
+		vV = planeNorm.Cross(z);
+	      }
+              genfit::SharedPlanePtr plane(new genfit::DetPlane(point, vU, vV));
 
               TVectorD hitCoords(1);
               hitCoords(0) = gRandom->Gaus(0,resolution);
