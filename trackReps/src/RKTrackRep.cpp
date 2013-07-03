@@ -463,13 +463,13 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
     jacobian *= TMatrixD(5,5, ExtrapSteps_[i].jac_);
 
 #ifdef DEBUG
-  std::cout << "jacobian " << i << " "; TMatrixD(5,5, ExtrapSteps_[i].jac_.data()).Print();
-  std::cout << "noise " << i << " "; TMatrixDSym(5, ExtrapSteps_[i].noise_.data()).Print();
+  std::cout << "jacobian " << i << " "; TMatrixD(5,5, ExtrapSteps_[i].jac_).Print();
+  std::cout << "noise " << i << " "; TMatrixDSym(5, ExtrapSteps_[i].noise_).Print();
 #endif
 
 #ifdef DEBUG
-  std::cout << "jacobian " << i << " "; TMatrixD(5,5, ExtrapSteps_[i].jac_.data()).Print();
-  std::cout << "noise " << i << " "; TMatrixDSym(5, ExtrapSteps_[i].noise_.data()).Print();
+  std::cout << "jacobian " << i << " "; TMatrixD(5,5, ExtrapSteps_[i].jac_).Print();
+  std::cout << "noise " << i << " "; TMatrixDSym(5, ExtrapSteps_[i].noise_).Print();
 #endif
   }
 
@@ -529,11 +529,11 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
     noise += (TMatrixDSym(5, ExtrapSteps_[i].noise_)).Similarity(jacobian);
 
 #ifdef DEBUG
-  std::cout << "inverted noise " << i << " "; ((TMatrixDSym(5, ExtrapSteps_[i].noise_.data())).Similarity(jacobian)).Print();
+  std::cout << "inverted noise " << i << " "; ((TMatrixDSym(5, ExtrapSteps_[i].noise_)).Similarity(jacobian)).Print();
 #endif
 
 #ifdef DEBUG
-  std::cout << "inverted noise " << i << " "; ((TMatrixDSym(5, ExtrapSteps_[i].noise_.data())).Similarity(jacobian)).Print();
+  std::cout << "inverted noise " << i << " "; ((TMatrixDSym(5, ExtrapSteps_[i].noise_)).Similarity(jacobian)).Print();
 #endif
   }
 
@@ -992,15 +992,7 @@ void RKTrackRep::calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& 
   std::cout << "RKTrackRep::calcJ_pM_5x7 \n";
   std::cout << "  U = "; U.Print();
   std::cout << "  V = "; V.Print();
-  std::cout << "  pTilde = "; RKTools::printDim(pTilde.data(), 3,1);
-  std::cout << "  spu = " << spu << "\n";
-#endif
-
-#ifdef DEBUG
-  std::cout << "RKTrackRep::calcJ_pM_5x7 \n";
-  std::cout << "  U = "; U.Print();
-  std::cout << "  V = "; V.Print();
-  std::cout << "  pTilde = "; RKTools::printDim(pTilde.data(), 3,1);
+  std::cout << "  pTilde = "; RKTools::printDim(pTilde, 3,1);
   std::cout << "  spu = " << spu << "\n";
 #endif
 
@@ -1032,6 +1024,9 @@ void RKTrackRep::calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& 
   J_pM_5x7_[18] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
   J_pM_5x7_[19] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
 
+#ifdef DEBUG
+  std::cout << "  J_pM_5x7_ = "; RKTools::printDim(J_pM_5x7_, 5,7);
+#endif
 }
 
 
@@ -1123,7 +1118,7 @@ void RKTrackRep::calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVecto
   std::cout << "  U = "; U.Print();
   std::cout << "  V = "; V.Print();
   std::cout << "  W = "; W.Print();
-  std::cout << "  A = "; RKTools::printDim(A.data(), 3,1);
+  std::cout << "  A = "; RKTools::printDim(A, 3,1);
 #endif
 
   const double AtU = A[0]*U.X() + A[1]*U.Y() + A[2]*U.Z();
@@ -1151,6 +1146,10 @@ void RKTrackRep::calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVecto
   J_Mp_7x5_[4]  = V.X(); // [0][4]
   J_Mp_7x5_[9]  = V.Y(); // [1][4]
   J_Mp_7x5_[14] = V.Z(); // [2][4]
+
+#ifdef DEBUG
+  std::cout << "  J_Mp_7x5_ = "; RKTools::printDim(J_Mp_7x5_, 7,5);
+#endif
 
 }
 
@@ -1444,7 +1443,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
 #ifdef DEBUG
       std::cout << "  Jacobian^T of extrapolation before Projection:\n";
-      RKTools::printDim(jacobianT->data(), 7,7);
+      RKTools::printDim(*jacobianT, 7,7);
       std::cout << "  Project Jacobian of extrapolation onto destination plane\n";
 #endif
       An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
@@ -1461,7 +1460,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
 #ifdef DEBUG
       std::cout << "  Jacobian^T of extrapolation after Projection:\n";
-      RKTools::printDim(jacobianT->data(), 7,7);
+      RKTools::printDim(*jacobianT, 7,7);
 #endif
 
       // TODO: find a more elegant way of calculating noiseProjection
@@ -1748,7 +1747,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
 #ifdef DEBUG
     std::cout<<"RKSteps \n";
-    for (auto it = RKSteps_.begin(); it != RKSteps_.end(); ++it){
+    for (std::vector<RKStep>::iterator it = RKSteps_.begin(); it != RKSteps_.end(); ++it){
       it->materialProperties_.Print();
     }
     std::cout<<"\n";
@@ -1839,7 +1838,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
 #ifdef DEBUG
     std::cout<<"ExtrapSteps \n";
-    for (auto it = ExtrapSteps_.begin(); it != ExtrapSteps_.end(); ++it){
+    for (std::vector<ExtrapStep>::iterator it = ExtrapSteps_.begin(); it != ExtrapSteps_.end(); ++it){
       std::cout << "5D Jacobian: "; RKTools::printDim((it->jac_), 5,5);
       std::cout << "5D noise:    "; RKTools::printDim((it->noise_), 5,5);
     }
