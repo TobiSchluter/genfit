@@ -25,7 +25,9 @@
 
 #include <vector>
 
+#ifndef __CINT__
 #include "boost/scoped_ptr.hpp"
+#endif
 
 #include "AbsFitterInfo.h"
 #include "KalmanFittedStateOnPlane.h"
@@ -104,11 +106,19 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
   MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const;
 
+#ifndef __CINT__
   boost::scoped_ptr<ReferenceStateOnPlane> referenceState_; // Ownership
   boost::scoped_ptr<MeasuredStateOnPlane> forwardPrediction_; // Ownership
   boost::scoped_ptr<KalmanFittedStateOnPlane> forwardUpdate_; // Ownership
   boost::scoped_ptr<MeasuredStateOnPlane> backwardPrediction_; // Ownership
   boost::scoped_ptr<KalmanFittedStateOnPlane> backwardUpdate_; // Ownership
+#else
+  class ReferenceStateOnPlane* referenceState_;
+  class MeasuredStateOnPlane* forwardPrediction_;
+  class KalmanFittedStateOnPlane* forwardUpdate_;
+  class MeasuredStateOnPlane* backwardPrediction_;
+  class KalmanFittedStateOnPlane* backwardUpdate_;
+#endif
 
  //> TODO ! ptr implement: to the special ownership version
   /* class owned_pointer_vector : private std::vector<MeasuredStateOnPlane*> {

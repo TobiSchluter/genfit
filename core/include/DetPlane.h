@@ -35,7 +35,9 @@
 #include <TObject.h>
 #include <TVector3.h>
 
+#ifndef __CINT__
 #include "boost/scoped_ptr.hpp"
+#endif
 
 #include "AbsFinitePlane.h"
 
@@ -58,7 +60,7 @@ namespace genfit {
  */
 
 
-class DetPlane : public TObject {
+class DetPlane { //: public TObject {
 
  public:
 
@@ -186,7 +188,11 @@ class DetPlane : public TObject {
   TVector3 u_;
   TVector3 v_;
 
+#ifndef __CINT__
   boost::scoped_ptr<AbsFinitePlane> finitePlane_; // Ownership
+#else
+  class AbsFinitePlane* finitePlane_;
+#endif
 
 
   //ClassDef(DetPlane,1)
