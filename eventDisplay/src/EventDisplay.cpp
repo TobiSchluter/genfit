@@ -243,8 +243,10 @@ void EventDisplay::drawEvent(unsigned int id) {
 
     unsigned int numhits = track->getNumPointsWithMeasurement();
 
-    TVector3 track_pos, track_posRef, track_posFwd, track_posBwd;
-    TVector3 old_track_pos, old_track_posRef, old_track_posFwd, old_track_posBwd;
+    TVector3 track_pos, track_posRef, track_posFwdPre, track_posBwdPre, track_posFwdUp, track_posBwdUp;
+    TVector3 old_track_pos, old_track_posRef, old_track_posFwdPre, old_track_posBwdPre, old_track_posFwdUp, old_track_posBwdUp;
+    TVector3 track_dir, track_dirRef, track_dirFwdPre, track_dirBwdPre, track_dirFwdUp, track_dirBwdUp;
+    TVector3 old_track_dir, old_track_dirRef, old_track_dirFwdPre, old_track_dirBwdPre, old_track_dirFwdUp, old_track_dirBwdUp;
 
     TEveStraightLineSet* track_lines = nullptr;
     TEveStraightLineSet* track_linesFwd = nullptr;
@@ -265,11 +267,13 @@ void EventDisplay::drawEvent(unsigned int id) {
 
       KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(fitterInfo);
       MeasuredStateOnPlane fittedState = fi->getFittedState(true);
-      track_pos = rep->getPos(&fittedState);
-      track_posFwd = rep->getPos(fi->getForwardUpdate());
-      track_posBwd = rep->getPos(fi->getBackwardUpdate());
+      rep->getPosDir(&fittedState, track_pos, track_dir);
+      rep->getPosDir(fi->getForwardPrediction(), track_posFwdPre, track_dirFwdPre);
+      rep->getPosDir(fi->getForwardUpdate(), track_posFwdUp, track_dirFwdUp);
+      rep->getPosDir(fi->getBackwardPrediction(), track_posBwdPre, track_dirBwdPre);
+      rep->getPosDir(fi->getBackwardUpdate(), track_posBwdUp, track_dirBwdUp);
       if (fi->hasReferenceState()) {
-        track_posRef = rep->getPos(fi->getReferenceState());
+        rep->getPosDir(fi->getReferenceState(), track_posRef, track_dirRef);
       }
 
       double charge = rep->getCharge(&fittedState);
@@ -315,7 +319,7 @@ void EventDisplay::drawEvent(unsigned int id) {
         plane_size = 4;
       } else if (dynamic_cast<const WireMeasurement*>(m) != nullptr) {
         wire_hit = true;
-        hit_u = hit_coords(0);
+        hit_u = fabs(hit_coords(0));
         hit_v = v*(track_pos-o); // move the covariance tube so that the track goes through it
         hit_res_u = hit_cov(0,0);
         hit_res_v = 4;
@@ -350,40 +354,59 @@ void EventDisplay::drawEvent(unsigned int id) {
 
       // draw track if corresponding option is set ------------------------------------------
       struct makeLinesClass {
-	void operator()(TEveStraightLineSet **pls, const TVector3& vOld, const TVector3& vNew,
-			const Color_t& color, const Style_t& style, bool drawMarkers)
-	{
-	  if (*pls == nullptr) *pls = new TEveStraightLineSet;
-	  TEveStraightLineSet *ls = *pls;
-	  ls->AddLine(vOld(0), vOld(1), vOld(2), vNew(0), vNew(1), vNew(2));
-	  ls->SetLineColor(color);
-	  ls->SetLineStyle(style);
-	  ls->SetLineWidth(2);
-	  if (drawMarkers)
-	    ls->AddMarker(vNew(0), vNew(1), vNew(2));
-	}
+      void operator()(TEveStraightLineSet **pls, const TVector3& vOld, const TVector3& vNew, const TVector3& dirOld, const TVector3& dirNew,
+          const Color_t& color, const Style_t& style, bool drawMarkers, double lineWidth = 2)
+        {
+          double distA = (vNew-vOld).Mag();
+          double distB = distA;
+          if ((vNew-vOld)*dirOld < 0)
+            distA *= -1.;
+          if ((vNew-vOld)*dirNew < 0)
+            distB *= -1.;
+          TVector3 intermediate1 = vOld + 0.3 * distA * dirOld;
+          TVector3 intermediate2 = vNew - 0.3 * distB * dirNew;
+          if (*pls == nullptr) *pls = new TEveStraightLineSet;
+          TEveStraightLineSet *ls = *pls;
+          ls->AddLine(vOld(0), vOld(1), vOld(2), intermediate1(0), intermediate1(1), intermediate1(2));
+          ls->AddLine(intermediate1(0), intermediate1(1), intermediate1(2), intermediate2(0), intermediate2(1), intermediate2(2));
+          ls->AddLine(intermediate2(0), intermediate2(1), intermediate2(2), vNew(0), vNew(1), vNew(2));
+          ls->SetLineColor(color);
+          ls->SetLineStyle(style);
+          ls->SetLineWidth(lineWidth);
+          if (drawMarkers)
+            ls->AddMarker(vNew(0), vNew(1), vNew(2));
+        }
       } makeLines;
+
       if(drawTrack) {
-	if (j > 0)
-	  makeLines(&track_lines, old_track_pos, track_pos, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers);
-	old_track_pos = track_pos;
+        if (j > 0)
+          makeLines(&track_lines, old_track_pos, track_pos, old_track_dir, track_dir, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers, 3);
+        old_track_pos = track_pos;
+        old_track_dir = track_dir;
       }
       if (drawForward) {
-	if (j > 0)
-	  makeLines(&track_linesFwd, old_track_posFwd, track_posFwd, charge > 0 ? kRed + 1 : kBlue + 1, 1, drawTrackMarkers);
-	old_track_posFwd = track_posFwd;
+        if (j > 0)
+          makeLines(&track_linesFwd, old_track_posFwdUp, track_posFwdPre, old_track_dirFwdUp, track_dirFwdPre, charge > 0 ? kMagenta : kCyan, 1, drawTrackMarkers, 1);
+        old_track_posFwdPre = track_posFwdPre;
+        old_track_dirFwdPre = track_dirFwdPre;
+        old_track_posFwdUp = track_posFwdUp;
+        old_track_dirFwdUp = track_dirFwdUp;
       }
       if (drawBackward) {
-	if (j > 0)
-	  makeLines(&track_linesBwd, old_track_posBwd, track_posBwd, charge > 0 ? kRed + 3 : kBlue + 3, 1, drawTrackMarkers);
-	old_track_posBwd = track_posBwd;
+        if (j > 0)
+          makeLines(&track_linesBwd, old_track_posBwdPre, track_posBwdUp, old_track_dirBwdPre, track_dirBwdUp, charge > 0 ? kYellow : kMagenta, 1, drawTrackMarkers, 1);
+        old_track_posBwdPre = track_posBwdPre;
+        old_track_dirBwdPre = track_dirBwdPre;
+        old_track_posBwdUp = track_posBwdUp;
+        old_track_dirBwdUp = track_dirBwdUp;
       }
       // finished drawing track -------------------------------------------------------------
       // draw reference track if corresponding option is set ------------------------------------------
       if(drawTrack && fi->hasReferenceState()) {
-	if (j > 0)
-	  makeLines(&track_linesRef, old_track_posRef, track_posRef, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers);
-	old_track_posRef = track_posRef;
+        if (j > 0)
+          makeLines(&track_linesRef, old_track_posRef, track_posRef, old_track_dirRef, track_dirRef, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers, 3);
+        old_track_posRef = track_posRef;
+        old_track_dirRef = track_dirRef;
       }
       // finished drawing reference track -------------------------------------------------------------
 
@@ -428,8 +451,8 @@ void EventDisplay::drawEvent(unsigned int id) {
           } else {
             // calculate eigenvalues to draw error-ellipse ----------------------------
             TMatrixDEigen eigen_values(hit_cov);
-            TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
-            det_shape->IncDenyDestroy();
+            TEveGeoShape* cov_shape = new TEveGeoShape("cov_shape");
+            cov_shape->IncDenyDestroy();
             TMatrixT<double> ev = eigen_values.GetEigenValues();
             TMatrixT<double> eVec = eigen_values.GetEigenVectors();
             double pseudo_res_0 = errorScale_*std::sqrt(ev(0,0));
@@ -455,7 +478,7 @@ void EventDisplay::drawEvent(unsigned int id) {
             // finished autoscaling ---------------------------------------------------
 
             // calculate the semiaxis of the error ellipse ----------------------------
-            det_shape->SetShape(new TGeoEltu(pseudo_res_0, pseudo_res_1, 0.0105));
+            cov_shape->SetShape(new TGeoEltu(pseudo_res_0, pseudo_res_1, 0.0105));
             TVector3 pix_pos = o + hit_u*u + hit_v*v;
             TVector3 u_semiaxis = (pix_pos + eVec(0,0)*u + eVec(1,0)*v)-pix_pos;
             TVector3 v_semiaxis = (pix_pos + eVec(0,1)*u + eVec(1,1)*v)-pix_pos;
@@ -467,12 +490,12 @@ void EventDisplay::drawEvent(unsigned int id) {
                 (v_semiaxis.Theta()*180)/TMath::Pi(), (v_semiaxis.Phi()*180)/TMath::Pi(),
                 (norm.Theta()*180)/TMath::Pi(), (norm.Phi()*180)/TMath::Pi());
             TGeoCombiTrans det_trans(pix_pos(0),pix_pos(1),pix_pos(2), &det_rot);
-            det_shape->SetTransMatrix(det_trans);
+            cov_shape->SetTransMatrix(det_trans);
             // finished rotating and translating --------------------------------------
 
-            det_shape->SetMainColor(kYellow);
-            det_shape->SetMainTransparency(0);
-            gEve->AddElement(det_shape);
+            cov_shape->SetMainColor(kYellow);
+            cov_shape->SetMainTransparency(0);
+            gEve->AddElement(cov_shape);
           }
         }
         // finished drawing planar hits ---------------------------------------------------
@@ -482,9 +505,9 @@ void EventDisplay::drawEvent(unsigned int id) {
 
           // get eigenvalues of covariance to know how to draw the ellipsoid ------------
           TMatrixDEigen eigen_values(m->getRawHitCov());
-          TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
-          det_shape->IncDenyDestroy();
-          det_shape->SetShape(new TGeoSphere(0.,1.));
+          TEveGeoShape* cov_shape = new TEveGeoShape("cov_shape");
+          cov_shape->IncDenyDestroy();
+          cov_shape->SetShape(new TGeoSphere(0.,1.));
           TMatrixT<double> ev = eigen_values.GetEigenValues();
           TMatrixT<double> eVec = eigen_values.GetEigenVectors();
           TVector3 eVec1(eVec(0,0),eVec(1,0),eVec(2,0));
@@ -535,19 +558,19 @@ void EventDisplay::drawEvent(unsigned int id) {
                                  //1/(pseudo_res_0),1/(pseudo_res_1),1/(pseudo_res_2),
                                  pseudo_res_0, pseudo_res_1, pseudo_res_2,
                                  &det_rot);
-          det_shape->SetTransMatrix(det_trans);
+          cov_shape->SetTransMatrix(det_trans);
           // finished rotating and translating ------------------------------------------
 
-          det_shape->SetMainColor(kYellow);
-          det_shape->SetMainTransparency(10);
-          gEve->AddElement(det_shape);
+          cov_shape->SetMainColor(kYellow);
+          cov_shape->SetMainTransparency(10);
+          gEve->AddElement(cov_shape);
         }
         // finished drawing spacepoint hits -----------------------------------------------
 
         // draw wire hits -----------------------------------------------------------------
         if(wire_hit) {
-          TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
-          det_shape->IncDenyDestroy();
+          TEveGeoShape* cov_shape = new TEveGeoShape("cov_shape");
+          cov_shape->IncDenyDestroy();
           double pseudo_res_0 = errorScale_*std::sqrt(hit_cov(0,0));
           double pseudo_res_1 = plane_size;
           if (wirepoint_hit) pseudo_res_1 = errorScale_*std::sqrt(hit_cov(1,1));
@@ -580,7 +603,7 @@ void EventDisplay::drawEvent(unsigned int id) {
           }
           // finished autoscaling -------------------------------------------------------
 
-          det_shape->SetShape(new TGeoTube(std::max(0., (double)(hit_u - pseudo_res_0)), hit_u + pseudo_res_0, pseudo_res_1));
+          cov_shape->SetShape(new TGeoTube(std::max(0., (double)(hit_u - pseudo_res_0)), hit_u + pseudo_res_0, pseudo_res_1));
           TVector3 norm = u.Cross(v);
 
           // rotate and translate -------------------------------------------------------
@@ -591,12 +614,12 @@ void EventDisplay::drawEvent(unsigned int id) {
                                    o(1) + hit_v*v.Y(),
                                    o(2) + hit_v*v.Z(),
                                    &det_rot);
-          det_shape->SetTransMatrix(det_trans);
+          cov_shape->SetTransMatrix(det_trans);
           // finished rotating and translating ------------------------------------------
 
-          det_shape->SetMainColor(kYellow);
-          det_shape->SetMainTransparency(50);
-          gEve->AddElement(det_shape);
+          cov_shape->SetMainColor(kYellow);
+          cov_shape->SetMainTransparency(50);
+          gEve->AddElement(cov_shape);
         }
         // finished drawing wire hits -----------------------------------------------------
       }
@@ -619,7 +642,7 @@ void EventDisplay::drawEvent(unsigned int id) {
 
 TEveBox* EventDisplay::boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth) {
 
-  TEveBox* box = new TEveBox;
+  TEveBox* box = new TEveBox("detPlane_shape");
   float vertices[24];
 
   TVector3 norm = u.Cross(v);
@@ -670,7 +693,6 @@ void EventDisplay::makeGui() {
 
   TGHorizontalFrame* hf = new TGHorizontalFrame(frmMain);
   {
-
     TString icondir( Form("%s/icons/", gSystem->Getenv("ROOTSYS")) );
     TGPictureButton* b = 0;
     EventDisplay*  fh = EventDisplay::getInstance();
