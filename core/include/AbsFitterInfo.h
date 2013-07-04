@@ -90,6 +90,13 @@ class AbsFitterInfo : public TObject {
   AbsFitterInfo& operator=(const AbsFitterInfo&); // assignment operator
 };
 
+// Needed for boost cloneability:
+inline AbsFitterInfo* new_clone( const AbsFitterInfo & a)
+{
+  return a.clone();
+}
+
+
 } /* End of namespace genfit */
 /** @} */
 

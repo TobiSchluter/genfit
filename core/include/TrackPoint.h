@@ -30,6 +30,8 @@
 
 #include <TObject.h>
 
+#include <boost/ptr_container/ptr_vector.hpp>
+
 #include <map>
 #include <vector>
 #include <memory>
@@ -101,9 +103,10 @@ class TrackPoint : public TObject {
    *  Can be more than one, e.g. multiple measurements in the same Si detector, left and right measurements of a wire detector etc.
    * @element-type AbsMeasurement
    */
-  std::vector<AbsMeasurement*> rawMeasurements_; // Ownership
+  boost::ptr_vector<AbsMeasurement> rawMeasurements_;
+  //std::vector<AbsMeasurement*> rawMeasurements_; // Ownership
 
-  std::map< const AbsTrackRep*, std::vector<AbsFitterInfo*> > fitterInfos_; // Ownership over FitterInfos
+  std::map< const AbsTrackRep*, boost::ptr_vector<AbsFitterInfo> > fitterInfos_; // Ownership over FitterInfos
 
   //MaterialInfo* material_; // Ownership
 

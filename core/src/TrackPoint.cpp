@@ -55,16 +55,17 @@ TrackPoint::TrackPoint(const TrackPoint& rhs) :
   sortingParameter_(rhs.sortingParameter_), track_(rhs.track_)
 {
   // clone rawMeasurements
-  for (std::vector<AbsMeasurement*>::const_iterator it = rhs.rawMeasurements_.begin(); it != rhs.rawMeasurements_.end(); ++it) {
-    AbsMeasurement* tp = (*it)->clone();
+  for (boost::ptr_vector<AbsMeasurement>::const_iterator it = rhs.rawMeasurements_.begin(); it != rhs.rawMeasurements_.end(); ++it) {
+    AbsMeasurement* tp = it->clone();
     tp->setTrackPoint(this);
     addRawMeasurement(tp);
   }
 
   // copy fitterInfos
-  for (std::map<const AbsTrackRep*, std::vector<AbsFitterInfo*> >::const_iterator it = rhs.fitterInfos_.begin(); it != rhs.fitterInfos_.end();  ++it ) {
-    for (std::vector<AbsFitterInfo*>::const_iterator it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
-      AbsFitterInfo* fi = (*it2)->clone();
+  for (std::map<const AbsTrackRep*, boost::ptr_vector<AbsFitterInfo> >::const_iterator it = rhs.fitterInfos_.begin(); it != rhs.fitterInfos_.end();  ++it ) {
+    for (boost::ptr_vector<AbsFitterInfo>::const_iterator it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
+      // FIXME: can be solved by clone-ability
+      AbsFitterInfo* fi = it2->clone();
       fi->setTrackPoint(this);
       fitterInfos_[(*it).first].push_back(fi);
     }
@@ -75,16 +76,17 @@ TrackPoint::TrackPoint(const TrackPoint& rhs, const std::map<const AbsTrackRep*,
   sortingParameter_(rhs.sortingParameter_), track_(rhs.track_)
 {
   // clone rawMeasurements
-  for (std::vector<AbsMeasurement*>::const_iterator it = rhs.rawMeasurements_.begin(); it!=rhs.rawMeasurements_.end(); ++it) {
-    AbsMeasurement* tp = (*it)->clone();
+  for (boost::ptr_vector<AbsMeasurement>::const_iterator it = rhs.rawMeasurements_.begin(); it!=rhs.rawMeasurements_.end(); ++it) {
+    AbsMeasurement* tp = it->clone();
     tp->setTrackPoint(this);
     addRawMeasurement(tp);
   }
 
   // copy fitterInfos
-  for (std::map<const AbsTrackRep*, std::vector<AbsFitterInfo*> >::const_iterator it = rhs.fitterInfos_.begin(); it != rhs.fitterInfos_.end();  ++it ) {
-    for (std::vector<AbsFitterInfo*>::const_iterator it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
-      AbsFitterInfo* fi = (*it2)->clone();
+  for (std::map<const AbsTrackRep*, boost::ptr_vector<AbsFitterInfo> >::const_iterator it = rhs.fitterInfos_.begin(); it != rhs.fitterInfos_.end();  ++it ) {
+    for (boost::ptr_vector<AbsFitterInfo>::const_iterator it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
+      // FIXME: Again, cloneability can take care of this.
+      AbsFitterInfo* fi = it2->clone();
       fi->setRep(map.at(it->first));
       fi->setTrackPoint(this);
       fitterInfos_[map.at(it->first)].push_back(fi);
@@ -102,16 +104,17 @@ TrackPoint& TrackPoint::operator=(const TrackPoint& rhs) {
   fitterInfos_.clear();
 
   // clone rawMeasurements
-  for (std::vector<AbsMeasurement*>::const_iterator it = rhs.rawMeasurements_.begin(); it!=rhs.rawMeasurements_.end(); ++it) {
-    AbsMeasurement* tp = (*it)->clone();
+  for (boost::ptr_vector<AbsMeasurement>::const_iterator it = rhs.rawMeasurements_.begin(); it!=rhs.rawMeasurements_.end(); ++it) {
+    AbsMeasurement* tp = it->clone();
     tp->setTrackPoint(this);
     addRawMeasurement(tp);
   }
 
   // copy fitterInfos
-  for (std::map<const AbsTrackRep*, std::vector<AbsFitterInfo*> >::const_iterator it = rhs.fitterInfos_.begin(); it != rhs.fitterInfos_.end();  ++it ) {
-    for (std::vector<AbsFitterInfo*>::const_iterator it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
-      AbsFitterInfo* fi = (*it2)->clone();
+  for (std::map<const AbsTrackRep*, boost::ptr_vector<AbsFitterInfo> >::const_iterator it = rhs.fitterInfos_.begin(); it != rhs.fitterInfos_.end();  ++it ) {
+    for (boost::ptr_vector<AbsFitterInfo>::const_iterator it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
+      // FIXME: cloneability should take care
+      AbsFitterInfo* fi = it2->clone();
       fi->setTrackPoint(this);
       fitterInfos_[it->first].push_back(fi);
     }
@@ -122,7 +125,7 @@ TrackPoint& TrackPoint::operator=(const TrackPoint& rhs) {
 
 
 TrackPoint::~TrackPoint() {
-  ; // smart pointers take care of everything
+  ; // ptr_vector takes care of everything
 }
 
 
@@ -134,7 +137,13 @@ TrackPoint::~TrackPoint() {
 
 
 std::vector< genfit::AbsMeasurement* > TrackPoint::getRawMeasurements() const {
-  return rawMeasurements_;
+  // FIXME: Change type?  Why is this needed?
+  std::vector<genfit::AbsMeasurement*> vec;
+  vec.reserve(rawMeasurements_.size());
+  for (size_t i = 0; i < rawMeasurements_.size(); ++i)
+    // FIXME: why do I get the const&, i.e. why do I have to const_cast ?
+    vec.push_back(const_cast<AbsMeasurement*>(&rawMeasurements_[i]));
+  return vec;
 
   /*std::vector< genfit::AbsMeasurement* > retVal;
   retVal.reserve(rawMeasurements_.size());
@@ -151,16 +160,19 @@ AbsMeasurement* TrackPoint::getRawMeasurement(int i) const {
   if (i < 0)
     i += rawMeasurements_.size();
 
-  return rawMeasurements_.at(i);
+  // FIXME: As above: why do I get the const-form of at?
+  return const_cast<AbsMeasurement*>(&(rawMeasurements_.at(i)));
 }
 
 
 std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos() const {
+  // FIXME: Should the return type be a ptr_vector?
   std::vector< AbsFitterInfo* > retVal;
 
-  for (std::map<const AbsTrackRep*, std::vector<AbsFitterInfo*> >::const_iterator it = fitterInfos_.begin(); it != fitterInfos_.end();  ++it ) {
-    for (std::vector<AbsFitterInfo*>::const_iterator it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
-      retVal.push_back(*it2);
+  for (std::map<const AbsTrackRep*, boost::ptr_vector<AbsFitterInfo> >::const_iterator it = fitterInfos_.begin(); it != fitterInfos_.end();  ++it ) {
+    for (size_t i = 0; i < it->second.size(); ++i) {
+      // FIXME: why const?
+      retVal.push_back(const_cast<AbsFitterInfo*>(&it->second[i]));
     }
   }
 
@@ -170,12 +182,12 @@ std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos() const {
 std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos(const AbsTrackRep* rep) const {
   std::vector< AbsFitterInfo* > retVal;
 
-  std::map< const AbsTrackRep*, std::vector<AbsFitterInfo*> >::const_iterator it = fitterInfos_.find(rep);
+  std::map< const AbsTrackRep*, boost::ptr_vector<AbsFitterInfo> >::const_iterator it = fitterInfos_.find(rep);
 
   if (it != fitterInfos_.end()) {
-    for (std::vector<AbsFitterInfo*>::const_iterator it2 = it->second.begin(); it2 != it->second.end();  ++it2 ) {
-      assert(*it2 != NULL);
-      retVal.push_back(*it2);
+    for (size_t i = 0; i < it->second.size(); ++i) {
+      // FIXME: why const?
+      retVal.push_back(const_cast<AbsFitterInfo*>(&it->second[i]));
     }
   }
 
@@ -184,12 +196,13 @@ std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos(const AbsTrackRep* rep)
 
 
 AbsFitterInfo* TrackPoint::getFitterInfo(const AbsTrackRep* rep, int i) const {
-  std::map< const AbsTrackRep*, std::vector<AbsFitterInfo*> >::const_iterator it = fitterInfos_.find(rep);
+  std::map< const AbsTrackRep*, boost::ptr_vector<AbsFitterInfo> >::const_iterator it = fitterInfos_.find(rep);
 
   if (it != fitterInfos_.end()) {
     if (i < 0)
       i += it->second.size();
-    return it->second.at(i);
+    // FIXME: why do I need the const_cast?
+    return const_cast<AbsFitterInfo*>(&it->second.at(i));
   }
 
   Exception exc("TrackPoint::getFitterInfo ==> no FitterInfo for given TrackRep",__LINE__,__FILE__);
@@ -206,7 +219,7 @@ unsigned int TrackPoint::getNumFitterInfos(const AbsTrackRep* rep) const {
 
 
 bool TrackPoint::hasFitterInfos(const AbsTrackRep* rep) const {
-  std::map< const AbsTrackRep*, std::vector<AbsFitterInfo*> >::const_iterator it = fitterInfos_.find(rep);
+  std::map< const AbsTrackRep*, boost::ptr_vector<AbsFitterInfo> >::const_iterator it = fitterInfos_.find(rep);
   if (it == fitterInfos_.end())
     return false;
 
@@ -215,7 +228,7 @@ bool TrackPoint::hasFitterInfos(const AbsTrackRep* rep) const {
 
 
 void TrackPoint::deleteFitterInfo(AbsTrackRep* rep, int i) {
-  std::map< const AbsTrackRep*, std::vector<AbsFitterInfo*> >::iterator it = fitterInfos_.find(rep);
+  std::map< const AbsTrackRep*, boost::ptr_vector<AbsFitterInfo> >::iterator it = fitterInfos_.find(rep);
 
   if (it != fitterInfos_.end()) {
     if (i < 0)
@@ -236,15 +249,15 @@ void TrackPoint::Print(const Option_t*) const {
 
   for (unsigned int i=0; i<rawMeasurements_.size(); ++i) {
     std::cout << "RawMeasurement Nr. " << i << "\n";
-    rawMeasurements_[i]->Print();
+    rawMeasurements_[i].Print();
     std::cout << "............\n";
   }
 
-  for (std::map< const AbsTrackRep*, std::vector<AbsFitterInfo*> >::const_iterator it = fitterInfos_.begin(); it != fitterInfos_.end();  ++it ) {
+  for (std::map< const AbsTrackRep*, boost::ptr_vector<AbsFitterInfo> >::const_iterator it = fitterInfos_.begin(); it != fitterInfos_.end();  ++it ) {
 
     for (unsigned int i=0; i<it->second.size(); ++i) {
       std::cout << "FitterInfo Nr. " << i << " for TrackRep " << it->first << "\n";
-      it->second[i]->Print();
+      it->second[i].Print();
       std::cout << "............\n";
     }
 
