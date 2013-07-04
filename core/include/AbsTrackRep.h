@@ -63,7 +63,9 @@ class AbsTrackRep : public TObject {
   virtual TVector3 getPos(const StateOnPlane* stateInput) const = 0;
 
   virtual TVector3 getMom(const StateOnPlane* stateInput) const = 0;
+  TVector3 getDir(const StateOnPlane* stateInput) const {return getMom(stateInput).Unit();}
   virtual void getPosMom(const StateOnPlane* stateInput, TVector3& pos, TVector3& mom) const = 0;
+  void getPosDir(const StateOnPlane* stateInput, TVector3& pos, TVector3& dir) const {getPosMom(stateInput, pos, dir); dir.SetMag(1.);}
   virtual TVectorD get6DState(const StateOnPlane* stateInput) const;
 
   /** Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance */
