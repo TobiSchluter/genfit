@@ -40,21 +40,38 @@ WirePointMeasurement::WirePointMeasurement(const TVectorD& rawHitCoords, const T
 }
 
 
-MeasurementOnPlane WirePointMeasurement::constructMeasurementOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const
+std::vector<MeasurementOnPlane*> WirePointMeasurement::constructMeasurementsOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const
 {
-  MeasurementOnPlane mop(TVectorD(2),
+  MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(2),
        TMatrixDSym(2),
        plane, rep, getHMatrix(rep));
 
-  mop.getState()(0) = rawHitCoords_(6);
-  mop.getState()(1) = rawHitCoords_(7);
+  mopR->getState()(0) = rawHitCoords_(6);
+  mopR->getState()(1) = rawHitCoords_(7);
 
-  mop.getCov()(0,0) = rawHitCov_(6,6);
-  mop.getCov()(1,0) = rawHitCov_(7,6);
-  mop.getCov()(0,1) = rawHitCov_(6,7);
-  mop.getCov()(1,1) = rawHitCov_(7,7);
+  mopR->getCov()(0,0) = rawHitCov_(6,6);
+  mopR->getCov()(1,0) = rawHitCov_(7,6);
+  mopR->getCov()(0,1) = rawHitCov_(6,7);
+  mopR->getCov()(1,1) = rawHitCov_(7,7);
 
-  return mop;
+
+  MeasurementOnPlane* mopL = new MeasurementOnPlane(*mopR);
+  mopL->getState()(0) *= -1;
+
+  // set left/right weights
+  if (leftRight_ < 0) {
+    mopL->setWeight(1);
+    mopR->setWeight(0);
+  }
+  else if (leftRight_ > 0) {
+    mopL->setWeight(0);
+    mopR->setWeight(1);
+  }
+
+  std::vector<MeasurementOnPlane*> retVal;
+  retVal.push_back(mopL);
+  retVal.push_back(mopR);
+  return retVal;
 }
 
 const TMatrixD& WirePointMeasurement::getHMatrix(const AbsTrackRep* rep) const {

@@ -49,13 +49,15 @@ SharedPlanePtr PlanarMeasurement::constructPlane(const StateOnPlane* state) cons
 }
 
 
-MeasurementOnPlane PlanarMeasurement::constructMeasurementOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const {
+std::vector<MeasurementOnPlane*> PlanarMeasurement::constructMeasurementsOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const {
 
-  MeasurementOnPlane mop(rawHitCoords_,
+  MeasurementOnPlane* mop = new MeasurementOnPlane(rawHitCoords_,
        rawHitCov_,
        plane, rep, getHMatrix(rep));
 
-  return mop;
+  std::vector<MeasurementOnPlane*> retVal;
+  retVal.push_back(mop);
+  return retVal;
 }
 
 

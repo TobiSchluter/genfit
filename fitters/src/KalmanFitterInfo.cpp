@@ -186,6 +186,13 @@ void KalmanFitterInfo::setMeasurementsOnPlane(const std::vector< genfit::Measure
 }
 
 
+void KalmanFitterInfo::addMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane) {
+  for (std::vector<MeasurementOnPlane*>::const_iterator m = measurementsOnPlane.begin(), mend = measurementsOnPlane.end(); m < mend; ++m) {
+    addMeasurementOnPlane(*m);
+  }
+}
+
+
 void KalmanFitterInfo::setRep(const AbsTrackRep* rep) {
   rep_ = rep;
 

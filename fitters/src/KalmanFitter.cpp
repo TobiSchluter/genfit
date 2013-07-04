@@ -152,7 +152,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   if (fi->getNumMeasurements() == 0) {
     const AbsMeasurement* m = tp->getRawMeasurement(0);
     SharedPlanePtr plane = m->constructPlane(currentState);
-    fi->addMeasurementOnPlane(new MeasurementOnPlane(m->constructMeasurementOnPlane(rep, plane)));
+    fi->addMeasurementsOnPlane(m->constructMeasurementsOnPlane(rep, plane));
   }
   const MeasurementOnPlane* mOnPlane = fi->getMeasurementOnPlane(0);
   const SharedPlanePtr plane = mOnPlane->getPlane();

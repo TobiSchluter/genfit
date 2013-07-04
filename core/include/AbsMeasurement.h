@@ -66,8 +66,9 @@ class AbsMeasurement : public TObject {
 
   /**
    * Construct measurement on given plane wrt. given TrackRep. The raw measurement has to be projected onto the plane. It's possible to make corrections to the coordinates here.
+   * Usually the vector will contain only one element. But in the case of e.g. WireMeasurements, it will be 2 (left and right).
    */
-  virtual MeasurementOnPlane constructMeasurementOnPlane(const AbsTrackRep*, const SharedPlanePtr) const = 0;
+  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr) const = 0;
 
   virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const = 0;
 
@@ -76,7 +77,7 @@ class AbsMeasurement : public TObject {
  protected:
 
   // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
- AbsMeasurement(const AbsMeasurement& o) : TObject(o) {;};
+ AbsMeasurement(const AbsMeasurement&);
 #ifndef __CINT__
   AbsMeasurement& operator=(const AbsMeasurement&); // default cannot work because TVector and TMatrix = operators don't do resizing
 #endif

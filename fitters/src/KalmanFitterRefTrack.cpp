@@ -229,8 +229,7 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
       for ( std::vector< genfit::AbsMeasurement* >::iterator measurement = rawMeasurements.begin(), lastMeasurement =rawMeasurements.end(); measurement != lastMeasurement; ++measurement)
       {
        assert((*measurement) != NULL);
-       MeasurementOnPlane* mop = new MeasurementOnPlane((*measurement)->constructMeasurementOnPlane(rep, plane));
-       fitterInfo->addMeasurementOnPlane(mop);
+       fitterInfo->addMeasurementsOnPlane((*measurement)->constructMeasurementsOnPlane(rep, plane));
       }
     }
     catch (genfit::Exception& e) {

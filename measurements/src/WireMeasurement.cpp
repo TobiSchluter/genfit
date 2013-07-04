@@ -88,26 +88,38 @@ SharedPlanePtr WireMeasurement::constructPlane(const StateOnPlane* state) const 
   TVector3 U = dirInPoca.Cross(wireDirection);
   // U.SetMag(1.); automatically assured
 
-  // check left/right ambiguity
-  if (leftRight_ == 0){ // auto select
-    if ((poca - pocaOnWire)*U < 0) U *= -1.;
-  }
-  else if (leftRight_ < 0) U *= -1.;
-
   return SharedPlanePtr(new DetPlane(wire1, U, wireDirection));
 }
 
 
-MeasurementOnPlane WireMeasurement::constructMeasurementOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const
+std::vector<MeasurementOnPlane*> WireMeasurement::constructMeasurementsOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const
 {
-  double m = rawHitCoords_(6);
+  double mR = rawHitCoords_(6);
+  double mL = -mR;
   double V = rawHitCov_(6,6);
 
-  MeasurementOnPlane mop(TVectorD(1, &m),
+  MeasurementOnPlane* mopL = new MeasurementOnPlane(TVectorD(1, &mL),
 			 TMatrixDSym(1, &V),
 			 plane, rep, getHMatrix(rep));
 
-  return mop;
+  MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(1, &mR),
+       TMatrixDSym(1, &V),
+       plane, rep, getHMatrix(rep));
+
+  // set left/right weights
+  if (leftRight_ < 0) {
+    mopL->setWeight(1);
+    mopR->setWeight(0);
+  }
+  else if (leftRight_ > 0) {
+    mopL->setWeight(0);
+    mopR->setWeight(1);
+  }
+
+  std::vector<MeasurementOnPlane*> retVal;
+  retVal.push_back(mopL);
+  retVal.push_back(mopR);
+  return retVal;
 }
 
 const TMatrixD& WireMeasurement::getHMatrix(const AbsTrackRep* rep) const {

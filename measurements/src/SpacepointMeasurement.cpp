@@ -56,14 +56,14 @@ SharedPlanePtr SpacepointMeasurement::constructPlane(const StateOnPlane* state) 
 }
 
 
-MeasurementOnPlane SpacepointMeasurement::constructMeasurementOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const
+std::vector<MeasurementOnPlane*> SpacepointMeasurement::constructMeasurementsOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const
 {
-  MeasurementOnPlane mop(TVectorD(2),
+  MeasurementOnPlane* mop = new MeasurementOnPlane(TVectorD(2),
        TMatrixDSym(3), // will be resized to 2x2 by Similarity later
        plane, rep, getHMatrix(rep));
 
-  TVectorD& m = mop.getState();
-  TMatrixDSym& V = mop.getCov();
+  TVectorD& m = mop->getState();
+  TMatrixDSym& V = mop->getCov();
 
   const TVector3& o(plane->getO());
   const TVector3& u(plane->getU());
@@ -93,7 +93,9 @@ MeasurementOnPlane SpacepointMeasurement::constructMeasurementOnPlane(const AbsT
   V = rawHitCov_;
   V.SimilarityT(jac);
 
-  return mop;
+  std::vector<MeasurementOnPlane*> retVal;
+  retVal.push_back(mop);
+  return retVal;
 }
 
 
