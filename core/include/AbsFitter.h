@@ -33,7 +33,7 @@ class AbsFitter {
   AbsFitter() {}
   virtual ~AbsFitter() {}
 
-  virtual void processTrack(Track*, AbsTrackRep*) = 0;
+  virtual void processTrack(Track*, const AbsTrackRep*) = 0;
 };
 
 }  /* End of namespace genfit */

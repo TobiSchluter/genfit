@@ -36,7 +36,7 @@
 using namespace genfit;
 
 
-void KalmanFitter::fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf, int direction)
+void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction)
 {
   chi2 = 0;
   ndf = 0;
@@ -74,7 +74,7 @@ void KalmanFitter::fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf
 }
 
 
-void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
+void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
 {
   currentState = new MeasuredStateOnPlane(rep);
   TVectorD seed(tr->getStateSeed());
@@ -96,7 +96,7 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
     std::cout << "\033[0mfitting" << std::endl;
 #endif
     double chi2FW = 0;
-    size_t ndfFW = 0;
+    double ndfFW = 0;
     fitTrack(tr, rep, chi2FW, ndfFW, +1);
 #ifdef DEBUG
     std::cout << "\033[1;21mstate post forward" << std::endl;
@@ -107,7 +107,7 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
     // Backwards iteration:
     currentState->getCov() *= blowUpFactor_;  // blow up cov
     double chi2BW = 0;
-    size_t ndfBW = 0;
+    double ndfBW = 0;
     fitTrack(tr, rep, chi2BW, ndfBW, -1);
 #ifdef DEBUG
     std::cout << "\033[1;21mstate post backward" << std::endl;
@@ -129,9 +129,10 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
     }
 
     if (++nIt > maxIterations_) {
-      delete currentState;
-      Exception exc("Track fit didn't converge in max iterations.",__LINE__,__FILE__);
-      throw exc;
+      // FIXME
+      //delete currentState;
+      //Exception exc("Track fit didn't converge in max iterations.",__LINE__,__FILE__);
+      //throw exc;
     }
   }
   delete currentState;
@@ -139,7 +140,7 @@ void KalmanFitter::processTrack(Track* tr, AbsTrackRep* rep)
 
 void
 KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
-				AbsTrackRep* rep, double& chi2, size_t& ndf, int direction)
+    const AbsTrackRep* rep, double& chi2, double& ndf, int direction)
 {
   if (!tp->hasRawMeasurements())
     return;

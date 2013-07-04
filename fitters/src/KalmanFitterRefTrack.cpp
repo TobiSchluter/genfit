@@ -39,7 +39,7 @@
 using namespace genfit;
 
 
-void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, size_t& ndf, int direction)
+void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction)
 {
   chi2 = 0;
   ndf = 0;
@@ -72,17 +72,15 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& c
 }
 
 
-void KalmanFitterRefTrack::processTrack(Track* tr, AbsTrackRep* rep)
+void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
 {
 
   // TODO: try catch block, what if fit fails?
 
   double oldChi2FW = 1e6;
   double oldChi2BW = 1e6;
-  double chi2FW = 0;
-  size_t ndfFW = 0;
-  double chi2BW = 0;
-  size_t ndfBW = 0;
+  double chi2FW(0), ndfFW(0);
+  double chi2BW(0), ndfBW(0);
 
   for (unsigned int i=0; i<maxIterations_; ++i) {
 
@@ -254,139 +252,8 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
 }
 
 
-void KalmanFitterRefTrack::getChiSquNdf(const Track* tr, const AbsTrackRep* rep, double& bChi2, double& fChi2, double& bNdf,  double& fNdf) const {
-  bChi2 = 0;
-  fChi2 = 0;
-  bNdf = -1. * rep->getDim();
-  fNdf = -1. * rep->getDim();
-
-  std::vector<TrackPoint*> pointsWM = tr->getPointsWithMeasurement();
-  for (std::vector<TrackPoint*>::const_iterator tpIter = pointsWM.begin(), endIter = pointsWM.end(); tpIter != endIter; ++tpIter) {
-    AbsFitterInfo* afi = (*tpIter)->getFitterInfo(rep);
-    KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>(afi);
-    if (!fi) {
-      Exception exc("KalmanFitterRefTrack::getChiSqu(): fitterInfo is not a KalmanFitterInfo", __LINE__,__FILE__);
-      throw exc;
-    }
-
-    KalmanFittedStateOnPlane* fup = fi->getForwardUpdate();
-    KalmanFittedStateOnPlane* bup = fi->getBackwardUpdate();
-
-    if (fup == NULL || bup == NULL) {
-      Exception exc("KalmanFitterRefTrack::getChiSqu(): fup == NULL || bup == NULL", __LINE__,__FILE__);
-      throw exc;
-    }
-
-    bChi2 += bup->getChiSquareIncrement();
-    fChi2 += fup->getChiSquareIncrement();
-
-    bNdf += bup->getNdf();
-    fNdf += fup->getNdf();
-  }
-
-  if (bNdf < 0)
-    bNdf = 0;
-
-  if (fNdf < 0)
-    fNdf = 0;
-}
-
-
-double KalmanFitterRefTrack::getChiSqu(const Track* tr, const AbsTrackRep* rep, int direction) const {
-  double bChi2(0), fChi2(0), bNdf(0), fNdf(0);
-
-  getChiSquNdf(tr, rep, bChi2, fChi2, bNdf, fNdf);
-
-  if (direction < 0)
-    return bChi2;
-  return fChi2;
-}
-
-double KalmanFitterRefTrack::getNdf(const Track* tr, const AbsTrackRep* rep, int direction) const {
-  double bChi2(0), fChi2(0), bNdf(0), fNdf(0);
-
-  getChiSquNdf(tr, rep, bChi2, fChi2, bNdf, fNdf);
-
-  if (direction < 0)
-    return bNdf;
-  return fNdf;
-}
-
-double KalmanFitterRefTrack::getRedChiSqu(const Track* tr, const AbsTrackRep* rep, int direction) const {
-  double bChi2(0), fChi2(0), bNdf(0), fNdf(0);
-
-  getChiSquNdf(tr, rep, bChi2, fChi2, bNdf, fNdf);
-
-  if (direction < 0)
-    return bChi2/bNdf;
-  return fChi2/fNdf;
-}
-
-double KalmanFitterRefTrack::getPVal(const Track* tr, const AbsTrackRep* rep, int direction) const {
-  double bChi2(0), fChi2(0), bNdf(0), fNdf(0);
-
-  getChiSquNdf(tr, rep, bChi2, fChi2, bNdf, fNdf);
-
-  if (direction < 0)
-    return ROOT::Math::chisquared_cdf_c(bChi2, bNdf);
-  return ROOT::Math::chisquared_cdf_c(fChi2, fNdf);
-}
-
-
-bool KalmanFitterRefTrack::isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const {
-  std::vector< TrackPoint* > points = tr->getPointsWithMeasurement();
-
-  if (points.empty())
-    return true;
-
-  for (std::vector<TrackPoint*>::const_iterator pIt = points.begin(), pEnd = points.end(); pIt != pEnd; ++pIt) {
-    KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>((*pIt)->getFitterInfo(rep));
-    if (!fi)
-      return false;
-
-    if (!(fi->checkConsistency()))
-      return false;
-
-    if (fi->getStatusFlag() != 0)
-      return false;
-
-    if (!(fi->hasReferenceState()))
-      return false;
-  }
-
-  return true;
-}
-
-bool KalmanFitterRefTrack::isTrackFitted(const Track* tr, const AbsTrackRep* rep) const {
-  std::vector< TrackPoint* > points = tr->getPointsWithMeasurement();
-
-  if (points.empty())
-    return true;
-
-  for (std::vector<TrackPoint*>::const_iterator pIt = points.begin(), pEnd = points.end(); pIt != pEnd; ++pIt) {
-    KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>((*pIt)->getFitterInfo(rep));
-    if (!fi)
-      return false;
-
-    if (!(fi->checkConsistency()))
-      return false;
-
-    if (fi->getStatusFlag() != 0)
-      return false;
-
-    if (!(fi->hasForwardUpdate()))
-      return false;
-
-    if (!(fi->hasBackwardUpdate()))
-      return false;
-  }
-
-  return true;
-}
-
-
 void
-KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, size_t& ndf, int direction)
+KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, double& ndf, int direction)
 {
 
   const MeasurementOnPlane& m = fi->getAvgWeightedMeasurementOnPlane();

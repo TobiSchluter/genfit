@@ -62,10 +62,10 @@ class KalmanFitterInfo : public AbsFitterInfo {
   KalmanFittedStateOnPlane* getUpdate(int direction) const {if (direction >=0) return forwardUpdate_.get(); return backwardUpdate_.get();}
   std::vector< genfit::MeasurementOnPlane* > getMeasurementsOnPlane() const;
   const MeasurementOnPlane* getMeasurementOnPlane(int i = 0) const {if (i<0) i += measurementsOnPlane_.size(); return measurementsOnPlane_.at(i);}
-  /**
-   * Get weighted mean of all measurements.
-   */
+  /** Get weighted mean of all measurements. */
   MeasurementOnPlane getAvgWeightedMeasurementOnPlane() const;
+  /** Get measurements which is closest to state. */
+  const MeasurementOnPlane* getClosestMeasurementOnPlane(const StateOnPlane*) const;
 
   bool hasReferenceState() const {return (referenceState_.get() != NULL);}
   bool hasForwardPrediction() const {return (forwardPrediction_.get()  != NULL);}

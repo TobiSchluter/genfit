@@ -23,39 +23,29 @@
 #ifndef genfit_KalmanFitter_h
 #define genfit_KalmanFitter_h
 
-#include "AbsFitter.h"
-#include "MeasuredStateOnPlane.h"
+#include "AbsKalmanFitter.h"
 
 namespace genfit {
 
 class KalmanFitterInfo;
+class MeasuredStateOnPlane;
 class TrackPoint;
 
-class KalmanFitter : public AbsFitter {
+class KalmanFitter : public AbsKalmanFitter {
  public:
-  KalmanFitter(size_t maxIterations = 4, double deltaChi2 = 1e-3, double blowUpFactor = 1e3)
-    : maxIterations_(maxIterations), deltaChi2_(deltaChi2), blowUpFactor_(blowUpFactor) {}
+  KalmanFitter(unsigned int maxIterations = 4, double deltaChi2 = 1e-3, double blowUpFactor = 1e3)
+    : AbsKalmanFitter(maxIterations, deltaChi2, blowUpFactor) {}
   ~KalmanFitter() {}
 
-  void fitTrack(Track* tr, AbsTrackRep* rep, double chi2, size_t ndf, int direction);
-
-  void processTrack(Track* tr, AbsTrackRep* rep);
+  void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
+  void processTrack(Track* tr, const AbsTrackRep* rep);
 
  private:
   void processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
-			 AbsTrackRep* rep, double& chi2, size_t& ndf, int direction);
+      const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
+
   MeasuredStateOnPlane* currentState;
 
-  // Maximum number of iterations to attempt.  Forward and backward
-  // are counted as one iteration.
-  size_t maxIterations_;
-  // Convergence criterion: if track total chi² changes less than this
-  // between consecutive iterations, consider the track converged.
-  // chi² from the backwards fit is used.
-  double deltaChi2_;
-  // Blow up the covariance of the forward (backward) fit by this
-  // factor before seeding the backward (forward) fit.
-  double blowUpFactor_;
 };
 
 }

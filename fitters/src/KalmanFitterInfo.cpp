@@ -125,6 +125,29 @@ MeasurementOnPlane KalmanFitterInfo::getAvgWeightedMeasurementOnPlane() const {
 }
 
 
+const MeasurementOnPlane* KalmanFitterInfo::getClosestMeasurementOnPlane(const StateOnPlane* sop) const {
+  if(measurementsOnPlane_.size() == 0)
+    return NULL;
+
+  if(measurementsOnPlane_.size() == 1)
+    return getMeasurementOnPlane(0);
+
+  double normMin(9.99E99);
+  unsigned int iMin(0);
+  for (unsigned int i=0; i<getNumMeasurements(); ++i) {
+    const TMatrixD& H = measurementsOnPlane_[i]->getHMatrix();
+    TVectorD res = measurementsOnPlane_[i]->getState() - (H * sop->getState());
+    double norm = sqrt(res.Norm2Sqr());
+    if (norm < normMin) {
+      normMin = norm;
+      iMin = i;
+    }
+  }
+
+  return getMeasurementOnPlane(iMin);
+}
+
+
 MeasuredStateOnPlane KalmanFitterInfo::getFittedState(bool biased) const {
   // TODO: Test
 
