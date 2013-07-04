@@ -136,13 +136,12 @@ TrackPoint::~TrackPoint() {
 }*/
 
 
-std::vector< genfit::AbsMeasurement* > TrackPoint::getRawMeasurements() const {
+std::vector< genfit::AbsMeasurement* > TrackPoint::getRawMeasurements() {
   // FIXME: Change type?  Why is this needed?
   std::vector<genfit::AbsMeasurement*> vec;
   vec.reserve(rawMeasurements_.size());
   for (size_t i = 0; i < rawMeasurements_.size(); ++i)
-    // FIXME: why do I get the const&, i.e. why do I have to const_cast ?
-    vec.push_back(const_cast<AbsMeasurement*>(&rawMeasurements_[i]));
+    vec.push_back(&rawMeasurements_[i]);
   return vec;
 
   /*std::vector< genfit::AbsMeasurement* > retVal;
@@ -156,12 +155,11 @@ std::vector< genfit::AbsMeasurement* > TrackPoint::getRawMeasurements() const {
 }
 
 
-AbsMeasurement* TrackPoint::getRawMeasurement(int i) const {
+AbsMeasurement* TrackPoint::getRawMeasurement(int i) {
   if (i < 0)
     i += rawMeasurements_.size();
 
-  // FIXME: As above: why do I get the const-form of at?
-  return const_cast<AbsMeasurement*>(&(rawMeasurements_.at(i)));
+  return &(rawMeasurements_.at(i));
 }
 
 
@@ -171,7 +169,7 @@ std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos() const {
 
   for (std::map<const AbsTrackRep*, boost::ptr_vector<AbsFitterInfo> >::const_iterator it = fitterInfos_.begin(); it != fitterInfos_.end();  ++it ) {
     for (size_t i = 0; i < it->second.size(); ++i) {
-      // FIXME: why const?
+      // FIXME: why const? Because of const_iterator.
       retVal.push_back(const_cast<AbsFitterInfo*>(&it->second[i]));
     }
   }
@@ -180,13 +178,13 @@ std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos() const {
 }
 
 std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos(const AbsTrackRep* rep) const {
+  // FIXME: Probably makes more sense to return a reference to the ptr_vector
   std::vector< AbsFitterInfo* > retVal;
 
   std::map< const AbsTrackRep*, boost::ptr_vector<AbsFitterInfo> >::const_iterator it = fitterInfos_.find(rep);
 
   if (it != fitterInfos_.end()) {
     for (size_t i = 0; i < it->second.size(); ++i) {
-      // FIXME: why const?
       retVal.push_back(const_cast<AbsFitterInfo*>(&it->second[i]));
     }
   }
@@ -201,7 +199,6 @@ AbsFitterInfo* TrackPoint::getFitterInfo(const AbsTrackRep* rep, int i) const {
   if (it != fitterInfos_.end()) {
     if (i < 0)
       i += it->second.size();
-    // FIXME: why do I need the const_cast?
     return const_cast<AbsFitterInfo*>(&it->second.at(i));
   }
 

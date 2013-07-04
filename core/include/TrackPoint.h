@@ -66,8 +66,8 @@ class TrackPoint : public TObject {
   Track* getTrack() const {return track_;}
   void setTrack(Track* track) {track_ = track;}
 
-  std::vector< genfit::AbsMeasurement* > getRawMeasurements() const;
-  AbsMeasurement* getRawMeasurement(int i = 0) const;
+  std::vector< genfit::AbsMeasurement* > getRawMeasurements();
+  AbsMeasurement* getRawMeasurement(int i = 0);
   unsigned int getNumRawMeasurements() const {return rawMeasurements_.size();}
   bool hasRawMeasurements() const {return (! rawMeasurements_.empty());}
   //! Get list of all fitterInfos of all TrackReps
