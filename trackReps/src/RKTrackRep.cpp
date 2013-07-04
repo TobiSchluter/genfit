@@ -421,7 +421,6 @@ double RKTrackRep::getCharge(const StateOnPlane* state) const
     return (state->getAuxInfo())(0);
   else {
     TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(pdgCode_);
-    std::cerr<<"pdg "<<pdgCode_<<std::endl;
     assert(particle != NULL);
     return particle->Charge()/(3.);
   }
