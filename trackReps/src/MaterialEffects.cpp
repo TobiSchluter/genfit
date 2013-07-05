@@ -577,7 +577,7 @@ double MaterialEffects::energyLossBrems(const double& mom) const
 
     double ETA = 0.;
     if (matZ_ > 0.) {
-      double X = log(AA * mom / matZ_ * matZ_);
+      double X = log(AA * mom / (matZ_ * matZ_));
       if (X > -8.) {
         if (X >= +9.) ETA = 1.;
         else {
