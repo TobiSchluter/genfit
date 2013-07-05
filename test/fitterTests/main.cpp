@@ -12,6 +12,7 @@
 #include <Exception.h>
 #include <FieldManager.h>
 #include <KalmanFittedStateOnPlane.h>
+#include <AbsKalmanFitter.h>
 #include <KalmanFitter.h>
 #include <KalmanFitterRefTrack.h>
 #include <KalmanFitterInfo.h>
@@ -119,10 +120,10 @@ int randomSign() {
 int main() {
   std::cout<<"main"<<std::endl;
 
-  const unsigned int nEvents = 10000;
+  const unsigned int nEvents = 1;
   const double BField = 15.;       // kGauss
-  const double momentum = 0.1;     // GeV
-  const double theta = 150;         // degree
+  const double momentum = 0.4;     // GeV
+  const double theta = 100;         // degree
   const double thetaDetPlane = 90;         // degree
   const double phiDetPlane = 0;         // degree
   const double pointDist = 5;      // cm; approx. distance between measurements generated w/ RKTrackRep
@@ -138,7 +139,15 @@ int main() {
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
-  const int fitterId = 1; // 1 = SimpleKalman; 2 = KalmanFitterRefTrack; 3 = DAF
+  enum eFitterType { SimpleKalman = 0,
+        RefKalman};
+  //const eFitterType fitterId = SimpleKalman;
+  const eFitterType fitterId = RefKalman;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
+  const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
+  const int nIter = 2; // max number of iterations
+  const double dChi2 = 1.E-3; // convergence criterion
 
   const int pdg = 13;               // particle pdg code
 
@@ -147,7 +156,7 @@ int main() {
   const double momSmear = 0.1*momentum;     // GeV
   const double zSmearFac = 10;
 
-  const bool HelixTest = false;      // use helix for creating measurements
+  const bool HelixTest = true;      // use helix for creating measurements
 
   const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
 
@@ -167,15 +176,27 @@ int main() {
 
   for (int i = 0; i < 4; ++i)
     {
-      measurementTypes.push_back(StripU);
-      measurementTypes.push_back(StripV);
+      measurementTypes.push_back(WirePoint);
     }
 
 
 
-  // init fitters
-  genfit::KalmanFitter simpleKalman;
-  genfit::KalmanFitterRefTrack kalmanFitterRefTrack;
+  // init fitter
+  genfit::AbsKalmanFitter* fitter;
+  switch (fitterId) {
+    case SimpleKalman:
+      fitter = new genfit::KalmanFitter(nIter);
+      break;
+
+    case RefKalman:
+      fitter = new genfit::KalmanFitterRefTrack(nIter);
+      break;
+  }
+  fitter-> setMultipleMeasurementHandling(mmHandling);
+
+
+  genfit::KalmanFitter simpleKalman(nIter, dChi2);
+  genfit::KalmanFitterRefTrack kalmanFitterRefTrack(nIter, dChi2);
 
 
   gRandom->SetSeed(10);
@@ -347,8 +368,8 @@ int main() {
 
           int lr = 1;
           TVector3 wirePerp;
-          if (measurementTypes[i] == Wire
-	      || measurementTypes[i] == WirePoint){
+          if (measurementTypes[i] == Wire ||
+              measurementTypes[i] == WirePoint){
             wirePerp = dir.Cross(currentWireDir);
             if (gRandom->Uniform(-1,1) >= 0) {
               wirePerp *= -1.;
@@ -441,17 +462,17 @@ int main() {
             }
             break;
 
-	  case StripU: case StripV: {
+            case StripU: case StripV: {
               if (debug) std::cerr << "create StripHit" << std::endl;
 
-	      TVector3 vU, vV;
-	      if (measurementTypes[i] == StripU) {
-		vU = planeNorm.Cross(z);
-		vV = (planeNorm.Cross(z)).Cross(planeNorm);
-	      } else {
-		vU = (planeNorm.Cross(z)).Cross(planeNorm);
-		vV = planeNorm.Cross(z);
-	      }
+              TVector3 vU, vV;
+              if (measurementTypes[i] == StripU) {
+                vU = planeNorm.Cross(z);
+                vV = (planeNorm.Cross(z)).Cross(planeNorm);
+              } else {
+                vU = (planeNorm.Cross(z)).Cross(planeNorm);
+                vV = planeNorm.Cross(z);
+              }
               genfit::SharedPlanePtr plane(new genfit::DetPlane(point, vU, vV));
 
               TVectorD hitCoords(1);
@@ -468,7 +489,7 @@ int main() {
             case Wire: {
               if (debug) std::cerr << "create WireHit" << std::endl;
 
-              TVectorD hitCoords(7);
+             TVectorD hitCoords(7);
               hitCoords(0) = (point-wirePerp-currentWireDir).X();
               hitCoords(1) = (point-wirePerp-currentWireDir).Y();
               hitCoords(2) = (point-wirePerp-currentWireDir).Z();
@@ -563,30 +584,12 @@ int main() {
       // print trackCand
       //if (debug) fitTrack->Print();
 
-
+      assert(fitTrack->checkConsistency());
 
       // do the fit
       try{
-        switch (fitterId) {
-          case 1:
-            if (debug) std::cout<<"Starting the fitter (simple Kalman)"<<std::endl;
-            simpleKalman.processTrack(fitTrack, rep);
-            break;
-
-          case 2:
-            if (debug) std::cout<<"Starting the fitter (reference track Kalman)"<<std::endl;
-            kalmanFitterRefTrack.processTrack(fitTrack, rep);
-            break;
-
-          case 3:
-            //if (debug) std::cout<<"Starting the fitter (DAF)"<<std::endl;
-            //daf.processTrack.processTrack(fitTrack, rep);
-            //break;
-          default:
-            std::cout<<"no fitter selected!"<<std::endl;
-
-        }
-
+        if (debug) std::cout<<"Starting the fitter"<<std::endl;
+        fitter->processTrack(fitTrack, rep);
         if (debug) std::cout<<"fitter is finished!"<<std::endl;
       }
       catch(genfit::Exception& e){
@@ -595,12 +598,14 @@ int main() {
         continue;
       }
 
+      assert(fitTrack->checkConsistency());
+
       if (debug) fitTrack->Print();
 
 
 
       // check if fit was successful
-      if (!kalmanFitterRefTrack.isTrackFitted(fitTrack, rep)) {
+      if (!fitter->isTrackFitted(fitTrack, rep)) {
         std::cout << "Track could not be fitted successfully! \n";
         continue;
       }
@@ -638,7 +643,7 @@ int main() {
       const TVectorD& state = kfsop->getState();
       const TMatrixDSym& cov = kfsop->getCov();
 
-      double pval = kalmanFitterRefTrack.getPVal(fitTrack, rep); // FIXME choose fitter that has been used
+      double pval = fitter->getPVal(fitTrack, rep); // FIXME choose fitter that has been used
 
       hmomRes->Fill( (charge/state[0]-momentum));
       hupRes->Fill(  (state[1]-referenceState[1]));
