@@ -30,8 +30,6 @@
 
 #include <TObject.h>
 
-#include <boost/ptr_container/ptr_vector.hpp>
-
 #include <map>
 #include <vector>
 #include <memory>
@@ -67,7 +65,7 @@ class TrackPoint : public TObject {
   void setTrack(Track* track) {track_ = track;}
 
   std::vector< genfit::AbsMeasurement* > getRawMeasurements();
-  AbsMeasurement* getRawMeasurement(int i = 0);
+  AbsMeasurement* getRawMeasurement(int i = 0) const;
   unsigned int getNumRawMeasurements() const {return rawMeasurements_.size();}
   bool hasRawMeasurements() const {return (! rawMeasurements_.empty());}
   //! Get list of all fitterInfos of all TrackReps
@@ -103,10 +101,10 @@ class TrackPoint : public TObject {
    *  Can be more than one, e.g. multiple measurements in the same Si detector, left and right measurements of a wire detector etc.
    * @element-type AbsMeasurement
    */
-  boost::ptr_vector<AbsMeasurement> rawMeasurements_;
+  std::vector<AbsMeasurement*> rawMeasurements_;
   //std::vector<AbsMeasurement*> rawMeasurements_; // Ownership
 
-  std::map< const AbsTrackRep*, boost::ptr_vector<AbsFitterInfo> > fitterInfos_; // Ownership over FitterInfos
+  std::map< const AbsTrackRep*, std::vector<AbsFitterInfo*> > fitterInfos_; // Ownership over FitterInfos
 
   //MaterialInfo* material_; // Ownership
 
