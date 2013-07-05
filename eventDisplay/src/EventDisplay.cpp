@@ -355,7 +355,7 @@ void EventDisplay::drawEvent(unsigned int id) {
       // draw track if corresponding option is set ------------------------------------------
       struct makeLinesClass {
       void operator()(TEveStraightLineSet **pls, const TVector3& vOld, const TVector3& vNew, const TVector3& dirOld, const TVector3& dirNew,
-          const Color_t& color, const Style_t& style, bool drawMarkers, double lineWidth = 2)
+          const Color_t& color, const Style_t& style, bool drawMarkers, double lineWidth = 2, int markerPos = 1)
         {
           double distA = (vNew-vOld).Mag();
           double distB = distA;
@@ -373,8 +373,13 @@ void EventDisplay::drawEvent(unsigned int id) {
           ls->SetLineColor(color);
           ls->SetLineStyle(style);
           ls->SetLineWidth(lineWidth);
-          if (drawMarkers)
-            ls->AddMarker(vNew(0), vNew(1), vNew(2));
+          if (drawMarkers) {
+            if (markerPos == 0)
+              ls->AddMarker(vOld(0), vOld(1), vOld(2));
+            else
+              ls->AddMarker(vNew(0), vNew(1), vNew(2));
+          }
+
         }
       } makeLines;
 
@@ -386,7 +391,7 @@ void EventDisplay::drawEvent(unsigned int id) {
       }
       if (drawForward) {
         if (j > 0)
-          makeLines(&track_linesFwd, old_track_posFwdUp, track_posFwdPre, old_track_dirFwdUp, track_dirFwdPre, charge > 0 ? kMagenta : kCyan, 1, drawTrackMarkers, 1);
+          makeLines(&track_linesFwd, old_track_posFwdUp, track_posFwdPre, old_track_dirFwdUp, track_dirFwdPre, charge > 0 ? kMagenta : kCyan, 1, drawTrackMarkers, 1, 0);
         old_track_posFwdPre = track_posFwdPre;
         old_track_dirFwdPre = track_dirFwdPre;
         old_track_posFwdUp = track_posFwdUp;
