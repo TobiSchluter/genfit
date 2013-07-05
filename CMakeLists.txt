@@ -2,7 +2,7 @@
 CMAKE_MINIMUM_REQUIRED( VERSION 2.6 )
 
 # declare the project name
-PROJECT(genfit)
+PROJECT(genfit2)
 
 # set project version
 SET( ${PROJECT_NAME}_VERSION_MAJOR 2 )
