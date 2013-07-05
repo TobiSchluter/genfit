@@ -41,6 +41,12 @@ using namespace genfit;
 
 void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction)
 {
+
+  if (!isTrackPrepared(tr, rep)) {
+    Exception exc("KalmanFitterRefTrack::fitTrack ==> track is not properly prepared.",__LINE__,__FILE__);
+    throw exc;
+  }
+
   chi2 = 0;
   ndf = 0;
   KalmanFitterInfo* prevFi(NULL);
@@ -96,9 +102,15 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
 #endif
 
     // fit forward
+#ifdef DEBUG
+    std::cout << "forward fit\n";
+#endif
     fitTrack(tr, rep, chi2FW, ndfFW, +1);
 
     // fit backward
+#ifdef DEBUG
+    std::cout << "backward fit\n";
+#endif
     KalmanFitterInfo* lastInfo = static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(-1)->getFitterInfo(rep, -1));
     lastInfo->setBackwardPrediction(new MeasuredStateOnPlane(*(lastInfo->getForwardUpdate())));
     lastInfo->getBackwardPrediction()->getCov() *= blowUpFactor_;  // blow up cov
