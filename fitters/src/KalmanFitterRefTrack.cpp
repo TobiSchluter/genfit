@@ -256,10 +256,11 @@ void
 KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, double& ndf, int direction)
 {
 
-  const MeasurementOnPlane& m = fi->getAvgWeightedMeasurementOnPlane();
 
-  TVectorD dp(m.getHMatrix().GetNcols()); // \delta p_{k|k-1}
-  TMatrixDSym C(m.getHMatrix().GetNcols()); // C_{k|k-1}
+  unsigned int dim = fi->getRep()->getDim();
+
+  TVectorD dp(dim); // \delta p_{k|k-1}
+  TMatrixDSym C(dim); // C_{k|k-1}
 
   // predict
   if (prevFi != NULL) {
@@ -294,6 +295,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
 #endif
 
   // update
+  const MeasurementOnPlane& m = getMeasurement(fi, direction);
   const TVectorD& dm = m.getState() - (m.getHMatrix() * fi->getReferenceState()->getState()); // \delta m_k = m_k - H_k p_{k,r}
 
   TMatrixDSym covSumInv(C); // (V_k + H_k C_{k|k-1} H_k^T)^(-1)

@@ -167,3 +167,27 @@ bool AbsKalmanFitter::isTrackFitted(const Track* tr, const AbsTrackRep* rep) con
 }
 
 
+const MeasurementOnPlane AbsKalmanFitter::getMeasurement(const KalmanFitterInfo* fi, int direction) const {
+  switch (multipleMeasurementHandling_) {
+    case weightedAverage :
+      return fi->getAvgWeightedMeasurementOnPlane();
+    case unweightedClosestToReference :
+      if (!fi->hasReferenceState()) {
+        Exception e("AbsKalmanFitter::getMeasurement: no ReferenceState.", __LINE__,__FILE__);
+        e.setFatal();
+        throw e;
+      }
+      return MeasurementOnPlane(*(fi->getClosestMeasurementOnPlane(fi->getReferenceState())));
+    case unweightedClosestToPrediction :
+      if (!fi->hasPrediction(direction)) {
+        Exception e("AbsKalmanFitter::getMeasurement: no prediction.", __LINE__,__FILE__);
+        e.setFatal();
+        throw e;
+      }
+      return MeasurementOnPlane(*(fi->getClosestMeasurementOnPlane(fi->getPrediction(direction))));
+    default:
+      Exception e("AbsKalmanFitter::getMeasurement: choice not valid.", __LINE__,__FILE__);
+      e.setFatal();
+      throw e;
+  }
+}

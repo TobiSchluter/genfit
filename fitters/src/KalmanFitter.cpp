@@ -145,18 +145,20 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   if (!tp->hasRawMeasurements())
     return;
 
-  assert(tp->getNumRawMeasurements() == 1);  // FIXME: should of course support any number
-
   // Extrapolate to TrackPoint.
   MeasuredStateOnPlane* state = new MeasuredStateOnPlane(*currentState);
   //state.Print();
+
+  // construct measurementsOnPlane if it has not yet been done
   if (fi->getNumMeasurements() == 0) {
-    const AbsMeasurement* m = tp->getRawMeasurement(0);
-    SharedPlanePtr plane = m->constructPlane(currentState);
-    fi->addMeasurementsOnPlane(m->constructMeasurementsOnPlane(rep, plane));
+    std::vector< genfit::AbsMeasurement* > rawMeasurements =  tp->getRawMeasurements();
+    // construct plane with first measurement
+    SharedPlanePtr plane = rawMeasurements[0]->constructPlane(currentState);
+    for (std::vector< genfit::AbsMeasurement* >::iterator it = rawMeasurements.begin(); it != rawMeasurements.end(); ++it) {
+      fi->addMeasurementsOnPlane((*it)->constructMeasurementsOnPlane(rep, plane));
+    }
   }
-  const MeasurementOnPlane* mOnPlane = fi->getMeasurementOnPlane(0);
-  const SharedPlanePtr plane = mOnPlane->getPlane();
+  const SharedPlanePtr plane = fi->getPlane();
 
 #ifdef DEBUG
   std::cout << "its plane is at R = " << plane->getO().Perp()
@@ -178,9 +180,10 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
 
   TVectorD stateVector(state->getState());
   TMatrixDSym cov(state->getCov());
-  const TVectorD& measurement(mOnPlane->getState());
-  const TMatrixDSym& V(mOnPlane->getCov());
-  const TMatrixD& H(mOnPlane->getHMatrix());
+  const MeasurementOnPlane& mOnPlane = getMeasurement(fi, direction);
+  const TVectorD& measurement(mOnPlane.getState());
+  const TMatrixDSym& V(mOnPlane.getCov());
+  const TMatrixD& H(mOnPlane.getHMatrix());
 #ifdef DEBUG
   std::cout << "State prediction: "; stateVector.Print();
   std::cout << "Cov prediction: "; state->getCov().Print();

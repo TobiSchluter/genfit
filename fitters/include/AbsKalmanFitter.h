@@ -24,13 +24,25 @@
 #define genfit_AbsKalmanFitter_h
 
 #include "AbsFitter.h"
+#include "MeasurementOnPlane.h"
 
 namespace genfit {
+
+class KalmanFitterInfo;
+
+enum eMultipleMeasurementHandling {
+  weightedAverage, // weighted average between measurements; used by DAF
+  //weightedClosestToReference,
+  unweightedClosestToReference,
+  //weightedClosestToPrediction,
+  unweightedClosestToPrediction
+};
+
 
 class AbsKalmanFitter : public AbsFitter {
  public:
   AbsKalmanFitter(unsigned int maxIterations = 4, double deltaChi2 = 1e-3, double blowUpFactor = 1e3)
-    : maxIterations_(maxIterations), deltaChi2_(deltaChi2), blowUpFactor_(blowUpFactor) {}
+    : maxIterations_(maxIterations), deltaChi2_(deltaChi2), blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPrediction) {}
   virtual ~AbsKalmanFitter() {;}
 
   virtual void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction) = 0;
@@ -40,11 +52,17 @@ class AbsKalmanFitter : public AbsFitter {
   double getNdf(const Track* tr, const AbsTrackRep* rep, int direction = -1) const;
   double getRedChiSqu(const Track* tr, const AbsTrackRep* rep, int direction = -1) const;
   double getPVal(const Track* tr, const AbsTrackRep* rep, int direction = -1) const;
+  eMultipleMeasurementHandling getMultipleMeasurementHandling() const {return multipleMeasurementHandling_;}
+
+  void setMultipleMeasurementHandling(eMultipleMeasurementHandling mmh) {multipleMeasurementHandling_ = mmh;}
 
   bool isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const;
   bool isTrackFitted(const Track* tr, const AbsTrackRep* rep) const;
 
  protected:
+
+  //! get the measurementOnPlane taking the multipleMeasurementHandling_ into account
+  const MeasurementOnPlane getMeasurement(const KalmanFitterInfo* fi, int direction) const;
 
   // Maximum number of iterations to attempt.  Forward and backward
   // are counted as one iteration.
@@ -56,6 +74,9 @@ class AbsKalmanFitter : public AbsFitter {
   // Blow up the covariance of the forward (backward) fit by this
   // factor before seeding the backward (forward) fit.
   double blowUpFactor_;
+
+  // How to handle if there are multiple MeasurementsOnPlane
+  eMultipleMeasurementHandling multipleMeasurementHandling_;
 };
 
 }

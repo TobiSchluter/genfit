@@ -148,6 +148,23 @@ const MeasurementOnPlane* KalmanFitterInfo::getClosestMeasurementOnPlane(const S
 }
 
 
+SharedPlanePtr KalmanFitterInfo::getPlane() const {
+  if (hasReferenceState())
+    return referenceState_->getPlane();
+  if (getNumMeasurements() != 0)
+    return measurementsOnPlane_[0]->getPlane();
+  if (hasForwardPrediction())
+    return forwardPrediction_->getPlane();
+  if (hasBackwardPrediction())
+    return backwardPrediction_->getPlane();
+  if (hasReferenceState())
+    return referenceState_->getPlane();
+
+  Exception e("KalmanFitterInfo::getPlane: no plane available.", __LINE__,__FILE__);
+  throw e;
+}
+
+
 MeasuredStateOnPlane KalmanFitterInfo::getFittedState(bool biased) const {
   // TODO: Test
 

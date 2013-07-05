@@ -70,10 +70,12 @@ class KalmanFitterInfo : public AbsFitterInfo {
   bool hasReferenceState() const {return (referenceState_.get() != NULL);}
   bool hasForwardPrediction() const {return (forwardPrediction_.get()  != NULL);}
   bool hasBackwardPrediction() const {return (backwardPrediction_.get() != NULL);}
+  bool hasPrediction(int direction) const {if (direction >=0) return hasForwardPrediction(); return hasBackwardPrediction();}
   bool hasForwardUpdate() const {return (forwardUpdate_.get() != NULL);}
   bool hasBackwardUpdate() const {return (backwardUpdate_.get() != NULL);}
+  bool hasUpdate(int direction) const {if (direction >=0) return hasForwardUpdate(); return hasBackwardUpdate();}
   unsigned int getNumMeasurements() const {return measurementsOnPlane_.size();}
-
+  SharedPlanePtr getPlane() const;
   /** Get unbiased (default) or biased smoothed state
    */
   MeasuredStateOnPlane getFittedState(bool biased = false) const;
