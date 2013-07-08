@@ -70,7 +70,7 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& c
       catch (genfit::Exception& e) {
         fi->setStatusFlag(1);
         std::cerr << e.what();
-        return;
+	throw e;
       }
 
       prevFi = fi;
@@ -344,16 +344,20 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   std::cout << "\033[0m";
 #endif
 
-  // Calculate chi²
-  TMatrixDSym Rinv(C);
-  Rinv.Similarity(m.getHMatrix());
-  Rinv -= m.getCov();
-  Rinv *= -1;
-  tools::invertMatrix(Rinv);
+  // Calculate chi² increment.  At the first point chi2inc == 0 and
+  // the matrix will not be invertible.
+  double chi2inc = 0;
+  if (ndf != 0) {
+    TMatrixDSym Rinv(C);
+    Rinv.Similarity(m.getHMatrix());
+    Rinv -= m.getCov();
+    Rinv *= -1;
+    tools::invertMatrix(Rinv);
 
-  TVectorD resNew(m.getState() - m.getHMatrix()*updated);
+    TVectorD resNew(m.getState() - m.getHMatrix()*updated);
 
-  double chi2inc = Rinv.Similarity(resNew);
+    chi2inc = Rinv.Similarity(resNew);
+  }
   chi2 += chi2inc;
 
   double ndfInc = m.getState().GetNrows() * m.getWeight();
