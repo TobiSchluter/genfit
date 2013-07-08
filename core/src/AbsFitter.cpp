@@ -1,5 +1,5 @@
-/* Copyright 2013, Ludwig-Maximilians Universität München,
-   Authors: Tobias Schlüter & Johannes Rauch
+/* Copyright 2008-2010, Technische Universitaet Muenchen,
+   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
 
    This file is part of GENFIT.
 
@@ -16,28 +16,16 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @addtogroup genfit
- * @{
- */
 
-#ifndef genfit_AbsFitter_h
-#define genfit_AbsFitter_h
+#include "AbsFitter.h"
+#include "Track.h"
 
 namespace genfit {
 
-class Track;
-class AbsTrackRep;
+void AbsFitter::processTrack(Track* tr) {
+  for (unsigned int i=0; i<tr->getNumReps(); ++i) {
+    processTrack(tr, tr->getTrackRep(i));
+  }
+}
 
-class AbsFitter {
- public:
-  AbsFitter() {}
-  virtual ~AbsFitter() {}
-
-  virtual void processTrack(Track*, const AbsTrackRep*) = 0;
-  virtual void processTrack(Track*);
-};
-
-}  /* End of namespace genfit */
-/** @} */
-
-#endif //genfit_AbsFitter_h
+} /* End of namespace genfit */
