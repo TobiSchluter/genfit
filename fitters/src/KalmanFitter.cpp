@@ -38,6 +38,13 @@ using namespace genfit;
 
 void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction)
 {
+
+  if (multipleMeasurementHandling_ == unweightedClosestToReference) {
+    Exception exc("KalmanFitter::fitTrack ==> cannot use unweightedClosestToReference as multiple measurement handling.",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+
   chi2 = 0;
   ndf = 0;
 #ifdef DEBUG

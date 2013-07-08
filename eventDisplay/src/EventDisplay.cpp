@@ -238,6 +238,10 @@ void EventDisplay::drawEvent(unsigned int id) {
   for(unsigned int i = 0; i < events_[id]->size(); i++) { // loop over all tracks in an event
 
     Track* track = events_[id]->at(i);
+    if (! track->checkConsistency()){
+      std::cerr<<"track is not consistent"<<std::endl;
+      continue;
+    }
 
     AbsTrackRep* rep(track->getCardinalRep());
 
@@ -266,7 +270,15 @@ void EventDisplay::drawEvent(unsigned int id) {
       }
 
       KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(fitterInfo);
-      MeasuredStateOnPlane fittedState = fi->getFittedState(true);
+      MeasuredStateOnPlane fittedState;
+      try {
+        fittedState = fi->getFittedState(true);
+      }
+      catch (Exception& e) {
+        std::cerr << e.what();
+        std::cerr<<"can not get fitted state"<<std::endl;
+        continue;
+      }
       rep->getPosDir(&fittedState, track_pos, track_dir);
       rep->getPosDir(fi->getForwardPrediction(), track_posFwdPre, track_dirFwdPre);
       rep->getPosDir(fi->getForwardUpdate(), track_posFwdUp, track_dirFwdUp);

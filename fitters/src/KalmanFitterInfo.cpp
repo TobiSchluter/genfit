@@ -356,8 +356,31 @@ bool KalmanFitterInfo::checkConsistency() const {
     return false;
   }
 
+  // if more than one measurement, check if they have the same dimensionality
+  if (measurementsOnPlane_.size() > 1) {
+    int dim = measurementsOnPlane_[0]->getState().GetNrows();
+    for (unsigned int i = 1; i<measurementsOnPlane_.size(); ++i) {
+      if(measurementsOnPlane_[i]->getPlane() != plane) {
+        std::cerr << "KalmanFitterInfo::checkConsistency(): measurementsOnPlane_ are not all defined with the correct plane" << std::endl;
+        return false;
+      }
+      if(measurementsOnPlane_[i]->getState().GetNrows() != dim) {
+        std::cerr << "KalmanFitterInfo::checkConsistency(): measurementsOnPlane_ do not all have the same dimensionality" << std::endl;
+        return false;
+      }
+    }
+    if (dim == 0) {
+      std::cerr << "KalmanFitterInfo::checkConsistency(): measurementsOnPlane_ have dimension 0" << std::endl;
+      return false;
+    }
+  }
+
   // see if everything else is defined wrt this plane and rep_
   if (referenceState_) {
+    if(referenceState_->getPlane() != plane) {
+      std::cerr << "KalmanFitterInfo::checkConsistency(): referenceState_ is not defined with the correct plane" << std::endl;
+      return false;
+    }
     if (referenceState_->getRep() != rep_) {
       std::cerr << "KalmanFitterInfo::checkConsistency(): referenceState_ is not defined with the correct TrackRep" << std::endl;
       return false;

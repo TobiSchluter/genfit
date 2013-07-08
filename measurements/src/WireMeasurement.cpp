@@ -115,6 +115,10 @@ std::vector<MeasurementOnPlane*> WireMeasurement::constructMeasurementsOnPlane(c
     mopL->setWeight(0);
     mopR->setWeight(1);
   }
+  else {
+    mopL->setWeight(0.5);
+    mopR->setWeight(0.5);
+  }
 
   std::vector<MeasurementOnPlane*> retVal;
   retVal.push_back(mopL);
