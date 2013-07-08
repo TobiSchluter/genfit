@@ -83,7 +83,9 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
 
   // TODO: try catch block, what if fit fails?
 
+#ifdef DEBUG
   double oldChi2FW = 1e6;
+#endif
   double oldChi2BW = 1e6;
   double chi2FW(0), ndfFW(0);
   double chi2BW(0), ndfBW(0);
@@ -132,7 +134,9 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
     }
     else {
       oldChi2BW = chi2BW;
+#ifdef DEBUG
       oldChi2FW = chi2FW;
+#endif
     }
 
   }

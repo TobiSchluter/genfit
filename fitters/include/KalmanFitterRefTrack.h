@@ -47,7 +47,7 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
 
 };
 
-}
+}  /* End of namespace genfit */
 /** @} */
 
 #endif //genfit_KalmanFitterRefTrack_h

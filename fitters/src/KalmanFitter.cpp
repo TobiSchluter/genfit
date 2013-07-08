@@ -92,8 +92,9 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
   currentState->getCov().UnitMatrix();
   currentState->getCov() *= blowUpFactor_;
 
-
+#ifdef DEBUG
   double oldChi2FW = 1e6;
+#endif
   double oldChi2BW = 1e6;
   size_t nIt = 0;
   for(;;) {
@@ -131,7 +132,9 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
     }
     else {
       oldChi2BW = chi2BW;
+#ifdef DEBUG
       oldChi2FW = chi2FW;
+#endif
       currentState->getCov() *= blowUpFactor_;  // blow up cov
     }
 
@@ -173,10 +176,12 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
 #endif
 
   //state.Print();
-  double extLen = rep->extrapolateToPlane(state, plane);
 
 #ifdef DEBUG
+  double extLen = rep->extrapolateToPlane(state, plane);
   std::cout << "extrapolated by " << extLen << std::endl;
+#else
+  rep->extrapolateToPlane(state, plane);
 #endif
   //std::cout << "after extrap: " << std::endl;
   //state.Print();
