@@ -46,7 +46,7 @@
 
 namespace genfit {
 
-EventDisplay* EventDisplay::eventDisplay_ = nullptr;
+EventDisplay* EventDisplay::eventDisplay_ = NULL;
 
 EventDisplay::EventDisplay() {
 
@@ -75,7 +75,7 @@ double EventDisplay::getErrScale() { return errorScale_; }
 
 EventDisplay* EventDisplay::getInstance() {
 
-  if(eventDisplay_ == nullptr) {
+  if(eventDisplay_ == NULL) {
     eventDisplay_ = new EventDisplay();
   }
   return eventDisplay_;
@@ -170,13 +170,13 @@ void EventDisplay::open() {
   // draw the geometry, does not really work yet. If it's fixed, the docu in the header file should be changed.
   if(drawGeometry) {
     TGeoNode* top_node = gGeoManager->GetTopNode();
-    assert(top_node != nullptr);
+    assert(top_node != NULL);
 
     //Set transparency & color of geometry
     TObjArray* volumes = gGeoManager->GetListOfVolumes();
     for(int i = 0; i < volumes->GetEntriesFast(); i++) {
       TGeoVolume* volume = dynamic_cast<TGeoVolume*>(volumes->At(i));
-      assert(volume != nullptr);
+      assert(volume != NULL);
       volume->SetLineColor(12);
       volume->SetTransparency(50);
     }
@@ -243,6 +243,8 @@ void EventDisplay::drawEvent(unsigned int id) {
       continue;
     }
 
+    track->Print();
+
     AbsTrackRep* rep(track->getCardinalRep());
 
     unsigned int numhits = track->getNumPointsWithMeasurement();
@@ -252,10 +254,10 @@ void EventDisplay::drawEvent(unsigned int id) {
     TVector3 track_dir, track_dirRef, track_dirFwdPre, track_dirBwdPre, track_dirFwdUp, track_dirBwdUp;
     TVector3 old_track_dir, old_track_dirRef, old_track_dirFwdPre, old_track_dirBwdPre, old_track_dirFwdUp, old_track_dirBwdUp;
 
-    TEveStraightLineSet* track_lines = nullptr;
-    TEveStraightLineSet* track_linesFwd = nullptr;
-    TEveStraightLineSet* track_linesBwd = nullptr;
-    TEveStraightLineSet* track_linesRef = nullptr;
+    TEveStraightLineSet* track_lines = NULL;
+    TEveStraightLineSet* track_linesFwd = NULL;
+    TEveStraightLineSet* track_linesBwd = NULL;
+    TEveStraightLineSet* track_linesRef = NULL;
 
 
     for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
@@ -264,7 +266,7 @@ void EventDisplay::drawEvent(unsigned int id) {
       AbsFitterInfo* fitterInfo = track->getPointWithMeasurement(j)->getFitterInfo(rep, -1);
       const AbsMeasurement* m = track->getPointWithMeasurement(j)->getRawMeasurement();  // FIXME draw all measurements, not only 1st
 
-      if (dynamic_cast<KalmanFitterInfo*>(fitterInfo) == nullptr){
+      if (dynamic_cast<KalmanFitterInfo*>(fitterInfo) == NULL){
         std::cerr<<"can only display KalmanFitterInfo"<<std::endl;
         continue;
       }
@@ -314,7 +316,7 @@ void EventDisplay::drawEvent(unsigned int id) {
 
       int hit_coords_dim = hit_coords.GetNrows();
 
-      if(dynamic_cast<const PlanarMeasurement*>(m) != nullptr) {
+      if(dynamic_cast<const PlanarMeasurement*>(m) != NULL) {
         planar_hit = true;
         if(hit_coords_dim == 1) {
           hit_u = hit_coords(0);
@@ -326,17 +328,17 @@ void EventDisplay::drawEvent(unsigned int id) {
           hit_res_u = hit_cov(0,0);
           hit_res_v = hit_cov(1,1);
         }
-      } else if (dynamic_cast<const SpacepointMeasurement*>(m) != nullptr) {
+      } else if (dynamic_cast<const SpacepointMeasurement*>(m) != NULL) {
         space_hit = true;
         plane_size = 4;
-      } else if (dynamic_cast<const WireMeasurement*>(m) != nullptr) {
+      } else if (dynamic_cast<const WireMeasurement*>(m) != NULL) {
         wire_hit = true;
         hit_u = fabs(hit_coords(0));
         hit_v = v*(track_pos-o); // move the covariance tube so that the track goes through it
         hit_res_u = hit_cov(0,0);
         hit_res_v = 4;
         plane_size = 4;
-        if (dynamic_cast<const WirePointMeasurement*>(m) != nullptr) {
+        if (dynamic_cast<const WirePointMeasurement*>(m) != NULL) {
           wirepoint_hit = true;
           hit_v = hit_coords(1);
           hit_res_v = hit_cov(1,1);
@@ -377,7 +379,7 @@ void EventDisplay::drawEvent(unsigned int id) {
             distB *= -1.;
           TVector3 intermediate1 = vOld + 0.3 * distA * dirOld;
           TVector3 intermediate2 = vNew - 0.3 * distB * dirNew;
-          if (*pls == nullptr) *pls = new TEveStraightLineSet;
+          if (*pls == NULL) *pls = new TEveStraightLineSet;
           TEveStraightLineSet *ls = *pls;
           ls->AddLine(vOld(0), vOld(1), vOld(2), intermediate1(0), intermediate1(1), intermediate1(2));
           ls->AddLine(intermediate1(0), intermediate1(1), intermediate1(2), intermediate2(0), intermediate2(1), intermediate2(2));
@@ -643,10 +645,10 @@ void EventDisplay::drawEvent(unsigned int id) {
 
     }
 
-    if(track_lines != nullptr) gEve->AddElement(track_lines);
-    if(track_linesFwd != nullptr) gEve->AddElement(track_linesFwd);
-    if(track_linesBwd != nullptr) gEve->AddElement(track_linesBwd);
-    if(track_linesRef != nullptr) gEve->AddElement(track_linesRef);
+    if(track_lines != NULL) gEve->AddElement(track_lines);
+    if(track_linesFwd != NULL) gEve->AddElement(track_linesFwd);
+    if(track_linesBwd != NULL) gEve->AddElement(track_linesBwd);
+    if(track_linesRef != NULL) gEve->AddElement(track_linesRef);
 
   }
 
