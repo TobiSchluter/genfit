@@ -48,6 +48,8 @@ namespace genfit {
 
 class DAF : public AbsKalmanFitter {
 
+ public:
+
   DAF();
   DAF(AbsKalmanFitter* kalman);
   ~DAF() {};
@@ -55,6 +57,8 @@ class DAF : public AbsKalmanFitter {
   /** @brief Process a track using the DAF.
    */
   void processTrack(Track* tr, const AbsTrackRep* rep);
+
+  void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction) {;}
 
   /** @brief Set the probability cut for the weight calculation for the hits.
    *
@@ -82,13 +86,15 @@ class DAF : public AbsKalmanFitter {
   /** @brief check if convergence is met so the main iteration (over the betas) can be left
    * the convergence criteria is the largest change in the weights
    */
-  bool isConvergent(const std::vector<std::vector<double> >& oldWeights, AbsTrackRep* rep) const;
+  bool isConvergent(const std::vector<std::vector<double> >& oldWeights, const AbsTrackRep* rep) const;
+
+  void getWeights(const Track* tr, const AbsTrackRep* rep);
 
   /** @brief Calculate the weights for the next fitting pass.
     */
-  std::vector<std::vector<double> > calcWeights(Track* trk, double beta);
+  std::vector<std::vector<double> > calcWeights(Track* trk, const AbsTrackRep* rep, double beta);
 
-  std::map<AbsTrackRep*, std::vector<std::vector<double> > > weights_;
+  std::map<const AbsTrackRep*, std::vector<std::vector<double> > > weights_;
   std::vector<double> betas_;
   std::map<int,double>  chi2Cuts_;
   boost::scoped_ptr<AbsKalmanFitter> kalman_;

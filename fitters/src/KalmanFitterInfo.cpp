@@ -27,6 +27,9 @@
 #include "Track.h"
 #include "TrackPoint.h"
 
+//#define DEBUG
+
+
 namespace genfit {
 
 KalmanFitterInfo::KalmanFitterInfo() :
@@ -148,6 +151,17 @@ const MeasurementOnPlane* KalmanFitterInfo::getClosestMeasurementOnPlane(const S
 }
 
 
+std::vector<double> KalmanFitterInfo::getWeights() const {
+  std::vector<double> retVal;
+
+  for (unsigned int i=0; i<getNumMeasurements(); ++i) {
+    retVal.push_back(getMeasurementOnPlane(i)->getWeight());
+  }
+
+  return retVal;
+}
+
+
 SharedPlanePtr KalmanFitterInfo::getPlane() const {
   if (hasReferenceState())
     return referenceState_->getPlane();
@@ -169,19 +183,50 @@ MeasuredStateOnPlane KalmanFitterInfo::getFittedState(bool biased) const {
   // TODO: Test
 
   if (biased) {
-    if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(-1) == this->getTrackPoint()) // last measurement
+    if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(-1) == this->getTrackPoint()) {// last measurement
+      assert(forwardUpdate_.get() != NULL);
+      #ifdef DEBUG
+      std::cout << "KalmanFitterInfo::getFittedState - biased at last measurement = forwardUpdate_ \n";
+      #endif
       return MeasuredStateOnPlane(*forwardUpdate_);
-    else if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(0) == this->getTrackPoint()) // first measurement
+    }
+    else if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(0) == this->getTrackPoint()) { // first measurement
+      assert(backwardUpdate_.get() != NULL);
+      #ifdef DEBUG
+      std::cout << "KalmanFitterInfo::getFittedState - biased at first measurement = backwardUpdate_ \n";
+      backwardUpdate_->Print();
+      #endif
       return MeasuredStateOnPlane(*backwardUpdate_);
+    }
 
+    assert(forwardUpdate_.get() != NULL);
+    assert(backwardPrediction_.get() != NULL);
+    #ifdef DEBUG
+    std::cout << "KalmanFitterInfo::getFittedState - biased = mean(forwardUpdate_, backwardPrediction_) \n";
+    #endif
     return calcAverageState(forwardUpdate_.get(), backwardPrediction_.get());
   }
   else { // unbiased
-    if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(-1) == this->getTrackPoint()) // last measurement
+    if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(-1) == this->getTrackPoint()) { // last measurement
+      assert(forwardPrediction_.get() != NULL);
+      #ifdef DEBUG
+      std::cout << "KalmanFitterInfo::getFittedState - unbiased at last measurement = forwardPrediction_ \n";
+      #endif
       return MeasuredStateOnPlane(*forwardPrediction_);
-    else if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(0) == this->getTrackPoint()) // first measurement
+    }
+    else if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(0) == this->getTrackPoint()) { // first measurement
+      assert(backwardPrediction_.get() != NULL);
+      #ifdef DEBUG
+      std::cout << "KalmanFitterInfo::getFittedState - unbiased at first measurement = backwardPrediction_ \n";
+      #endif
       return MeasuredStateOnPlane(*backwardPrediction_);
+    }
 
+    assert(forwardPrediction_.get() != NULL);
+    assert(backwardPrediction_.get() != NULL);
+    #ifdef DEBUG
+    std::cout << "KalmanFitterInfo::getFittedState - unbiased = mean(forwardPrediction_, backwardPrediction_) \n";
+    #endif
     return calcAverageState(forwardPrediction_.get(), backwardPrediction_.get());
   }
 
@@ -257,6 +302,19 @@ void KalmanFitterInfo::setRep(const AbsTrackRep* rep) {
 }
 
 
+void KalmanFitterInfo::setWeights(const std::vector<double>& weights) {
+
+  if (weights.size() != getNumMeasurements()) {
+    Exception e("KalmanFitterInfo::setWeights: weights do nat have the same size as measurementsOnPlane", __LINE__,__FILE__);
+    throw e;
+  }
+
+  for (unsigned int i=0; i<getNumMeasurements(); ++i) {
+    getMeasurementOnPlane(i)->setWeight(weights[i]);
+  }
+}
+
+
 void KalmanFitterInfo::deleteForwardInfo() {
   forwardPrediction_.reset();
   forwardUpdate_.reset();
@@ -289,18 +347,15 @@ MeasuredStateOnPlane KalmanFitterInfo::calcAverageState(const MeasuredStateOnPla
 
   TMatrixDSym fCovInv, bCovInv, smoothed_cov;
 
-  const TMatrixDSym& fCov = forwardState->getCov();
-  tools::invertMatrix(fCov, fCovInv);
-
-  const TMatrixDSym& bCov = backwardState->getCov();
-  tools::invertMatrix(bCov, bCovInv);
+  tools::invertMatrix(forwardState->getCov(), fCovInv);
+  tools::invertMatrix(backwardState->getCov(), bCovInv);
 
   tools::invertMatrix(fCovInv + bCovInv, smoothed_cov);
 
   return MeasuredStateOnPlane(smoothed_cov * (fCovInv*forwardState->getState() + bCovInv*backwardState->getState()), // smoothed state
                               smoothed_cov,
-                              forwardUpdate_->getPlane(),
-                              forwardUpdate_->getRep());
+                              forwardState->getPlane(),
+                              forwardState->getRep());
 }
 
 
@@ -376,6 +431,7 @@ bool KalmanFitterInfo::checkConsistency() const {
   }
 
   // see if everything else is defined wrt this plane and rep_
+  int dim = rep_->getDim(); // check dim
   if (referenceState_) {
     if(referenceState_->getPlane() != plane) {
       std::cerr << "KalmanFitterInfo::checkConsistency(): referenceState_ is not defined with the correct plane" << std::endl;
@@ -383,6 +439,10 @@ bool KalmanFitterInfo::checkConsistency() const {
     }
     if (referenceState_->getRep() != rep_) {
       std::cerr << "KalmanFitterInfo::checkConsistency(): referenceState_ is not defined with the correct TrackRep" << std::endl;
+      return false;
+    }
+    if (referenceState_->getState().GetNrows() != dim) {
+      std::cerr << "KalmanFitterInfo::checkConsistency(): referenceState_ does not have the right dimension!" << std::endl;
       return false;
     }
   }
@@ -396,6 +456,10 @@ bool KalmanFitterInfo::checkConsistency() const {
       std::cerr << "KalmanFitterInfo::checkConsistency(): forwardPrediction_ is not defined with the correct TrackRep" << std::endl;
       return false;
     }
+    if (forwardPrediction_->getState().GetNrows() != dim || forwardPrediction_->getCov().GetNrows() != dim) {
+      std::cerr << "KalmanFitterInfo::checkConsistency(): forwardPrediction_ does not have the right dimension!" << std::endl;
+      return false;
+    }
   }
   if (forwardUpdate_) {
     if(forwardUpdate_->getPlane() != plane) {
@@ -404,6 +468,10 @@ bool KalmanFitterInfo::checkConsistency() const {
     }
     if(forwardUpdate_->getRep() != rep_) {
       std::cerr << "KalmanFitterInfo::checkConsistency(): forwardUpdate_ is not defined with the correct TrackRep" << std::endl;
+      return false;
+    }
+    if (forwardUpdate_->getState().GetNrows() != dim || forwardUpdate_->getCov().GetNrows() != dim) {
+      std::cerr << "KalmanFitterInfo::checkConsistency(): forwardUpdate_ does not have the right dimension!" << std::endl;
       return false;
     }
   }
@@ -417,6 +485,10 @@ bool KalmanFitterInfo::checkConsistency() const {
       std::cerr << "KalmanFitterInfo::checkConsistency(): backwardPrediction_ is not defined with the correct TrackRep" << std::endl;
       return false;
     }
+    if (backwardPrediction_->getState().GetNrows() != dim || backwardPrediction_->getCov().GetNrows() != dim) {
+      std::cerr << "KalmanFitterInfo::checkConsistency(): backwardPrediction_ does not have the right dimension!" << std::endl;
+      return false;
+    }
   }
   if (backwardUpdate_) {
     if(backwardUpdate_->getPlane() != plane) {
@@ -425,6 +497,10 @@ bool KalmanFitterInfo::checkConsistency() const {
     }
     if(backwardUpdate_->getRep() != rep_) {
       std::cerr << "KalmanFitterInfo::checkConsistency(): backwardUpdate_ is not defined with the correct TrackRep" << std::endl;
+      return false;
+    }
+    if (backwardUpdate_->getState().GetNrows() != dim || backwardUpdate_->getCov().GetNrows() != dim) {
+      std::cerr << "KalmanFitterInfo::checkConsistency(): backwardUpdate_ does not have the right dimension!" << std::endl;
       return false;
     }
   }
@@ -436,6 +512,10 @@ bool KalmanFitterInfo::checkConsistency() const {
     }
     if((*it)->getRep() != rep_) {
       std::cerr << "KalmanFitterInfo::checkConsistency(): measurement is not defined with the correct TrackRep" << std::endl;
+      return false;
+    }
+    if ((*it)->getState().GetNrows() == 0) {
+      std::cerr << "KalmanFitterInfo::checkConsistency(): measurement has dimension 0!" << std::endl;
       return false;
     }
   }

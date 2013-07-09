@@ -36,6 +36,7 @@
 
 //#define DEBUG
 
+
 using namespace genfit;
 
 
@@ -70,7 +71,7 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& c
       catch (genfit::Exception& e) {
         fi->setStatusFlag(1);
         std::cerr << e.what();
-	throw e;
+        throw e;
       }
 
       prevFi = fi;
@@ -198,8 +199,28 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
       continue;
 
     // create new fitterInfo and ReferenceState
-    KalmanFitterInfo* fitterInfo = new KalmanFitterInfo(trackPoint, rep);
-    trackPoint->addFitterInfo(fitterInfo);
+    KalmanFitterInfo* fitterInfo;
+    AbsFitterInfo* absFitterInfo;
+    std::vector<double> oldWeights;
+    bool KalmanFiAvailable = false;
+    if (trackPoint->getNumFitterInfos(rep) != 0) {
+      absFitterInfo = trackPoint->getFitterInfo(rep);
+      if (dynamic_cast<KalmanFitterInfo*>(absFitterInfo) != NULL) {
+        KalmanFiAvailable = true;
+      }
+    }
+    if (KalmanFiAvailable) {
+      fitterInfo = static_cast<KalmanFitterInfo*>(absFitterInfo);
+      oldWeights = fitterInfo->getWeights();
+      fitterInfo->deleteForwardInfo();
+      fitterInfo->deleteBackwardInfo();
+      fitterInfo->deleteReferenceInfo();
+      fitterInfo->deleteMeasurementInfo();
+    }
+    else {
+      fitterInfo = new KalmanFitterInfo(trackPoint, rep);
+      trackPoint->addFitterInfo(fitterInfo);
+    }
 
     try {
       // Construct plane
@@ -238,12 +259,15 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
         fitterInfo->setForwardPrediction(new MeasuredStateOnPlane(*seedState));
       }
 
-      // get MeasurementsInPlane
+      // get MeasurementsOnPlane
       std::vector<AbsMeasurement*> rawMeasurements = trackPoint->getRawMeasurements();
       for ( std::vector< genfit::AbsMeasurement* >::iterator measurement = rawMeasurements.begin(), lastMeasurement =rawMeasurements.end(); measurement != lastMeasurement; ++measurement)
       {
        assert((*measurement) != NULL);
-       fitterInfo->addMeasurementsOnPlane((*measurement)->constructMeasurementsOnPlane(rep, plane));
+       fitterInfo->setMeasurementsOnPlane((*measurement)->constructMeasurementsOnPlane(rep, plane));
+       if (KalmanFiAvailable) {
+         fitterInfo->setWeights(oldWeights);
+       }
       }
     }
     catch (genfit::Exception& e) {

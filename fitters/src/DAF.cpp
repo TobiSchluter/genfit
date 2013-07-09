@@ -18,15 +18,22 @@
 */
 
 #include "DAF.h"
+#include "Exception.h"
+#include "KalmanFitterInfo.h"
 #include "KalmanFitterRefTrack.h"
 #include "Tools.h"
-#include "Exception.h"
+#include "Track.h"
+#include "TrackPoint.h"
+
 #include <assert.h>
 #include <cmath>
 
 //root stuff
 #include <TMath.h>
 #include <Math/QuantFuncMathCore.h>
+
+
+//#define DEBUG
 
 
 namespace genfit {
@@ -50,6 +57,63 @@ DAF::DAF(AbsKalmanFitter* kalman) {
 
 
 void DAF::processTrack(Track* tr, const AbsTrackRep* rep) {
+
+#ifdef DEBUG
+  std::cout<<"DAF::processTrack \n";
+#endif
+
+  weights_.clear();
+
+  std::vector<std::vector<double> > oldWeights;
+  bool oneLastIter = false;
+
+  for( int iBeta=0; iBeta != c_maxIter; ++iBeta) { // loop over. If no convergence is reached after 10 iterations just stop.
+
+#ifdef DEBUG
+      std::cout<<"DAF::processTrack, trackRep  " << rep << ", beta = " << betas_[iBeta] << "\n";
+#endif
+
+    kalman_->processTrack(tr);
+
+    if (! kalman_->isTrackFitted(tr, rep)){
+      break;
+    }
+
+    if (iBeta > 0)
+      oldWeights = weights_.at(rep);
+    getWeights(tr, rep);
+
+    try{
+      weights_.at(rep) = calcWeights(tr, rep, betas_[iBeta]);
+    } catch(Exception& e) {
+      std::cerr<<e.what();
+      e.info();
+      //std::cerr << "calc weights failed" << std::endl;
+      //mini_trk->getTrackRep(0)->setStatusFlag(1);
+      break;
+    }
+    if( oneLastIter == true){
+#ifdef DEBUG
+      std::cout << "break after one last iteration\n";
+#endif
+      break;
+    }
+    if (iBeta > 0) {
+      if ( isConvergent(oldWeights, rep) ){
+  #ifdef DEBUG
+          std::cout << "convergence reached in iteration " << iBeta << "\n";
+  #endif
+        oneLastIter = true;
+      }
+    }
+
+#ifdef DEBUG
+      if( iBeta == c_maxIter-1 ){
+        std::cout << "giving up after 10 iterations\n";
+      }
+#endif
+  } // end loop over betas
+
 
 }
 
@@ -109,7 +173,7 @@ void DAF::setBetas(double b1,double b2,double b3,double b4,double b5,double b6,d
 }
 
 
-bool DAF::isConvergent(const std::vector<std::vector<double> >& oldWeights, AbsTrackRep* rep) const {
+bool DAF::isConvergent(const std::vector<std::vector<double> >& oldWeights, const AbsTrackRep* rep) const {
   const int n = oldWeights.size();
   const std::vector<std::vector<double> >& newWeights = weights_.at(rep);
   assert(n == int(newWeights.size()));
@@ -117,12 +181,163 @@ bool DAF::isConvergent(const std::vector<std::vector<double> >& oldWeights, AbsT
     const int m = oldWeights[i].size();
     assert(m == int(newWeights[i].size()));
     for( int j = 0; j != m; ++j){
-      if( fdim( oldWeights[i][j] , newWeights[i][j]) > 0.001 ){ //Moritz just made the value up. has to be tested if good
+      if( fabs(oldWeights[i][j] - newWeights[i][j]) > 0.001 ){ //Moritz just made the value up. has to be tested if good
         return false;
       }
     }
   }
   return true;
+}
+
+
+void DAF::getWeights(const Track* tr, const AbsTrackRep* rep) {
+
+#ifdef DEBUG
+      std::cout<<"DAF::getWeights \n";
+#endif
+
+  std::vector< TrackPoint* > trackPoints = tr->getPointsWithMeasurement();
+  for (std::vector< TrackPoint* >::iterator tp = trackPoints.begin(); tp != trackPoints.end(); ++tp) {
+    AbsFitterInfo* fi = (*tp)->getFitterInfo(rep);
+    if (dynamic_cast<KalmanFitterInfo*>(fi) == NULL){
+      Exception exc("DAF::getWeights ==> can only use KalmanFitterInfos",__LINE__,__FILE__);
+      throw exc;
+    }
+    KalmanFitterInfo* kfi = static_cast<KalmanFitterInfo*>(fi);
+    unsigned int nMeas = kfi->getNumMeasurements();
+    std::vector<double> weights;
+    weights.reserve(nMeas);
+#ifdef DEBUG
+      std::cout<<"(";
+#endif
+    for (unsigned int i=0; i<nMeas; ++i) {
+      weights.push_back(kfi->getMeasurementOnPlane(i)->getWeight());
+#ifdef DEBUG
+      std::cout<<kfi->getMeasurementOnPlane(i)->getWeight();
+      if (i<nMeas-1)
+        std::cout<<", ";
+#endif
+    }
+#ifdef DEBUG
+      std::cout<<") ";
+#endif
+    weights_[rep].push_back(weights);
+  }
+#ifdef DEBUG
+      std::cout<<"\n";
+#endif
+}
+
+
+std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
+
+#ifdef DEBUG
+      std::cout<<"DAF::calcWeights \n";
+#endif
+
+  std::vector<std::vector<double> > ret_val;
+
+  std::vector< TrackPoint* > trackPoints = tr->getPointsWithMeasurement();
+  for (std::vector< TrackPoint* >::iterator tp = trackPoints.begin(); tp != trackPoints.end(); ++tp) {
+
+    AbsFitterInfo* fi = (*tp)->getFitterInfo(rep);
+    if (dynamic_cast<KalmanFitterInfo*>(fi) == NULL){
+      Exception exc("DAF::getWeights ==> can only use KalmanFitterInfos",__LINE__,__FILE__);
+      throw exc;
+    }
+    KalmanFitterInfo* kfi = static_cast<KalmanFitterInfo*>(fi);
+    unsigned int nMeas = kfi->getNumMeasurements();
+    std::vector<double> weights;
+    weights.reserve(nMeas);
+
+    if(kfi->getStatusFlag() != 0) { // failed hit
+      weights.assign(nMeas, 0.5);
+      //std::cout<<"Assumed weight 0.5!!"<<std::endl;
+      ret_val.push_back(weights);
+
+#ifdef DEBUG
+      std::cout<<"(";
+#endif
+      for (unsigned int j=0; j<nMeas; ++j){
+        kfi->getMeasurementOnPlane(j)->setWeight(0.5);
+#ifdef DEBUG
+        std::cout<<"0.5";
+        if (j<nMeas-1)
+          std::cout<<", ";
+#endif
+      }
+#ifdef DEBUG
+      std::cout<<") ";
+#endif
+      continue;
+    }
+
+    std::vector<double> phi;
+    double phi_sum = 0;
+    double phi_cut = 0;
+    const MeasuredStateOnPlane& smoothedState = kfi->getFittedState(true);
+
+    TVectorD x_smoo(kfi->getMeasurementOnPlane()->getHMatrix() * smoothedState.getState());
+
+    for(unsigned int j=0; j<nMeas; j++) {
+      double* detV = new double(0);
+
+      try{
+        const MeasurementOnPlane* mop = kfi->getMeasurementOnPlane(j);
+        int hitDim = mop->getState().GetNoElements();
+        TMatrixDSym V( beta * mop->getCov());
+        TVectorD resid(mop->getState() - x_smoo);
+        TMatrixDSym Vinv;
+        tools::invertMatrix(V, Vinv, detV); // can throw an Exception
+
+        phi.push_back((1./(std::pow(2.*TMath::Pi(),hitDim/2)*sqrt(*detV)))*exp(-0.5*Vinv.Similarity(resid))); // std::pow(double, int) from <cmath> is faster than pow(double, double) from <math.h> when the exponent actually _is_ an integer.
+        phi_sum += phi[j];
+        //std::cerr << "hitDim " << hitDim << " fchi2Cuts[hitDim] " << fchi2Cuts[hitDim] << std::endl;
+        double cutVal = chi2Cuts_[hitDim];
+        assert(cutVal>1.E-6);
+        //the follwing assumes that in the compeating hits (real hits in one DAF hit) could have different V otherwise calculation could be simplified
+        phi_cut += (1./(std::pow(2.*TMath::Pi(),hitDim/2)*sqrt(*detV)))*exp(-0.5*cutVal/beta);
+      }
+      catch(Exception& e) {
+        delete detV;
+        e.what();
+        e.info();
+        phi.push_back(0); //m and Vorig do not contain sensible values, assign weight 0
+        continue;
+      }
+
+      delete detV;
+
+    }
+
+#ifdef DEBUG
+      std::cout<<"(";
+#endif
+    for(unsigned int j=0; j<nMeas; j++) {
+      double weight = phi[j]/(phi_sum+phi_cut);
+      weights.push_back(weight);
+      kfi->getMeasurementOnPlane(j)->setWeight(weight);
+#ifdef DEBUG
+      std::cout<<weight;
+      if (j<nMeas-1)
+        std::cout<<", ";
+#endif
+    }
+#ifdef DEBUG
+      std::cout<<") ";
+#endif
+
+    ret_val.push_back(weights);
+
+
+  }
+#ifdef DEBUG
+      std::cout<<"\n";
+#endif
+
+
+  return ret_val;
+
 }
 
 

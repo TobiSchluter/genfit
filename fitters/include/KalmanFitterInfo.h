@@ -61,11 +61,19 @@ class KalmanFitterInfo : public AbsFitterInfo {
   KalmanFittedStateOnPlane* getBackwardUpdate() const {return backwardUpdate_.get();}
   KalmanFittedStateOnPlane* getUpdate(int direction) const {if (direction >=0) return forwardUpdate_.get(); return backwardUpdate_.get();}
   std::vector< genfit::MeasurementOnPlane* > getMeasurementsOnPlane() const;
-  const MeasurementOnPlane* getMeasurementOnPlane(int i = 0) const {if (i<0) i += measurementsOnPlane_.size(); return measurementsOnPlane_.at(i);}
+  MeasurementOnPlane* getMeasurementOnPlane(int i = 0) const {if (i<0) i += measurementsOnPlane_.size(); return measurementsOnPlane_.at(i);}
   /** Get weighted mean of all measurements. */
   MeasurementOnPlane getAvgWeightedMeasurementOnPlane() const;
   /** Get measurements which is closest to state. */
   const MeasurementOnPlane* getClosestMeasurementOnPlane(const StateOnPlane*) const;
+  unsigned int getNumMeasurements() const {return measurementsOnPlane_.size();}
+  /** Get weights of measurements */
+  std::vector<double> getWeights() const;
+  SharedPlanePtr getPlane() const;
+  /** Get unbiased (default) or biased smoothed state */
+  MeasuredStateOnPlane getFittedState(bool biased = false) const;
+  /** Get unbiased (default) or biased residual from ith measurement */
+  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const; // also calculates covariance of the residual
 
   bool hasReferenceState() const {return (referenceState_.get() != NULL);}
   bool hasForwardPrediction() const {return (forwardPrediction_.get()  != NULL);}
@@ -74,14 +82,6 @@ class KalmanFitterInfo : public AbsFitterInfo {
   bool hasForwardUpdate() const {return (forwardUpdate_.get() != NULL);}
   bool hasBackwardUpdate() const {return (backwardUpdate_.get() != NULL);}
   bool hasUpdate(int direction) const {if (direction >=0) return hasForwardUpdate(); return hasBackwardUpdate();}
-  unsigned int getNumMeasurements() const {return measurementsOnPlane_.size();}
-  SharedPlanePtr getPlane() const;
-  /** Get unbiased (default) or biased smoothed state
-   */
-  MeasuredStateOnPlane getFittedState(bool biased = false) const;
-  /** Get unbiased (default) or biased residual from ith measurement
-   */
-  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const; // also calculates covariance of the residual
 
   void setReferenceState(ReferenceStateOnPlane* referenceState) {referenceState_.reset(referenceState);}
   void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction) {forwardPrediction_.reset(forwardPrediction);}
@@ -93,7 +93,8 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
   void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) { measurementsOnPlane_.push_back(measurementOnPlane); }
   void addMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
-
+  /** Set weights of measurements */
+  void setWeights(const std::vector<double>&);
   void setRep(const AbsTrackRep* rep);
 
   void deleteForwardInfo();
