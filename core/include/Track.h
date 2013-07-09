@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "AbsTrackRep.h"
+#include "FitStatus.h"
 #include "TrackCand.h"
 #include "TrackPoint.h"
 
@@ -51,8 +52,9 @@ class Track : public TObject {
   AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_);}
   unsigned int getCardinalRepID() const {return cardinalRep_;}
 
-  bool hasFitStatus(const AbsTrackRep* rep) const {if (fitStatuses_.find(rep) == fitStatuses_.end()) return false; return (fitStatuses_[rep] != NULL;)}
+  bool hasFitStatus(const AbsTrackRep* rep) const {if (fitStatuses_.find(rep) == fitStatuses_.end()) return false; return (fitStatuses_.at(rep) != NULL);}
   FitStatus* getFitStatus(const AbsTrackRep* rep) const {return fitStatuses_.at(rep);}
+  void setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep) {fitStatuses_[rep] = fitStatus;} // FIXME memory leak
 
   const TVectorD& getStateSeed() const {return stateSeed_;}
   void setStateSeed(const TVectorD& s) {stateSeed_.ResizeTo(s); stateSeed_ = s;}
@@ -88,6 +90,8 @@ class Track : public TObject {
   bool checkConsistency() const;
 
  private:
+
+  void trackHasChanged();
 
   Track& operator=(const Track&); // assignment operator  // delete until properly implemented
 

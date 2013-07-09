@@ -21,6 +21,7 @@
 #include "Exception.h"
 #include "KalmanFitterInfo.h"
 #include "KalmanFitterRefTrack.h"
+#include "KalmanFitStatus.h"
 #include "Tools.h"
 #include "Track.h"
 #include "TrackPoint.h"
@@ -67,11 +68,13 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep) {
 #endif
 
   weights_.clear();
-
   std::vector<std::vector<double> > oldWeights;
+
+  KalmanFitStatus* status;
   bool oneLastIter = false;
 
-  for( int iBeta=0; iBeta != c_maxIter; ++iBeta) { // loop over. If no convergence is reached after 10 iterations just stop.
+  int iBeta=0;
+  for(; iBeta != c_maxIter; ++iBeta) { // loop over. If no convergence is reached after 10 iterations just stop.
 
 #ifdef DEBUG
       std::cout<<"DAF::processTrack, trackRep  " << rep << ", beta = " << betas_[iBeta] << "\n";
@@ -79,7 +82,11 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep) {
 
     kalman_->processTrack(tr);
 
-    if (! kalman_->isTrackFitted(tr, rep)){
+    status = static_cast<KalmanFitStatus*>(tr->getFitStatus(rep));
+    status->setIsFittedWithDaf();
+
+    if (! status->isFitConverged()){
+      status->setIsFitted(false);
       break;
     }
 
@@ -94,6 +101,8 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep) {
       e.info();
       //std::cerr << "calc weights failed" << std::endl;
       //mini_trk->getTrackRep(0)->setStatusFlag(1);
+      status->setIsFitted(false);
+      status->setIsFitConverged(false);
       break;
     }
     if( oneLastIter == true){
@@ -108,16 +117,19 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep) {
           std::cout << "convergence reached in iteration " << iBeta << "\n";
   #endif
         oneLastIter = true;
+        status->setIsFitConverged();
       }
     }
 
-#ifdef DEBUG
       if( iBeta == c_maxIter-1 ){
+        status->setIsFitConverged(false);
+#ifdef DEBUG
         std::cout << "giving up after 10 iterations\n";
-      }
 #endif
+      }
   } // end loop over betas
 
+  status->setNumIterations(iBeta);
 
 }
 

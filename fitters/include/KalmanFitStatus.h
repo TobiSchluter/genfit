@@ -38,6 +38,8 @@ class KalmanFitStatus : public FitStatus {
 
   virtual ~KalmanFitStatus() {};
 
+  virtual FitStatus* clone() const {return new KalmanFitStatus(*this);}
+
   unsigned int getNumIterations() const {return numIterations_;}
   bool isFittedWithDaf() const {return fittedWithDaf_;}
   bool isFittedWithReferenceTrack() const {return fittedWithReferenceTrack_;}
@@ -54,6 +56,20 @@ class KalmanFitStatus : public FitStatus {
   void setForwardNdf(double fNdf) {fNdf_ = fNdf;}
   void setBackwardNdf(double bNdf) {bNdf_ = bNdf;}
 
+  void Print(const Option_t* = "") const {
+    FitStatus::Print();
+    if (fittedWithDaf_) std::cout << " track has been fitted with DAF,";
+    if (fittedWithReferenceTrack_) std::cout << " track has been fitted with reference track,";
+    if (isFitConverged_) {
+      std::cout << " numIterations = " << numIterations_ << ", ";
+      std::cout << "fChi2 = " << fChi2_ << ", ";
+      std::cout << "bChi2 = " << bChi2_ << ", ";
+      std::cout << "fNdf = " << fNdf_ << ", ";
+      std::cout << "bNdf = " << bNdf_ << "\n";
+    }
+    std::cout << "\n";
+  }
+
  protected:
 
   unsigned int numIterations_; // number of iterations that have been performed
@@ -65,6 +81,7 @@ class KalmanFitStatus : public FitStatus {
   double fNdf_; // degrees of freedom of the forward fit
   double bNdf_; // degrees of freedom of the backward fit
 
+};
 
 } /* End of namespace genfit */
 /** @} */

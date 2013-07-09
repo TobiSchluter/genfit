@@ -30,6 +30,7 @@
 
 #include "KalmanFitterRefTrack.h"
 #include "KalmanFitterInfo.h"
+#include "KalmanFitStatus.h"
 
 #include <Math/ProbFunc.h>
 
@@ -82,8 +83,6 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& c
 void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
 {
 
-  // TODO: try catch block, what if fit fails?
-
 #ifdef DEBUG
   double oldChi2FW = 1e6;
 #endif
@@ -91,59 +90,84 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
   double chi2FW(0), ndfFW(0);
   double chi2BW(0), ndfBW(0);
 
-  for (unsigned int i=0; i<maxIterations_; ++i) {
+  KalmanFitStatus* status = new KalmanFitStatus();
+  tr->setFitStatus(status, rep);
 
-#ifdef DEBUG
-    std::cout << " KalmanFitterRefTrack::processTrack, iteration nr. " << i << "\n";
-#endif
+  status->setIsFittedWithReferenceTrack(true);
 
-    // prepare
-    prepareTrack(tr, rep);
+  unsigned int i=0;
 
-#ifdef DEBUG
-    std::cout << "Prepared Track:"; tr->Print();
-#endif
+  for (; i<maxIterations_; ++i) {
 
-    // fit forward
-#ifdef DEBUG
-    std::cout << "forward fit\n";
-#endif
-    fitTrack(tr, rep, chi2FW, ndfFW, +1);
+    try {
+      #ifdef DEBUG
+      std::cout << " KalmanFitterRefTrack::processTrack, iteration nr. " << i << "\n";
+      #endif
 
-    // fit backward
-#ifdef DEBUG
-    std::cout << "backward fit\n";
-#endif
-    KalmanFitterInfo* lastInfo = static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(-1)->getFitterInfo(rep));
-    lastInfo->setBackwardPrediction(new MeasuredStateOnPlane(*(lastInfo->getForwardUpdate())));
-    lastInfo->getBackwardPrediction()->getCov() *= blowUpFactor_;  // blow up cov
+      // prepare
+      prepareTrack(tr, rep);
 
-    fitTrack(tr, rep, chi2BW, ndfBW, -1);
+      #ifdef DEBUG
+      std::cout << "Prepared Track:"; tr->Print();
+      #endif
+
+      // fit forward
+      #ifdef DEBUG
+      std::cout << "forward fit\n";
+      #endif
+      fitTrack(tr, rep, chi2FW, ndfFW, +1);
+
+      // fit backward
+      #ifdef DEBUG
+      std::cout << "backward fit\n";
+      #endif
+      KalmanFitterInfo* lastInfo = static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(-1)->getFitterInfo(rep));
+      lastInfo->setBackwardPrediction(new MeasuredStateOnPlane(*(lastInfo->getForwardUpdate())));
+      lastInfo->getBackwardPrediction()->getCov() *= blowUpFactor_;  // blow up cov
+
+      fitTrack(tr, rep, chi2BW, ndfBW, -1);
 
 
-#ifdef DEBUG
-    std::cout << "Track after fit:"; tr->Print();
+      #ifdef DEBUG
+      std::cout << "Track after fit:"; tr->Print();
 
 
-    std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
-        << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
-#endif
+      std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
+          << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
+      #endif
 
-    if (fabs(oldChi2BW - chi2BW) < deltaChi2_)  {
-      // Finished
-      break;
+      if (fabs(oldChi2BW - chi2BW) < deltaChi2_)  {
+        // Finished
+        status->setIsFitConverged();
+        break;
+      }
+      else {
+        oldChi2BW = chi2BW;
+        #ifdef DEBUG
+        oldChi2FW = chi2FW;
+        #endif
+      }
+
     }
-    else {
-      oldChi2BW = chi2BW;
-#ifdef DEBUG
-      oldChi2FW = chi2FW;
-#endif
+    catch(Exception& e) {
+      status->setIsFitted(false);
+      status->setIsFitConverged(false);
+      return;
     }
 
   }
 
+
   // check
   assert(tr->checkConsistency());
+
+  status->setIsFitted();
+  status->setCharge(rep->getCharge(static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
+  status->setNumIterations(i);
+  status->setForwardChiSqu(chi2FW);
+  status->setBackwardChiSqu(chi2BW);
+  status->setForwardNdf(ndfFW);
+  status->setBackwardNdf(ndfBW);
 
 }
 

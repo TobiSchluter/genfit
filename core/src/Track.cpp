@@ -66,6 +66,10 @@ Track::Track(const Track& rhs)
     insertPoint(new TrackPoint(**it, oldRepNewRep));
   }
 
+  for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it=rhs.fitStatuses_.begin(); it!=rhs.fitStatuses_.end(); ++it) {
+    setFitStatus(it->second->clone(), oldRepNewRep[it->first]);
+  }
+
   // self test
   assert(checkConsistency());
 }
@@ -179,6 +183,7 @@ unsigned int Track::getNumPointsWithMeasurement() const {
 void Track::insertPoint(TrackPoint* point, int id) {
   // TODO: test
   assert(point!=NULL);
+  trackHasChanged();
 
   point->setTrack(this);
 
@@ -205,6 +210,8 @@ void Track::insertPoint(TrackPoint* point, int id) {
 
 void Track::deletePoint(int id) {
   // TODO: test
+  trackHasChanged();
+
   if (id < 0)
     id += trackPoints_.size();
 
@@ -221,6 +228,7 @@ void Track::deletePoint(int id) {
 
 void Track::mergeTrack(int i, Track other) {
   // TODO: implement
+  trackHasChanged();
 }
 
 
@@ -267,11 +275,14 @@ void Track::setCardinalRep(int id) {
 
 void Track::sortHits() {
   // TODO: implement
+  trackHasChanged();
 }
 
 
 void Track::deleteForwardInfo(int startId, int endId) {
   // TODO: test
+  trackHasChanged();
+
   if (startId < 0)
     startId += trackPoints_.size();
   if (endId < 0)
@@ -287,6 +298,8 @@ void Track::deleteForwardInfo(int startId, int endId) {
 
 void Track::deleteBackwardInfo(int startId, int endId) {
   // TODO: test
+  trackHasChanged();
+
   if (startId < 0)
     startId += trackPoints_.size();
   if (endId < 0)
@@ -302,6 +315,8 @@ void Track::deleteBackwardInfo(int startId, int endId) {
 
 void Track::deleteReferenceInfo(int startId, int endId) {
   // TODO: test
+  trackHasChanged();
+
   if (startId < 0)
     startId += trackPoints_.size();
   if (endId < 0)
@@ -317,6 +332,8 @@ void Track::deleteReferenceInfo(int startId, int endId) {
 
 void Track::deleteMeasurementInfo(int startId, int endId) {
   // TODO: test. Do we also have to delete forward- and backward info if measurements are removed?
+  trackHasChanged();
+
   if (startId < 0)
     startId += trackPoints_.size();
   if (endId < 0)
@@ -350,6 +367,10 @@ void Track::Print(const Option_t*) const {
     std::cout << "TrackPoint Nr. " << i << "\n";
     trackPoints_[i]->Print();
     std::cout << "..........................................................................\n";
+  }
+
+  for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it=fitStatuses_.begin(); it!=fitStatuses_.end(); ++it) {
+    it->second->Print();
   }
 
   std::cout << "=======================================================================================\n";
@@ -443,6 +464,13 @@ bool Track::checkConsistency() const {
   }
 
   return true;
+}
+
+
+void Track::trackHasChanged() {
+  for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it=fitStatuses_.begin(); it!=fitStatuses_.end(); ++it) {
+    it->second->setHasTrackChanged();
+  }
 }
 
 

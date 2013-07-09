@@ -25,6 +25,7 @@
 
 #include "Exception.h"
 #include "KalmanFitterInfo.h"
+#include "KalmanFitStatus.h"
 #include "Track.h"
 #include "TrackPoint.h"
 #include "Tools.h"
@@ -96,58 +97,78 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
   double oldChi2FW = 1e6;
 #endif
   double oldChi2BW = 1e6;
+  double chi2FW(0), ndfFW(0);
+  double chi2BW(0), ndfBW(0);
+
   size_t nIt = 0;
+
+  KalmanFitStatus* status = new KalmanFitStatus();
+  tr->setFitStatus(status, rep);
+
   for(;;) {
-#ifdef DEBUG
-    std::cout << "\033[1;21mstate pre" << std::endl;
-    currentState->Print();
-    std::cout << "\033[0mfitting" << std::endl;
-#endif
-    double chi2FW = 0;
-    double ndfFW = 0;
-    fitTrack(tr, rep, chi2FW, ndfFW, +1);
-#ifdef DEBUG
-    std::cout << "\033[1;21mstate post forward" << std::endl;
-    currentState->Print();
-    std::cout << "\033[0m";
-#endif
+    try {
+      #ifdef DEBUG
+      std::cout << "\033[1;21mstate pre" << std::endl;
+      currentState->Print();
+      std::cout << "\033[0mfitting" << std::endl;
+      #endif
+      chi2FW = 0;
+      ndfFW = 0;
+      fitTrack(tr, rep, chi2FW, ndfFW, +1);
+      #ifdef DEBUG
+      std::cout << "\033[1;21mstate post forward" << std::endl;
+      currentState->Print();
+      std::cout << "\033[0m";
+      #endif
 
-    // Backwards iteration:
-    currentState->getCov() *= blowUpFactor_;  // blow up cov
-    double chi2BW = 0;
-    double ndfBW = 0;
-    fitTrack(tr, rep, chi2BW, ndfBW, -1);
-#ifdef DEBUG
-    std::cout << "\033[1;21mstate post backward" << std::endl;
-    currentState->Print();
-    std::cout << "\033[0m";
-
-    std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
-	      << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
-#endif
-
-    if (fabs(oldChi2BW - chi2BW) < deltaChi2_)  {
-      // Finished
-      break;
-    }
-    else {
-      oldChi2BW = chi2BW;
-#ifdef DEBUG
-      oldChi2FW = chi2FW;
-#endif
+      // Backwards iteration:
       currentState->getCov() *= blowUpFactor_;  // blow up cov
-    }
+      chi2BW = 0;
+      ndfBW = 0;
+      fitTrack(tr, rep, chi2BW, ndfBW, -1);
+      #ifdef DEBUG
+      std::cout << "\033[1;21mstate post backward" << std::endl;
+      currentState->Print();
+      std::cout << "\033[0m";
 
-    if (++nIt > maxIterations_) {
-      break;
-      // FIXME
-      //delete currentState;
-      //Exception exc("Track fit didn't converge in max iterations.",__LINE__,__FILE__);
-      //throw exc;
+      std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
+          << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
+      #endif
+
+      if (fabs(oldChi2BW - chi2BW) < deltaChi2_)  {
+        // Finished
+        status->setIsFitConverged();
+        break;
+      }
+      else {
+        oldChi2BW = chi2BW;
+        #ifdef DEBUG
+        oldChi2FW = chi2FW;
+        #endif
+        currentState->getCov() *= blowUpFactor_;  // blow up cov
+      }
+
+      if (++nIt > maxIterations_) {
+        break;
+      }
+    }
+    catch(Exception& e) {
+      status->setIsFitted(false);
+      status->setIsFitConverged(false);
+      return;
     }
   }
   delete currentState;
+
+  status->setIsFitted();
+  status->setCharge(rep->getCharge(static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
+  status->setNumIterations(nIt);
+  status->setForwardChiSqu(chi2FW);
+  status->setBackwardChiSqu(chi2BW);
+  status->setForwardNdf(ndfFW);
+  status->setBackwardNdf(ndfBW);
 }
+
 
 void
 KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
