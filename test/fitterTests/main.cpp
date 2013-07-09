@@ -16,6 +16,7 @@
 #include <KalmanFitter.h>
 #include <KalmanFitterRefTrack.h>
 #include <KalmanFitterInfo.h>
+#include <DAF.h>
 #include <MaterialInfo.h>
 #include <MeasuredStateOnPlane.h>
 #include <MeasurementOnPlane.h>
@@ -140,13 +141,14 @@ int main() {
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
   enum eFitterType { SimpleKalman = 0,
-        RefKalman};
+        RefKalman,
+        DAF};
   //const eFitterType fitterId = SimpleKalman;
-  const eFitterType fitterId = RefKalman;
+  const eFitterType fitterId = DAF;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
   const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
-  const int nIter = 2; // max number of iterations
+  const int nIter = 1; // max number of iterations
   const double dChi2 = 1.E-3; // convergence criterion
 
   const int pdg = 13;               // particle pdg code
@@ -173,10 +175,11 @@ int main() {
 
   std::vector<unsigned int> measurementTypes;
 
-
+  measurementTypes.push_back(Pixel);
+  measurementTypes.push_back(Pixel);
   for (int i = 0; i < 4; ++i)
     {
-      measurementTypes.push_back(WirePoint);
+      measurementTypes.push_back(Wire);
     }
 
 
@@ -186,17 +189,18 @@ int main() {
   switch (fitterId) {
     case SimpleKalman:
       fitter = new genfit::KalmanFitter(nIter);
+      fitter->setMultipleMeasurementHandling(mmHandling);
       break;
 
     case RefKalman:
       fitter = new genfit::KalmanFitterRefTrack(nIter);
+      fitter->setMultipleMeasurementHandling(mmHandling);
+      break;
+
+    case DAF:
+      fitter = new genfit::DAF();
       break;
   }
-  fitter-> setMultipleMeasurementHandling(mmHandling);
-
-
-  genfit::KalmanFitter simpleKalman(nIter, dChi2);
-  genfit::KalmanFitterRefTrack kalmanFitterRefTrack(nIter, dChi2);
 
 
   gRandom->SetSeed(10);
@@ -632,7 +636,7 @@ int main() {
       }
       catch(genfit::Exception& e){
         std::cerr<<"Exception, next track"<<std::endl;
-        e.what();
+        std::cerr << e.what();
         continue; // here is a memleak!
       }
 
