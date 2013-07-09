@@ -51,6 +51,9 @@ class Track : public TObject {
   AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_);}
   unsigned int getCardinalRepID() const {return cardinalRep_;}
 
+  bool hasFitStatus(const AbsTrackRep* rep) const {if (fitStatuses_.find(rep) == fitStatuses_.end()) return false; return (fitStatuses_[rep] != NULL;)}
+  FitStatus* getFitStatus(const AbsTrackRep* rep) const {return fitStatuses_.at(rep);}
+
   const TVectorD& getStateSeed() const {return stateSeed_;}
   void setStateSeed(const TVectorD& s) {stateSeed_.ResizeTo(s); stateSeed_ = s;}
 
@@ -92,6 +95,8 @@ class Track : public TObject {
 
   std::vector<AbsTrackRep*> trackReps_; // Ownership
   unsigned int cardinalRep_; // THE selected rep, default = 0;
+
+  std::map< const AbsTrackRep*, FitStatus* > fitStatuses_;
 
   TVectorD stateSeed_; // 6D: position, momentum
 
