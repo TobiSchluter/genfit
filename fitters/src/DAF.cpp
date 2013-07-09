@@ -38,20 +38,24 @@
 
 namespace genfit {
 
-DAF::DAF() {
+DAF::DAF()
+  : deltaWeight_(0.001)
+{
   kalman_.reset(new KalmanFitterRefTrack());
   kalman_->setMultipleMeasurementHandling(weightedAverage);
   kalman_->setNumIterations(1);
 
-  setBetas(81.,8.,4.,1.,1.,1.);
+  setAnnealingScheme(100, 0.1, 5);
   setProbCut(0.01);
 }
 
-DAF::DAF(AbsKalmanFitter* kalman) {
+DAF::DAF(AbsKalmanFitter* kalman)
+  : deltaWeight_(0.001)
+{
   kalman_.reset(kalman);
   kalman_->setNumIterations(1);
 
-  setBetas(81.,8.,4.,1.,1.,1.);
+  setAnnealingScheme(100, 0.1, 5);
   setProbCut(0.01);
 }
 
@@ -173,6 +177,29 @@ void DAF::setBetas(double b1,double b2,double b3,double b4,double b5,double b6,d
 }
 
 
+void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) {
+  assert(bStart > bFinal);
+  assert(bFinal > 1.E-10);
+  assert(nSteps > 1);
+  assert(int(nSteps) <= c_maxIter);
+
+  betas_.clear();
+
+  const double x = log(bStart/bFinal)/log(2)/(nSteps-1);
+
+  for (unsigned int i=0; i<nSteps; ++i) {
+    double exp = double(nSteps-i-1)*x;
+    betas_.push_back(bFinal * pow(2., exp));
+  }
+
+  betas_.resize(c_maxIter,betas_.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
+
+  /*for (unsigned int i=0; i<betas_.size(); ++i) {
+    std::cout<< betas_[i] << ", ";
+  }*/
+}
+
+
 bool DAF::isConvergent(const std::vector<std::vector<double> >& oldWeights, const AbsTrackRep* rep) const {
   const int n = oldWeights.size();
   const std::vector<std::vector<double> >& newWeights = weights_.at(rep);
@@ -181,7 +208,7 @@ bool DAF::isConvergent(const std::vector<std::vector<double> >& oldWeights, cons
     const int m = oldWeights[i].size();
     assert(m == int(newWeights[i].size()));
     for( int j = 0; j != m; ++j){
-      if( fabs(oldWeights[i][j] - newWeights[i][j]) > 0.001 ){ //Moritz just made the value up. has to be tested if good
+      if( fabs(oldWeights[i][j] - newWeights[i][j]) > deltaWeight_ ){
         return false;
       }
     }

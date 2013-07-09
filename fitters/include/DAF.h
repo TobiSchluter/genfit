@@ -78,7 +78,16 @@ class DAF : public AbsKalmanFitter {
    */
   void setBetas(double b1,double b2=-1, double b3=-1., double b4=-1., double b5=-1., double b6=-1., double b7=-1., double b8=-1., double b9=-1., double b10=-1.);
 
-  void resolveWireHitAmbi(bool resolve = true);
+  /** @brief Configure the annealing scheme.
+   *
+   * Set a start and end temperature and the number of steps. A logarithmic sequence of temperatures will be calculated.
+   */
+  void setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps);
+
+  /**
+   * If all weights change less than delta between two iterations, the fit is regarded as converged.
+   */
+  void setConvergenceDeltaWeight(double delta) {deltaWeight_ = delta;}
 
 
  private:
@@ -94,6 +103,7 @@ class DAF : public AbsKalmanFitter {
     */
   std::vector<std::vector<double> > calcWeights(Track* trk, const AbsTrackRep* rep, double beta);
 
+  double deltaWeight_; // convergence criterium
   std::map<const AbsTrackRep*, std::vector<std::vector<double> > > weights_;
   std::vector<double> betas_;
   std::map<int,double>  chi2Cuts_;

@@ -139,6 +139,7 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
     }
 
     if (++nIt > maxIterations_) {
+      break;
       // FIXME
       //delete currentState;
       //Exception exc("Track fit didn't converge in max iterations.",__LINE__,__FILE__);
