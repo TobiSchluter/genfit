@@ -263,7 +263,7 @@ void EventDisplay::drawEvent(unsigned int id) {
     for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
 
       // get the fitter infos ------------------------------------------------------------------
-      AbsFitterInfo* fitterInfo = track->getPointWithMeasurement(j)->getFitterInfo(rep, -1);
+      AbsFitterInfo* fitterInfo = track->getPointWithMeasurement(j)->getFitterInfo(rep);
       const AbsMeasurement* m = track->getPointWithMeasurement(j)->getRawMeasurement();  // FIXME draw all measurements, not only 1st
 
       if (dynamic_cast<KalmanFitterInfo*>(fitterInfo) == NULL){

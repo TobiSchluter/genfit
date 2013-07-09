@@ -239,7 +239,7 @@ void Track::deleteTrackRep(int id) {
 
   // delete FitterInfos related to the deleted TrackRep
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin(); pointIt != trackPoints_.end(); ++pointIt) {
-    (*pointIt)->deleteFitterInfos(rep);
+    (*pointIt)->deleteFitterInfo(rep);
   }
 
   trackReps_.erase(trackReps_.begin()+id);

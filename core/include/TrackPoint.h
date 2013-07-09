@@ -68,13 +68,10 @@ class TrackPoint : public TObject {
   AbsMeasurement* getRawMeasurement(int i = 0) const;
   unsigned int getNumRawMeasurements() const {return rawMeasurements_.size();}
   bool hasRawMeasurements() const {return (! rawMeasurements_.empty());}
-  //! Get list of all fitterInfos of all TrackReps
+  //! Get list of all fitterInfos
   std::vector< AbsFitterInfo* > getFitterInfos() const;
-  //! Get list of fitterInfos of a one TrackRep
-  std::vector< AbsFitterInfo* > getFitterInfos(const AbsTrackRep* rep) const;
-  AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep, int i = -1) const;
-  unsigned int getNumFitterInfos(const AbsTrackRep* rep) const;
-  bool hasFitterInfos(const AbsTrackRep* rep) const;
+  AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep) const {return fitterInfos_.at(rep);}
+  bool hasFitterInfo(const AbsTrackRep* rep) const;
 
   //MaterialInfo* getMaterialInfo() {return material_;}
   //bool hasMaterialInfo() {return material_ != nullptr;}
@@ -84,9 +81,9 @@ class TrackPoint : public TObject {
   //! Takes ownership
   void addRawMeasurement(AbsMeasurement* rawMeasurement) {assert(rawMeasurement!=NULL); rawMeasurements_.push_back(rawMeasurement);}
   //! Takes Ownership
-  size_t addFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_[fitterInfo->getRep()].push_back( fitterInfo); return fitterInfos_[fitterInfo->getRep()].size();}
-  void deleteFitterInfo(AbsTrackRep* rep, int i);
-  void deleteFitterInfos(const AbsTrackRep* rep);
+  void setFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_[fitterInfo->getRep()] = fitterInfo;} // FIXME memory leak
+  void deleteFitterInfo(AbsTrackRep* rep) {fitterInfos_.erase(rep);} // FIXME memory leak
+
   //void setMaterial(MaterialInfo* material);
 
   void Print(const Option_t* = "") const;
@@ -104,7 +101,7 @@ class TrackPoint : public TObject {
   std::vector<AbsMeasurement*> rawMeasurements_;
   //std::vector<AbsMeasurement*> rawMeasurements_; // Ownership
 
-  std::map< const AbsTrackRep*, std::vector<AbsFitterInfo*> > fitterInfos_; // Ownership over FitterInfos
+  std::map< const AbsTrackRep*, AbsFitterInfo* > fitterInfos_; // Ownership over FitterInfos
 
   //MaterialInfo* material_; // Ownership
 

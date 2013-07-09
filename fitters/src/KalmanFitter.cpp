@@ -61,9 +61,9 @@ void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, dou
       tp = tr->getPoint(-i-1);
     }
 
-    if (tp->getNumFitterInfos(rep) == 0) {
+    if (! tp->hasFitterInfo(rep)) {
       fi = new KalmanFitterInfo(tp, rep);
-      tp->addFitterInfo(fi);
+      tp->setFitterInfo(fi);
     }
     else
       fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep));
