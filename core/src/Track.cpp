@@ -103,7 +103,12 @@ Track::Track(const Track& rhs)
 
 
 Track::~Track() {
-  ; // smart pointers take care
+  // FIXME: smarter containers or pointers needed ...
+  for (size_t i = 0; i < trackPoints_.size(); ++i)
+    delete trackPoints_[i];
+
+  for (size_t i = 0; i < trackReps_.size(); ++i)
+    delete trackReps_[i];
 }
 
 

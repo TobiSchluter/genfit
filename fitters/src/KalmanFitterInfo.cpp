@@ -45,7 +45,9 @@ KalmanFitterInfo::KalmanFitterInfo(const TrackPoint* trackPoint, const AbsTrackR
 }
 
 KalmanFitterInfo::~KalmanFitterInfo() {
-  ;
+  // FIXME: need smart pointers / smart containers here
+  for (size_t i = 0; i < measurementsOnPlane_.size(); ++i)
+    delete measurementsOnPlane_[i];
 }
 
 

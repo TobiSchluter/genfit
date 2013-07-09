@@ -116,7 +116,7 @@ TrackPoint& TrackPoint::operator=(const TrackPoint& rhs) {
 
 
 TrackPoint::~TrackPoint() {
-  // We definitely need some smart containers or smart pointers that
+  // FIXME: We definitely need some smart containers or smart pointers that
   // take care of this, but so far we haven't found a convincing
   // option (2013-07-05).
   
