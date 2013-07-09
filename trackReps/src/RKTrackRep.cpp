@@ -1555,8 +1555,9 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
     distVsStep[Dist/An] = fieldCurvLimit;
 
-    // resize limit according to q
-    // never grow step size more than two-fold
+    // resize limit according to q never grow step size more than
+    // two-fold to avoid infinite grow-shrink loops with strongly
+    // inhomogeneous fields.
     if (q>2) {
       fieldCurvLimit *= 2;
       break;
