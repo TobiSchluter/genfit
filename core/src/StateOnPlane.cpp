@@ -25,35 +25,6 @@
 
 namespace genfit {
 
-StateOnPlane::StateOnPlane(const AbsTrackRep* rep) :
-  state_(0), auxInfo_(0), sharedPlane_(), rep_(rep)
-{
-  if (rep != NULL) {
-    state_.ResizeTo(rep->getDim());
-  }
-}
-
-StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr plane, const AbsTrackRep* rep) :
-  state_(state), sharedPlane_(plane), rep_(rep)
-{
-  assert(rep != NULL);
-  //assert(state_.GetNrows() == (signed)rep->getDim());
-}
-
-StateOnPlane& StateOnPlane::operator= (const StateOnPlane& other) {
-  state_.ResizeTo(other.state_);
-  state_ = other.state_;
-
-  auxInfo_.ResizeTo(other.auxInfo_);
-  auxInfo_ = other.auxInfo_;
-
-  sharedPlane_ = other.sharedPlane_;
-
-  rep_ = other.rep_;
-
-  return *this;
-}
-
 
 void StateOnPlane::Print(Option_t* option) const {
   std::cout << "genfit::StateOnPlane ";

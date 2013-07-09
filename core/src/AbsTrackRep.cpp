@@ -18,6 +18,7 @@
 */
 
 #include "AbsTrackRep.h"
+#include "StateOnPlane.h"
 
 #include <iostream>
 

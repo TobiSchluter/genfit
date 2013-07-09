@@ -22,6 +22,7 @@
 #include <Exception.h>
 #include <FieldManager.h>
 #include <MaterialEffects.h>
+#include "MeasuredStateOnPlane.h"
 
 #include <TDatabasePDG.h>
 #include <TDecompLU.h>

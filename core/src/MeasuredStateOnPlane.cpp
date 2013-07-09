@@ -25,37 +25,6 @@
 
 namespace genfit {
 
-MeasuredStateOnPlane::MeasuredStateOnPlane(const AbsTrackRep* rep) :
-  StateOnPlane(rep), cov_(0,0)
-{
-  if (rep != NULL) {
-    cov_.ResizeTo(rep->getDim(), rep->getDim());
-  }
-}
-
-MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep) :
-  StateOnPlane(state, plane, rep), cov_(cov)
-{
-  assert(rep != NULL);
-  //assert(cov_.GetNcols() == (signed)rep->getDim());
-}
-
-MeasuredStateOnPlane::MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov) :
-  StateOnPlane(state), cov_(cov)
-{
-  //assert(cov_.GetNcols() == (signed)getRep()->getDim());
-}
-
-MeasuredStateOnPlane& MeasuredStateOnPlane::operator= (const MeasuredStateOnPlane& other) {
-  StateOnPlane::operator=(other);
-
-  cov_.ResizeTo(other.cov_);
-  cov_ = other.cov_;
-
-  return *this;
-}
-
-
 void MeasuredStateOnPlane::Print(Option_t* option) const {
   std::cout << "genfit::MeasuredStateOnPlane ";
   std::cout << " state vector: "; state_.Print();

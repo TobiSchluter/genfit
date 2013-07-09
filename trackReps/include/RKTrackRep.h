@@ -25,6 +25,8 @@
 #define genfit_RKTrackRep_h
 
 #include "AbsTrackRep.h"
+#include "StateOnPlane.h"
+#include "MaterialInfo.h"
 
 #include "RKTools.h"
 #include "StepLimits.h"

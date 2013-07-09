@@ -3,12 +3,17 @@
 
 #include <TVector3.h>
 #include <TObject.h>
+#include <TVectorD.h>
+#include <TMatrixD.h>
+#include <TMatrixDSym.h>
 
-#include "MaterialInfo.h"
-#include "MeasuredStateOnPlane.h"
-#include "StateOnPlane.h"
+#include "SharedPlanePtr.h"
+//#include "MaterialInfo.h"
 
 namespace genfit {
+
+class StateOnPlane;
+class MeasuredStateOnPlane;
 
   /** 
    *  Provides functionality to extrapolate a #GFStateOnPlane to another #GFDetPlane, or to the POCA to a line or a point.

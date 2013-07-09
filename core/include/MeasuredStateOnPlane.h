@@ -27,6 +27,7 @@
 #include <TMatrixDSym.h>
 
 #include "StateOnPlane.h"
+#include "AbsTrackRep.h"
 
 
 namespace genfit {
@@ -62,6 +63,40 @@ class MeasuredStateOnPlane : public StateOnPlane {
   //ClassDef(MeasuredStateOnPlane,1)
 
 };
+
+
+inline MeasuredStateOnPlane::MeasuredStateOnPlane(const AbsTrackRep* rep) :
+  StateOnPlane(rep), cov_(0,0)
+{
+  if (rep != NULL) {
+    cov_.ResizeTo(rep->getDim(), rep->getDim());
+  }
+}
+
+inline MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep) :
+  StateOnPlane(state, plane, rep), cov_(cov)
+{
+  assert(rep != NULL);
+  //assert(cov_.GetNcols() == (signed)rep->getDim());
+}
+
+inline MeasuredStateOnPlane::MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov) :
+  StateOnPlane(state), cov_(cov)
+{
+  //assert(cov_.GetNcols() == (signed)getRep()->getDim());
+}
+
+inline MeasuredStateOnPlane& MeasuredStateOnPlane::operator= (const MeasuredStateOnPlane& other) {
+  StateOnPlane::operator=(other);
+
+  cov_.ResizeTo(other.cov_);
+  cov_ = other.cov_;
+
+  return *this;
+}
+
+
+
 
 } /* End of namespace genfit */
 /** @} */

@@ -28,11 +28,10 @@
 #include <TVectorD.h>
 
 #include "SharedPlanePtr.h"
+#include "AbsTrackRep.h"
 
 
 namespace genfit {
-
-class AbsTrackRep;
 
   /** 
    *  A state with arbitrary dimension defined in a #GFDetPlane. #fSharedPlane is a shared_pointer, the ownership over that plane is shared between all #GFStateOnPlane objects defined in that plane.
@@ -79,6 +78,36 @@ class StateOnPlane : public TObject {
   //ClassDef(StateOnPlane,1)
 
 };
+
+
+inline StateOnPlane::StateOnPlane(const AbsTrackRep* rep) :
+  state_(0), auxInfo_(0), sharedPlane_(), rep_(rep)
+{
+  if (rep != NULL) {
+    state_.ResizeTo(rep->getDim());
+  }
+}
+
+inline StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr plane, const AbsTrackRep* rep) :
+  state_(state), sharedPlane_(plane), rep_(rep)
+{
+  assert(rep != NULL);
+  //assert(state_.GetNrows() == (signed)rep->getDim());
+}
+
+inline StateOnPlane& StateOnPlane::operator= (const StateOnPlane& other) {
+  state_.ResizeTo(other.state_);
+  state_ = other.state_;
+
+  auxInfo_.ResizeTo(other.auxInfo_);
+  auxInfo_ = other.auxInfo_;
+
+  sharedPlane_ = other.sharedPlane_;
+
+  rep_ = other.rep_;
+
+  return *this;
+}
 
 } /* End of namespace genfit */
 /** @} */
