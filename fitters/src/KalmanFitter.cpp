@@ -69,14 +69,7 @@ void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, dou
     else
       fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep));
 
-    try {
-      processTrackPoint(tr, tp, fi, rep, chi2, ndf, direction);
-    }
-    catch (genfit::Exception& e) {
-      fi->setStatusFlag(1);
-      std::cerr << e.what();
-      return;
-    }
+    processTrackPoint(tr, tp, fi, rep, chi2, ndf, direction);
 
   }
 }

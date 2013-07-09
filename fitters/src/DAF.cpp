@@ -289,7 +289,7 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
     std::vector<double> weights;
     weights.reserve(nMeas);
 
-    if(kfi->getStatusFlag() != 0) { // failed hit
+    /*if(kfi->getStatusFlag() != 0) { // failed hit
       weights.assign(nMeas, 0.5);
       //std::cout<<"Assumed weight 0.5!!"<<std::endl;
       ret_val.push_back(weights);
@@ -309,7 +309,7 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
       std::cout<<") ";
 #endif
       continue;
-    }
+    }*/
 
     std::vector<double> phi;
     double phi_sum = 0;

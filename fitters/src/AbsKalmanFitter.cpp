@@ -129,9 +129,6 @@ bool AbsKalmanFitter::isTrackPrepared(const Track* tr, const AbsTrackRep* rep) c
     if (!(fi->checkConsistency()))
       return false;
 
-    if (fi->getStatusFlag() != 0)
-      return false;
-
     if (!(fi->hasReferenceState()))
       return false;
   }
@@ -151,9 +148,6 @@ bool AbsKalmanFitter::isTrackFitted(const Track* tr, const AbsTrackRep* rep) con
       return false;
 
     if (!(fi->checkConsistency()))
-      return false;
-
-    if (fi->getStatusFlag() != 0)
       return false;
 
     if (!(fi->hasForwardUpdate()))

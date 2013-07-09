@@ -362,7 +362,7 @@ MeasuredStateOnPlane KalmanFitterInfo::calcAverageState(const MeasuredStateOnPla
 
 
 void KalmanFitterInfo::Print(const Option_t*) const {
-  std::cout << "genfit::KalmanFitterInfo. Belongs to TrackPoint " << trackPoint_ << "; TrackRep " <<  rep_ << "; statusFlag = " << statusFlag_ << "\n";
+  std::cout << "genfit::KalmanFitterInfo. Belongs to TrackPoint " << trackPoint_ << "; TrackRep " <<  rep_  << "\n";
 
   for (unsigned int i=0; i<measurementsOnPlane_.size(); ++i) {
     std::cout << "MeasurementOnPlane Nr " << i <<": "; measurementsOnPlane_[i]->Print();
