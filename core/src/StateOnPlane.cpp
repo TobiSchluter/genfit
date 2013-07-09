@@ -40,6 +40,21 @@ StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr plane, const Ab
   //assert(state_.GetNrows() == (signed)rep->getDim());
 }
 
+StateOnPlane& StateOnPlane::operator= (const StateOnPlane& other) {
+  state_.ResizeTo(other.state_);
+  state_ = other.state_;
+
+  auxInfo_.ResizeTo(other.auxInfo_);
+  auxInfo_ = other.auxInfo_;
+
+  sharedPlane_ = other.sharedPlane_;
+
+  rep_ = other.rep_;
+
+  return *this;
+}
+
+
 void StateOnPlane::Print(Option_t* option) const {
   std::cout << "genfit::StateOnPlane ";
   std::cout << " state vector: "; state_.Print();

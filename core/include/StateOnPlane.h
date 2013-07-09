@@ -46,6 +46,7 @@ class StateOnPlane : public TObject {
   StateOnPlane(const AbsTrackRep* rep = NULL);
   StateOnPlane(const TVectorD& state, SharedPlanePtr plane, const AbsTrackRep* rep);
 
+  StateOnPlane& operator= (const StateOnPlane& other);
 
   const TVectorD& getState() const {return state_;}
   TVectorD& getState() {return state_;}

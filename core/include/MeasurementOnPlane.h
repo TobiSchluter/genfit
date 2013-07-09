@@ -28,6 +28,7 @@
 
 #include "MeasuredStateOnPlane.h"
 
+#include <cmath>
 
 namespace genfit {
 
@@ -42,7 +43,7 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
   double getWeight() const {return weight_;}
 
   void setHMatrix(const TMatrixD& hMatrix) {hMatrix_ = hMatrix;}
-  void setWeight(double weight) {weight_ = weight;}
+  void setWeight(double weight) {weight_ = fmax(weight, 1.E-10);}
 
   void Print(Option_t* option = "") const ;
 

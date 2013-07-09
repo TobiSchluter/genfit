@@ -37,7 +37,7 @@ MeasurementOnPlane::MeasurementOnPlane(const TVectorD& state, const TMatrixDSym&
 
 void MeasurementOnPlane::Print(Option_t* option) const
 {
-  std::cout << "genfit::MeasuredStateOnPlane ";
+  std::cout << "genfit::MeasurementOnPlane, weight = " << weight_ << "\n";
   std::cout << " state vector: "; state_.Print();
   std::cout << " covariance matrix: "; cov_.Print();
   if (sharedPlane_ != NULL)

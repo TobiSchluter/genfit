@@ -46,6 +46,16 @@ MeasuredStateOnPlane::MeasuredStateOnPlane(const StateOnPlane& state, const TMat
   //assert(cov_.GetNcols() == (signed)getRep()->getDim());
 }
 
+MeasuredStateOnPlane& MeasuredStateOnPlane::operator= (const MeasuredStateOnPlane& other) {
+  StateOnPlane::operator=(other);
+
+  cov_.ResizeTo(other.cov_);
+  cov_ = other.cov_;
+
+  return *this;
+}
+
+
 void MeasuredStateOnPlane::Print(Option_t* option) const {
   std::cout << "genfit::MeasuredStateOnPlane ";
   std::cout << " state vector: "; state_.Print();
