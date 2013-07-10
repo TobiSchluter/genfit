@@ -24,7 +24,7 @@
 #ifndef genfit_KalmanFitStatus_h
 #define genfit_KalmanFitStatus_h
 
-#include <FitStatus.h>
+#include "FitStatus.h"
 
 namespace genfit {
 
