@@ -134,7 +134,8 @@ class RKTrackRep : public AbsTrackRep {
                      M7x7* jacobian,
                      M1x3& SA,
                      double S,
-                     bool varField = true) const;
+                     bool varField = true,
+                     bool calcOnlyLastRowOfJ = false) const;
 
 
  private:
@@ -180,7 +181,8 @@ class RKTrackRep : public AbsTrackRep {
               bool& checkJacProj,
               TMatrixD& noiseProjection,
               StepLimits& limits,
-              bool onlyOneStep = false) const;
+              bool onlyOneStep = false,
+              bool calcOnlyLastRowOfJ = false) const;
 
   double estimateStep(const M1x7& state7,
                       const M1x4& SU,
