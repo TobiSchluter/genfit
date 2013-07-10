@@ -483,18 +483,23 @@ void RKTools::J_MMxJ_MM(M7x7& J_MM, const M7x7& J_MM_old){
 }
 
 
-void RKTools::J_pMxJ_MMTxJ_Mp(const M5x7& J_pM, const M7x7& J_MMT, const M7x5& J_Mp, M5x5& J_pp, bool MMproj) {
+void RKTools::J_pMTTxJ_MMTTxJ_MpTT(const M7x5& J_pMT, const M7x7& J_MMT, const M5x7& J_MpT, M5x5& J_pp) {
+    //const M5x7& J_pM, const M7x7& J_MMT, const M7x5& J_Mp, M5x5& J_pp, bool MMproj) {
 
   // calculates  J_pp = J_pM * J_MM * J_Mp
   // input J_MMT is transposed version of actual jacobian J_MM
+  // input J_pMT is transposed version of actual jacobian J_pM (Master to plane)
+  // input J_MpT is transposed version of actual jacobian J_Mp (plane to Master)
 
-  // J_pM
-  // 0 0 0 0 0 0 1
-  // 0 0 0 x x x 0
-  // 0 0 0 x x x 0
-  // x x x 0 0 0 0
-  // x x x 0 0 0 0
 
+  // J_pMT
+  // 0 0 0 x x
+  // 0 0 0 x x
+  // 0 0 0 x x
+  // 0 x x 0 0
+  // 0 x x 0 0
+  // 0 x x 0 0
+  // 1 0 0 0 0
 
   // J_MMT if MMproj == true
   // x x x x x x 0
@@ -505,32 +510,21 @@ void RKTools::J_pMxJ_MMTxJ_Mp(const M5x7& J_pM, const M7x7& J_MMT, const M7x5& J
   // x x x x x x 0
   // x x x x x x x
 
-  // J_MMT if MMproj == false
-  // 1 0 0 0 0 0 0
-  // 0 1 0 0 0 0 0
-  // 0 0 1 0 0 0 0
-  // x x x x x x 0
-  // x x x x x x 0
-  // x x x x x x 0
-  // x x x x x x x
+  // J_MpT
+  // 0 0 0 0 0 0 1
+  // 0 0 0 x x x 0
+  // 0 0 0 x x x 0
+  // x x x 0 0 0 0
+  // x x x 0 0 0 0
 
-
-  // J_Mp
-  // 0 0 0 x x
-  // 0 0 0 x x
-  // 0 0 0 x x
-  // 0 x x 0 0
-  // 0 x x 0 0
-  // 0 x x 0 0
-  // 1 0 0 0 0
-
-  TMatrixD JpM(5, 7, J_pM);
+/*
+  TMatrixD JpM(5, 7, J_MpT);
   JpM.Transpose(JpM);
 
   TMatrixD JMM(7, 7, J_MMT);
   JMM.Transpose(JMM);
 
-  TMatrixD JMp(7, 5, J_Mp);
+  TMatrixD JMp(7, 5, J_pMT);
   JMp.Transpose(JMp);
 
   TMatrixD Jpp =  (JMp * JMM) * JpM;
@@ -540,13 +534,37 @@ void RKTools::J_pMxJ_MMTxJ_Mp(const M5x7& J_pM, const M7x7& J_MMT, const M7x5& J
   //std::cout << "J_pp: "; printDim(J_pp.data(), 5,5);
 
   return;
+*/
 
 
+  J_pp[0*5+0] = J_MMT[6*7+6];
+  J_pp[0*5+1] = 0;
+  J_pp[0*5+2] = 0;
+  J_pp[0*5+3] = 0;
+  J_pp[0*5+4] = 0;
+  J_pp[1*5+0] =  J_pMT[3*5+1] * J_MMT[6*7+3] + J_pMT[4*5+1] * J_MMT[6*7+4] + J_pMT[5*5+1] * J_MMT[6*7+5];
+  J_pp[1*5+1] = (J_pMT[3*5+1] * J_MMT[3*7+3] + J_pMT[4*5+1] * J_MMT[3*7+4] + J_pMT[5*5+1] * J_MMT[3*7+5]) * J_MpT[1*7+3] + (J_pMT[3*5+1] * J_MMT[4*7+3] + J_pMT[4*5+1] * J_MMT[4*7+4] + J_pMT[5*5+1] * J_MMT[4*7+5]) * J_MpT[1*7+4] + (J_pMT[3*5+1] * J_MMT[5*7+3] + J_pMT[4*5+1] * J_MMT[5*7+4] + J_pMT[5*5+1] * J_MMT[5*7+5]) * J_MpT[1*7+5];
+  J_pp[1*5+2] = (J_pMT[3*5+1] * J_MMT[3*7+3] + J_pMT[4*5+1] * J_MMT[3*7+4] + J_pMT[5*5+1] * J_MMT[3*7+5]) * J_MpT[2*7+3] + (J_pMT[3*5+1] * J_MMT[4*7+3] + J_pMT[4*5+1] * J_MMT[4*7+4] + J_pMT[5*5+1] * J_MMT[4*7+5]) * J_MpT[2*7+4] + (J_pMT[3*5+1] * J_MMT[5*7+3] + J_pMT[4*5+1] * J_MMT[5*7+4] + J_pMT[5*5+1] * J_MMT[5*7+5]) * J_MpT[2*7+5];
+  J_pp[1*5+3] = (J_pMT[3*5+1] * J_MMT[0*7+3] + J_pMT[4*5+1] * J_MMT[0*7+4] + J_pMT[5*5+1] * J_MMT[0*7+5]) * J_MpT[3*7+0] + (J_pMT[3*5+1] * J_MMT[1*7+3] + J_pMT[4*5+1] * J_MMT[1*7+4] + J_pMT[5*5+1] * J_MMT[1*7+5]) * J_MpT[3*7+1] + (J_pMT[3*5+1] * J_MMT[2*7+3] + J_pMT[4*5+1] * J_MMT[2*7+4] + J_pMT[5*5+1] * J_MMT[2*7+5]) * J_MpT[3*7+2];
+  J_pp[1*5+4] = (J_pMT[3*5+1] * J_MMT[0*7+3] + J_pMT[4*5+1] * J_MMT[0*7+4] + J_pMT[5*5+1] * J_MMT[0*7+5]) * J_MpT[4*7+0] + (J_pMT[3*5+1] * J_MMT[1*7+3] + J_pMT[4*5+1] * J_MMT[1*7+4] + J_pMT[5*5+1] * J_MMT[1*7+5]) * J_MpT[4*7+1] + (J_pMT[3*5+1] * J_MMT[2*7+3] + J_pMT[4*5+1] * J_MMT[2*7+4] + J_pMT[5*5+1] * J_MMT[2*7+5]) * J_MpT[4*7+2];
+  J_pp[2*5+0] =  J_pMT[3*5+2] * J_MMT[6*7+3] + J_pMT[4*5+2] * J_MMT[6*7+4] + J_pMT[5*5+2] * J_MMT[6*7+5];
+  J_pp[2*5+1] = (J_pMT[3*5+2] * J_MMT[3*7+3] + J_pMT[4*5+2] * J_MMT[3*7+4] + J_pMT[5*5+2] * J_MMT[3*7+5]) * J_MpT[1*7+3] + (J_pMT[3*5+2] * J_MMT[4*7+3] + J_pMT[4*5+2] * J_MMT[4*7+4] + J_pMT[5*5+2] * J_MMT[4*7+5]) * J_MpT[1*7+4] + (J_pMT[3*5+2] * J_MMT[5*7+3] + J_pMT[4*5+2] * J_MMT[5*7+4] + J_pMT[5*5+2] * J_MMT[5*7+5]) * J_MpT[1*7+5];
+  J_pp[2*5+2] = (J_pMT[3*5+2] * J_MMT[3*7+3] + J_pMT[4*5+2] * J_MMT[3*7+4] + J_pMT[5*5+2] * J_MMT[3*7+5]) * J_MpT[2*7+3] + (J_pMT[3*5+2] * J_MMT[4*7+3] + J_pMT[4*5+2] * J_MMT[4*7+4] + J_pMT[5*5+2] * J_MMT[4*7+5]) * J_MpT[2*7+4] + (J_pMT[3*5+2] * J_MMT[5*7+3] + J_pMT[4*5+2] * J_MMT[5*7+4] + J_pMT[5*5+2] * J_MMT[5*7+5]) * J_MpT[2*7+5];
+  J_pp[2*5+3] = (J_pMT[3*5+2] * J_MMT[0*7+3] + J_pMT[4*5+2] * J_MMT[0*7+4] + J_pMT[5*5+2] * J_MMT[0*7+5]) * J_MpT[3*7+0] + (J_pMT[3*5+2] * J_MMT[1*7+3] + J_pMT[4*5+2] * J_MMT[1*7+4] + J_pMT[5*5+2] * J_MMT[1*7+5]) * J_MpT[3*7+1] + (J_pMT[3*5+2] * J_MMT[2*7+3] + J_pMT[4*5+2] * J_MMT[2*7+4] + J_pMT[5*5+2] * J_MMT[2*7+5]) * J_MpT[3*7+2];
+  J_pp[2*5+4] = (J_pMT[3*5+2] * J_MMT[0*7+3] + J_pMT[4*5+2] * J_MMT[0*7+4] + J_pMT[5*5+2] * J_MMT[0*7+5]) * J_MpT[4*7+0] + (J_pMT[3*5+2] * J_MMT[1*7+3] + J_pMT[4*5+2] * J_MMT[1*7+4] + J_pMT[5*5+2] * J_MMT[1*7+5]) * J_MpT[4*7+1] + (J_pMT[3*5+2] * J_MMT[2*7+3] + J_pMT[4*5+2] * J_MMT[2*7+4] + J_pMT[5*5+2] * J_MMT[2*7+5]) * J_MpT[4*7+2];
+  J_pp[3*5+0] =  J_pMT[0*5+3] * J_MMT[6*7+0] + J_pMT[1*5+3] * J_MMT[6*7+1] + J_pMT[2*5+3] * J_MMT[6*7+2];
+  J_pp[3*5+1] = (J_pMT[0*5+3] * J_MMT[3*7+0] + J_pMT[1*5+3] * J_MMT[3*7+1] + J_pMT[2*5+3] * J_MMT[3*7+2]) * J_MpT[1*7+3] + (J_pMT[0*5+3] * J_MMT[4*7+0] + J_pMT[1*5+3] * J_MMT[4*7+1] + J_pMT[2*5+3] * J_MMT[4*7+2]) * J_MpT[1*7+4] + (J_pMT[0*5+3] * J_MMT[5*7+0] + J_pMT[1*5+3] * J_MMT[5*7+1] + J_pMT[2*5+3] * J_MMT[5*7+2]) * J_MpT[1*7+5];
+  J_pp[3*5+2] = (J_pMT[0*5+3] * J_MMT[3*7+0] + J_pMT[1*5+3] * J_MMT[3*7+1] + J_pMT[2*5+3] * J_MMT[3*7+2]) * J_MpT[2*7+3] + (J_pMT[0*5+3] * J_MMT[4*7+0] + J_pMT[1*5+3] * J_MMT[4*7+1] + J_pMT[2*5+3] * J_MMT[4*7+2]) * J_MpT[2*7+4] + (J_pMT[0*5+3] * J_MMT[5*7+0] + J_pMT[1*5+3] * J_MMT[5*7+1] + J_pMT[2*5+3] * J_MMT[5*7+2]) * J_MpT[2*7+5];
+  J_pp[3*5+3] = (J_pMT[0*5+3] * J_MMT[0*7+0] + J_pMT[1*5+3] * J_MMT[0*7+1] + J_pMT[2*5+3] * J_MMT[0*7+2]) * J_MpT[3*7+0] + (J_pMT[0*5+3] * J_MMT[1*7+0] + J_pMT[1*5+3] * J_MMT[1*7+1] + J_pMT[2*5+3] * J_MMT[1*7+2]) * J_MpT[3*7+1] + (J_pMT[0*5+3] * J_MMT[2*7+0] + J_pMT[1*5+3] * J_MMT[2*7+1] + J_pMT[2*5+3] * J_MMT[2*7+2]) * J_MpT[3*7+2];
+  J_pp[3*5+4] = (J_pMT[0*5+3] * J_MMT[0*7+0] + J_pMT[1*5+3] * J_MMT[0*7+1] + J_pMT[2*5+3] * J_MMT[0*7+2]) * J_MpT[4*7+0] + (J_pMT[0*5+3] * J_MMT[1*7+0] + J_pMT[1*5+3] * J_MMT[1*7+1] + J_pMT[2*5+3] * J_MMT[1*7+2]) * J_MpT[4*7+1] + (J_pMT[0*5+3] * J_MMT[2*7+0] + J_pMT[1*5+3] * J_MMT[2*7+1] + J_pMT[2*5+3] * J_MMT[2*7+2]) * J_MpT[4*7+2];
+  J_pp[4*5+0] =  J_pMT[0*5+4] * J_MMT[6*7+0] + J_pMT[1*5+4] * J_MMT[6*7+1] + J_pMT[2*5+4] * J_MMT[6*7+2];
+  J_pp[4*5+1] = (J_pMT[0*5+4] * J_MMT[3*7+0] + J_pMT[1*5+4] * J_MMT[3*7+1] + J_pMT[2*5+4] * J_MMT[3*7+2]) * J_MpT[1*7+3] + (J_pMT[0*5+4] * J_MMT[4*7+0] + J_pMT[1*5+4] * J_MMT[4*7+1] + J_pMT[2*5+4] * J_MMT[4*7+2]) * J_MpT[1*7+4] + (J_pMT[0*5+4] * J_MMT[5*7+0] + J_pMT[1*5+4] * J_MMT[5*7+1] + J_pMT[2*5+4] * J_MMT[5*7+2]) * J_MpT[1*7+5];
+  J_pp[4*5+2] = (J_pMT[0*5+4] * J_MMT[3*7+0] + J_pMT[1*5+4] * J_MMT[3*7+1] + J_pMT[2*5+4] * J_MMT[3*7+2]) * J_MpT[2*7+3] + (J_pMT[0*5+4] * J_MMT[4*7+0] + J_pMT[1*5+4] * J_MMT[4*7+1] + J_pMT[2*5+4] * J_MMT[4*7+2]) * J_MpT[2*7+4] + (J_pMT[0*5+4] * J_MMT[5*7+0] + J_pMT[1*5+4] * J_MMT[5*7+1] + J_pMT[2*5+4] * J_MMT[5*7+2]) * J_MpT[2*7+5];
+  J_pp[4*5+3] = (J_pMT[0*5+4] * J_MMT[0*7+0] + J_pMT[1*5+4] * J_MMT[0*7+1] + J_pMT[2*5+4] * J_MMT[0*7+2]) * J_MpT[3*7+0] + (J_pMT[0*5+4] * J_MMT[1*7+0] + J_pMT[1*5+4] * J_MMT[1*7+1] + J_pMT[2*5+4] * J_MMT[1*7+2]) * J_MpT[3*7+1] + (J_pMT[0*5+4] * J_MMT[2*7+0] + J_pMT[1*5+4] * J_MMT[2*7+1] + J_pMT[2*5+4] * J_MMT[2*7+2]) * J_MpT[3*7+2];
+  J_pp[4*5+4] = (J_pMT[0*5+4] * J_MMT[0*7+0] + J_pMT[1*5+4] * J_MMT[0*7+1] + J_pMT[2*5+4] * J_MMT[0*7+2]) * J_MpT[4*7+0] + (J_pMT[0*5+4] * J_MMT[1*7+0] + J_pMT[1*5+4] * J_MMT[1*7+1] + J_pMT[2*5+4] * J_MMT[1*7+2]) * J_MpT[4*7+1] + (J_pMT[0*5+4] * J_MMT[2*7+0] + J_pMT[1*5+4] * J_MMT[2*7+1] + J_pMT[2*5+4] * J_MMT[2*7+2]) * J_MpT[4*7+2];
 
 
-
-  // FIXME: recalculate with transposed J_MM
-
+/*
   if (MMproj) {
     J_pp[0*5+0] = J_MMT[6*7+6];
     J_pp[0*5+1] = J_MMT[6*7+3] * J_Mp[3*5+1] + J_MMT[6*7+4] * J_Mp[4*5+1] + J_MMT[6*7+5] * J_Mp[5*5+1];
@@ -601,7 +619,7 @@ void RKTools::J_pMxJ_MMTxJ_Mp(const M5x7& J_pM, const M7x7& J_MMT, const M7x5& J
     J_pp[4*5+3] = J_pM[4*7+0] * J_Mp[0*5+3] + J_pM[4*7+1] * J_Mp[1*5+3] + J_pM[4*7+2] * J_Mp[2*5+3];
     J_pp[4*5+4] = J_pM[4*7+0] * J_Mp[0*5+4] + J_pM[4*7+1] * J_Mp[1*5+4] + J_pM[4*7+2] * J_Mp[2*5+4];
   }
-
+*/
   /*std::cout << "RKTools::J_pMxJ_MMTxJ_Mp \n";
   std::cout << "J_pM: "; printDim(J_pM.data(), 5,7);
   std::cout << "J_MMT: "; printDim(J_MMT.data(), 7,7);

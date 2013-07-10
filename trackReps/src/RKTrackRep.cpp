@@ -1561,7 +1561,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   // and improve stepsize estimation to reach plane
   //
   double fieldCurvLimit(limits.getLowestLimitSignedVal()); // signed
-  std::map<double, double> distVsStep; // keys: straight line distances to plane; values: RK steps
+  std::pair<double, double> distVsStep (9.E99, 9.E99); // first: smallest straight line distances to plane; second: RK steps
 
   while (fabs(fieldCurvLimit) > MINSTEP) {
     M1x7 state7_temp = { state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] }; // invalid: M1x7 state7_temp(state7);
@@ -1582,7 +1582,10 @@ double RKTrackRep::estimateStep(const M1x7& state7,
          state7_temp[4] * SU[1] +
          state7_temp[5] * SU[2];    // An = dir * N;  component of dir normal to surface
 
-    distVsStep[Dist/An] = fieldCurvLimit;
+    if (fabs(Dist/An) < fabs(distVsStep.first)) {
+      distVsStep.first = Dist/An;
+      distVsStep.second = fieldCurvLimit;
+    }
 
     // resize limit according to q never grow step size more than
     // two-fold to avoid infinite grow-shrink loops with strongly
@@ -1604,8 +1607,8 @@ double RKTrackRep::estimateStep(const M1x7& state7,
     limits.setLimit(stp_fieldCurv, fieldCurvLimit);
 
   double stepToPlane(limits.getLimitSigned(stp_plane));
-  if (distVsStep.size() > 0) {
-    stepToPlane = distVsStep.begin()->first + distVsStep.begin()->second;
+  if (fabs(distVsStep.first) < 8.E99) {
+    stepToPlane = distVsStep.first + distVsStep.second;
   }
   limits.setLimit(stp_plane, stepToPlane);
 
@@ -1863,7 +1866,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         calcJ_Mp_7x5(intermediatePlane.getU(), intermediatePlane.getV(), intermediatePlane.getNormal(), *((M1x3*) &state7[3]));
       }
 
-      RKTools::J_pMxJ_MMTxJ_Mp(J_pM_5x7_, J_MMT_, J_Mp_7x5_, extrapStep.jac_, checkJacProj);
+      RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp_7x5_, J_MMT_, J_pM_5x7_, extrapStep.jac_);
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane

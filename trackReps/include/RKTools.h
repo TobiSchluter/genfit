@@ -53,7 +53,7 @@ namespace RKTools {
 
   void J_MMxJ_MM(M7x7& J_MM, const M7x7& J_MM_old);
 
-  void J_pMxJ_MMTxJ_Mp(const M5x7& J_pM, const M7x7& J_MMT, const M7x5& J_Mp, M5x5& J_pp, bool MMproj = true);
+  void J_pMTTxJ_MMTTxJ_MpTT(const M7x5& J_pMT, const M7x7& J_MMT, const M5x7& J_MpT, M5x5& J_pp);
 
   void printDim(const double* mat, unsigned int dimX, unsigned int dimY);
 
