@@ -115,11 +115,23 @@ int randomSign() {
 //---------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------
 
+#define VALGRIND
 
-//#define VALGRIND
+#ifdef VALGRIND
+  #include <valgrind/callgrind.h>
+#else
+#define CALLGRIND_START_INSTRUMENTATION;
+#define CALLGRIND_STOP_INSTRUMENTATION;
+#define CALLGRIND_DUMP_STATS;
+#endif
 
 int main() {
   std::cout<<"main"<<std::endl;
+
+  enum eFitterType { SimpleKalman = 0,
+        RefKalman,
+        DafSimple,
+        DafRef};
 
   const unsigned int nEvents = 1;
   const double BField = 15.;       // kGauss
@@ -129,25 +141,22 @@ int main() {
   const double phiDetPlane = 0;         // degree
   const double pointDist = 5;      // cm; approx. distance between measurements generated w/ RKTrackRep
   const double pointDistDeg = 5;      // degree; distance between measurements generated w/ helix model
-  const double resolution = 0.02;   // cm; resolution of generated measurements
+  const double resolution = 0.25;   // cm; resolution of generated measurements
 
   const double resolutionWire = 5*resolution;   // cm; resolution of generated measurements
   const TVector3 wireDir(0,0,1);
   const double skewAngle(5);
-  const bool useSkew = false;
+  const bool useSkew = true;
   const int nSuperLayer = 5;
   const double minDrift = 0;
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
-  enum eFitterType { SimpleKalman = 0,
-        RefKalman,
-        DAF};
   //const eFitterType fitterId = SimpleKalman;
-  const eFitterType fitterId = DAF;
+  const eFitterType fitterId = RefKalman;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
-  const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
+  const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
   const int nIter = 1; // max number of iterations
   const double dChi2 = 1.E-3; // convergence criterion
 
@@ -177,10 +186,20 @@ int main() {
 
   measurementTypes.push_back(Pixel);
   measurementTypes.push_back(Pixel);
-  for (int i = 0; i < 4; ++i)
-    {
-      measurementTypes.push_back(Wire);
-    }
+  measurementTypes.push_back(Spacepoint);
+  measurementTypes.push_back(Spacepoint);
+  measurementTypes.push_back(ProlateSpacepoint);
+  measurementTypes.push_back(ProlateSpacepoint);
+  measurementTypes.push_back(StripU);
+  measurementTypes.push_back(StripU);
+  measurementTypes.push_back(StripV);
+  measurementTypes.push_back(StripV);
+  measurementTypes.push_back(Wire);
+  measurementTypes.push_back(Wire);
+  measurementTypes.push_back(WirePoint);
+  measurementTypes.push_back(WirePoint);
+  //for (int i = 0; i < 10; ++i)
+
 
 
 
@@ -197,9 +216,23 @@ int main() {
       fitter->setMultipleMeasurementHandling(mmHandling);
       break;
 
-    case DAF:
+    case DafSimple:
+      {
+        genfit::AbsKalmanFitter* DafsKalman = new genfit::KalmanFitter();
+        DafsKalman->setMultipleMeasurementHandling(mmHandling);
+        fitter = new genfit::DAF(DafsKalman);
+      }
+      break;
+    case DafRef:
       fitter = new genfit::DAF();
       break;
+
+  }
+
+  if (dynamic_cast<genfit::DAF*>(fitter) != NULL) {
+    //static_cast<genfit::DAF*>(fitter)->setBetas(100, 50, 25, 12, 6, 3, 1, 0.5, 0.1);
+    //static_cast<genfit::DAF*>(fitter)->setBetas(81, 8, 4, 0.5, 0.1);
+    static_cast<genfit::DAF*>(fitter)->setAnnealingScheme(100, 0.1, 5);
   }
 
 
@@ -593,7 +626,10 @@ int main() {
       // do the fit
       try{
         if (debug) std::cout<<"Starting the fitter"<<std::endl;
+        CALLGRIND_START_INSTRUMENTATION;
         fitter->processTrack(fitTrack, rep);
+        CALLGRIND_STOP_INSTRUMENTATION;
+        CALLGRIND_DUMP_STATS;
         if (debug) std::cout<<"fitter is finished!"<<std::endl;
       }
       catch(genfit::Exception& e){
@@ -609,7 +645,8 @@ int main() {
 
 
       // check if fit was successful
-      if (!fitter->isTrackFitted(fitTrack, rep)) {
+      //if (!fitter->isTrackFitted(fitTrack, rep)) {
+      if (! fitTrack->getFitStatus(rep)->isFitted()) {
         std::cout << "Track could not be fitted successfully! \n";
         continue;
       }
@@ -669,12 +706,13 @@ int main() {
 
 
       // check l/r resolution
-     /* if (fitterId == 3) {
+      if (dynamic_cast<genfit::DAF*>(fitter) != NULL) {
         for (unsigned int i=0; i<leftRightTrue.size(); ++i){
           int trueSide = leftRightTrue[i];
           if (trueSide == 0) continue; // not a wire measurement
-          const TVectorT<double>& dafWeightLR = fitTrack->getBK(0)->getVector(BKKey_dafWeight, i);
-          assert(dafWeightLR.GetNrows()==2);
+          std::vector<double> dafWeightLR = dynamic_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(i)->getFitterInfo(rep))->getWeights();
+          if(dafWeightLR.size() != 2)
+            continue;
 
           double weightCorrectSide, weightWrongSide;
 
@@ -695,7 +733,7 @@ int main() {
         }
 
       }
-*/
+
 
      /* if (debug) std::cerr<<"Fill Tree ..." << std::endl;
       tree->Fill();*/
@@ -772,7 +810,7 @@ int main() {
   if (debug) std::cout<<"... done"<<std::endl;
 
   // open event display
-  display->setOptions("THDPMABF"); // G show geometry
+  display->setOptions("ABDEFHMPT"); // G show geometry
   display->open();
 
   //rootapp->Run();
