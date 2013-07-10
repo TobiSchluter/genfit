@@ -24,13 +24,15 @@
 #ifndef genfit_StepLimits_h
 #define genfit_StepLimits_h
 
-#include <map>
+#include <vector>
+#include <math.h>
+
 
 namespace genfit {
 
 enum StepLimitType {
   // soft limits (only rough estimation, can go beyond safely)
-  stp_noLimit,    // only for internal use
+  stp_noLimit = 0,    // only for internal use
 
   // medium limits (can go a bit further if e.g. plane or boundary will be reached)
   stp_fieldCurv,  // stepsize limited by curvature and magnetic field inhomogenities
@@ -40,20 +42,23 @@ enum StepLimitType {
   // hard limits (must stop there at any case!)
   stp_sMaxArg,    // stepsize limited by argument maxStepArg passed to #estimateStep()
   stp_boundary,   // stepsize limited by stepper because material boundary is encountered
-  stp_plane       // stepsize limited because destination plane is reached
+  stp_plane,      // stepsize limited because destination plane is reached
+
+  ENUM_NR_ITEMS   // only for internal use
 };
 
-bool pairCompare(std::pair<StepLimitType, double> i, std::pair<StepLimitType, double> j);
+
 
 class StepLimits {
 
  public:
-  StepLimits();
+  StepLimits()
+  : limits_(ENUM_NR_ITEMS, maxLimit_), stepSign_(1) {;}
 
   /**
    * Get limit of #type. If that limit has not yet been set, return max double value.
    */
-  double getLimit(StepLimitType type) const;
+  double getLimit(StepLimitType type) const {return limits_[type];}
   double getLimitSigned(StepLimitType type) const {
     return stepSign_*getLimit(type);
   }
@@ -86,7 +91,7 @@ class StepLimits {
   /**
    * absolute of value will be taken! If limit is already lower, it will be set to value anyway.
    */
-  void setLimit(StepLimitType type, double value);
+  void setLimit(StepLimitType type, double value) {limits_[type] = fabs(value);}
   /**
    * sets #stepSign_ to sign of #signedVal
    */
@@ -96,14 +101,15 @@ class StepLimits {
    */
   void setStepSign(double signedVal);
 
-  void removeLimit(StepLimitType type) {limits_.erase(type);}
+  void removeLimit(StepLimitType type) {limits_[type] = maxLimit_;}
 
   void reset();
   void Print();
 
  private:
-  std::map<StepLimitType, double> limits_; // limits are unsigned (i.e. non-negative)
+  std::vector<double> limits_; // limits are unsigned (i.e. non-negative)
   char stepSign_;
+  static const double maxLimit_;
 
 };
 

@@ -24,65 +24,58 @@
 #include <iostream>
 #include <limits>
 
-#include <math.h>
 
 namespace genfit {
 
-
-bool pairCompare(std::pair<StepLimitType, double> i, std::pair<StepLimitType, double> j) {
-  return i.second < j.second;
-}
-
-
-StepLimits::StepLimits() :
-  stepSign_(1)
-{
-  ;
-}
-
-
-double StepLimits::getLimit(StepLimitType type) const {
-  std::map<StepLimitType, double>::const_iterator it = limits_.find(type);
-
-  if (it == limits_.end()) {
-    return std::numeric_limits<double>::max();
-  }
-
-  return it->second;
-}
-
+const double StepLimits::maxLimit_ = 99.E99;
 
 std::pair<StepLimitType, double> StepLimits::getLowestLimit(double margin) const {
-  if (limits_.size() == 0) {
-    return std::pair<StepLimitType, double>(stp_noLimit, std::numeric_limits<double>::max());
+
+  double lowest(maxLimit_);
+  unsigned int iLowest(0);
+
+  for (unsigned int i=1; i<ENUM_NR_ITEMS; ++i) {
+
+    // lowest hard limit may exceed lowest soft limit by up to #margin
+    if (i == int(stp_sMaxArg))
+      lowest *= (1+margin);
+
+    if (limits_[i] < lowest) {
+      lowest = limits_[i];
+      iLowest = i;
+    }
   }
 
-  std::map<StepLimitType, double>::const_iterator itMedium = limits_.upper_bound(stp_noLimit);
-  std::map<StepLimitType, double>::const_iterator itHard   = limits_.upper_bound(stp_sMax);
+  /*std::cout << "lowest limit:";
+      std::cout << "   | " << lowest << " cm due to ";
+      switch (static_cast<StepLimitType>(iLowest)) {
+      case stp_noLimit:
+        break;
+      case stp_fieldCurv:
+        std::cout << "stp_fieldCurv (medium limit): stepsize limited by curvature and magnetic field inhomogenities";
+        break;
+      case stp_momLoss:
+        std::cout << "stp_momLoss (medium limit): stepsize limited by stepper because maximum momLoss is reached";
+        break;
+      case stp_sMax:
+        std::cout << "stp_sMax (medium limit): stepsize limited by SMax defined in #estimateStep()";
+        break;
+      case stp_sMaxArg:
+        std::cout << "stp_sMaxArg (hard limit): stepsize limited by argument maxStepArg passed to #estimateStep()";
+        break;
+      case stp_boundary:
+        std::cout << "stp_boundary (hard limit): stepsize limited by stepper because material boundary is encountered";
+        break;
+      case stp_plane:
+        std::cout << "stp_plane (hard limit):  stepsize limited because destination plane is reached";
+        break;
+      case ENUM_NR_ITEMS:
+        break;
+      }
+*/
 
-  // find minimum medium limit
-   const std::pair<const genfit::StepLimitType, double> itMinMedium = *min_element(itMedium, itHard, pairCompare );
+  return std::pair<StepLimitType, double>(static_cast<StepLimitType>(iLowest), lowest);
 
-  // case 2: medium limits, no hard limits
-  if (itHard == limits_.end()) {
-    return itMinMedium;
-  }
-
-  // find minimum hard limit
-  const std::pair<const genfit::StepLimitType, double> itMinHard = *min_element(itHard, limits_.end(), pairCompare );
-
-  // case 3: hard limits -> ignore soft limits, lowest hard limit may exceed lowest soft limit by up to #margin
-  if (itMinHard.second <= (1+margin)*itMinMedium.second)
-    return itMinHard;
-
-  return itMinMedium;
-
-}
-
-
-void StepLimits::setLimit(StepLimitType type, double value) {
-  assert (type != stp_noLimit);
-  limits_[type] = fabs(value);
 }
 
 
@@ -90,16 +83,8 @@ void StepLimits::reduceLimit(StepLimitType type, double value) {
   assert (type != stp_noLimit);
   value = fabs(value);
 
-  std::map<StepLimitType, double>::iterator it;
-  it = limits_.find(type);
-
-  if (it == limits_.end()) {
+  if (limits_[type] > value)
     limits_[type] = value;
-  }
-  else {
-    if (value < it->second)
-      it->second = value;
-  }
 }
 
 
@@ -119,9 +104,12 @@ void StepLimits::setStepSign(double signedVal) {
 
 
 void StepLimits::Print() {
-  for (std::map<StepLimitType, double>::const_iterator it = limits_.begin(); it != limits_.end(); ++it) {
-    std::cout << "   | " << it->second << " cm due to ";
-    switch (it->first) {
+  for (unsigned int i=0; i<ENUM_NR_ITEMS; ++i) {
+    if (limits_[i] >= maxLimit_)
+      continue;
+
+    std::cout << "   | " << limits_[i] << " cm due to ";
+    switch (static_cast<StepLimitType>(i)) {
     case stp_noLimit:
       break;
     case stp_fieldCurv:
@@ -141,6 +129,8 @@ void StepLimits::Print() {
       break;
     case stp_plane:
       std::cout << "stp_plane (hard limit):  stepsize limited because destination plane is reached";
+      break;
+    case ENUM_NR_ITEMS:
       break;
     }
     std::cout << "\n";

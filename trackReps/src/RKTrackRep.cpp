@@ -28,6 +28,8 @@
 #include <TDecompLU.h>
 #include <TMath.h>
 
+#include <map>
+
 #include "boost/shared_ptr.hpp"
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
@@ -1596,7 +1598,10 @@ double RKTrackRep::estimateStep(const M1x7& state7,
         fabs(fieldCurvLimit) > limits.getLowestLimitVal()) // other limits are lower!
       break;
   }
-  limits.setLimit(stp_fieldCurv, fieldCurvLimit);
+  if (fabs(fieldCurvLimit) < MINSTEP)
+    limits.setLimit(stp_fieldCurv, MINSTEP);
+  else
+    limits.setLimit(stp_fieldCurv, fieldCurvLimit);
 
   double stepToPlane(limits.getLimitSigned(stp_plane));
   if (distVsStep.size() > 0) {
