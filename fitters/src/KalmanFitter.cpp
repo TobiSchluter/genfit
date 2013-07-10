@@ -146,6 +146,7 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
       }
     }
     catch(Exception& e) {
+      std::cerr << e.what();
       status->setIsFitted(false);
       status->setIsFitConverged(false);
       return;

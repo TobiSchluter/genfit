@@ -339,7 +339,7 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
       }
       catch(Exception& e) {
         delete detV;
-        e.what();
+        std::cerr<<e.what();
         e.info();
         phi.push_back(0); //m and Vorig do not contain sensible values, assign weight 0
         continue;

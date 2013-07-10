@@ -137,6 +137,11 @@ bool AbsKalmanFitter::isTrackPrepared(const Track* tr, const AbsTrackRep* rep) c
 }
 
 bool AbsKalmanFitter::isTrackFitted(const Track* tr, const AbsTrackRep* rep) const {
+  if (! tr->getFitStatus(rep)->isFitted())
+    return false;
+
+  // in depth check
+
   std::vector< TrackPoint* > points = tr->getPointsWithMeasurement();
 
   if (points.empty())
