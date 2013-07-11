@@ -25,6 +25,7 @@
 #define genfit_FitStatus_h
 
 #include <TObject.h>
+#include <iostream>
 
 namespace genfit {
 
