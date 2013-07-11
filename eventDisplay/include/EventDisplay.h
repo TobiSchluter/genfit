@@ -87,17 +87,18 @@ class EventDisplay : public TNamed {
 		 *      sufficiently to ensure all hits are displayed. However, this can lead to unwanted
 		 *      results if there are only a few hits with very small errors, as all hits are scaled
 		 *      by the same factor to ensure consistency.\n\n
+		 * 'B': Draw Backward Fit (track segments start at updates and end at predictions)\n\n
 		 * 'D': Draw detectors. This causes a simple representation for all detectors to be drawn. For
 		 *      planar detectors, this is a plane with the same position and orientation of the real
 		 *      detector plane, but with different size. For wires, this is a tube whose diameter
 		 *      is equal to the value measured by the wire. Spacepoint hits are not affected by this
 		 *      option.\n\n
+		 * 'E': Draw Error cones (position and direction uncertainties) around the track.\n\n
+     * 'F': Draw Forward Fit (track segments start at updates and end at predictions)
 		 * 'H': Draw hits. This causes the hits to be visualized. Normally, the size of the hit
 		 *      representation is connected to the covariance matrix of the hit, scaled by the value
 		 *      set in setErrScale which is normally 1. See also option 'A' and 'S'. Normally used in
 		 *      connection with 'D'.\n\n
-		 * 'R': Draw Hits added via the function addHits. Then option 'H' shouldn't be used, otherwise
-		 *      the hits belonging to a track will be plotted twice. This feature is in a beta stage.\n\n
 		 * 'G': Draw geometry. Draw also the geometry in the gGeoManager. This feature is experimental
 		 *      and may lead to strang things being drawn.\n\n
 		 * 'M': Draw track markers. Draw the intersection points between the track and the virtual
@@ -106,7 +107,7 @@ class EventDisplay : public TNamed {
 		 * 'S': Scale manually. This leads to the spacepoint hits (and only them up to now!) being drawn
 		 *      as spheres with radius 0.5 scaled with the error scale factor. Can be used if the scaling
 		 *      with errors leads to problems.\n\n
-		 * 'T': Draw Track. Draw the track as straight lines between the virtual (and/or real) detector
+		 * 'T': Draw Track. Draw the track as lines between the virtual (and/or real) detector
 		 *      planes.\n\n
 		 * 'X': Draw silent. Does not run the TApplication.
 		 *
