@@ -2,6 +2,7 @@
 #include "EventDisplay.h"
 
 #include <assert.h>
+#include <algorithm>
 #include <cmath>
 #include <exception>
 #include <iostream>
@@ -27,6 +28,7 @@
 #include <TEveGeoNode.h>
 #include <TEveGeoShape.h>
 #include <TEveStraightLineSet.h>
+#include <TEveTriangleSet.h>
 #include <TDecompSVD.h>
 #include <TGButton.h>
 #include <TGeoEltu.h>
@@ -211,6 +213,7 @@ void EventDisplay::drawEvent(unsigned int id) {
   bool drawAutoScale = false;
   bool drawBackward = false;
   bool drawDetectors = false;
+  bool drawErrors = false;
   bool drawForward = false;
   bool drawHits = false;
   bool drawScaleMan = false;
@@ -223,6 +226,7 @@ void EventDisplay::drawEvent(unsigned int id) {
       if(option_[i] == 'A') drawAutoScale = true;
       if(option_[i] == 'B') drawBackward = true;
       if(option_[i] == 'D') drawDetectors = true;
+      if(option_[i] == 'E') drawErrors = true;
       if(option_[i] == 'F') drawForward = true;
       if(option_[i] == 'H') drawHits = true;
       if(option_[i] == 'M') drawTrackMarkers = true;
@@ -249,16 +253,15 @@ void EventDisplay::drawEvent(unsigned int id) {
 
     unsigned int numhits = track->getNumPointsWithMeasurement();
 
-    TVector3 track_pos, track_posRef, track_posFwdPre, track_posBwdPre, track_posFwdUp, track_posBwdUp;
-    TVector3 old_track_pos, old_track_posRef, old_track_posFwdPre, old_track_posBwdPre, old_track_posFwdUp, old_track_posBwdUp;
-    TVector3 track_dir, track_dirRef, track_dirFwdPre, track_dirBwdPre, track_dirFwdUp, track_dirBwdUp;
-    TVector3 old_track_dir, old_track_dirRef, old_track_dirFwdPre, old_track_dirBwdPre, old_track_dirFwdUp, old_track_dirBwdUp;
-
     TEveStraightLineSet* track_lines = NULL;
     TEveStraightLineSet* track_linesFwd = NULL;
     TEveStraightLineSet* track_linesBwd = NULL;
     TEveStraightLineSet* track_linesRef = NULL;
 
+
+    KalmanFitterInfo* fi;
+    KalmanFitterInfo* prevFi;
+    MeasuredStateOnPlane fittedState, prevFittedState;
 
     for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
 
@@ -271,8 +274,7 @@ void EventDisplay::drawEvent(unsigned int id) {
         continue;
       }
 
-      KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(fitterInfo);
-      MeasuredStateOnPlane fittedState;
+      fi = static_cast<KalmanFitterInfo*>(fitterInfo);
       try {
         fittedState = fi->getFittedState(true);
       }
@@ -281,14 +283,8 @@ void EventDisplay::drawEvent(unsigned int id) {
         std::cerr<<"can not get fitted state"<<std::endl;
         continue;
       }
-      rep->getPosDir(&fittedState, track_pos, track_dir);
-      rep->getPosDir(fi->getForwardPrediction(), track_posFwdPre, track_dirFwdPre);
-      rep->getPosDir(fi->getForwardUpdate(), track_posFwdUp, track_dirFwdUp);
-      rep->getPosDir(fi->getBackwardPrediction(), track_posBwdPre, track_dirBwdPre);
-      rep->getPosDir(fi->getBackwardUpdate(), track_posBwdUp, track_dirBwdUp);
-      if (fi->hasReferenceState()) {
-        rep->getPosDir(fi->getReferenceState(), track_posRef, track_dirRef);
-      }
+
+      TVector3 track_pos = rep->getPos(&fittedState);
 
       double charge = rep->getCharge(&fittedState);
 
@@ -368,66 +364,212 @@ void EventDisplay::drawEvent(unsigned int id) {
 
       // draw track if corresponding option is set ------------------------------------------
       struct makeLinesClass {
-      void operator()(TEveStraightLineSet **pls, const TVector3& vOld, const TVector3& vNew, const TVector3& dirOld, const TVector3& dirNew,
-          const Color_t& color, const Style_t& style, bool drawMarkers, double lineWidth = 2, int markerPos = 1)
+      void operator()(TEveStraightLineSet **pls, const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
+          const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth = 2, int markerPos = 1)
         {
-          double distA = (vNew-vOld).Mag();
+          TVector3 pos, dir, oldPos, oldDir;
+          rep->getPosDir(state, pos, dir);
+          rep->getPosDir(prevState, oldPos, oldDir);
+
+          double distA = (pos-oldPos).Mag();
           double distB = distA;
-          if ((vNew-vOld)*dirOld < 0)
+          if ((pos-oldPos)*oldDir < 0)
             distA *= -1.;
-          if ((vNew-vOld)*dirNew < 0)
+          if ((pos-oldPos)*dir < 0)
             distB *= -1.;
-          TVector3 intermediate1 = vOld + 0.3 * distA * dirOld;
-          TVector3 intermediate2 = vNew - 0.3 * distB * dirNew;
+          TVector3 intermediate1 = oldPos + 0.3 * distA * oldDir;
+          TVector3 intermediate2 = pos - 0.3 * distB * dir;
           if (*pls == NULL) *pls = new TEveStraightLineSet;
           TEveStraightLineSet *ls = *pls;
-          ls->AddLine(vOld(0), vOld(1), vOld(2), intermediate1(0), intermediate1(1), intermediate1(2));
+          ls->AddLine(oldPos(0), oldPos(1), oldPos(2), intermediate1(0), intermediate1(1), intermediate1(2));
           ls->AddLine(intermediate1(0), intermediate1(1), intermediate1(2), intermediate2(0), intermediate2(1), intermediate2(2));
-          ls->AddLine(intermediate2(0), intermediate2(1), intermediate2(2), vNew(0), vNew(1), vNew(2));
+          ls->AddLine(intermediate2(0), intermediate2(1), intermediate2(2), pos(0), pos(1), pos(2));
           ls->SetLineColor(color);
           ls->SetLineStyle(style);
           ls->SetLineWidth(lineWidth);
           if (drawMarkers) {
             if (markerPos == 0)
-              ls->AddMarker(vOld(0), vOld(1), vOld(2));
+              ls->AddMarker(oldPos(0), oldPos(1), oldPos(2));
             else
-              ls->AddMarker(vNew(0), vNew(1), vNew(2));
+              ls->AddMarker(pos(0), pos(1), pos(2));
+          }
+
+          if (drawErrors) {
+            const MeasuredStateOnPlane* measuredState;
+            if (markerPos == 0)
+              measuredState = dynamic_cast<const MeasuredStateOnPlane*>(prevState);
+            else
+              measuredState = dynamic_cast<const MeasuredStateOnPlane*>(state);
+
+            if (measuredState != NULL) {
+
+              // get cov at plane
+              TMatrixDSym cov;
+              TVector3 position, direction;
+              rep->getPosMomCov(measuredState, position, direction, cov);
+
+              // get eigenvalues & -vectors
+              TMatrixDEigen eigen_values(cov.GetSub(0,2, 0,2));
+              TMatrixT<double> ev = eigen_values.GetEigenValues();
+              cov.Print();
+              ev.Print();
+              measuredState->getCov().Print();
+              TMatrixT<double> eVec = eigen_values.GetEigenVectors();
+              TVector3 eVec1, eVec2;
+              double ev0(ev(0,0)), ev1(ev(1,1)), ev2(ev(2,2));
+              // limit
+              static const double maxErr = 1000.;
+              ev0 = std::min(ev0, maxErr);
+              ev1 = std::min(ev1, maxErr);
+              ev2 = std::min(ev2, maxErr);
+
+              // get two largest eigenvalues/-vectors
+              if (ev0 < ev1 && ev0 < ev2) {
+                eVec1.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
+                eVec1 *= sqrt(ev1);
+                eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
+                eVec2 *= sqrt(ev2);
+              }
+              else if (ev1 < ev0 && ev1 < ev2) {
+                eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
+                eVec1 *= sqrt(ev0);
+                eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
+                eVec2 *= sqrt(ev2);
+              }
+              else {
+                eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
+                eVec1 *= sqrt(ev0);
+                eVec2.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
+                eVec2 *= sqrt(ev1);
+              }
+
+              const TVector3 oldEVec1(eVec1);
+              const TVector3 oldEVec2(eVec2);
+
+              const int nEdges = 16;
+              std::vector<TVector3> vertices;
+
+              vertices.push_back(position);
+
+              // vertices at plane
+              for (unsigned int i=0; i<nEdges; ++i) {
+                const double angle = 2*TMath::Pi()/nEdges * i;
+                vertices.push_back(position + cos(angle)*eVec1 + sin(angle)*eVec2);
+              }
+
+
+              // evaluate at a distance from the original plane
+              TVector3 eval;
+              if (markerPos == 0)
+                eval = 0.2 * distA * oldDir;
+              else
+                eval = -0.2 * distB * dir;
+
+              DetPlane* newPlane = new DetPlane(*(measuredState->getPlane()));
+              newPlane->setO(position + eval);
+
+              MeasuredStateOnPlane stateCopy(*measuredState);
+              try{
+                rep->extrapolateToPlane(&stateCopy, SharedPlanePtr(newPlane));
+              }
+              catch(Exception& e){
+                std::cerr<<e.what();
+                return;
+              }
+
+              // get cov at 2nd plane
+              rep->getPosMomCov(&stateCopy, position, direction, cov);
+
+              // get eigenvalues & -vectors
+              TMatrixDEigen eigen_values2(cov.GetSub(0,2, 0,2));
+              ev = eigen_values2.GetEigenValues();
+              cov.Print();
+              ev.Print();
+              stateCopy.getCov().Print();
+              eVec = eigen_values2.GetEigenVectors();
+              ev0 = ev(0,0); ev1 = ev(1,1);  ev2 = ev(2,2);
+              // limit
+              ev0 = std::min(ev0, maxErr);
+              ev1 = std::min(ev1, maxErr);
+              ev2 = std::min(ev2, maxErr);
+
+              // get two largest eigenvalues/-vectors
+              if (ev0 < ev1 && ev0 < ev2) {
+                eVec1.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
+                eVec1 *= sqrt(ev1);
+                eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
+                eVec2 *= sqrt(ev2);
+              }
+              else if (ev1 < ev0 && ev1 < ev2) {
+                eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
+                eVec1 *= sqrt(ev0);
+                eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
+                eVec2 *= sqrt(ev2);
+              }
+              else {
+                eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
+                eVec1 *= sqrt(ev0);
+                eVec2.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
+                eVec2 *= sqrt(ev1);
+              }
+
+              // vertices at 2nd plane
+              if (oldEVec1*eVec1 < 0)
+                eVec1 *= -1;
+              if (oldEVec2*eVec2 < 0)
+                eVec2 *= -1;
+
+              double angle0 = eVec1.Angle(oldEVec1);
+              for (unsigned int i=0; i<nEdges; ++i) {
+                const double angle = 2*TMath::Pi()/nEdges * i - angle0;
+                vertices.push_back(position + cos(angle)*eVec1 + sin(angle)*eVec2);
+              }
+
+              vertices.push_back(position);
+
+
+              TEveTriangleSet* error_shape = new TEveTriangleSet(vertices.size(), nEdges*4);
+              for(unsigned int k = 0; k < vertices.size(); ++k) {
+                error_shape->SetVertex(k, vertices[k].X(), vertices[k].Y(), vertices[k].Z());
+              }
+
+              assert(vertices.size() == 2*nEdges+2);
+
+              int iTri(0);
+              for (int i=0; i<nEdges; ++i) {
+                error_shape->SetTriangle(iTri++,  0,             i+1,        (i+1)%nEdges+1);
+                error_shape->SetTriangle(iTri++,  i+1,           i+1+nEdges, (i+1)%nEdges+1);
+                error_shape->SetTriangle(iTri++, (i+1)%nEdges+1, i+1+nEdges, (i+1)%nEdges+1+nEdges);
+                error_shape->SetTriangle(iTri++,  2*nEdges+1,    i+1+nEdges, (i+1)%nEdges+1+nEdges);
+              }
+
+              assert(iTri == nEdges*4);
+
+              error_shape->SetMainColor(color);
+              error_shape->SetMainTransparency(25);
+              gEve->AddElement(error_shape);
+            }
           }
 
         }
       } makeLines;
 
-      if(drawTrack) {
-        if (j > 0)
-          makeLines(&track_lines, old_track_pos, track_pos, old_track_dir, track_dir, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers, 3);
-        old_track_pos = track_pos;
-        old_track_dir = track_dir;
+      if (j > 0) {
+        if(drawTrack) {
+          makeLines(&track_lines, &prevFittedState, &fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers, drawErrors, 3);
+          if (drawErrors) { // make sure to draw errors in both directions
+            TEveStraightLineSet* dummy = NULL;
+            makeLines(&dummy, &prevFittedState, &fittedState, rep, charge > 0 ? kRed : kBlue, 1, false, drawErrors, 3, 0);
+          }
+        }
+        if (drawForward)
+          makeLines(&track_linesFwd, prevFi->getForwardUpdate(), fi->getForwardPrediction(), rep, charge > 0 ? kMagenta : kCyan, 1, drawTrackMarkers, drawErrors, 1, 0);
+        if (drawBackward)
+          makeLines(&track_linesBwd, prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, charge > 0 ? kYellow : kMagenta, 1, drawTrackMarkers, drawErrors, 1);
+        // draw reference track if corresponding option is set ------------------------------------------
+        if(drawTrack && fi->hasReferenceState())
+          makeLines(&track_linesRef, prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers, false, 3);
       }
-      if (drawForward) {
-        if (j > 0)
-          makeLines(&track_linesFwd, old_track_posFwdUp, track_posFwdPre, old_track_dirFwdUp, track_dirFwdPre, charge > 0 ? kMagenta : kCyan, 1, drawTrackMarkers, 1, 0);
-        old_track_posFwdPre = track_posFwdPre;
-        old_track_dirFwdPre = track_dirFwdPre;
-        old_track_posFwdUp = track_posFwdUp;
-        old_track_dirFwdUp = track_dirFwdUp;
-      }
-      if (drawBackward) {
-        if (j > 0)
-          makeLines(&track_linesBwd, old_track_posBwdPre, track_posBwdUp, old_track_dirBwdPre, track_dirBwdUp, charge > 0 ? kYellow : kMagenta, 1, drawTrackMarkers, 1);
-        old_track_posBwdPre = track_posBwdPre;
-        old_track_dirBwdPre = track_dirBwdPre;
-        old_track_posBwdUp = track_posBwdUp;
-        old_track_dirBwdUp = track_dirBwdUp;
-      }
-      // finished drawing track -------------------------------------------------------------
-      // draw reference track if corresponding option is set ------------------------------------------
-      if(drawTrack && fi->hasReferenceState()) {
-        if (j > 0)
-          makeLines(&track_linesRef, old_track_posRef, track_posRef, old_track_dirRef, track_dirRef, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers, 3);
-        old_track_posRef = track_posRef;
-        old_track_dirRef = track_dirRef;
-      }
-      // finished drawing reference track -------------------------------------------------------------
 
       // draw detectors if option is set, only important for wire hits ----------------------
       if(drawDetectors) {
@@ -643,6 +785,9 @@ void EventDisplay::drawEvent(unsigned int id) {
         // finished drawing wire hits -----------------------------------------------------
       }
 
+      prevFi = fi;
+      prevFittedState = fittedState;
+
     }
 
     if(track_lines != NULL) gEve->AddElement(track_lines);
@@ -672,24 +817,31 @@ TEveBox* EventDisplay::boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, 
   vertices[0] = o(0) - u(0) - v(0) - norm(0);
   vertices[1] = o(1) - u(1) - v(1) - norm(1);
   vertices[2] = o(2) - u(2) - v(2) - norm(2);
+
   vertices[3] = o(0) + u(0) - v(0) - norm(0);
   vertices[4] = o(1) + u(1) - v(1) - norm(1);
   vertices[5] = o(2) + u(2) - v(2) - norm(2);
+
   vertices[6] = o(0) + u(0) - v(0) + norm(0);
   vertices[7] = o(1) + u(1) - v(1) + norm(1);
   vertices[8] = o(2) + u(2) - v(2) + norm(2);
+
   vertices[9] = o(0) - u(0) - v(0) + norm(0);
   vertices[10] = o(1) - u(1) - v(1) + norm(1);
   vertices[11] = o(2) - u(2) - v(2) + norm(2);
+
   vertices[12] = o(0) - u(0) + v(0) - norm(0);
   vertices[13] = o(1) - u(1) + v(1) - norm(1);
   vertices[14] = o(2) - u(2) + v(2) - norm(2);
+
   vertices[15] = o(0) + u(0) + v(0) - norm(0);
   vertices[16] = o(1) + u(1) + v(1) - norm(1);
   vertices[17] = o(2) + u(2) + v(2) - norm(2);
+
   vertices[18] = o(0) + u(0) + v(0) + norm(0);
   vertices[19] = o(1) + u(1) + v(1) + norm(1);
   vertices[20] = o(2) + u(2) + v(2) + norm(2);
+
   vertices[21] = o(0) - u(0) + v(0) + norm(0);
   vertices[22] = o(1) - u(1) + v(1) + norm(1);
   vertices[23] = o(2) - u(2) + v(2) + norm(2);
