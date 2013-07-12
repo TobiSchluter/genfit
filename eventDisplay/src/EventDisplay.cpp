@@ -396,7 +396,15 @@ void EventDisplay::drawEvent(unsigned int id) {
 
             if (measuredState != NULL) {
 
-              // get cov at plane
+              // step for evaluate at a distance from the original plane
+              TVector3 eval;
+              if (markerPos == 0)
+                eval = 0.2 * distA * oldDir;
+              else
+                eval = -0.2 * distB * dir;
+
+
+              // get cov at first plane
               TMatrixDSym cov;
               TVector3 position, direction;
               rep->getPosMomCov(measuredState, position, direction, cov);
@@ -406,12 +414,11 @@ void EventDisplay::drawEvent(unsigned int id) {
               TMatrixT<double> ev = eigen_values.GetEigenValues();
               TMatrixT<double> eVec = eigen_values.GetEigenVectors();
               TVector3 eVec1, eVec2;
-              double ev0(ev(0,0)), ev1(ev(1,1)), ev2(ev(2,2));
               // limit
               static const double maxErr = 1000.;
-              ev0 = std::min(ev0, maxErr);
-              ev1 = std::min(ev1, maxErr);
-              ev2 = std::min(ev2, maxErr);
+              double ev0 = std::min(ev(0,0), maxErr);
+              double ev1 = std::min(ev(1,1), maxErr);
+              double ev2 = std::min(ev(2,2), maxErr);
 
               // get two largest eigenvalues/-vectors
               if (ev0 < ev1 && ev0 < ev2) {
@@ -433,10 +440,14 @@ void EventDisplay::drawEvent(unsigned int id) {
                 eVec2 *= sqrt(ev1);
               }
 
+              if (eVec1.Cross(eVec2)*eval < 0)
+                eVec2 *= -1;
+              assert(eVec1.Cross(eVec2)*eval > 0);
+
               const TVector3 oldEVec1(eVec1);
               const TVector3 oldEVec2(eVec2);
 
-              const int nEdges = 16;
+              const int nEdges = 24;
               std::vector<TVector3> vertices;
 
               vertices.push_back(position);
@@ -448,12 +459,6 @@ void EventDisplay::drawEvent(unsigned int id) {
               }
 
 
-              // evaluate at a distance from the original plane
-              TVector3 eval;
-              if (markerPos == 0)
-                eval = 0.2 * distA * oldDir;
-              else
-                eval = -0.2 * distB * dir;
 
               DetPlane* newPlane = new DetPlane(*(measuredState->getPlane()));
               newPlane->setO(position + eval);
@@ -474,11 +479,10 @@ void EventDisplay::drawEvent(unsigned int id) {
               TMatrixDEigen eigen_values2(cov.GetSub(0,2, 0,2));
               ev = eigen_values2.GetEigenValues();
               eVec = eigen_values2.GetEigenVectors();
-              ev0 = ev(0,0); ev1 = ev(1,1);  ev2 = ev(2,2);
               // limit
-              ev0 = std::min(ev0, maxErr);
-              ev1 = std::min(ev1, maxErr);
-              ev2 = std::min(ev2, maxErr);
+              ev0 = std::min(ev(0,0), maxErr);
+              ev1 = std::min(ev(1,1), maxErr);
+              ev2 = std::min(ev(2,2), maxErr);
 
               // get two largest eigenvalues/-vectors
               if (ev0 < ev1 && ev0 < ev2) {
@@ -500,13 +504,25 @@ void EventDisplay::drawEvent(unsigned int id) {
                 eVec2 *= sqrt(ev1);
               }
 
-              // vertices at 2nd plane
-              if (oldEVec1*eVec1 < 0)
-                eVec1 *= -1;
-              if (oldEVec2*eVec2 < 0)
+              if (eVec1.Cross(eVec2)*eval < 0)
                 eVec2 *= -1;
+              assert(eVec1.Cross(eVec2)*eval > 0);
 
+              if (oldEVec1*eVec1 < 0) {
+                eVec1 *= -1;
+                eVec2 *= -1;
+              }
+
+              oldEVec1.Print();
+              oldEVec2.Print();
+              eVec1.Print();
+              eVec2.Print();
+
+              // vertices at 2nd plane
               double angle0 = eVec1.Angle(oldEVec1);
+              if (eVec1*(eval.Cross(oldEVec1)) < 0)
+                angle0 *= -1;
+              std::cout<<"angle0 "<<angle0<<"\n";
               for (int i=0; i<nEdges; ++i) {
                 const double angle = 2*TMath::Pi()/nEdges * i - angle0;
                 vertices.push_back(position + cos(angle)*eVec1 + sin(angle)*eVec2);
@@ -515,7 +531,7 @@ void EventDisplay::drawEvent(unsigned int id) {
               vertices.push_back(position);
 
 
-              TEveTriangleSet* error_shape = new TEveTriangleSet(vertices.size(), nEdges*4);
+              TEveTriangleSet* error_shape = new TEveTriangleSet(vertices.size(), nEdges*2);
               for(unsigned int k = 0; k < vertices.size(); ++k) {
                 error_shape->SetVertex(k, vertices[k].X(), vertices[k].Y(), vertices[k].Z());
               }
@@ -524,13 +540,13 @@ void EventDisplay::drawEvent(unsigned int id) {
 
               int iTri(0);
               for (int i=0; i<nEdges; ++i) {
-                error_shape->SetTriangle(iTri++,  0,             i+1,        (i+1)%nEdges+1);
+                //error_shape->SetTriangle(iTri++,  0,             i+1,        (i+1)%nEdges+1);
                 error_shape->SetTriangle(iTri++,  i+1,           i+1+nEdges, (i+1)%nEdges+1);
                 error_shape->SetTriangle(iTri++, (i+1)%nEdges+1, i+1+nEdges, (i+1)%nEdges+1+nEdges);
-                error_shape->SetTriangle(iTri++,  2*nEdges+1,    i+1+nEdges, (i+1)%nEdges+1+nEdges);
+                //error_shape->SetTriangle(iTri++,  2*nEdges+1,    i+1+nEdges, (i+1)%nEdges+1+nEdges);
               }
 
-              assert(iTri == nEdges*4);
+              //assert(iTri == nEdges*4);
 
               error_shape->SetMainColor(color);
               error_shape->SetMainTransparency(25);
