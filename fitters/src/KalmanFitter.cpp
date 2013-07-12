@@ -30,6 +30,7 @@
 #include "TrackPoint.h"
 #include "Tools.h"
 
+#include <Math/ProbFunc.h>
 
 
 //#define DEBUG
@@ -84,12 +85,14 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
   rep->setPosMomCov(currentState, seed, cov);
 
   currentState->getCov().UnitMatrix();
-  currentState->getCov() *= blowUpFactor_;
+  //currentState->getCov() *= blowUpFactor_;
 
 #ifdef DEBUG
   double oldChi2FW = 1e6;
-#endif
   double oldChi2BW = 1e6;
+  double oldPvalFW = 0.;
+#endif
+  double oldPvalBW = 0.;
   double chi2FW(0), ndfFW(0);
   double chi2BW(0), ndfBW(0);
 
@@ -128,15 +131,27 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
           << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
       #endif
 
-      if (fabs(oldChi2BW - chi2BW) < deltaChi2_)  {
+      double PvalBW = ROOT::Math::chisquared_cdf_c(chi2BW, ndfBW);
+      #ifdef DEBUG
+      double PvalFW = ROOT::Math::chisquared_cdf_c(chi2FW, ndfFW);
+      #endif
+      // See if p-value only changed little.  If the initial
+      // parameters are very far off, initial chi^2 and the chi^2
+      // after the first iteration will be both very close to zero, so
+      // we need to force at least two iterations here.  Convergence
+      // doesn't make much sense before running twice anyway.
+      if (nIt > 0 && fabs(oldPvalBW - PvalBW) < deltaPval_)  {
         // Finished
+	++nIt;
         status->setIsFitConverged();
         break;
       }
       else {
-        oldChi2BW = chi2BW;
+	oldPvalBW = PvalBW;
         #ifdef DEBUG
+        oldChi2BW = chi2BW;
         oldChi2FW = chi2FW;
+	oldPvalFW = PvalFW;
         #endif
         currentState->getCov() *= blowUpFactor_;  // blow up cov
       }

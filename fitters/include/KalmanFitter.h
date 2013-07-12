@@ -33,8 +33,8 @@ class TrackPoint;
 
 class KalmanFitter : public AbsKalmanFitter {
  public:
-  KalmanFitter(unsigned int maxIterations = 4, double deltaChi2 = 1e-3, double blowUpFactor = 1e3)
-    : AbsKalmanFitter(maxIterations, deltaChi2, blowUpFactor) {}
+  KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
+    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor) {}
   ~KalmanFitter() {}
 
   void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction);

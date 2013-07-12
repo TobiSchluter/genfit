@@ -41,8 +41,8 @@ enum eMultipleMeasurementHandling {
 
 class AbsKalmanFitter : public AbsFitter {
  public:
-  AbsKalmanFitter(unsigned int maxIterations = 4, double deltaChi2 = 1e-3, double blowUpFactor = 1e3)
-    : maxIterations_(maxIterations), deltaChi2_(deltaChi2), blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPrediction) {}
+  AbsKalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
+    : maxIterations_(maxIterations), deltaPval_(deltaPval), blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPrediction) {}
   virtual ~AbsKalmanFitter() {;}
 
   virtual void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction) = 0;
@@ -68,10 +68,10 @@ class AbsKalmanFitter : public AbsFitter {
   // Maximum number of iterations to attempt.  Forward and backward
   // are counted as one iteration.
   unsigned int maxIterations_;
-  // Convergence criterion: if track total chi² changes less than this
+  // Convergence criterion: if track total P-value changes less than this
   // between consecutive iterations, consider the track converged.
   // chi² from the backwards fit is used.
-  double deltaChi2_;
+  double deltaPval_;
   // Blow up the covariance of the forward (backward) fit by this
   // factor before seeding the backward (forward) fit.
   double blowUpFactor_;

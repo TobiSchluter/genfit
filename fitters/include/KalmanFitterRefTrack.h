@@ -31,8 +31,8 @@ class KalmanFitterInfo;
 
 class KalmanFitterRefTrack : public AbsKalmanFitter {
  public:
-  KalmanFitterRefTrack(unsigned int maxIterations = 4, double deltaChi2 = 1e-3, double blowUpFactor = 1e3)
-    : AbsKalmanFitter(maxIterations, deltaChi2, blowUpFactor) {}
+  KalmanFitterRefTrack(unsigned int maxIterations = 4, double deltaPval = 1e-2, double blowUpFactor = 1e3)
+    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor) {}
   ~KalmanFitterRefTrack() {}
 
   /**

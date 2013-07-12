@@ -78,8 +78,10 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
 
 #ifdef DEBUG
   double oldChi2FW = 1e6;
-#endif
+  double oldPvalFW = 0.;
   double oldChi2BW = 1e6;
+#endif
+  double oldPvalBW = 0.;
   double chi2FW(0), ndfFW(0);
   double chi2BW(0), ndfBW(0);
 
@@ -88,9 +90,8 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
 
   status->setIsFittedWithReferenceTrack(true);
 
-  unsigned int i=0;
-
-  for (; i<maxIterations_; ++i) {
+  unsigned int nIt=0;
+  for (;;) {
 
     try {
       #ifdef DEBUG
@@ -129,18 +130,33 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
           << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
       #endif
 
-      if (fabs(oldChi2BW - chi2BW) < deltaChi2_)  {
+      // See if p-value only changed little.  If the initial
+      // parameters are very far off, initial chi^2 and the chi^2
+      // after the first iteration will be both very close to zero, so
+      // we need to force at least two iterations here.  Convergence
+      // doesn't make much sense before running twice anyway.
+      double PvalBW = ROOT::Math::chisquared_cdf_c(chi2BW, ndfBW);
+      #ifdef DEBUG
+      double PvalFW = ROOT::Math::chisquared_cdf_c(chi2FW, ndfFW);
+      #endif
+      if (nIt > 0 && fabs(oldPvalBW - PvalBW) < deltaPval_)  {
         // Finished
+	++nIt;
         status->setIsFitConverged();
         break;
       }
       else {
-        oldChi2BW = chi2BW;
+	oldPvalBW = PvalBW;
         #ifdef DEBUG
+        oldChi2BW = chi2BW;
         oldChi2FW = chi2FW;
+	oldPvalFW = PvalFW;
         #endif
       }
 
+      if (++nIt > maxIterations_) {
+	break;
+      }
     }
     catch(Exception& e) {
       std::cerr << e.what();
@@ -157,7 +173,7 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
 
   status->setIsFitted();
   status->setCharge(rep->getCharge(static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
-  status->setNumIterations(i);
+  status->setNumIterations(nIt);
   status->setForwardChiSqu(chi2FW);
   status->setBackwardChiSqu(chi2BW);
   status->setForwardNdf(ndfFW);
@@ -187,7 +203,7 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
     seedState = std::auto_ptr<MeasuredStateOnPlane>(new MeasuredStateOnPlane(rep));
     TMatrixDSym cov(rep->getDim());
     cov.UnitMatrix();
-    cov *= blowUpFactor_;
+    //cov *= blowUpFactor_;
     rep->setPosMom(&*seedState, tr->getStateSeed());
     seedState->setCov(cov);
   }
