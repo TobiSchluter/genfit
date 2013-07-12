@@ -247,9 +247,10 @@ void EventDisplay::drawEvent(unsigned int id) {
       continue;
     }
 
-    track->Print();
-
     AbsTrackRep* rep(track->getCardinalRep());
+
+    //track->Print();
+    track->getFitStatus(rep)->Print();
 
     unsigned int numhits = track->getNumPointsWithMeasurement();
 
@@ -307,8 +308,6 @@ void EventDisplay::drawEvent(unsigned int id) {
       double_t hit_u = 0;
       double_t hit_v = 0;
       double_t plane_size = 4;
-      double_t hit_res_u = 0.5;
-      double_t hit_res_v = 0.5;
 
       int hit_coords_dim = hit_coords.GetNrows();
 
@@ -316,13 +315,10 @@ void EventDisplay::drawEvent(unsigned int id) {
         planar_hit = true;
         if(hit_coords_dim == 1) {
           hit_u = hit_coords(0);
-          hit_res_u = hit_cov(0,0);
         } else if(hit_coords_dim == 2) {
           planar_pixel_hit = true;
           hit_u = hit_coords(0);
           hit_v = hit_coords(1);
-          hit_res_u = hit_cov(0,0);
-          hit_res_v = hit_cov(1,1);
         }
       } else if (dynamic_cast<const SpacepointMeasurement*>(m) != NULL) {
         space_hit = true;
@@ -331,13 +327,10 @@ void EventDisplay::drawEvent(unsigned int id) {
         wire_hit = true;
         hit_u = fabs(hit_coords(0));
         hit_v = v*(track_pos-o); // move the covariance tube so that the track goes through it
-        hit_res_u = hit_cov(0,0);
-        hit_res_v = 4;
         plane_size = 4;
         if (dynamic_cast<const WirePointMeasurement*>(m) != NULL) {
           wirepoint_hit = true;
           hit_v = hit_coords(1);
-          hit_res_v = hit_cov(1,1);
         }
       } else {
         std::cout << "Track " << i << ", Hit " << j << ": Unknown measurement type: skipping hit!" << std::endl;
@@ -411,9 +404,6 @@ void EventDisplay::drawEvent(unsigned int id) {
               // get eigenvalues & -vectors
               TMatrixDEigen eigen_values(cov.GetSub(0,2, 0,2));
               TMatrixT<double> ev = eigen_values.GetEigenValues();
-              cov.Print();
-              ev.Print();
-              measuredState->getCov().Print();
               TMatrixT<double> eVec = eigen_values.GetEigenVectors();
               TVector3 eVec1, eVec2;
               double ev0(ev(0,0)), ev1(ev(1,1)), ev2(ev(2,2));
@@ -452,7 +442,7 @@ void EventDisplay::drawEvent(unsigned int id) {
               vertices.push_back(position);
 
               // vertices at plane
-              for (unsigned int i=0; i<nEdges; ++i) {
+              for (int i=0; i<nEdges; ++i) {
                 const double angle = 2*TMath::Pi()/nEdges * i;
                 vertices.push_back(position + cos(angle)*eVec1 + sin(angle)*eVec2);
               }
@@ -483,9 +473,6 @@ void EventDisplay::drawEvent(unsigned int id) {
               // get eigenvalues & -vectors
               TMatrixDEigen eigen_values2(cov.GetSub(0,2, 0,2));
               ev = eigen_values2.GetEigenValues();
-              cov.Print();
-              ev.Print();
-              stateCopy.getCov().Print();
               eVec = eigen_values2.GetEigenVectors();
               ev0 = ev(0,0); ev1 = ev(1,1);  ev2 = ev(2,2);
               // limit
@@ -520,7 +507,7 @@ void EventDisplay::drawEvent(unsigned int id) {
                 eVec2 *= -1;
 
               double angle0 = eVec1.Angle(oldEVec1);
-              for (unsigned int i=0; i<nEdges; ++i) {
+              for (int i=0; i<nEdges; ++i) {
                 const double angle = 2*TMath::Pi()/nEdges * i - angle0;
                 vertices.push_back(position + cos(angle)*eVec1 + sin(angle)*eVec2);
               }
@@ -605,7 +592,7 @@ void EventDisplay::drawEvent(unsigned int id) {
         if(planar_hit) {
           if(!planar_pixel_hit) {
             TEveBox* hit_box;
-            hit_box = boxCreator((o + hit_u*u), u, v, errorScale_*std::sqrt(hit_res_u), plane_size, 0.0105);
+            hit_box = boxCreator((o + hit_u*u), u, v, errorScale_*std::sqrt(hit_cov(0,0)), plane_size, 0.0105);
             hit_box->SetMainColor(kYellow);
             hit_box->SetMainTransparency(0);
             gEve->AddElement(hit_box);
