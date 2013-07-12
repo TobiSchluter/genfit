@@ -25,6 +25,10 @@
 
 #include "AbsKalmanFitter.h"
 
+#ifndef __CINT__
+#include "boost/scoped_ptr.hpp"
+#endif
+
 namespace genfit {
 
 class KalmanFitterInfo;
@@ -44,7 +48,11 @@ class KalmanFitter : public AbsKalmanFitter {
   void processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
       const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
 
-  MeasuredStateOnPlane* currentState;
+#ifndef __CINT__
+  boost::scoped_ptr<MeasuredStateOnPlane> currentState_;
+#else
+  class MeasuredStateOnPlane* currentState_;
+#endif
 
 };
 

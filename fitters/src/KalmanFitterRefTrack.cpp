@@ -121,6 +121,8 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
 
       fitTrack(tr, rep, chi2BW, ndfBW, -1);
 
+      ++nIt;
+
 
       #ifdef DEBUG
       std::cout << "Track after fit:"; tr->Print();
@@ -139,23 +141,22 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
       #ifdef DEBUG
       double PvalFW = ROOT::Math::chisquared_cdf_c(chi2FW, ndfFW);
       #endif
-      if (nIt > 0 && fabs(oldPvalBW - PvalBW) < deltaPval_)  {
+      if (nIt > 1 && fabs(oldPvalBW - PvalBW) < deltaPval_)  {
         // Finished
-	++nIt;
         status->setIsFitConverged();
         break;
       }
       else {
-	oldPvalBW = PvalBW;
+        oldPvalBW = PvalBW;
         #ifdef DEBUG
         oldChi2BW = chi2BW;
         oldChi2FW = chi2FW;
-	oldPvalFW = PvalFW;
+        oldPvalFW = PvalFW;
         #endif
       }
 
-      if (++nIt > maxIterations_) {
-	break;
+      if (nIt >= maxIterations_) {
+        break;
       }
     }
     catch(Exception& e) {
@@ -195,16 +196,17 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
     if (fitterInfo) {
       if (fitterInfo->hasBackwardUpdate()) {
         seedState = std::auto_ptr<MeasuredStateOnPlane>(new MeasuredStateOnPlane(*(fitterInfo->getBackwardUpdate())));
+        seedState->getCov() *= blowUpFactor_;
       }
     }
   }
   // else create seed state from seed info of track
   if (seedState.get() == NULL) {
     seedState = std::auto_ptr<MeasuredStateOnPlane>(new MeasuredStateOnPlane(rep));
+    rep->setPosMom(&*seedState, tr->getStateSeed());
     TMatrixDSym cov(rep->getDim());
     cov.UnitMatrix();
-    //cov *= blowUpFactor_;
-    rep->setPosMom(&*seedState, tr->getStateSeed());
+    //cov *= blowUpFactor_; // FIXME find good start values
     seedState->setCov(cov);
   }
 

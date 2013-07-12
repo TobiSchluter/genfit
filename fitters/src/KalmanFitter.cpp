@@ -78,14 +78,13 @@ void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, dou
 
 void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
 {
-  currentState = new MeasuredStateOnPlane(rep);
+  currentState_.reset(new MeasuredStateOnPlane(rep));
   TVectorD seed(tr->getStateSeed());
-  //seed[0] += 1e-2;  // just so we don't run through the perfectly correct coordinates
   TMatrixDSym cov(6);
-  rep->setPosMomCov(currentState, seed, cov);
+  rep->setPosMomCov(currentState_.get(), seed, cov);
 
-  currentState->getCov().UnitMatrix();
-  //currentState->getCov() *= blowUpFactor_;
+  currentState_->getCov().UnitMatrix();
+  //currentState_->getCov() *= blowUpFactor_; // FIXME find good start values
 
 #ifdef DEBUG
   double oldChi2FW = 1e6;
@@ -96,16 +95,16 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
   double chi2FW(0), ndfFW(0);
   double chi2BW(0), ndfBW(0);
 
-  size_t nIt = 0;
 
   KalmanFitStatus* status = new KalmanFitStatus();
   tr->setFitStatus(status, rep);
 
+  unsigned int nIt = 0;
   for(;;) {
     try {
       #ifdef DEBUG
       std::cout << "\033[1;21mstate pre" << std::endl;
-      currentState->Print();
+      currentState_->Print();
       std::cout << "\033[0mfitting" << std::endl;
       #endif
       chi2FW = 0;
@@ -113,23 +112,25 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
       fitTrack(tr, rep, chi2FW, ndfFW, +1);
       #ifdef DEBUG
       std::cout << "\033[1;21mstate post forward" << std::endl;
-      currentState->Print();
+      currentState_->Print();
       std::cout << "\033[0m";
       #endif
 
       // Backwards iteration:
-      currentState->getCov() *= blowUpFactor_;  // blow up cov
+      currentState_->getCov() *= blowUpFactor_;  // blow up cov
       chi2BW = 0;
       ndfBW = 0;
       fitTrack(tr, rep, chi2BW, ndfBW, -1);
       #ifdef DEBUG
       std::cout << "\033[1;21mstate post backward" << std::endl;
-      currentState->Print();
+      currentState_->Print();
       std::cout << "\033[0m";
 
       std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
           << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
       #endif
+
+      ++nIt;
 
       double PvalBW = ROOT::Math::chisquared_cdf_c(chi2BW, ndfBW);
       #ifdef DEBUG
@@ -140,23 +141,22 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
       // after the first iteration will be both very close to zero, so
       // we need to force at least two iterations here.  Convergence
       // doesn't make much sense before running twice anyway.
-      if (nIt > 0 && fabs(oldPvalBW - PvalBW) < deltaPval_)  {
+      if (nIt > 1 && fabs(oldPvalBW - PvalBW) < deltaPval_)  {
         // Finished
-	++nIt;
         status->setIsFitConverged();
         break;
       }
       else {
-	oldPvalBW = PvalBW;
+        oldPvalBW = PvalBW;
         #ifdef DEBUG
         oldChi2BW = chi2BW;
         oldChi2FW = chi2FW;
-	oldPvalFW = PvalFW;
+        oldPvalFW = PvalFW;
         #endif
-        currentState->getCov() *= blowUpFactor_;  // blow up cov
+        currentState_->getCov() *= blowUpFactor_;  // blow up cov
       }
 
-      if (++nIt > maxIterations_) {
+      if (nIt >= maxIterations_) {
         break;
       }
     }
@@ -167,7 +167,6 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
       return;
     }
   }
-  delete currentState;
 
   status->setIsFitted();
   status->setCharge(rep->getCharge(static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
@@ -187,14 +186,14 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
     return;
 
   // Extrapolate to TrackPoint.
-  MeasuredStateOnPlane* state = new MeasuredStateOnPlane(*currentState);
+  MeasuredStateOnPlane* state = new MeasuredStateOnPlane(*currentState_);
   //state.Print();
 
   // construct measurementsOnPlane if it has not yet been done
   if (fi->getNumMeasurements() == 0) {
     std::vector< genfit::AbsMeasurement* > rawMeasurements =  tp->getRawMeasurements();
     // construct plane with first measurement
-    SharedPlanePtr plane = rawMeasurements[0]->constructPlane(currentState);
+    SharedPlanePtr plane = rawMeasurements[0]->constructPlane(currentState_.get());
     for (std::vector< genfit::AbsMeasurement* >::iterator it = rawMeasurements.begin(); it != rawMeasurements.end(); ++it) {
       fi->addMeasurementsOnPlane((*it)->constructMeasurementsOnPlane(rep, plane));
     }
@@ -278,8 +277,8 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   std::cout << ")" << std::endl;
 #endif
 
-  currentState->setStateCovPlane(stateVector, cov, plane);
-  currentState->setAuxInfo(state->getAuxInfo());
+  currentState_->setStateCovPlane(stateVector, cov, plane);
+  currentState_->setAuxInfo(state->getAuxInfo());
 
   /*TDecompChol dec(cov);
   TMatrixDSym mist(cov);
@@ -308,6 +307,6 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
 #endif
 
   // set update
-  KalmanFittedStateOnPlane* updatedSOP = new KalmanFittedStateOnPlane(*currentState, chi2inc, ndfInc);
+  KalmanFittedStateOnPlane* updatedSOP = new KalmanFittedStateOnPlane(*currentState_, chi2inc, ndfInc);
   fi->setUpdate(updatedSOP, direction);
 }
