@@ -354,10 +354,11 @@ MeasuredStateOnPlane KalmanFitterInfo::calcAverageState(const MeasuredStateOnPla
 
   tools::invertMatrix(fCovInv + bCovInv, smoothed_cov);
 
-  return MeasuredStateOnPlane(smoothed_cov * (fCovInv*forwardState->getState() + bCovInv*backwardState->getState()), // smoothed state
-                              smoothed_cov,
-                              forwardState->getPlane(),
-                              forwardState->getRep());
+  MeasuredStateOnPlane retVal(*forwardState); // copies auxInfo
+  retVal.setState(smoothed_cov * (fCovInv*forwardState->getState() + bCovInv*backwardState->getState()));
+  retVal.setCov(smoothed_cov);
+
+  return retVal;
 }
 
 
