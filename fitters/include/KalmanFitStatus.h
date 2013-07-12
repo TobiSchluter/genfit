@@ -60,7 +60,7 @@ class KalmanFitStatus : public FitStatus {
     FitStatus::Print();
     if (fittedWithDaf_) std::cout << " track has been fitted with DAF,";
     if (fittedWithReferenceTrack_) std::cout << " track has been fitted with reference track,";
-    if (isFitConverged_) {
+    if (isFitted_) {
       std::cout << " numIterations = " << numIterations_ << ", ";
       std::cout << "fChi2 = " << fChi2_ << ", ";
       std::cout << "bChi2 = " << bChi2_ << ", ";

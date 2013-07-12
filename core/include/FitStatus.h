@@ -54,11 +54,12 @@ class FitStatus : public TObject {
     std::cout << "fitStatus \n";
     if (isFitted_) {
       std::cout << " track has been fitted,";
-      if (isFitConverged_) std::cout << " fit has converged,";
-      if (hasTrackChanged_) std::cout << " but track has changed,";
-      if (isFitConverged_) {
-        std::cout << " fitted charge = " << charge_ << " \n";
-      }
+      if (isFitConverged_)
+        std::cout << " fit has converged,";
+      else
+        std::cout << " fit has NOT converged,";
+      if (hasTrackChanged_) std::cout << " track has changed since the fit,";
+      std::cout << " fitted charge = " << charge_ << " \n";
     }
     else
       std::cout << " track has NOT been fitted,";
