@@ -115,14 +115,14 @@ int randomSign() {
 //---------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------
 
-//#define VALGRIND
+#define VALGRIND
 
 #ifdef VALGRIND
   #include <valgrind/callgrind.h>
 #else
-#define CALLGRIND_START_INSTRUMENTATION
-#define CALLGRIND_STOP_INSTRUMENTATION
-#define CALLGRIND_DUMP_STATS
+#define CALLGRIND_START_INSTRUMENTATION;
+#define CALLGRIND_STOP_INSTRUMENTATION;
+#define CALLGRIND_DUMP_STATS;
 #endif
 
 int main() {
@@ -152,11 +152,11 @@ int main() {
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
-  const eFitterType fitterId = SimpleKalman;
-  //const eFitterType fitterId = RefKalman;
+  //const eFitterType fitterId = SimpleKalman;
+  const eFitterType fitterId = RefKalman;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
-  const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
+  const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
   const int nIter = 1; // max number of iterations
   const double dChi2 = 1.E-3; // convergence criterion
 
@@ -174,17 +174,17 @@ int main() {
   const bool debug = false;
 
   enum eMeasurementType { Pixel = 0,
-        Spacepoint,
-        ProlateSpacepoint,
-        StripU,
-        StripV,
-        Wire,
-        WirePoint };
+			  Spacepoint,
+			  ProlateSpacepoint,
+			  StripU,
+			  StripV,
+			  Wire,
+			  WirePoint };
 
 
   std::vector<unsigned int> measurementTypes;
 
-  /*measurementTypes.push_back(Pixel);
+  measurementTypes.push_back(Pixel);
   measurementTypes.push_back(Pixel);
   measurementTypes.push_back(Spacepoint);
   measurementTypes.push_back(Spacepoint);
@@ -197,9 +197,10 @@ int main() {
   measurementTypes.push_back(Wire);
   measurementTypes.push_back(Wire);
   measurementTypes.push_back(WirePoint);
-  measurementTypes.push_back(WirePoint);*/
-  for (int i = 0; i < 5; ++i)
-    measurementTypes.push_back(Pixel);
+  measurementTypes.push_back(WirePoint);
+  //for (int i = 0; i < 10; ++i)
+
+
 
 
   // init fitter
@@ -300,9 +301,9 @@ int main() {
       // true start values
       TVector3 pos(0, 0, 0);
       TVector3 mom(1.,0,0);
-      //mom.SetPhi(gRandom->Uniform(0.,2*TMath::Pi()));
+      mom.SetPhi(gRandom->Uniform(0.,2*TMath::Pi()));
       //mom.SetTheta(gRandom->Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
-      //mom.SetTheta(theta*TMath::Pi()/180);
+      mom.SetTheta(theta*TMath::Pi()/180);
       mom.SetMag(momentum);
 
       // calc helix parameters
@@ -597,7 +598,7 @@ int main() {
       }
       catch(genfit::Exception& e){
         std::cerr<<"Exception, next track"<<std::endl;
-        std::cerr << e.what();
+        e.what();
         continue; // here is a memleak!
       }
 
@@ -625,10 +626,10 @@ int main() {
       // do the fit
       try{
         if (debug) std::cout<<"Starting the fitter"<<std::endl;
-        CALLGRIND_START_INSTRUMENTATION
+        CALLGRIND_START_INSTRUMENTATION;
         fitter->processTrack(fitTrack, rep);
-        CALLGRIND_STOP_INSTRUMENTATION
-        CALLGRIND_DUMP_STATS
+        CALLGRIND_STOP_INSTRUMENTATION;
+        CALLGRIND_DUMP_STATS;
         if (debug) std::cout<<"fitter is finished!"<<std::endl;
       }
       catch(genfit::Exception& e){
