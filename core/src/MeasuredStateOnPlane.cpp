@@ -27,6 +27,7 @@ namespace genfit {
 
 void MeasuredStateOnPlane::Print(Option_t* option) const {
   std::cout << "genfit::MeasuredStateOnPlane ";
+  std::cout << "my address " << (long)this << " my plane's address " << (long)this->sharedPlane_.get() << std::endl;
   std::cout << " state vector: "; state_.Print();
   std::cout << " covariance matrix: "; cov_.Print();
   if (sharedPlane_ != NULL) {
