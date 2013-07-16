@@ -328,12 +328,16 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
       try{
         const MeasurementOnPlane* mop = kfi->getMeasurementOnPlane(j);
         int hitDim = mop->getState().GetNoElements();
-        TMatrixDSym V( beta * mop->getCov());
         TVectorD resid(mop->getState() - x_smoo);
         TMatrixDSym Vinv;
-        tools::invertMatrix(V, Vinv, detV); // can throw an Exception
+        tools::invertMatrix(mop->getCov(), Vinv, detV); // can throw an Exception
 
-        phi.push_back((1./(std::pow(2.*TMath::Pi(),hitDim/2)*sqrt(*detV)))*exp(-0.5*Vinv.Similarity(resid))); // std::pow(double, int) from <cmath> is faster than pow(double, double) from <math.h> when the exponent actually _is_ an integer.
+        double chi2 = Vinv.Similarity(resid);
+		#ifdef DEBUG
+        std::cout<<"chi2 = " << chi2 << "\n";
+		#endif
+
+        phi.push_back((1./(std::pow(2.*TMath::Pi(),hitDim/2)*sqrt(*detV)))*exp(-0.5*chi2/beta)); // std::pow(double, int) from <cmath> is faster than pow(double, double) from <math.h> when the exponent actually _is_ an integer.
         phi_sum += phi[j];
         //std::cerr << "hitDim " << hitDim << " fchi2Cuts[hitDim] " << fchi2Cuts[hitDim] << std::endl;
         double cutVal = chi2Cuts_[hitDim];
@@ -343,7 +347,7 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
       }
       catch(Exception& e) {
         delete detV;
-        std::cerr<<e.what();
+        std::cerr << e.what();
         e.info();
         phi.push_back(0); //m and Vorig do not contain sensible values, assign weight 0
         continue;
