@@ -61,6 +61,10 @@ class WireMeasurement : public AbsMeasurement {
     * When these initial weights are used by the DAF, the smoothed track will be closer to the real
     * trajectory than if both sides are weighted with 0.5 regardless of the drift distance.
     * This helps a lot when resolving l/r ambiguities with the DAF.
+    * The idea is that for the first iteration of the DAF, the wire positions are taken.
+    * For small drift radii, the wire position does not bend the fit away from the
+    * trajectory, whereas the wire position for hits with large drift radii is further away
+    * from the trajectory and will therefore bias the fit if not weighted down.
     */
   virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const;
 

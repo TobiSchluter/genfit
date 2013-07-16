@@ -121,6 +121,7 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep) {
         std::cout << "DAF::convergence reached in iteration " << iBeta << "\n";
         #endif
         oneLastIter = true;
+        status->setIsFitConverged();
       }
     }
 
