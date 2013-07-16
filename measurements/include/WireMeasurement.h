@@ -56,12 +56,21 @@ class WireMeasurement : public AbsMeasurement {
 
   virtual AbsMeasurement* clone() const {return new WireMeasurement(*this);}
 
+  /**  Hits with a small drift distance get a higher weight, whereas hits with
+    * big drift distances become weighted down.
+    * When these initial weights are used by the DAF, the smoothed track will be closer to the real
+    * trajectory than if both sides are weighted with 0.5 regardless of the drift distance.
+    * This helps a lot when resolving l/r ambiguities with the DAF.
+    */
   virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const;
 
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr) const;
 
   virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const;
 
+  /** Set maximum drift distance. This is used to calculate the start weights of the two
+   * measurementsOnPlane.
+   */
   void setMaxDistance(double d){maxDistance_ = d;}
   /**
    * select how to resolve the left/right ambiguity:

@@ -34,13 +34,13 @@ namespace genfit {
 
 
 WireMeasurement::WireMeasurement(int nDim)
-  : AbsMeasurement(nDim), maxDistance_(1.E50), leftRight_(0)
+  : AbsMeasurement(nDim), maxDistance_(2), leftRight_(0)
 {
   assert(nDim >= 7);
 }
 
 WireMeasurement::WireMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
-  : AbsMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint), maxDistance_(1.E50), leftRight_(0)
+  : AbsMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint), maxDistance_(2), leftRight_(0)
 {
   assert(rawHitCoords_.GetNrows() >= 7);
 }
@@ -69,14 +69,6 @@ SharedPlanePtr WireMeasurement::constructPlane(const StateOnPlane* state) const 
   TVector3 dirInPoca = rep->getMom(&st);
   dirInPoca.SetMag(1.);
   const TVector3& pocaOnWire = wire1 + wireDirection.Dot(poca - wire1)*wireDirection;
-
-
-  // check distance of poca to wire
-  if((poca - pocaOnWire).Mag() > maxDistance_) {
-    Exception exc("GFAbsWireHit::detPlane(): distance poca-wire > maxdistance", __LINE__,__FILE__);
-    throw exc;    
-  }
-
  
   // check if direction is parallel to wire
   if (fabs(wireDirection.Angle(dirInPoca)) < 0.01){
@@ -116,8 +108,8 @@ std::vector<MeasurementOnPlane*> WireMeasurement::constructMeasurementsOnPlane(c
     mopR->setWeight(1);
   }
   else {
-    mopL->setWeight(0.5);
-    mopR->setWeight(0.5);
+    mopL->setWeight(0.5 * pow(1-mR/maxDistance_, 2.));
+    mopR->setWeight(0.5 * pow(1-mR/maxDistance_, 2.));
   }
 
   std::vector<MeasurementOnPlane*> retVal;

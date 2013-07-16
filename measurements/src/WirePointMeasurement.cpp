@@ -67,6 +67,11 @@ std::vector<MeasurementOnPlane*> WirePointMeasurement::constructMeasurementsOnPl
     mopL->setWeight(0);
     mopR->setWeight(1);
   }
+  else {
+    double mR = rawHitCoords_(6);
+    mopL->setWeight(0.5 * pow(1-mR/maxDistance_, 2.));
+    mopR->setWeight(0.5 * pow(1-mR/maxDistance_, 2.));
+  }
 
   std::vector<MeasurementOnPlane*> retVal;
   retVal.push_back(mopL);
