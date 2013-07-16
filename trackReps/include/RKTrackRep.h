@@ -237,6 +237,7 @@ class RKTrackRep : public AbsTrackRep {
   mutable M7x5 J_Mp_7x5_; //!  // FIXME this is actually (J_pM)^T
   mutable M6x5 J_Mp_6x5_; //!  // FIXME this is actually (J_pM)^T
 
+  ClassDef(RKTrackRep, 1)
 };
 
 } /* End of namespace genfit */
