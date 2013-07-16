@@ -254,12 +254,6 @@ void EventDisplay::drawEvent(unsigned int id) {
 
     unsigned int numhits = track->getNumPointsWithMeasurement();
 
-    TEveStraightLineSet* track_lines = NULL;
-    TEveStraightLineSet* track_linesFwd = NULL;
-    TEveStraightLineSet* track_linesBwd = NULL;
-    TEveStraightLineSet* track_linesRef = NULL;
-
-
     KalmanFitterInfo* fi;
     KalmanFitterInfo* prevFi;
     MeasuredStateOnPlane fittedState, prevFittedState;
@@ -357,7 +351,7 @@ void EventDisplay::drawEvent(unsigned int id) {
 
       // draw track if corresponding option is set ------------------------------------------
       struct makeLinesClass {
-      void operator()(TEveStraightLineSet **pls, const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
+      void operator()(const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
           const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth = 2, int markerPos = 1)
         {
           TVector3 pos, dir, oldPos, oldDir;
@@ -372,8 +366,7 @@ void EventDisplay::drawEvent(unsigned int id) {
             distB *= -1.;
           TVector3 intermediate1 = oldPos + 0.3 * distA * oldDir;
           TVector3 intermediate2 = pos - 0.3 * distB * dir;
-          if (*pls == NULL) *pls = new TEveStraightLineSet;
-          TEveStraightLineSet *ls = *pls;
+          TEveStraightLineSet* ls = new TEveStraightLineSet;
           ls->AddLine(oldPos(0), oldPos(1), oldPos(2), intermediate1(0), intermediate1(1), intermediate1(2));
           ls->AddLine(intermediate1(0), intermediate1(1), intermediate1(2), intermediate2(0), intermediate2(1), intermediate2(2));
           ls->AddLine(intermediate2(0), intermediate2(1), intermediate2(2), pos(0), pos(1), pos(2));
@@ -386,6 +379,10 @@ void EventDisplay::drawEvent(unsigned int id) {
             else
               ls->AddMarker(pos(0), pos(1), pos(2));
           }
+
+          if (lineWidth > 0)
+            gEve->AddElement(ls);
+
 
           if (drawErrors) {
             const MeasuredStateOnPlane* measuredState;
@@ -513,16 +510,10 @@ void EventDisplay::drawEvent(unsigned int id) {
                 eVec2 *= -1;
               }
 
-              oldEVec1.Print();
-              oldEVec2.Print();
-              eVec1.Print();
-              eVec2.Print();
-
               // vertices at 2nd plane
               double angle0 = eVec1.Angle(oldEVec1);
               if (eVec1*(eval.Cross(oldEVec1)) < 0)
                 angle0 *= -1;
-              std::cout<<"angle0 "<<angle0<<"\n";
               for (int i=0; i<nEdges; ++i) {
                 const double angle = 2*TMath::Pi()/nEdges * i - angle0;
                 vertices.push_back(position + cos(angle)*eVec1 + sin(angle)*eVec2);
@@ -559,19 +550,18 @@ void EventDisplay::drawEvent(unsigned int id) {
 
       if (j > 0) {
         if(drawTrack) {
-          makeLines(&track_lines, &prevFittedState, &fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers, drawErrors, 3);
+          makeLines(&prevFittedState, &fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers, drawErrors, 3);
           if (drawErrors) { // make sure to draw errors in both directions
-            TEveStraightLineSet* dummy = NULL;
-            makeLines(&dummy, &prevFittedState, &fittedState, rep, charge > 0 ? kRed : kBlue, 1, false, drawErrors, 3, 0);
+            makeLines(&prevFittedState, &fittedState, rep, charge > 0 ? kRed : kBlue, 1, false, drawErrors, 0, 0);
           }
         }
         if (drawForward)
-          makeLines(&track_linesFwd, prevFi->getForwardUpdate(), fi->getForwardPrediction(), rep, charge > 0 ? kMagenta : kCyan, 1, drawTrackMarkers, drawErrors, 1, 0);
+          makeLines(prevFi->getForwardUpdate(), fi->getForwardPrediction(), rep, charge > 0 ? kMagenta : kCyan, 1, drawTrackMarkers, drawErrors, 1, 0);
         if (drawBackward)
-          makeLines(&track_linesBwd, prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, charge > 0 ? kYellow : kMagenta, 1, drawTrackMarkers, drawErrors, 1);
+          makeLines(prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, charge > 0 ? kYellow : kMagenta, 1, drawTrackMarkers, drawErrors, 1);
         // draw reference track if corresponding option is set ------------------------------------------
         if(drawTrack && fi->hasReferenceState())
-          makeLines(&track_linesRef, prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers, false, 3);
+          makeLines(prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers, false, 3);
       }
 
       // draw detectors if option is set, only important for wire hits ----------------------
@@ -792,11 +782,6 @@ void EventDisplay::drawEvent(unsigned int id) {
       prevFittedState = fittedState;
 
     }
-
-    if(track_lines != NULL) gEve->AddElement(track_lines);
-    if(track_linesFwd != NULL) gEve->AddElement(track_linesFwd);
-    if(track_linesBwd != NULL) gEve->AddElement(track_linesBwd);
-    if(track_linesRef != NULL) gEve->AddElement(track_linesRef);
 
   }
 
