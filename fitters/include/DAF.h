@@ -47,7 +47,8 @@ namespace genfit {
  */
 
 class DAF : public AbsKalmanFitter {
-
+  DAF(const DAF&);
+  DAF& operator=(genfit::DAF const&);
  public:
 
   DAF();

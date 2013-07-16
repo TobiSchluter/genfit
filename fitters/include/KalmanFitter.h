@@ -36,6 +36,8 @@ class MeasuredStateOnPlane;
 class TrackPoint;
 
 class KalmanFitter : public AbsKalmanFitter {
+  KalmanFitter(const KalmanFitter&);
+  KalmanFitter& operator=(KalmanFitter const&);
  public:
   KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
     : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor) {}
