@@ -507,7 +507,7 @@ void Track::Streamer(TBuffer &R__b)
          R__stl.reserve(R__n);
          for (R__i = 0; R__i < R__n; R__i++) {
             genfit::AbsTrackRep* R__t;
-            R__b.StreamObject(&R__t,R__tcl1);
+            R__b >> R__t;
             R__stl.push_back(R__t);
          }
       }
@@ -567,7 +567,7 @@ void Track::Streamer(TBuffer &R__b)
          }
 	 std::vector<AbsTrackRep*>::iterator R__k;
             for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
-            R__b.StreamObject((genfit::AbsTrackRep*)&(*R__k),R__tcl1);
+	      R__b << *R__k;
             }
          }
       }
