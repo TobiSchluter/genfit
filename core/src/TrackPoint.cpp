@@ -17,6 +17,8 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "Track.h"
+
 #include "TrackPoint.h"
 
 #include "Exception.h"
@@ -201,6 +203,98 @@ void TrackPoint::Print(const Option_t*) const {
   }
 
 
+}
+
+
+//
+// This is modified from the auto-generated Streamer.
+//
+// While reading, fitterInfos_ will be filled in by calling  
+void TrackPoint::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class genfit::TrackPoint.
+
+   //This works around a msvc bug and should be harmless on other platforms
+   typedef ::genfit::TrackPoint thisClass;
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      TObject::Streamer(R__b);
+      R__b >> sortingParameter_;
+      {
+	std::vector<genfit::AbsMeasurement*,std::allocator<genfit::AbsMeasurement*> > &R__stl =  rawMeasurements_;
+         R__stl.clear();
+         TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsMeasurement));
+         if (R__tcl1==0) {
+            Error("rawMeasurements_ streamer","Missing the TClass object for genfit::AbsMeasurement!");
+            return;
+         }
+         int R__i, R__n;
+         R__b >> R__n;
+         R__stl.reserve(R__n);
+         for (R__i = 0; R__i < R__n; R__i++) {
+            genfit::AbsMeasurement* R__t;
+            R__t = (genfit::AbsMeasurement*)R__b.ReadObjectAny(R__tcl1);
+            R__stl.push_back(R__t);
+         }
+      }
+      track_ = NULL;
+      int nTrackReps;
+      R__b >> nTrackReps;
+      vFitterInfos_.resize(nTrackReps);
+      for (int i = 0; i < nTrackReps; ++i)
+	{
+	  int id;
+	  R__b >> id;
+	  AbsFitterInfo* p = 0;
+	  R__b >> p;
+	  vFitterInfos_[id] = p;
+	}
+      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+
+      // Fixup ownerships.
+      for (size_t i = 0; i < rawMeasurements_.size(); ++i)
+	{
+	  rawMeasurements_[i]->setTrackPoint(this);
+	}
+      for (size_t i = 0; i < vFitterInfos_.size(); ++i)
+	{
+	  vFitterInfos_[i]->setTrackPoint(this);
+	}
+   } else {
+      R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      R__b << sortingParameter_;
+      {
+	std::vector<genfit::AbsMeasurement*,std::allocator<genfit::AbsMeasurement*> > &R__stl =  rawMeasurements_;
+         int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+         R__b << R__n;
+         if(R__n) {
+	   std::vector<genfit::AbsMeasurement*,std::allocator<genfit::AbsMeasurement*> >::iterator R__k;
+            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
+            R__b << (*R__k);
+            }
+         }
+      }
+      R__b << fitterInfos_.size();
+      for (std::map<const AbsTrackRep*, AbsFitterInfo*>::const_iterator it = fitterInfos_.begin();
+	   it != fitterInfos_.end(); ++it)
+	{
+	  int id = track_->getIdForRep(it->first);
+	  R__b << id;
+	  R__b << it->second;
+	}
+      R__b.SetByteCount(R__c, kTRUE);
+   }
+}
+
+void TrackPoint::fixupRepsForReading()
+{
+  for (size_t i = 0; i < vFitterInfos_.size(); ++i) {
+    // The vector is filled such that i corresponds to the id of the TrackRep.
+    fitterInfos_[track_->getTrackRep(i)] = vFitterInfos_[i];
+  }
+  vFitterInfos_.clear();
 }
 
 } /* End of namespace genfit */

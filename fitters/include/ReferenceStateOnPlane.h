@@ -89,7 +89,7 @@ class ReferenceStateOnPlane : public StateOnPlane {
   TMatrixDSym backwardNoiseMatrix_; // noise matrix for transport from next referenceState
 
 
-  //ClassDef(ReferenceStateOnPlane,0)
+  ClassDef(ReferenceStateOnPlane,0)
 
 };
 

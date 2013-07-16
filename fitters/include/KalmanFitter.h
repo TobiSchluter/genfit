@@ -51,9 +51,9 @@ class KalmanFitter : public AbsKalmanFitter {
 #ifndef __CINT__
   boost::scoped_ptr<MeasuredStateOnPlane> currentState_;
 #else
-  class MeasuredStateOnPlane* currentState_;
+  MeasuredStateOnPlane* currentState_;
 #endif
-
+  ClassDef(KalmanFitter,1)
 };
 
 }

@@ -89,7 +89,62 @@ AUX_SOURCE_DIRECTORY( ./fitters/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./measurements/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./trackReps/src  library_sources )
 
-ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources} )
+# Dictionary generation.  For the time being, we list classes one-by-one.
+MACRO (ROOT_GENERATE_DICTIONARY INFILES INCLUDE_DIRS_IN LINKDEF_FILE OUTFILE)
+  set (INCLUDE_DIRS)
+  foreach (_current_FILE ${INCLUDE_DIRS_IN})
+    set(INCLUDE_DIRS ${INCLUDE_DIRS} -I${_current_FILE})   
+  endforeach (_current_FILE ${INCLUDE_DIRS_IN})
+  
+  STRING(REGEX REPLACE "^(.*)\\.(.*)$" "\\1.h" OUTFILE_H "${OUTFILE}")
+  SET (OUTFILES ${OUTFILE} ${OUTFILE_H})
+
+  ADD_CUSTOM_COMMAND(OUTPUT ${OUTFILES}
+    COMMAND ${ROOT_CINT_EXECUTABLE}
+    ARGS -f ${OUTFILE} -c ${INCLUDE_DIRS} ${INFILES} ${LINKDEF_FILE} DEPENDS ${INFILES} ${LINKDEF_FILE})
+
+  STRING(REGEX REPLACE "/" "" OUTFILE_NO_SLASH "${OUTFILE}")
+  ADD_CUSTOM_TARGET(generate_${OUTFILE_NO_SLASH} DEPENDS ${OUTFILE})
+ENDMACRO (ROOT_GENERATE_DICTIONARY)
+
+SET(CORE_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/DetPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsFinitePlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/finitePlanes/include/RectangularFinitePlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsTrackRep.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/StateOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasuredStateOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsFitterInfo.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackPoint.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/FitStatus.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/Track.h
+)
+ROOT_GENERATE_DICTIONARY("${CORE_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/core/src/coreLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cpp" "${library_sources}")
+
+SET(FITTER_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/AbsKalmanFitter.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFittedStateOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFitStatus.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/ReferenceStateOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFitterRefTrack.h
+
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFitter.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFitterInfo.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/DAF.h
+)
+ROOT_GENERATE_DICTIONARY("${FITTER_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/fitters/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/fitters/src/fittersLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cpp" "${library_sources}")
+
+ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources})
 INSTALL( TARGETS ${PROJECT_NAME} DESTINATION lib )
 
 # link ROOT libraries

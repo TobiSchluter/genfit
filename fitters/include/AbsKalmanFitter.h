@@ -78,6 +78,8 @@ class AbsKalmanFitter : public AbsFitter {
 
   // How to handle if there are multiple MeasurementsOnPlane
   eMultipleMeasurementHandling multipleMeasurementHandling_;
+
+  ClassDef(AbsKalmanFitter, 1)
 };
 
 }

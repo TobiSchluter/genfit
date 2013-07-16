@@ -58,7 +58,7 @@ class KalmanFittedStateOnPlane : public MeasuredStateOnPlane {
   double ndf_;
 
 
-  //ClassDef(KalmanFittedStateOnPlane,1)
+  ClassDef(KalmanFittedStateOnPlane,1)
 
 };
 

@@ -383,5 +383,86 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
 
 }
 
+// Customized from generated Streamer.
+void DAF::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class genfit::DAF.
+
+   //This works around a msvc bug and should be harmless on other platforms
+   typedef ::genfit::DAF thisClass;
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      //This works around a msvc bug and should be harmless on other platforms
+      typedef genfit::AbsKalmanFitter baseClass0;
+      baseClass0::Streamer(R__b);
+      R__b >> deltaWeight_;
+      // weights_ are only of intermediate use -> not saved
+      {
+         std::vector<double> &R__stl =  betas_;
+         R__stl.clear();
+         int R__i, R__n;
+         R__b >> R__n;
+         R__stl.reserve(R__n);
+         for (R__i = 0; R__i < R__n; R__i++) {
+            double R__t;
+            R__b >> R__t;
+            R__stl.push_back(R__t);
+         }
+      }
+      {
+         std::map<int,double> &R__stl =  chi2Cuts_;
+         R__stl.clear();
+         int R__i, R__n;
+         R__b >> R__n;
+         for (R__i = 0; R__i < R__n; R__i++) {
+            int R__t;
+            R__b >> R__t;
+            double R__t2;
+            R__b >> R__t2;
+            typedef int Value_t;
+            std::pair<Value_t const, double > R__t3(R__t,R__t2);
+            R__stl.insert(R__t3);
+         }
+      }
+      AbsKalmanFitter *p;
+      R__b >> p;
+      kalman_.reset(p);
+      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+   } else {
+      R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+      //This works around a msvc bug and should be harmless on other platforms
+      typedef genfit::AbsKalmanFitter baseClass0;
+      baseClass0::Streamer(R__b);
+      R__b << deltaWeight_;
+      // weights_ are only of intermediate use -> not saved
+      weights_.clear();
+      {
+         std::vector<double> &R__stl =  betas_;
+         int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+         R__b << R__n;
+         if(R__n) {
+            std::vector<double>::iterator R__k;
+            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
+            R__b << (*R__k);
+            }
+         }
+      }
+      {
+         std::map<int,double> &R__stl =  chi2Cuts_;
+         int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+         R__b << R__n;
+         if(R__n) {
+            std::map<int,double>::iterator R__k;
+            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
+            R__b << ((*R__k).first );
+            R__b << ((*R__k).second);
+            }
+         }
+      }
+      R__b << kalman_.get();
+      R__b.SetByteCount(R__c, kTRUE);
+   }
+}
 
 } /* End of namespace genfit */

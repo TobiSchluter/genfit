@@ -60,7 +60,7 @@ namespace genfit {
  */
 
 
-class DetPlane { //: public TObject {
+class DetPlane : public TObject {
 
  public:
 
@@ -195,7 +195,7 @@ class DetPlane { //: public TObject {
 #endif
 
 
-  //ClassDef(DetPlane,1)
+  ClassDef(DetPlane,1)
 
 };
 

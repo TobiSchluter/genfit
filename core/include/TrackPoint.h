@@ -26,7 +26,7 @@
 
 #include "AbsMeasurement.h"
 #include "AbsFitterInfo.h"
-#include "MaterialInfo.h"
+//#include "MaterialInfo.h"
 
 #include <TObject.h>
 
@@ -54,7 +54,7 @@ class TrackPoint : public TObject {
   TrackPoint(const TrackPoint&); // copy constructor
   TrackPoint& operator=(const TrackPoint&); // assignment operator
 
-  TrackPoint(const TrackPoint&, const std::map<const AbsTrackRep*, AbsTrackRep*>&); // custom copy constructor where all TrackRep pointers are exchanged according to the map.
+  TrackPoint(const TrackPoint&, const std::map<const genfit::AbsTrackRep*, genfit::AbsTrackRep*>&); // custom copy constructor where all TrackRep pointers are exchanged according to the map.
 
   ~TrackPoint();
 
@@ -69,7 +69,7 @@ class TrackPoint : public TObject {
   unsigned int getNumRawMeasurements() const {return rawMeasurements_.size();}
   bool hasRawMeasurements() const {return (! rawMeasurements_.empty());}
   //! Get list of all fitterInfos
-  std::vector< AbsFitterInfo* > getFitterInfos() const;
+  std::vector< genfit::AbsFitterInfo* > getFitterInfos() const;
   AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep) const {return fitterInfos_.at(rep);}
   bool hasFitterInfo(const AbsTrackRep* rep) const;
 
@@ -81,18 +81,26 @@ class TrackPoint : public TObject {
   //! Takes ownership
   void addRawMeasurement(AbsMeasurement* rawMeasurement) {assert(rawMeasurement!=NULL); rawMeasurements_.push_back(rawMeasurement);}
   //! Takes Ownership
-  void setFitterInfo(AbsFitterInfo* fitterInfo) {fitterInfos_[fitterInfo->getRep()] = fitterInfo;} // FIXME memory leak
-  void deleteFitterInfo(AbsTrackRep* rep) {fitterInfos_.erase(rep);} // FIXME memory leak
+  void setFitterInfo(genfit::AbsFitterInfo* fitterInfo) {
+    if (fitterInfos_.find(fitterInfo->getRep()) != fitterInfos_.end()) { delete fitterInfos_[fitterInfo->getRep()]; }
+    fitterInfos_[fitterInfo->getRep()] = fitterInfo; }
+  void deleteFitterInfo(AbsTrackRep* rep) {delete fitterInfos_[rep]; fitterInfos_.erase(rep);}
 
   //void setMaterial(MaterialInfo* material);
 
   void Print(const Option_t* = "") const;
 
+  // This function is used when reading the TrackPoint and is called
+  // by the owner in order to build fitterInfos_ from vFitterInfos_.
+  // This requires that the track_ be set.  It also empties
+  // vFitterInfos_ which has served its purpose after this function is
+  // called.
+  void fixupRepsForReading();
  private:
   double sortingParameter_;
 
   //! Pointer to Track where TrackPoint belongs to
-  Track* track_; // No ownership
+  Track* track_; //! No ownership
 
   /** 
    *  Can be more than one, e.g. multiple measurements in the same Si detector, left and right measurements of a wire detector etc.
@@ -101,12 +109,17 @@ class TrackPoint : public TObject {
   std::vector<AbsMeasurement*> rawMeasurements_;
   //std::vector<AbsMeasurement*> rawMeasurements_; // Ownership
 
-  std::map< const AbsTrackRep*, AbsFitterInfo* > fitterInfos_; // Ownership over FitterInfos
+  std::map< const AbsTrackRep*, AbsFitterInfo* > fitterInfos_; //! Ownership over FitterInfos
+  // The following vector is read while streaming.  After reading the
+  // TrackPoint, the Track's streamer will call fixupRepsForReading,
+  // and this vector will be translated into the map fitterInfos.  The
+  // vector is indexed by the ids of the corresponding TrackReps.
+  std::vector< AbsFitterInfo* > vFitterInfos_; //!
 
   //MaterialInfo* material_; // Ownership
 
 
-  //ClassDef(TrackPoint,1)
+  ClassDef(TrackPoint,1)
 
 };
 

@@ -147,7 +147,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
 
 
-  //ClassDef(KalmanFitterInfo,1)
+  ClassDef(KalmanFitterInfo,1)
 
 };
 

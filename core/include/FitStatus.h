@@ -72,6 +72,8 @@ class FitStatus : public TObject {
   bool hasTrackChanged_; // has anything in the Track been changed sinde the fit -> fit isn't valid anymore
   double charge_; // fitted charge
 
+  ClassDef(FitStatus,1);
+
 };
 
 } /* End of namespace genfit */

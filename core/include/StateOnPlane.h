@@ -75,7 +75,7 @@ class StateOnPlane : public TObject {
   const AbsTrackRep* rep_; // No ownership
 
 
-  //ClassDef(StateOnPlane,1)
+  ClassDef(StateOnPlane,1)
 
 };
 

@@ -180,6 +180,16 @@ unsigned int Track::getNumPointsWithMeasurement() const {
 }
 
 
+int Track::getIdForRep(const AbsTrackRep* rep) const
+{
+  for (size_t i = 0; i < trackReps_.size(); ++i)
+    if (trackReps_[i] == rep)
+      return i;
+
+  assert(0 == 1);  // Cannot happen.
+}
+
+
 void Track::insertPoint(TrackPoint* point, int id) {
   // TODO: test
   assert(point!=NULL);
@@ -472,6 +482,130 @@ void Track::trackHasChanged() {
     it->second->setHasTrackChanged();
   }
 }
+
+
+void Track::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class genfit::Track.
+
+   //This works around a msvc bug and should be harmless on other platforms
+   typedef ::genfit::Track thisClass;
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      TObject::Streamer(R__b);
+      {
+	std::vector<AbsTrackRep*> &R__stl =  trackReps_;
+         R__stl.clear();
+         TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsTrackRep));
+         if (R__tcl1==0) {
+            Error("trackReps_ streamer","Missing the TClass object for genfit::AbsTrackRep!");
+            return;
+         }
+         int R__i, R__n;
+         R__b >> R__n;
+         R__stl.reserve(R__n);
+         for (R__i = 0; R__i < R__n; R__i++) {
+            genfit::AbsTrackRep* R__t;
+            R__b.StreamObject(&R__t,R__tcl1);
+            R__stl.push_back(R__t);
+         }
+      }
+      R__b >> cardinalRep_;
+      {
+	std::vector<TrackPoint*> &R__stl =  trackPoints_;
+         R__stl.clear();
+         TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::TrackPoint));
+         if (R__tcl1==0) {
+            Error("trackPoints_ streamer","Missing the TClass object for genfit::TrackPoint!");
+            return;
+         }
+         int R__i, R__n;
+         R__b >> R__n;
+         R__stl.reserve(R__n);
+         for (R__i = 0; R__i < R__n; R__i++) {
+            genfit::TrackPoint* R__t;
+            R__t = (genfit::TrackPoint*)R__b.ReadObjectAny(R__tcl1);
+	    R__t->setTrack(this);
+	    R__t->fixupRepsForReading();
+            R__stl.push_back(R__t);
+         }
+      }
+      {
+	std::map<const AbsTrackRep*,FitStatus*> &R__stl =  fitStatuses_;
+         R__stl.clear();
+         TClass *R__tcl2 = TBuffer::GetClass(typeid(genfit::FitStatus));
+         if (R__tcl2==0) {
+            Error("fitStatuses_ streamer","Missing the TClass object for genfit::FitStatus!");
+            return;
+         }
+         int R__i, R__n;
+         R__b >> R__n;
+         for (R__i = 0; R__i < R__n; R__i++) {
+	   int id;
+	   R__b >> id;
+            genfit::FitStatus* R__t2;
+            R__t2 = (genfit::FitStatus*)R__b.ReadObjectAny(R__tcl2);
+
+	    R__stl[this->getTrackRep(id)] = R__t2;
+         }
+      }
+      stateSeed_.Streamer(R__b);
+      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+   } else {
+      R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      {
+	std::vector<AbsTrackRep*> &R__stl =  trackReps_;
+         int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+         R__b << R__n;
+         if(R__n) {
+         TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsTrackRep));
+         if (R__tcl1==0) {
+            Error("trackReps_ streamer","Missing the TClass object for genfit::AbsTrackRep!");
+            return;
+         }
+	 std::vector<AbsTrackRep*>::iterator R__k;
+            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
+            R__b.StreamObject((genfit::AbsTrackRep*)&(*R__k),R__tcl1);
+            }
+         }
+      }
+      R__b << cardinalRep_;
+      {
+	std::vector<TrackPoint*> &R__stl =  trackPoints_;
+         int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+         R__b << R__n;
+         if(R__n) {
+	   std::vector<TrackPoint*>::iterator R__k;
+            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
+            R__b << (*R__k);
+            }
+         }
+      }
+      {
+	std::map<const AbsTrackRep*,FitStatus*> &R__stl =  fitStatuses_;
+         int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+         R__b << R__n;
+         if(R__n) {
+         TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsTrackRep));
+         if (R__tcl1==0) {
+            Error("fitStatuses_ streamer","Missing the TClass object for genfit::AbsTrackRep!");
+            return;
+         }
+	 std::map<const AbsTrackRep*,FitStatus*>::iterator R__k;
+            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
+	      int id = this->getIdForRep((*R__k).first);
+	      R__b << id;
+	      R__b << ((*R__k).second);
+            }
+         }
+      }
+      stateSeed_.Streamer(R__b);
+      R__b.SetByteCount(R__c, kTRUE);
+   }
+}
+
 
 
 } /* End of namespace genfit */

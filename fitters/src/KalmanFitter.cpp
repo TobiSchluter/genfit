@@ -310,3 +310,31 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   KalmanFittedStateOnPlane* updatedSOP = new KalmanFittedStateOnPlane(*currentState_, chi2inc, ndfInc);
   fi->setUpdate(updatedSOP, direction);
 }
+
+
+// Modified from auto-generated streamer to deal with scoped_ptr correctly.
+void KalmanFitter::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class genfit::KalmanFitter.
+
+   //This works around a msvc bug and should be harmless on other platforms
+   typedef ::genfit::KalmanFitter thisClass;
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      //This works around a msvc bug and should be harmless on other platforms
+      typedef genfit::AbsKalmanFitter baseClass0;
+      baseClass0::Streamer(R__b);
+      MeasuredStateOnPlane *p = 0;
+      R__b >> p;
+      currentState_.reset(p);
+      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+   } else {
+      R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+      //This works around a msvc bug and should be harmless on other platforms
+      typedef genfit::AbsKalmanFitter baseClass0;
+      baseClass0::Streamer(R__b);
+      R__b << currentState_.get();
+      R__b.SetByteCount(R__c, kTRUE);
+   }
+}

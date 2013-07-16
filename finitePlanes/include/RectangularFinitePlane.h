@@ -28,8 +28,7 @@ class RectangularFinitePlane : public AbsFinitePlane {
   double uMin_, uMax_, vMin_, vMax_;
 
 
-  //ClassDef(RectangularFinitePlane,1)
-
+  ClassDef(RectangularFinitePlane,1)
 };
 
 } /* End of namespace genfit */

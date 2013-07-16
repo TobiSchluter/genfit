@@ -38,4 +38,36 @@ void StateOnPlane::Print(Option_t* option) const {
   }
 }
 
+
+// Modified from auto-generated Streamer to account for sharedPlane_
+// also ignore rep_, this has to be set when loading the object owning
+// this state.
+void StateOnPlane::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class genfit::StateOnPlane.
+
+   //This works around a msvc bug and should be harmless on other platforms
+   typedef ::genfit::StateOnPlane thisClass;
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      TObject::Streamer(R__b);
+      state_.Streamer(R__b);
+      auxInfo_.Streamer(R__b);
+      DetPlane *plane = 0;
+      R__b >> plane;
+      sharedPlane_.reset(plane);
+      rep_ = NULL;  // needs to be set by owner
+      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+   } else {
+      R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      state_.Streamer(R__b);
+      auxInfo_.Streamer(R__b);
+      R__b << sharedPlane_.get();
+      R__b.SetByteCount(R__c, kTRUE);
+   }
+}
+
+
 } /* End of namespace genfit */

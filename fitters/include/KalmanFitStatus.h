@@ -81,6 +81,7 @@ class KalmanFitStatus : public FitStatus {
   double fNdf_; // degrees of freedom of the forward fit
   double bNdf_; // degrees of freedom of the backward fit
 
+  ClassDef(KalmanFitStatus, 1)
 };
 
 } /* End of namespace genfit */

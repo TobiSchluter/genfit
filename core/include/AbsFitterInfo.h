@@ -73,13 +73,13 @@ class AbsFitterInfo : public TObject {
 
   /** Pointer to #TrackPoint where the FitterInfo belongs to
    */
-  const TrackPoint* trackPoint_; // No ownership
+  const TrackPoint* trackPoint_; //! No ownership
 
   /** Pointer to #TrackRep with respect to which the FitterInfo is defined
    */
-  const AbsTrackRep* rep_; // No ownership
+  const AbsTrackRep* rep_; //! No ownership
 
-  //ClassDef(AbsFitterInfo,1)
+  ClassDef(AbsFitterInfo,1)
 
  private:
   AbsFitterInfo(const AbsFitterInfo&); // copy constructor

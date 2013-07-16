@@ -33,15 +33,18 @@ class Track : public TObject {
 
 
   TrackPoint* getPoint(int id) const;
-  std::vector< TrackPoint* > getPoints() const;
+  std::vector< genfit::TrackPoint* > getPoints() const;
   unsigned int getNumPoints() const {return trackPoints_.size();}
 
   TrackPoint* getPointWithMeasurement(int id) const;
-  std::vector< TrackPoint* > getPointsWithMeasurement() const;
+  std::vector< genfit::TrackPoint* > getPointsWithMeasurement() const;
   unsigned int getNumPointsWithMeasurement() const;
 
   AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id);}
   unsigned int getNumReps() const {return trackReps_.size();}
+
+  // This is used when streaming TrackPoints.
+  int getIdForRep(const AbsTrackRep* rep) const;
 
   /** @brief Get cardinal track representation
    *
@@ -95,16 +98,16 @@ class Track : public TObject {
 
   Track& operator=(const Track&); // assignment operator  // delete until properly implemented
 
-  std::vector<TrackPoint*> trackPoints_; // Ownership
-
   std::vector<AbsTrackRep*> trackReps_; // Ownership
   unsigned int cardinalRep_; // THE selected rep, default = 0;
+
+  std::vector<TrackPoint*> trackPoints_; // Ownership
 
   std::map< const AbsTrackRep*, FitStatus* > fitStatuses_;
 
   TVectorD stateSeed_; // 6D: position, momentum
 
-  //ClassDef(Track,1)
+  ClassDef(Track,1)
 
 };
 

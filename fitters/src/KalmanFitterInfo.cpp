@@ -552,4 +552,91 @@ bool KalmanFitterInfo::checkConsistency() const {
 }
 
 
+// Modified from auto-generated Streamer to correctly deal with smart pointers.
+void KalmanFitterInfo::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class genfit::KalmanFitterInfo.
+
+   //This works around a msvc bug and should be harmless on other platforms
+   typedef ::genfit::KalmanFitterInfo thisClass;
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      //This works around a msvc bug and should be harmless on other platforms
+      typedef genfit::AbsFitterInfo baseClass0;
+      baseClass0::Streamer(R__b);
+      {
+	ReferenceStateOnPlane *p = 0;
+	R__b >> p;
+	p->setRep(this->getRep());
+	referenceState_.reset(p);
+      }
+      {
+	MeasuredStateOnPlane *p = 0;
+	R__b >> p;
+	p->setRep(this->getRep());
+	forwardPrediction_.reset(p);
+      }
+      {
+	KalmanFittedStateOnPlane *p = 0;
+	R__b >> p;
+	p->setRep(this->getRep());
+	forwardUpdate_.reset(p);
+      }
+      {
+	MeasuredStateOnPlane *p = 0;
+	R__b >> p;
+	p->setRep(this->getRep());
+	backwardPrediction_.reset(p);
+      }
+      {
+	KalmanFittedStateOnPlane *p = 0;
+	R__b >> p;
+	p->setRep(this->getRep());
+	backwardUpdate_.reset(p);
+      }
+      {
+	std::vector<genfit::MeasurementOnPlane*,std::allocator<genfit::MeasurementOnPlane*> > &R__stl =  measurementsOnPlane_;
+         R__stl.clear();
+         TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::MeasurementOnPlane));
+         if (R__tcl1==0) {
+            Error("measurementsOnPlane_ streamer","Missing the TClass object for genfit::MeasurementOnPlane!");
+            return;
+         }
+         int R__i, R__n;
+         R__b >> R__n;
+         R__stl.reserve(R__n);
+         for (R__i = 0; R__i < R__n; R__i++) {
+            genfit::MeasurementOnPlane* R__t;
+            R__t = (genfit::MeasurementOnPlane*)R__b.ReadObjectAny(R__tcl1);
+            R__stl.push_back(R__t);
+         }
+      }
+      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+   } else {
+      R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+      //This works around a msvc bug and should be harmless on other platforms
+      typedef genfit::AbsFitterInfo baseClass0;
+      baseClass0::Streamer(R__b);
+      R__b << referenceState_.get();
+      R__b << forwardPrediction_.get();
+      R__b << forwardUpdate_.get();
+      R__b << backwardPrediction_.get();
+      R__b << backwardUpdate_.get();
+      {
+	std::vector<genfit::MeasurementOnPlane*,std::allocator<genfit::MeasurementOnPlane*> > &R__stl =  measurementsOnPlane_;
+         int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+         R__b << R__n;
+         if(R__n) {
+	   std::vector<genfit::MeasurementOnPlane*,std::allocator<genfit::MeasurementOnPlane*> >::iterator R__k;
+            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
+            R__b << (*R__k);
+            }
+         }
+      }
+      R__b.SetByteCount(R__c, kTRUE);
+   }
+}
+
+
 } /* End of namespace genfit */

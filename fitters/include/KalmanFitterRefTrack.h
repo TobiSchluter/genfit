@@ -45,6 +45,7 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
  private:
   void processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, double& ndf, int direction);
 
+  ClassDef(KalmanFitterRefTrack, 1)
 };
 
 }  /* End of namespace genfit */

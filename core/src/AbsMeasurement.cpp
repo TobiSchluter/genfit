@@ -56,4 +56,5 @@ void AbsMeasurement::Print(const Option_t*) const {
   std::cout << "Raw hit covariance: "; rawHitCov_.Print();
 }
 
+
 } /* End of namespace genfit */

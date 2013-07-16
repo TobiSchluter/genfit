@@ -104,13 +104,19 @@ class DAF : public AbsKalmanFitter {
   std::vector<std::vector<double> > calcWeights(Track* trk, const AbsTrackRep* rep, double beta);
 
   double deltaWeight_; // convergence criterium
-  std::map<const AbsTrackRep*, std::vector<std::vector<double> > > weights_;
+  std::map<const AbsTrackRep*, std::vector<std::vector<double> > > weights_;  //! not written/read by Streamer
   std::vector<double> betas_;
   std::map<int,double>  chi2Cuts_;
+#ifndef __CINT__
   boost::scoped_ptr<AbsKalmanFitter> kalman_;
+#else
+  AbsKalmanFitter *kalman_;
+#endif
 
   /** The maximal number of iterations in the main DAF loop. If the weights do not converge the loop will end after c_maxIter iterations*/
   const static unsigned int c_maxIter = 10;
+
+  ClassDef(DAF,1)
 };
 
 }  /* End of namespace genfit */

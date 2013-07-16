@@ -53,7 +53,7 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
   double weight_;
 
 
-  //ClassDef(MeasurementOnPlane,1)
+  ClassDef(MeasurementOnPlane,1)
 
 };
 
