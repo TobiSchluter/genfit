@@ -115,14 +115,14 @@ int randomSign() {
 //---------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------
 
-#define VALGRIND
+//#define VALGRIND
 
 #ifdef VALGRIND
   #include <valgrind/callgrind.h>
 #else
-#define CALLGRIND_START_INSTRUMENTATION;
-#define CALLGRIND_STOP_INSTRUMENTATION;
-#define CALLGRIND_DUMP_STATS;
+#define CALLGRIND_START_INSTRUMENTATION
+#define CALLGRIND_STOP_INSTRUMENTATION
+#define CALLGRIND_DUMP_STATS
 #endif
 
 int main() {
@@ -141,7 +141,7 @@ int main() {
   const double phiDetPlane = 0;         // degree
   const double pointDist = 5;      // cm; approx. distance between measurements generated w/ RKTrackRep
   const double pointDistDeg = 5;      // degree; distance between measurements generated w/ helix model
-  const double resolution = 0.25;   // cm; resolution of generated measurements
+  const double resolution = 0.3;   // cm; resolution of generated measurements
 
   const double resolutionWire = 5*resolution;   // cm; resolution of generated measurements
   const TVector3 wireDir(0,0,1);
@@ -174,17 +174,17 @@ int main() {
   const bool debug = false;
 
   enum eMeasurementType { Pixel = 0,
-			  Spacepoint,
-			  ProlateSpacepoint,
-			  StripU,
-			  StripV,
-			  Wire,
-			  WirePoint };
+        Spacepoint,
+        ProlateSpacepoint,
+        StripU,
+        StripV,
+        Wire,
+        WirePoint };
 
 
   std::vector<unsigned int> measurementTypes;
 
-  measurementTypes.push_back(Pixel);
+  /*measurementTypes.push_back(Pixel);
   measurementTypes.push_back(Pixel);
   measurementTypes.push_back(Spacepoint);
   measurementTypes.push_back(Spacepoint);
@@ -197,10 +197,9 @@ int main() {
   measurementTypes.push_back(Wire);
   measurementTypes.push_back(Wire);
   measurementTypes.push_back(WirePoint);
-  measurementTypes.push_back(WirePoint);
-  //for (int i = 0; i < 10; ++i)
-
-
+  measurementTypes.push_back(WirePoint);*/
+  for (int i = 0; i < 5; ++i)
+    measurementTypes.push_back(Pixel);
 
 
   // init fitter
@@ -237,6 +236,7 @@ int main() {
 
 
   gRandom->SetSeed(10);
+  signal(SIGSEGV, handler);   // install our handler
 
   // init event display
 #ifndef VALGRIND
@@ -244,7 +244,6 @@ int main() {
   display->reset();
 #endif
 
-  signal(SIGSEGV, handler);   // install our handler
 
   // init geometry and mag. field
   TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
@@ -598,7 +597,7 @@ int main() {
       }
       catch(genfit::Exception& e){
         std::cerr<<"Exception, next track"<<std::endl;
-        e.what();
+        std::cerr << e.what();
         continue; // here is a memleak!
       }
 
@@ -626,10 +625,10 @@ int main() {
       // do the fit
       try{
         if (debug) std::cout<<"Starting the fitter"<<std::endl;
-        CALLGRIND_START_INSTRUMENTATION;
+        CALLGRIND_START_INSTRUMENTATION
         fitter->processTrack(fitTrack, rep);
-        CALLGRIND_STOP_INSTRUMENTATION;
-        CALLGRIND_DUMP_STATS;
+        CALLGRIND_STOP_INSTRUMENTATION
+        CALLGRIND_DUMP_STATS
         if (debug) std::cout<<"fitter is finished!"<<std::endl;
       }
       catch(genfit::Exception& e){
@@ -655,7 +654,7 @@ int main() {
 #ifndef VALGRIND
       // add track to event display
       std::vector<genfit::Track*> event;
-      event.push_back(new genfit::Track(*fitTrack)); // FIXME memleak
+      event.push_back(fitTrack); 
       display->addEvent(event);
 #endif
 
