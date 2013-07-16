@@ -4,6 +4,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class genfit::AbsKalmanFitter;
 #pragma link C++ class genfit::KalmanFittedStateOnPlane;
 #pragma link C++ class genfit::KalmanFitStatus;
 #pragma link C++ class genfit::ReferenceStateOnPlane;
