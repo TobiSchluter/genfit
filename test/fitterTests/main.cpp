@@ -141,37 +141,41 @@ int main() {
   const double phiDetPlane = 0;         // degree
   const double pointDist = 5;      // cm; approx. distance between measurements generated w/ RKTrackRep
   const double pointDistDeg = 5;      // degree; distance between measurements generated w/ helix model
-  const double resolution = 0.3;   // cm; resolution of generated measurements
+  const double resolution = 0.02;   // cm; resolution of generated measurements
 
   const double resolutionWire = 5*resolution;   // cm; resolution of generated measurements
   const TVector3 wireDir(0,0,1);
   const double skewAngle(5);
   const bool useSkew = true;
   const int nSuperLayer = 5;
-  const double minDrift = 0;
+  const double minDrift = 0.;
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
+  const double outlierProb = 0.2;
+  const double outlierRange = 5;
+
   //const eFitterType fitterId = SimpleKalman;
-  const eFitterType fitterId = RefKalman;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
-  const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
+  //const eFitterType fitterId = RefKalman;
+  const eFitterType fitterId = DafRef;
+  const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
-  const int nIter = 1; // max number of iterations
+  const int nIter = 10; // max number of iterations
   const double dChi2 = 1.E-3; // convergence criterion
 
   const int pdg = 13;               // particle pdg code
 
   const bool smearPosMom = false;     // init the Reps with smeared pos and mom
-  const double posSmear = 20*resolution;     // cm
-  const double momSmear = 0.1*momentum;     // GeV
-  const double zSmearFac = 10;
+  const double posSmear = 10*resolution;     // cm
+  const double momSmear = 5. /180.*TMath::Pi();     // rad
+  const double zSmearFac = 2;
 
   const bool HelixTest = true;      // use helix for creating measurements
 
   const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
 
-  const bool debug = false;
+  const bool debug = true;
 
   enum eMeasurementType { Pixel = 0,
         Spacepoint,
@@ -198,8 +202,8 @@ int main() {
   measurementTypes.push_back(Wire);
   measurementTypes.push_back(WirePoint);
   measurementTypes.push_back(WirePoint);*/
-  for (int i = 0; i < 5; ++i)
-    measurementTypes.push_back(Pixel);
+  for (int i = 0; i < 10; ++i)
+    measurementTypes.push_back(WirePoint);
 
 
   // init fitter
@@ -232,10 +236,12 @@ int main() {
     //static_cast<genfit::DAF*>(fitter)->setBetas(100, 50, 25, 12, 6, 3, 1, 0.5, 0.1);
     //static_cast<genfit::DAF*>(fitter)->setBetas(81, 8, 4, 0.5, 0.1);
     static_cast<genfit::DAF*>(fitter)->setAnnealingScheme(100, 0.1, 5);
+    //static_cast<genfit::DAF*>(fitter)->setConvergenceDeltaWeight(0.0001);
+    fitter->setMaxIterations(nIter);
   }
 
 
-  gRandom->SetSeed(10);
+  gRandom->SetSeed(14);
   signal(SIGSEGV, handler);   // install our handler
 
   // init event display
@@ -286,7 +292,7 @@ int main() {
   TH1D *huPu = new TH1D("huPu","u pull",200,-6.,6.);
   TH1D *hvPu = new TH1D("hvPu","v pull",200,-6.,6.);
 
-  TH1D *weights = new TH1D("weights","wire Daf vs true weights",500,-1.01,1.01);
+  TH1D *weights = new TH1D("weights","Daf vs true weights",500,-1.01,1.01);
 #endif
 
   double maxWeight(0);
@@ -317,11 +323,6 @@ int main() {
 
 
 
-      TVector3 posErr(1.,1.,1.);
-      posErr *= posSmear;
-      TVector3 momErr(1.,1.,1.);
-      momErr *= momSmear;
-
       // smeared start values
       TVector3 posM(pos);
       TVector3 momM(mom);
@@ -330,9 +331,8 @@ int main() {
         posM.SetY(gRandom->Gaus(posM.Y(),posSmear));
         posM.SetZ(gRandom->Gaus(posM.Z(),zSmearFac*posSmear));
 
-        momM.SetX(gRandom->Gaus(momM.X(),momSmear));
-        momM.SetY(gRandom->Gaus(momM.Y(),momSmear));
-        momM.SetZ(gRandom->Gaus(momM.Z(),momSmear));
+        momM.SetPhi(gRandom->Gaus(mom.Phi(),momSmear));
+        momM.SetTheta(gRandom->Gaus(mom.Theta(),momSmear));
       }
 
 
@@ -357,6 +357,7 @@ int main() {
 
       // true values for left right. 0 for non wire measurements
       std::vector<int> leftRightTrue;
+      std::vector<bool> outlierTrue;
 
       TVector3 point, dir;
       int wireCounter = 0;
@@ -417,6 +418,14 @@ int main() {
           }
           else leftRightTrue.push_back(0);
 
+          bool outlier(false);
+          if (outlierProb > gRandom->Uniform(1.)) {
+            outlier = true;
+            if(debug)  std::cerr << "create outlier" << std::endl;
+          }
+
+          outlierTrue.push_back(outlier);
+
           switch(measurementTypes[i]){
             case Pixel: {
               if (debug) std::cerr << "create PixHit" << std::endl;
@@ -424,8 +433,14 @@ int main() {
               genfit::SharedPlanePtr plane(new genfit::DetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)));
 
               TVectorD hitCoords(2);
-              hitCoords(0) = gRandom->Gaus(0,resolution);
-              hitCoords(1) = gRandom->Gaus(0,resolution);
+              if (outlier) {
+                hitCoords(0) = gRandom->Uniform(-outlierRange, outlierRange);
+                hitCoords(1) = gRandom->Uniform(-outlierRange, outlierRange);
+              }
+              else {
+                hitCoords(0) = gRandom->Gaus(0,resolution);
+                hitCoords(1) = gRandom->Gaus(0,resolution);
+              }
 
               TMatrixDSym hitCov(2);
               hitCov(0,0) = resolution*resolution;
@@ -440,9 +455,16 @@ int main() {
               if (debug) std::cerr << "create SpacepointHit" << std::endl;
 
               TVectorD hitCoords(3);
-              hitCoords(0) = gRandom->Gaus(point.X(),resolution);
-              hitCoords(1) = gRandom->Gaus(point.Y(),resolution);
-              hitCoords(2) = gRandom->Gaus(point.Z(),resolution);
+              if (outlier) {
+                hitCoords(0) = gRandom->Uniform(point.X()-outlierRange, point.X()+outlierRange);
+                hitCoords(1) = gRandom->Uniform(point.Y()-outlierRange, point.Y()+outlierRange);
+                hitCoords(2) = gRandom->Uniform(point.Z()-outlierRange, point.Z()+outlierRange);
+              }
+              else {
+                hitCoords(0) = gRandom->Gaus(point.X(),resolution);
+                hitCoords(1) = gRandom->Gaus(point.Y(),resolution);
+                hitCoords(2) = gRandom->Gaus(point.Z(),resolution);
+              }
 
               TMatrixDSym hitCov(3);
               hitCov(0,0) = resolution*resolution;
@@ -457,9 +479,16 @@ int main() {
               if (debug) std::cerr << "create ProlateSpacepointHit" << std::endl;
 
               TVectorD hitCoords(3);
-              hitCoords(0) = point.X();
-              hitCoords(1) = point.Y();
-              hitCoords(2) = point.Z();
+              if (outlier) {
+                hitCoords(0) = gRandom->Uniform(point.X()-outlierRange, point.X()+outlierRange);
+                hitCoords(1) = gRandom->Uniform(point.Y()-outlierRange, point.Y()+outlierRange);
+                hitCoords(2) = gRandom->Uniform(point.Z()-outlierRange, point.Z()+outlierRange);
+              }
+              else {
+                hitCoords(0) = point.X();
+                hitCoords(1) = point.Y();
+                hitCoords(2) = point.Z();
+              }
 
               TMatrixDSym hitCov(3);
               hitCov(0,0) = resolution*resolution;
@@ -484,9 +513,11 @@ int main() {
               smearVec(1) = resolution;
               smearVec(2) = resolutionWire;
               smearVec *= rot;
-              hitCoords(0) += gRandom->Gaus(0, smearVec(0));
-              hitCoords(1) += gRandom->Gaus(0, smearVec(1));
-              hitCoords(2) += gRandom->Gaus(0, smearVec(2));
+              if (!outlier) {
+                hitCoords(0) += gRandom->Gaus(0, smearVec(0));
+                hitCoords(1) += gRandom->Gaus(0, smearVec(1));
+                hitCoords(2) += gRandom->Gaus(0, smearVec(2));
+              }
 
 
               // rotate cov
@@ -512,7 +543,10 @@ int main() {
               genfit::SharedPlanePtr plane(new genfit::DetPlane(point, vU, vV));
 
               TVectorD hitCoords(1);
-              hitCoords(0) = gRandom->Gaus(0,resolution);
+              if (outlier)
+                hitCoords(0) = gRandom->Uniform(-outlierRange, outlierRange);
+              else
+                hitCoords(0) = gRandom->Gaus(0,resolution);
 
               TMatrixDSym hitCov(1);
               hitCov(0,0) = resolution*resolution;
@@ -525,7 +559,11 @@ int main() {
             case Wire: {
               if (debug) std::cerr << "create WireHit" << std::endl;
 
-             TVectorD hitCoords(7);
+              if (outlier) {
+                wirePerp.SetMag(gRandom->Uniform(outlierRange));
+              }
+
+              TVectorD hitCoords(7);
               hitCoords(0) = (point-wirePerp-currentWireDir).X();
               hitCoords(1) = (point-wirePerp-currentWireDir).Y();
               hitCoords(2) = (point-wirePerp-currentWireDir).Z();
@@ -534,7 +572,10 @@ int main() {
               hitCoords(4) = (point-wirePerp+currentWireDir).Y();
               hitCoords(5) = (point-wirePerp+currentWireDir).Z();
 
-              hitCoords(6) = gRandom->Gaus(wirePerp.Mag(), resolution);
+              if (outlier)
+                hitCoords(6) = gRandom->Uniform(outlierRange);
+              else
+                hitCoords(6) = gRandom->Gaus(wirePerp.Mag(), resolution);
 
               TMatrixDSym hitCov(7);
               hitCov(6,6) = resolution*resolution;
@@ -551,6 +592,10 @@ int main() {
             case WirePoint: {
               if (debug) std::cerr << "create WirePointHit" << std::endl;
 
+              if (outlier) {
+                wirePerp.SetMag(gRandom->Uniform(outlierRange));
+              }
+
               TVectorD hitCoords(8);
               hitCoords(0) = (point-wirePerp-currentWireDir).X();
               hitCoords(1) = (point-wirePerp-currentWireDir).Y();
@@ -560,8 +605,15 @@ int main() {
               hitCoords(4) = (point-wirePerp+currentWireDir).Y();
               hitCoords(5) = (point-wirePerp+currentWireDir).Z();
 
-              hitCoords(6) = gRandom->Gaus(wirePerp.Mag(), resolution);
-              hitCoords(7) = gRandom->Gaus(currentWireDir.Mag(), resolutionWire);
+              if (outlier) {
+                hitCoords(6) = gRandom->Uniform(outlierRange);
+                hitCoords(7) = gRandom->Uniform(currentWireDir.Mag()-outlierRange, currentWireDir.Mag()+outlierRange);
+              }
+              else {
+                hitCoords(6) = gRandom->Gaus(wirePerp.Mag(), resolution);
+                hitCoords(7) = gRandom->Gaus(currentWireDir.Mag(), resolutionWire);
+              }
+
 
               TMatrixDSym hitCov(8);
               hitCov(6,6) = resolution*resolution;
@@ -581,9 +633,9 @@ int main() {
           }
           measurements.push_back(measurement);
 
-          if (debug) {
+          /*if (debug) {
             std::cout << "(smeared) measurement coordinates"; measurement->getRawHitCoords().Print();
-          }
+          }*/
 
           if (!HelixTest) {
             // stepalong (approximately)
@@ -704,11 +756,23 @@ int main() {
 
 
 
-      // check l/r resolution
+      // check l/r resolution and outlier rejection
       if (dynamic_cast<genfit::DAF*>(fitter) != NULL) {
         for (unsigned int i=0; i<leftRightTrue.size(); ++i){
+          if (debug) {
+            std::vector<double> dafWeights = dynamic_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(i)->getFitterInfo(rep))->getWeights();
+            std::cout << "hit " << i;
+            if (outlierTrue[i]) std::cout << " is an OUTLIER";
+            std::cout << " weights: ";
+            for (unsigned int j=0; j<dafWeights.size(); ++j){
+              std::cout << dafWeights[j] << "  ";
+            }
+            std::cout << "   l/r: " << leftRightTrue[i];
+            std::cout << "\n";
+          }
           int trueSide = leftRightTrue[i];
           if (trueSide == 0) continue; // not a wire measurement
+          if (outlierTrue[i]) continue; // an outlier
           std::vector<double> dafWeightLR = dynamic_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(i)->getFitterInfo(rep))->getWeights();
           if(dafWeightLR.size() != 2)
             continue;
@@ -729,6 +793,21 @@ int main() {
           weights->Fill(weightWrongSide);
 
           if (weightCorrectSide>maxWeight) maxWeight = weightCorrectSide;
+        }
+
+        for (unsigned int i=0; i<outlierTrue.size(); ++i){
+          std::vector<double> dafWeights = dynamic_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(i)->getFitterInfo(rep))->getWeights();
+
+          if (outlierTrue[i]) { // an outlier
+            for (unsigned int j=0; j<dafWeights.size(); ++j){
+              weights->Fill(dafWeights[j]-1);
+            }
+          }
+          else if (leftRightTrue[i] == 0) { // only for non wire hits
+            for (unsigned int j=0; j<dafWeights.size(); ++j){
+              weights->Fill(dafWeights[j]);
+            }
+          }
         }
 
       }
