@@ -26,7 +26,11 @@
 
 #include "AbsTrackRep.h"
 #include "StateOnPlane.h"
+#ifndef __CINT__
 #include "MaterialInfo.h"
+#else
+class MaterialProperties;
+#endif
 
 #include "RKTools.h"
 #include "StepLimits.h"

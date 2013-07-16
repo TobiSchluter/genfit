@@ -127,7 +127,7 @@ ROOT_GENERATE_DICTIONARY("${CORE_DICTIONARY_SOURCES}"
 			 "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cpp")
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cpp" "${library_sources}")
 
-SET(FITTER_DICTIONARY_SOURCES
+SET(FITTERS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/AbsKalmanFitter.h
   ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFittedStateOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFitStatus.h
@@ -138,11 +138,20 @@ SET(FITTER_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/KalmanFitterInfo.h
   ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/DAF.h
 )
-ROOT_GENERATE_DICTIONARY("${FITTER_DICTIONARY_SOURCES}"
+ROOT_GENERATE_DICTIONARY("${FITTERS_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/fitters/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/fitters/src/fittersLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cpp")
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cpp" "${library_sources}")
+
+SET(TRACKREPS_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include/RKTrackRep.h
+)
+ROOT_GENERATE_DICTIONARY("${TRACKREPS_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/trackReps/src/trackRepsLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp" "${library_sources}")
 
 ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources})
 INSTALL( TARGETS ${PROJECT_NAME} DESTINATION lib )
