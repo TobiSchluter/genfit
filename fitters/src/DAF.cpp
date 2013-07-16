@@ -44,7 +44,7 @@ DAF::DAF()
 {
   kalman_.reset(new KalmanFitterRefTrack());
   kalman_->setMultipleMeasurementHandling(weightedAverage);
-  kalman_->setNumIterations(1);
+  kalman_->setMaxIterations(1);
 
   setAnnealingScheme(100, 0.1, 5);
   setProbCut(0.01);
@@ -54,7 +54,7 @@ DAF::DAF(AbsKalmanFitter* kalman)
   : AbsKalmanFitter(c_maxIter), deltaWeight_(0.001)
 {
   kalman_.reset(kalman);
-  kalman_->setNumIterations(1);
+  kalman_->setMaxIterations(1);
 
   setAnnealingScheme(100, 0.1, 5);
   setProbCut(0.01);
@@ -133,7 +133,7 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep) {
       }
   } // end loop over betas
 
-  status->setNumIterations(iBeta);
+  status->setNumIterations(iBeta+1);
 
 }
 

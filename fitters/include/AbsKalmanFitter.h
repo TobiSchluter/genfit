@@ -54,7 +54,7 @@ class AbsKalmanFitter : public AbsFitter {
   double getPVal(const Track* tr, const AbsTrackRep* rep, int direction = -1) const;
   eMultipleMeasurementHandling getMultipleMeasurementHandling() const {return multipleMeasurementHandling_;}
 
-  void setNumIterations(unsigned int n) {maxIterations_ = n;}
+  void setMaxIterations(unsigned int n) {maxIterations_ = n;}
   void setMultipleMeasurementHandling(eMultipleMeasurementHandling mmh) {multipleMeasurementHandling_ = mmh;}
 
   bool isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const;

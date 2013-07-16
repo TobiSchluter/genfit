@@ -91,8 +91,10 @@ MeasurementOnPlane KalmanFitterInfo::getAvgWeightedMeasurementOnPlane() const {
   retVal.setWeight(1);
 
   if(measurementsOnPlane_.size() == 1) {
-    if (retVal.getWeight() != 1.)
-      retVal.getCov() *= 1. / retVal.getWeight();
+    double weight = (measurementsOnPlane_[0])->getWeight();
+    if (weight != 1.) {
+      retVal.getCov() *= 1. / weight;
+    }
   }
   else { // more than one hit
     retVal.getState().Zero();
