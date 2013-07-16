@@ -40,7 +40,7 @@
 namespace genfit {
 
 DAF::DAF()
-  : deltaWeight_(0.001)
+  : AbsKalmanFitter(c_maxIter), deltaWeight_(0.001)
 {
   kalman_.reset(new KalmanFitterRefTrack());
   kalman_->setMultipleMeasurementHandling(weightedAverage);
@@ -51,7 +51,7 @@ DAF::DAF()
 }
 
 DAF::DAF(AbsKalmanFitter* kalman)
-  : deltaWeight_(0.001)
+  : AbsKalmanFitter(c_maxIter), deltaWeight_(0.001)
 {
   kalman_.reset(kalman);
   kalman_->setNumIterations(1);
@@ -73,7 +73,7 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep) {
   KalmanFitStatus* status;
   bool oneLastIter = false;
 
-  int iBeta=0;
+  unsigned int iBeta = 0;
   for(; iBeta != c_maxIter; ++iBeta) { // loop over. If no convergence is reached after 10 iterations just stop.
 
 #ifdef DEBUG
@@ -85,7 +85,10 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep) {
     status = static_cast<KalmanFitStatus*>(tr->getFitStatus(rep));
     status->setIsFittedWithDaf();
 
-    if (! status->isFitConverged()){
+    if (! status->isFitted()){
+      #ifdef DEBUG
+      std::cout << "DAF::Kalman could not fit!\n";
+      #endif
       status->setIsFitted(false);
       break;
     }
@@ -106,26 +109,27 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep) {
       break;
     }
     if( oneLastIter == true){
-#ifdef DEBUG
-      std::cout << "break after one last iteration\n";
-#endif
+      #ifdef DEBUG
+      std::cout << "DAF::break after one last iteration\n";
+      #endif
+      status->setIsFitConverged();
       break;
     }
     if (iBeta > 0) {
       if ( isConvergent(oldWeights, rep) ){
-  #ifdef DEBUG
-          std::cout << "convergence reached in iteration " << iBeta << "\n";
-  #endif
+        #ifdef DEBUG
+        std::cout << "DAF::convergence reached in iteration " << iBeta << "\n";
+        #endif
         oneLastIter = true;
-        status->setIsFitConverged();
       }
     }
 
-      if( iBeta == c_maxIter-1 ){
+      if(iBeta == maxIterations_-1 ){
         status->setIsFitConverged(false);
-#ifdef DEBUG
-        std::cout << "giving up after 10 iterations\n";
-#endif
+        #ifdef DEBUG
+        std::cout << "DAF::number of max iterations reached!\n";
+        #endif
+        break;
       }
   } // end loop over betas
 
@@ -193,7 +197,7 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) 
   assert(bStart > bFinal);
   assert(bFinal > 1.E-10);
   assert(nSteps > 1);
-  assert(int(nSteps) <= c_maxIter);
+  assert(nSteps <= c_maxIter);
 
   betas_.clear();
 

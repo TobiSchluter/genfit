@@ -95,25 +95,25 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
 
     try {
       #ifdef DEBUG
-      std::cout << " KalmanFitterRefTrack::processTrack, iteration nr. " << i << "\n";
+      std::cout << " KalmanFitterRefTrack::processTrack, iteration nr. " << nIt << "\n";
       #endif
 
       // prepare
       prepareTrack(tr, rep);
 
       #ifdef DEBUG
-      std::cout << "Prepared Track:"; tr->Print();
+      std::cout << "KalmanFitterRefTrack::Prepared Track:"; tr->Print();
       #endif
 
       // fit forward
       #ifdef DEBUG
-      std::cout << "forward fit\n";
+      std::cout << "KalmanFitterRefTrack::forward fit\n";
       #endif
       fitTrack(tr, rep, chi2FW, ndfFW, +1);
 
       // fit backward
       #ifdef DEBUG
-      std::cout << "backward fit\n";
+      std::cout << "KalmanFitterRefTrack::backward fit\n";
       #endif
       KalmanFitterInfo* lastInfo = static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(-1)->getFitterInfo(rep));
       lastInfo->setBackwardPrediction(new MeasuredStateOnPlane(*(lastInfo->getForwardUpdate())));
@@ -125,7 +125,7 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
 
 
       #ifdef DEBUG
-      std::cout << "Track after fit:"; tr->Print();
+      std::cout << "KalmanFitterRefTrack::Track after fit:"; tr->Print();
 
 
       std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
@@ -156,6 +156,9 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
       }
 
       if (nIt >= maxIterations_) {
+        #ifdef DEBUG
+        std::cout << "KalmanFitterRefTrack::number of max iterations reached!\n";
+        #endif
         break;
       }
     }

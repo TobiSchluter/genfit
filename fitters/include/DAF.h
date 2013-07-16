@@ -110,7 +110,7 @@ class DAF : public AbsKalmanFitter {
   boost::scoped_ptr<AbsKalmanFitter> kalman_;
 
   /** The maximal number of iterations in the main DAF loop. If the weights do not converge the loop will end after c_maxIter iterations*/
-  const static int c_maxIter = 10;
+  const static unsigned int c_maxIter = 10;
 };
 
 }  /* End of namespace genfit */
