@@ -56,6 +56,7 @@ class SpacepointMeasurement : public AbsMeasurement {
 
   virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const;
 
+  ClassDef(SpacepointMeasurement,1)
 };
 
 } /* End of namespace genfit */

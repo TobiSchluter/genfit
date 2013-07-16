@@ -153,6 +153,19 @@ ROOT_GENERATE_DICTIONARY("${TRACKREPS_DICTIONARY_SOURCES}"
 			 "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp")
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp" "${library_sources}")
 
+SET(MEASUREMENTS_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/PlanarMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/ProlateSpacepointMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/SpacepointMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/WireMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/WirePointMeasurement.h
+)
+ROOT_GENERATE_DICTIONARY("${MEASUREMENTS_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/measurements/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/measurements/src/measurementsLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cpp" "${library_sources}")
+
 ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources})
 INSTALL( TARGETS ${PROJECT_NAME} DESTINATION lib )
 

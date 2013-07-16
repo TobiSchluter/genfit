@@ -61,6 +61,8 @@ class PlanarMeasurement : public AbsMeasurement {
  protected:
   SharedPlanePtr physicalPlane_;
   int planeId_;
+
+  ClassDef(PlanarMeasurement,1)
 };
 
 } /* End of namespace genfit */

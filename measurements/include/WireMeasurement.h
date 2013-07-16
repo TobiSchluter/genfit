@@ -91,6 +91,8 @@ class WireMeasurement : public AbsMeasurement {
 
   double maxDistance_;
   double leftRight_;
+
+  ClassDef(WireMeasurement, 1)
 };
 
 } /* End of namespace genfit */

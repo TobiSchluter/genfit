@@ -87,5 +87,32 @@ const TMatrixD& PlanarMeasurement::getHMatrix(const AbsTrackRep* rep) const {
   }
 }
 
+void PlanarMeasurement::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class genfit::PlanarMeasurement.
+
+   //This works around a msvc bug and should be harmless on other platforms
+   typedef ::genfit::PlanarMeasurement thisClass;
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      //This works around a msvc bug and should be harmless on other platforms
+      typedef genfit::AbsMeasurement baseClass0;
+      baseClass0::Streamer(R__b);
+      DetPlane* p = 0;
+      R__b >> p;
+      this->physicalPlane_.reset(p);
+      R__b >> planeId_;
+      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+   } else {
+      R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+      //This works around a msvc bug and should be harmless on other platforms
+      typedef genfit::AbsMeasurement baseClass0;
+      baseClass0::Streamer(R__b);
+      R__b << physicalPlane_.get();
+      R__b << planeId_;
+      R__b.SetByteCount(R__c, kTRUE);
+   }
+}
 
 } /* End of namespace genfit */

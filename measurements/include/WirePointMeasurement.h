@@ -60,6 +60,7 @@ class WirePointMeasurement : public WireMeasurement {
 
   virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const;
 
+  ClassDef(WirePointMeasurement,1)
 };
 
 } /* End of namespace genfit */
