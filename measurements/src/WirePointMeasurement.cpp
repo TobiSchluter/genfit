@@ -23,6 +23,7 @@
 #include "RKTrackRep.h"
 
 #include <cassert>
+#include <algorithm>
 
 
 namespace genfit {
@@ -68,9 +69,9 @@ std::vector<MeasurementOnPlane*> WirePointMeasurement::constructMeasurementsOnPl
     mopR->setWeight(1);
   }
   else {
-    double mR = rawHitCoords_(6);
-    mopL->setWeight(0.5 * pow(1-mR/maxDistance_, 2.));
-    mopR->setWeight(0.5 * pow(1-mR/maxDistance_, 2.));
+    double val = 0.5 * pow(std::max(0., 1 - rawHitCoords_(6)/maxDistance_), 2.);
+    mopL->setWeight(val);
+    mopR->setWeight(val);
   }
 
   std::vector<MeasurementOnPlane*> retVal;

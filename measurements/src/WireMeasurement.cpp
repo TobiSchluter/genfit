@@ -23,6 +23,7 @@
 #include "WireMeasurement.h"
 
 #include <cmath>
+#include <algorithm>
 
 #include "Exception.h"
 #include "RKTrackRep.h"
@@ -108,8 +109,9 @@ std::vector<MeasurementOnPlane*> WireMeasurement::constructMeasurementsOnPlane(c
     mopR->setWeight(1);
   }
   else {
-    mopL->setWeight(0.5 * pow(1-mR/maxDistance_, 2.));
-    mopR->setWeight(0.5 * pow(1-mR/maxDistance_, 2.));
+    double val = 0.5 * pow(std::max(0., 1 - mR/maxDistance_), 2.);
+    mopL->setWeight(val);
+    mopR->setWeight(val);
   }
 
   std::vector<MeasurementOnPlane*> retVal;
