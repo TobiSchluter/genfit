@@ -250,6 +250,7 @@ void EventDisplay::drawEvent(unsigned int id) {
     AbsTrackRep* rep(track->getCardinalRep());
 
     //track->Print();
+    track->Print("C");
     track->getFitStatus(rep)->Print();
 
     unsigned int numhits = track->getNumPointsWithMeasurement();
@@ -264,12 +265,11 @@ void EventDisplay::drawEvent(unsigned int id) {
       AbsFitterInfo* fitterInfo = track->getPointWithMeasurement(j)->getFitterInfo(rep);
       const AbsMeasurement* m = track->getPointWithMeasurement(j)->getRawMeasurement();  // FIXME draw all measurements, not only 1st
 
-      if (dynamic_cast<KalmanFitterInfo*>(fitterInfo) == NULL){
+      fi = dynamic_cast<KalmanFitterInfo*>(fitterInfo);
+      if(fi == NULL) {
         std::cerr<<"can only display KalmanFitterInfo"<<std::endl;
         continue;
       }
-
-      fi = static_cast<KalmanFitterInfo*>(fitterInfo);
       try {
         fittedState = fi->getFittedState(true);
       }
@@ -560,7 +560,7 @@ void EventDisplay::drawEvent(unsigned int id) {
         if (drawBackward)
           makeLines(prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, charge > 0 ? kYellow : kMagenta, 1, drawTrackMarkers, drawErrors, 1);
         // draw reference track if corresponding option is set ------------------------------------------
-        if(drawTrack && fi->hasReferenceState())
+        if(drawTrack && fi->hasReferenceState() && prevFi->hasReferenceState())
           makeLines(prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers, false, 3);
       }
 

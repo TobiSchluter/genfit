@@ -42,15 +42,12 @@ INCLUDE_DIRECTORIES(
 	BEFORE 
 	${ROOT_INCDIR}
 	$ENV{GENFIT}/include/genfit
-	$ENV{GENFIT}/eventDisplay/include
 )
 
 MESSAGE("INCLUDE_DIRECTORIES: ${INCLUDE_DIRECTORIES}")
 
 ADD_EXECUTABLE(main 
 	main.cpp
-	$ENV{GENFIT}/eventDisplay/include/EventDisplay.h
-  $ENV{GENFIT}/eventDisplay/src/EventDisplay.cpp  
 )
 
 TARGET_LINK_LIBRARIES(main 

@@ -62,7 +62,7 @@ class EventDisplay : public TNamed {
 		 * the same time.
 		 *
 		 */
-		void addEvent(std::vector<Track*>& tr);
+		void addEvent(std::vector<genfit::Track*>& tr);
 
 		/** @brief Go to the next event or step a certain number of events ahead.*/
 		void next(unsigned int stp = 1);
@@ -125,12 +125,6 @@ class EventDisplay : public TNamed {
 	
 
 	private:
-		static EventDisplay* eventDisplay_;
-		int eventId_;
-		double errorScale_;
-		std::string option_;
-		std::vector< std::vector<Track*>* > events_;
-
 		/** @brief Build the buttons for event navigation.*/
 		void makeGui();
 
@@ -143,8 +137,16 @@ class EventDisplay : public TNamed {
 		TEveBox* boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth);
 
 
+		static EventDisplay* eventDisplay_; //!
+		int eventId_; //!
+		double errorScale_; //!
+		std::string option_; //!
+		std::vector< std::vector<genfit::Track*>* > events_; //!
+
+
 	public:
-		//ClassDef(EventDisplay,1)
+		ClassDef(EventDisplay,1)
+
 };
 
 }

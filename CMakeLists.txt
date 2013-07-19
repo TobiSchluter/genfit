@@ -19,6 +19,7 @@ FIND_PACKAGE(ROOT REQUIRED COMPONENTS Geom)
 
 SET(GF_INC_DIRS
 	./core/include/ 
+	./eventDisplay/include/
 	./fields/include/
 	./finitePlanes/include/ 
 	./fitters/include/
@@ -83,6 +84,7 @@ LINK_DIRECTORIES(${ROOT_LIBRARY_DIR})
 
 # add the list of source code files -- careful, when a new file is added!
 AUX_SOURCE_DIRECTORY( ./core/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./eventDisplay/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./fields/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./finitePlanes/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./fitters/src  library_sources )
@@ -126,6 +128,15 @@ ROOT_GENERATE_DICTIONARY("${CORE_DICTIONARY_SOURCES}"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/core/src/coreLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cpp")
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cpp" "${library_sources}")
+
+SET(EVENTDISPLAY_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include/EventDisplay.h
+)
+ROOT_GENERATE_DICTIONARY("${EVENTDISPLAY_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/src/eventDisplayLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/eventDisplayRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/eventDisplayRootDict.cpp" "${library_sources}")
 
 SET(FITTERS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/fitters/include/AbsKalmanFitter.h
