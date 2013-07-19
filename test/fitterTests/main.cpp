@@ -133,7 +133,7 @@ int main() {
         DafSimple,
         DafRef};
 
-  const unsigned int nEvents = 1;
+  const unsigned int nEvents = 10;
   const double BField = 15.;       // kGauss
   const double momentum = 0.4;     // GeV
   const double theta = 100;         // degree
@@ -152,17 +152,21 @@ int main() {
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
-  const double outlierProb = 0.2;
+  const double outlierProb = -0.;
   const double outlierRange = 5;
 
+  const double hitSwitchProb = -0.; // probability to give hits to fit in wrong order (flip two hits)
+
   //const eFitterType fitterId = SimpleKalman;
-  //const eFitterType fitterId = RefKalman;
-  const eFitterType fitterId = DafRef;
+  const eFitterType fitterId = RefKalman;
+  //const eFitterType fitterId = DafRef;
   const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
   const int nIter = 10; // max number of iterations
   const double dChi2 = 1.E-3; // convergence criterion
+
+  const bool resort = false;
 
   const int pdg = 13;               // particle pdg code
 
@@ -175,7 +179,7 @@ int main() {
 
   const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
 
-  const bool debug = true;
+  const bool debug = false;
 
   enum eMeasurementType { Pixel = 0,
         Spacepoint,
@@ -202,8 +206,8 @@ int main() {
   measurementTypes.push_back(Wire);
   measurementTypes.push_back(WirePoint);
   measurementTypes.push_back(WirePoint);*/
-  for (int i = 0; i < 10; ++i)
-    measurementTypes.push_back(WirePoint);
+  for (int i = 0; i < 15; ++i)
+    measurementTypes.push_back(Pixel);
 
 
   // init fitter
@@ -659,6 +663,7 @@ int main() {
 
       // create track
       fitTrack = new genfit::Track(rep, rep->get6DState(&stateSmeared)); //initialized with smeared rep
+      //if (debug) fitTrack->Print("C");
 
       //fitTrack->addTrackRep(rep->clone()); // check if everything works fine with more than one rep
 
@@ -666,7 +671,12 @@ int main() {
       for(unsigned int i=0; i<measurements.size(); ++i){
         std::vector<genfit::AbsMeasurement*> measVec;
         measVec.push_back(measurements[i]);
-        fitTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack));
+        if (i>0 && hitSwitchProb > gRandom->Uniform(1.))
+          fitTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack), -2);
+        else
+          fitTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack));
+
+        //if (debug) fitTrack->Print("C");
       }
 
       // print trackCand
@@ -678,7 +688,7 @@ int main() {
       try{
         if (debug) std::cout<<"Starting the fitter"<<std::endl;
         CALLGRIND_START_INSTRUMENTATION
-        fitter->processTrack(fitTrack, rep);
+        fitter->processTrack(fitTrack, resort);
         CALLGRIND_STOP_INSTRUMENTATION
         CALLGRIND_DUMP_STATS
         if (debug) std::cout<<"fitter is finished!"<<std::endl;
@@ -691,8 +701,7 @@ int main() {
 
       assert(fitTrack->checkConsistency());
 
-      if (debug) fitTrack->Print();
-
+      if (debug) fitTrack->Print("C");
 
 
       // check if fit was successful
