@@ -57,6 +57,15 @@ class AbsFitterInfo : public TObject {
   void setTrackPoint(const TrackPoint *tp) {trackPoint_ = tp;}
   virtual void setRep(const AbsTrackRep* rep) {rep_ = rep;}
 
+  virtual bool hasMeasurements() const = 0;
+  virtual bool hasReferenceState() const = 0;
+  virtual bool hasForwardPrediction() const = 0;
+  virtual bool hasBackwardPrediction() const = 0;
+  virtual bool hasPrediction(int direction) const {if (direction >=0) return hasForwardPrediction(); return hasBackwardPrediction();}
+  virtual bool hasForwardUpdate() const = 0;
+  virtual bool hasBackwardUpdate() const = 0;
+  virtual bool hasUpdate(int direction) const {if (direction >=0) return hasForwardUpdate(); return hasBackwardUpdate();}
+
   virtual void deleteForwardInfo() = 0;
   virtual void deleteBackwardInfo() = 0;
   virtual void deleteReferenceInfo() = 0;

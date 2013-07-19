@@ -75,13 +75,12 @@ class KalmanFitterInfo : public AbsFitterInfo {
   /** Get unbiased (default) or biased residual from ith measurement */
   MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const; // also calculates covariance of the residual
 
+  bool hasMeasurements() const {return getNumMeasurements() > 0;}
   bool hasReferenceState() const {return (referenceState_.get() != NULL);}
   bool hasForwardPrediction() const {return (forwardPrediction_.get()  != NULL);}
   bool hasBackwardPrediction() const {return (backwardPrediction_.get() != NULL);}
-  bool hasPrediction(int direction) const {if (direction >=0) return hasForwardPrediction(); return hasBackwardPrediction();}
   bool hasForwardUpdate() const {return (forwardUpdate_.get() != NULL);}
   bool hasBackwardUpdate() const {return (backwardUpdate_.get() != NULL);}
-  bool hasUpdate(int direction) const {if (direction >=0) return hasForwardUpdate(); return hasBackwardUpdate();}
 
   void setReferenceState(ReferenceStateOnPlane* referenceState) {referenceState_.reset(referenceState);}
   void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction) {forwardPrediction_.reset(forwardPrediction);}

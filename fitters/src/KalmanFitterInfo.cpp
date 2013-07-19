@@ -416,6 +416,14 @@ bool KalmanFitterInfo::checkConsistency() const {
     return false;
   }
 
+  if (plane.get() == NULL) {
+    std::cerr << "KalmanFitterInfo::checkConsistency(): plane is NULL" << std::endl;
+    return false;
+  }
+
+  TVector3 oTest = plane->getO(); // see if the plane object is there
+  oTest *= 47.11;
+
   // if more than one measurement, check if they have the same dimensionality
   if (measurementsOnPlane_.size() > 1) {
     int dim = measurementsOnPlane_[0]->getState().GetNrows();
