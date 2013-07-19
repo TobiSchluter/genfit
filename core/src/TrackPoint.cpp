@@ -166,8 +166,10 @@ AbsMeasurement* TrackPoint::getRawMeasurement(int i) const {
 
 
 std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos() const {
-  // FIXME: Should the return type be a ptr_vector?
   std::vector< AbsFitterInfo* > retVal;
+
+  if (fitterInfos_.empty())
+    return retVal;
 
   for (std::map<const AbsTrackRep*, AbsFitterInfo* >::const_iterator it = fitterInfos_.begin(); it != fitterInfos_.end();  ++it ) {
     retVal.push_back(it->second);

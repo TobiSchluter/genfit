@@ -13,6 +13,18 @@
 
 namespace genfit {
 
+/**
+ * Class for hit sorting.
+ */
+class TrackPointComparator {
+ public:
+  /**
+   * Comparison operator used in Track::sort(). Compares sorting parameter.
+   */
+  bool operator() (const TrackPoint* lhs, const TrackPoint* rhs) const {
+    return lhs->getSortingParameter() < rhs->getSortingParameter();
+  }
+};
 
   /** 
    *  Holds a number of #AbsTrackRep, which correspond to the different particle hypotheses or track models which should be fitted.
@@ -62,8 +74,8 @@ class Track : public TObject {
   const TVectorD& getStateSeed() const {return stateSeed_;}
   void setStateSeed(const TVectorD& s) {stateSeed_.ResizeTo(s); stateSeed_ = s;}
 
-  /** Insert TrackPoint before TrackPoint with position id.
-   * Id -1 means after last TrackPoint.
+  /** Insert TrackPoint BEFORE TrackPoint with position id, if id >= 0.
+   * Id -1 means after last TrackPoint. Id -2 means before last TrackPoint. ...
    * Also deletes backwardInfos before new point and forwardInfos after new point.
    * Also sets Track backpointer of point accordingly.
    */
@@ -80,13 +92,14 @@ class Track : public TObject {
   void setCardinalRep(int id);
 
   /** Sort #TrackPoints and according to their sorting parameters.
+   * Returns if the order of the trackPoints has actually changed.
    */
-  void sortHits();
+  bool sort();
 
   void deleteForwardInfo(int startId, int endId); // delete in range [startId, endId]
-  void deleteBackwardInfo(int startId, int endId);
-  void deleteReferenceInfo(int startId, int endId);
-  void deleteMeasurementInfo(int startId, int endId);
+  void deleteBackwardInfo(int startId, int endId); // delete in range [startId, endId]
+  void deleteReferenceInfo(int startId, int endId); // delete in range [startId, endId]
+  void deleteMeasurementInfo(int startId, int endId); // delete in range [startId, endId]
 
   void Print(const Option_t* = "") const;
 
@@ -103,7 +116,7 @@ class Track : public TObject {
 
   std::vector<TrackPoint*> trackPoints_; // Ownership
 
-  std::map< const AbsTrackRep*, FitStatus* > fitStatuses_;
+  std::map< const AbsTrackRep*, FitStatus* > fitStatuses_; // Ownership over FitStatus*
 
   TVectorD stateSeed_; // 6D: position, momentum
 

@@ -27,6 +27,8 @@
 
 //#include <glog/logging.h>
 
+//#define DEBUG
+
 
 namespace genfit {
 
@@ -63,7 +65,8 @@ Track::Track(const Track& rhs)
   }
 
   for (std::vector<TrackPoint*>::const_iterator it=rhs.trackPoints_.begin(); it!=rhs.trackPoints_.end(); ++it) {
-    insertPoint(new TrackPoint(**it, oldRepNewRep));
+    trackPoints_.push_back(new TrackPoint(**it, oldRepNewRep));
+    trackPoints_.back()->setTrack(this);
   }
 
   for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it=rhs.fitStatuses_.begin(); it!=rhs.fitStatuses_.end(); ++it) {
@@ -110,6 +113,9 @@ Track::~Track() {
   // FIXME: smarter containers or pointers needed ...
   for (size_t i = 0; i < trackPoints_.size(); ++i)
     delete trackPoints_[i];
+
+  for (std::map< const AbsTrackRep*, FitStatus* >::iterator it = fitStatuses_.begin(); it!= fitStatuses_.end(); ++it)
+    delete it->second;
 
   for (size_t i = 0; i < trackReps_.size(); ++i)
     delete trackReps_[i];
@@ -191,14 +197,24 @@ int Track::getIdForRep(const AbsTrackRep* rep) const
 
 
 void Track::insertPoint(TrackPoint* point, int id) {
+
+  #ifdef DEBUG
+  std::cout << "Track::insertPoint at position " << id  << "\n";
+  #endif
   // TODO: test
   assert(point!=NULL);
   trackHasChanged();
 
   point->setTrack(this);
 
-  if (id == -1 || trackPoints_.size() == 0) {
+  if (trackPoints_.size() == 0) {
     trackPoints_.push_back(point);
+    return;
+  }
+
+  if (id == -1 || id == (int)trackPoints_.size()) {
+    trackPoints_.push_back(point);
+    deleteReferenceInfo(std::max(0, (int)trackPoints_.size()-2), (int)trackPoints_.size()-1);
     return;
   }
 
@@ -206,33 +222,49 @@ void Track::insertPoint(TrackPoint* point, int id) {
   assert(id < (ssize_t)trackPoints_.size() || -id-1 <= (ssize_t)trackPoints_.size());
 
   if (id < 0)
-    id += trackPoints_.size();
+    id += trackPoints_.size() + 1;
+
+  // insert
+  trackPoints_.insert(trackPoints_.begin() + id, point);  // insert inserts BEFORE
 
   // delete fitter infos if inserted point has a measurement
   if (point->hasRawMeasurements()) {
     deleteForwardInfo(id, -1);
-    deleteBackwardInfo(0, id-1);
+    deleteBackwardInfo(0, id);
   }
 
-  trackPoints_.insert(trackPoints_.begin() + id + 1, point);  // insert inserts BEFORE
+  // delete reference info of neighbouring points
+  deleteReferenceInfo(std::max(0, id-1), std::min((int)trackPoints_.size()-1, id+1));
 }
 
 
 void Track::deletePoint(int id) {
+
+  #ifdef DEBUG
+  std::cout << "Track::deletePoint at position " << id  << "\n";
+  #endif
+
   // TODO: test
   trackHasChanged();
 
   if (id < 0)
     id += trackPoints_.size();
+  assert(id>0);
 
-  if (trackPoints_.at(id) != NULL) {
-    // delete fitter infos if deleted point has a measurement
-    if (trackPoints_[id]->hasRawMeasurements()) {
-      deleteForwardInfo(id, -1);
-      deleteBackwardInfo(0, id-1);
-    }
+
+  // delete forwardInfo after point (backwardInfo before point) if deleted point has a measurement
+  if (trackPoints_[id]->hasRawMeasurements()) {
+    deleteForwardInfo(id, -1);
+    deleteBackwardInfo(0, id-1);
   }
-  trackPoints_.erase (trackPoints_.begin()+id);
+
+  // delete reference info of neighbouring points
+  deleteReferenceInfo(std::max(0, id-1), std::min((int)trackPoints_.size()-1, id+1));
+
+  // delete point
+  delete trackPoints_[id];
+  trackPoints_.erase(trackPoints_.begin()+id);
+
 }
 
 
@@ -265,6 +297,12 @@ void Track::deleteTrackRep(int id) {
     (*pointIt)->deleteFitterInfo(rep);
   }
 
+  // delete fitStatus
+  delete fitStatuses_.at(rep);
+  fitStatuses_.erase(rep);
+
+  // delete rep
+  delete rep;
   trackReps_.erase(trackReps_.begin()+id);
 }
 
@@ -283,20 +321,64 @@ void Track::setCardinalRep(int id) {
 }
 
 
-void Track::sortHits() {
-  // TODO: implement
+bool Track::sort() {
+  // TODO: test
+  #ifdef DEBUG
+  std::cout << "Track::sort \n";
+  #endif
+
+  int nPoints(trackPoints_.size());
+  // original order
+  std::vector<TrackPoint*> pointsBefore(trackPoints_);
+
+  // sort
+  std::stable_sort(trackPoints_.begin(), trackPoints_.end(), TrackPointComparator());
+
+  // see where order changed
+  int equalUntil(0), equalFrom(nPoints);
+  for (int i = 0; i<nPoints; ++i) {
+    if (pointsBefore[i] == trackPoints_[i])
+      equalUntil = i;
+    else
+      break;
+  }
+
+  if (equalUntil == nPoints-1)
+    return false; // sorting did not change anything
+
+
   trackHasChanged();
+
+  for (int i = nPoints-1; i>equalUntil; --i) {
+    if (pointsBefore[i] == trackPoints_[i])
+      equalFrom = i;
+    else
+      break;
+  }
+
+  deleteForwardInfo(equalUntil+1, -1);
+  deleteBackwardInfo(0, equalFrom-1);
+
+  deleteReferenceInfo(std::max(0, equalFrom-1), std::min((int)trackPoints_.size()-1, equalUntil+1));
+
+  return true;
 }
 
 
 void Track::deleteForwardInfo(int startId, int endId) {
   // TODO: test
+  #ifdef DEBUG
+  std::cout << "Track::deleteForwardInfo from position " << startId  << " to " << endId << "\n";
+  #endif
+
   trackHasChanged();
 
   if (startId < 0)
     startId += trackPoints_.size();
   if (endId < 0)
     endId += trackPoints_.size() + 1;
+
+  assert (endId >= startId);
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
     const std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
@@ -308,12 +390,19 @@ void Track::deleteForwardInfo(int startId, int endId) {
 
 void Track::deleteBackwardInfo(int startId, int endId) {
   // TODO: test
+
+  #ifdef DEBUG
+  std::cout << "Track::deleteBackwardInfo from position " << startId  << " to " << endId << "\n";
+  #endif
+
   trackHasChanged();
 
   if (startId < 0)
     startId += trackPoints_.size();
   if (endId < 0)
     endId += trackPoints_.size() + 1;
+
+  assert (endId >= startId);
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
     const std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
@@ -325,12 +414,19 @@ void Track::deleteBackwardInfo(int startId, int endId) {
 
 void Track::deleteReferenceInfo(int startId, int endId) {
   // TODO: test
+
+  #ifdef DEBUG
+  std::cout << "Track::deleteReferenceInfo from position " << startId  << " to " << endId << "\n";
+  #endif
+
   trackHasChanged();
 
   if (startId < 0)
     startId += trackPoints_.size();
   if (endId < 0)
     endId += trackPoints_.size() + 1;
+
+  assert (endId >= startId);
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
     std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
@@ -341,13 +437,20 @@ void Track::deleteReferenceInfo(int startId, int endId) {
 }
 
 void Track::deleteMeasurementInfo(int startId, int endId) {
+
   // TODO: test. Do we also have to delete forward- and backward info if measurements are removed?
+  #ifdef DEBUG
+  std::cout << "Track::deleteMeasurementInfo from position " << startId  << " to " << endId << "\n";
+  #endif
+
   trackHasChanged();
 
   if (startId < 0)
     startId += trackPoints_.size();
   if (endId < 0)
     endId += trackPoints_.size() + 1;
+
+  assert (endId >= startId);
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
     std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
@@ -358,7 +461,139 @@ void Track::deleteMeasurementInfo(int startId, int endId) {
 }
 
 
-void Track::Print(const Option_t*) const {
+void Track::Print(const Option_t* option) const {
+  TString opt = option;
+  opt.ToUpper();
+  if (opt.Contains("C")) { // compact
+
+    std::cout << "   ";
+    for (unsigned int i=0; i<trackPoints_.size(); ++i) {
+
+      int color = 32*(size_t)(trackPoints_[i]) % 15;
+      switch (color) {
+        case 0:
+          std::cout<<"\e[1;30m";
+          break;
+        case 1:
+          std::cout<<"\e[0;34m";
+          break;
+        case 2:
+          std::cout<<"\e[1;34m";
+          break;
+        case 3:
+          std::cout<<"\e[0;32m";
+          break;
+        case 4:
+          std::cout<<"\e[1;32m";
+          break;
+        case 5:
+          std::cout<<"\e[0;36m";
+          break;
+        case 6:
+          std::cout<<"\e[1;36m";
+          break;
+        case 7:
+          std::cout<<"\e[0;31m";
+          break;
+        case 8:
+          std::cout<<"\e[1;31m";
+          break;
+        case 9:
+          std::cout<<"\e[0;35m";
+          break;
+        case 10:
+          std::cout<<"\e[1;35m";
+          break;
+        case 11:
+          std::cout<<"\e[0;33m";
+          break;
+        case 12:
+          std::cout<<"\e[1;33m";
+          break;
+        case 13:
+          std::cout<<"\e[0;37m";
+          break;
+        default:
+          ;
+      }
+      std::cout << trackPoints_[i] << "\e[00m  ";
+    }
+    std::cout << "\n";
+
+    std::cout << "  ";
+    for (unsigned int i=0; i<trackPoints_.size(); ++i) {
+      printf("% -9.3g  ", trackPoints_[i]->getSortingParameter());
+    }
+    std::cout << "\n";
+
+    std::cout << "   ";
+    for (unsigned int i=0; i<trackPoints_.size(); ++i) {
+      if (! trackPoints_[i]->hasFitterInfo(getCardinalRep())) {
+        std::cout << "           ";
+        continue;
+      }
+      AbsFitterInfo* fi = trackPoints_[i]->getFitterInfo(getCardinalRep());
+      if (fi->hasMeasurements())
+        std::cout << "M";
+      else
+        std::cout << " ";
+
+      if (fi->hasReferenceState())
+        std::cout << "R";
+      else
+        std::cout << " ";
+
+      std::cout << "         ";
+    }
+    std::cout << "\n";
+
+    std::cout << "-> ";
+    for (unsigned int i=0; i<trackPoints_.size(); ++i) {
+      if (! trackPoints_[i]->hasFitterInfo(getCardinalRep())) {
+        std::cout << "           ";
+        continue;
+      }
+      AbsFitterInfo* fi = trackPoints_[i]->getFitterInfo(getCardinalRep());
+      if (fi->hasForwardPrediction())
+        std::cout << "P";
+      else
+        std::cout << " ";
+
+      if (fi->hasForwardUpdate())
+        std::cout << "U";
+      else
+        std::cout << " ";
+
+      std::cout << "         ";
+    }
+    std::cout << "\n";
+
+    std::cout << "<- ";
+    for (unsigned int i=0; i<trackPoints_.size(); ++i) {
+      if (! trackPoints_[i]->hasFitterInfo(getCardinalRep())) {
+        std::cout << "           ";
+        continue;
+      }
+      AbsFitterInfo* fi = trackPoints_[i]->getFitterInfo(getCardinalRep());
+      if (fi->hasBackwardPrediction())
+        std::cout << "P";
+      else
+        std::cout << " ";
+
+      if (fi->hasBackwardUpdate())
+        std::cout << "U";
+      else
+        std::cout << " ";
+
+      std::cout << "         ";
+    }
+    std::cout << "\n";
+
+    return;
+  }
+
+
+
   std::cout << "=======================================================================================\n";
   std::cout << "genfit::Track, containing " << trackPoints_.size() << " TrackPoints and " << trackReps_.size() << " TrackReps.\n";
   std::cout << " Seed state: "; stateSeed_.Print();
@@ -478,6 +713,11 @@ bool Track::checkConsistency() const {
 
 
 void Track::trackHasChanged() {
+
+  #ifdef DEBUG
+  std::cout << "Track::trackHasChanged \n";
+  #endif
+
   for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it=fitStatuses_.begin(); it!=fitStatuses_.end(); ++it) {
     it->second->setHasTrackChanged();
   }
@@ -495,60 +735,60 @@ void Track::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
       TObject::Streamer(R__b);
       {
-	std::vector<AbsTrackRep*> &R__stl =  trackReps_;
-         R__stl.clear();
-         TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsTrackRep));
-         if (R__tcl1==0) {
-            Error("trackReps_ streamer","Missing the TClass object for genfit::AbsTrackRep!");
-            return;
-         }
-         int R__i, R__n;
-         R__b >> R__n;
-         R__stl.reserve(R__n);
-         for (R__i = 0; R__i < R__n; R__i++) {
-            genfit::AbsTrackRep* R__t;
-            R__b >> R__t;
-            R__stl.push_back(R__t);
-         }
+        std::vector<AbsTrackRep*> &R__stl =  trackReps_;
+        R__stl.clear();
+        TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsTrackRep));
+        if (R__tcl1==0) {
+          Error("trackReps_ streamer","Missing the TClass object for genfit::AbsTrackRep!");
+          return;
+        }
+        int R__i, R__n;
+        R__b >> R__n;
+        R__stl.reserve(R__n);
+        for (R__i = 0; R__i < R__n; R__i++) {
+          genfit::AbsTrackRep* R__t;
+          R__b >> R__t;
+          R__stl.push_back(R__t);
+        }
       }
       R__b >> cardinalRep_;
       {
-	std::vector<TrackPoint*> &R__stl =  trackPoints_;
-         R__stl.clear();
-         TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::TrackPoint));
-         if (R__tcl1==0) {
-            Error("trackPoints_ streamer","Missing the TClass object for genfit::TrackPoint!");
-            return;
-         }
-         int R__i, R__n;
-         R__b >> R__n;
-         R__stl.reserve(R__n);
-         for (R__i = 0; R__i < R__n; R__i++) {
-            genfit::TrackPoint* R__t;
-            R__t = (genfit::TrackPoint*)R__b.ReadObjectAny(R__tcl1);
-	    R__t->setTrack(this);
-	    R__t->fixupRepsForReading();
-            R__stl.push_back(R__t);
-         }
+        std::vector<TrackPoint*> &R__stl =  trackPoints_;
+        R__stl.clear();
+        TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::TrackPoint));
+        if (R__tcl1==0) {
+          Error("trackPoints_ streamer","Missing the TClass object for genfit::TrackPoint!");
+          return;
+        }
+        int R__i, R__n;
+        R__b >> R__n;
+        R__stl.reserve(R__n);
+        for (R__i = 0; R__i < R__n; R__i++) {
+          genfit::TrackPoint* R__t;
+          R__t = (genfit::TrackPoint*)R__b.ReadObjectAny(R__tcl1);
+          R__t->setTrack(this);
+          R__t->fixupRepsForReading();
+          R__stl.push_back(R__t);
+        }
       }
       {
-	std::map<const AbsTrackRep*,FitStatus*> &R__stl =  fitStatuses_;
-         R__stl.clear();
-         TClass *R__tcl2 = TBuffer::GetClass(typeid(genfit::FitStatus));
-         if (R__tcl2==0) {
-            Error("fitStatuses_ streamer","Missing the TClass object for genfit::FitStatus!");
-            return;
-         }
-         int R__i, R__n;
-         R__b >> R__n;
-         for (R__i = 0; R__i < R__n; R__i++) {
-	   int id;
-	   R__b >> id;
-            genfit::FitStatus* R__t2;
-            R__t2 = (genfit::FitStatus*)R__b.ReadObjectAny(R__tcl2);
+        std::map<const AbsTrackRep*,FitStatus*> &R__stl =  fitStatuses_;
+        R__stl.clear();
+        TClass *R__tcl2 = TBuffer::GetClass(typeid(genfit::FitStatus));
+        if (R__tcl2==0) {
+          Error("fitStatuses_ streamer","Missing the TClass object for genfit::FitStatus!");
+          return;
+        }
+        int R__i, R__n;
+        R__b >> R__n;
+        for (R__i = 0; R__i < R__n; R__i++) {
+          int id;
+          R__b >> id;
+          genfit::FitStatus* R__t2;
+          R__t2 = (genfit::FitStatus*)R__b.ReadObjectAny(R__tcl2);
 
-	    R__stl[this->getTrackRep(id)] = R__t2;
-         }
+          R__stl[this->getTrackRep(id)] = R__t2;
+        }
       }
       stateSeed_.Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
@@ -556,50 +796,50 @@ void Track::Streamer(TBuffer &R__b)
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
       TObject::Streamer(R__b);
       {
-	std::vector<AbsTrackRep*> &R__stl =  trackReps_;
-         int R__n=(&R__stl) ? int(R__stl.size()) : 0;
-         R__b << R__n;
-         if(R__n) {
-         TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsTrackRep));
-         if (R__tcl1==0) {
+        std::vector<AbsTrackRep*> &R__stl =  trackReps_;
+        int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+        R__b << R__n;
+        if(R__n) {
+          TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsTrackRep));
+          if (R__tcl1==0) {
             Error("trackReps_ streamer","Missing the TClass object for genfit::AbsTrackRep!");
             return;
-         }
-	 std::vector<AbsTrackRep*>::iterator R__k;
-            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
-	      R__b << *R__k;
-            }
-         }
+          }
+          std::vector<AbsTrackRep*>::iterator R__k;
+          for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
+            R__b << *R__k;
+          }
+        }
       }
       R__b << cardinalRep_;
       {
-	std::vector<TrackPoint*> &R__stl =  trackPoints_;
-         int R__n=(&R__stl) ? int(R__stl.size()) : 0;
-         R__b << R__n;
-         if(R__n) {
-	   std::vector<TrackPoint*>::iterator R__k;
-            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
+        std::vector<TrackPoint*> &R__stl =  trackPoints_;
+        int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+        R__b << R__n;
+        if(R__n) {
+          std::vector<TrackPoint*>::iterator R__k;
+          for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
             R__b << (*R__k);
-            }
-         }
+          }
+        }
       }
       {
-	std::map<const AbsTrackRep*,FitStatus*> &R__stl =  fitStatuses_;
-         int R__n=(&R__stl) ? int(R__stl.size()) : 0;
-         R__b << R__n;
-         if(R__n) {
-         TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsTrackRep));
-         if (R__tcl1==0) {
+        std::map<const AbsTrackRep*,FitStatus*> &R__stl =  fitStatuses_;
+        int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+        R__b << R__n;
+        if(R__n) {
+          TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsTrackRep));
+          if (R__tcl1==0) {
             Error("fitStatuses_ streamer","Missing the TClass object for genfit::AbsTrackRep!");
             return;
-         }
-	 std::map<const AbsTrackRep*,FitStatus*>::iterator R__k;
-            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
-	      int id = this->getIdForRep((*R__k).first);
-	      R__b << id;
-	      R__b << ((*R__k).second);
-            }
-         }
+          }
+          std::map<const AbsTrackRep*,FitStatus*>::iterator R__k;
+          for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
+            int id = this->getIdForRep((*R__k).first);
+            R__b << id;
+            R__b << ((*R__k).second);
+          }
+        }
       }
       stateSeed_.Streamer(R__b);
       R__b.SetByteCount(R__c, kTRUE);
