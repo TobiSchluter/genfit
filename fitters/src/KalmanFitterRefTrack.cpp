@@ -106,14 +106,16 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
       #endif
 
       // resort
-      if (tr->sort()) {
-        #ifdef DEBUG
-        std::cout << "KalmanFitterRefTrack::Resorted Track:"; tr->Print("C");
-        #endif
-        prepareTrack(tr, rep, resortHits);// re-prepare if order of hits has changed!
-        #ifdef DEBUG
-        std::cout << "KalmanFitterRefTrack::Prepared resorted Track:"; tr->Print("C");
-        #endif
+      if (resortHits) {
+        if (tr->sort()) {
+          #ifdef DEBUG
+          std::cout << "KalmanFitterRefTrack::Resorted Track:"; tr->Print("C");
+          #endif
+          prepareTrack(tr, rep, resortHits);// re-prepare if order of hits has changed!
+          #ifdef DEBUG
+          std::cout << "KalmanFitterRefTrack::Prepared resorted Track:"; tr->Print("C");
+          #endif
+        }
       }
 
 
@@ -278,7 +280,7 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
     // do extrapolation and set reference state infos
     double segmentLen = rep->extrapolateToPlane(&*seedState, plane);
     trackLen += segmentLen;
-    //if (setSortingParams)
+    if (setSortingParams)
       trackPoint->setSortingParameter(trackLen);
 
     if (i>0) rep->getForwardJacobianAndNoise(FTransportMatrix, FNoiseMatrix);
