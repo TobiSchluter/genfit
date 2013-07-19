@@ -39,8 +39,13 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
    * Needs a prepared track!
    */
   void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
-  void processTrack(Track* tr, const AbsTrackRep* rep);
-  void prepareTrack(Track* tr, const AbsTrackRep* rep);
+  void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits);
+  /**
+   * Prepare the track: calc all reference states.
+   * If #setSortingParams is true, the extrapolation lengths will be set as sorting parameters
+   * of the TrackPoints.
+   */
+  void prepareTrack(Track* tr, const AbsTrackRep* rep, bool setSortingParams = false);
 
  private:
   void processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, double& ndf, int direction);

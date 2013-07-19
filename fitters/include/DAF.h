@@ -57,7 +57,7 @@ class DAF : public AbsKalmanFitter {
 
   /** @brief Process a track using the DAF.
    */
-  void processTrack(Track* tr, const AbsTrackRep* rep);
+  void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits);
 
   void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction) {;}
 

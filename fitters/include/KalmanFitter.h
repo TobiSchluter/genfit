@@ -44,7 +44,11 @@ class KalmanFitter : public AbsKalmanFitter {
   ~KalmanFitter() {}
 
   void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
-  void processTrack(Track* tr, const AbsTrackRep* rep);
+
+  /**
+   * Hit resorting currently NOT supported.
+   */
+  void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits);
 
  private:
   void processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,

@@ -73,7 +73,7 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& c
 }
 
 
-void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
+void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits)
 {
 
 #ifdef DEBUG
@@ -99,11 +99,23 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
       #endif
 
       // prepare
-      prepareTrack(tr, rep);
+      prepareTrack(tr, rep, resortHits);
 
       #ifdef DEBUG
-      std::cout << "KalmanFitterRefTrack::Prepared Track:"; tr->Print();
+      std::cout << "KalmanFitterRefTrack::Prepared Track:"; tr->Print("C");
       #endif
+
+      // resort
+      if (tr->sort()) {
+        #ifdef DEBUG
+        std::cout << "KalmanFitterRefTrack::Resorted Track:"; tr->Print("C");
+        #endif
+        prepareTrack(tr, rep, resortHits);// re-prepare if order of hits has changed!
+        #ifdef DEBUG
+        std::cout << "KalmanFitterRefTrack::Prepared resorted Track:"; tr->Print("C");
+        #endif
+      }
+
 
       // fit forward
       #ifdef DEBUG
@@ -125,7 +137,7 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
 
 
       #ifdef DEBUG
-      std::cout << "KalmanFitterRefTrack::Track after fit:"; tr->Print();
+      std::cout << "KalmanFitterRefTrack::Track after fit:"; tr->Print("C");
 
 
       std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
@@ -186,7 +198,7 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep)
 }
 
 
-void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
+void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool setSortingParams) {
 
   std::auto_ptr<MeasuredStateOnPlane> seedState;
 
@@ -226,6 +238,8 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
 
   KalmanFitterInfo* prevFitterInfo(NULL);
 
+  double trackLen(0);
+
   for (unsigned int i=0; i<tr->getNumPoints(); ++i){
     TrackPoint* trackPoint = tr->getPoint(i);
 
@@ -263,6 +277,10 @@ void KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep) {
 
     // do extrapolation and set reference state infos
     double segmentLen = rep->extrapolateToPlane(&*seedState, plane);
+    trackLen += segmentLen;
+    //if (setSortingParams)
+      trackPoint->setSortingParameter(trackLen);
+
     if (i>0) rep->getForwardJacobianAndNoise(FTransportMatrix, FNoiseMatrix);
     rep->getBackwardJacobianAndNoise(BTransportMatrix, BNoiseMatrix);
 

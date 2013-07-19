@@ -335,7 +335,7 @@ bool Track::sort() {
   std::stable_sort(trackPoints_.begin(), trackPoints_.end(), TrackPointComparator());
 
   // see where order changed
-  int equalUntil(0), equalFrom(nPoints);
+  int equalUntil(-1), equalFrom(nPoints);
   for (int i = 0; i<nPoints; ++i) {
     if (pointsBefore[i] == trackPoints_[i])
       equalUntil = i;
@@ -356,10 +356,14 @@ bool Track::sort() {
       break;
   }
 
+  #ifdef DEBUG
+  std::cout << "Track::sort. Equal up to (including) hit " << equalUntil << " and from (including) hit " << equalFrom << " \n";
+  #endif
+
   deleteForwardInfo(equalUntil+1, -1);
   deleteBackwardInfo(0, equalFrom-1);
 
-  deleteReferenceInfo(std::max(0, equalFrom-1), std::min((int)trackPoints_.size()-1, equalUntil+1));
+  deleteReferenceInfo(std::max(0, equalUntil), std::min((int)trackPoints_.size()-1, equalFrom));
 
   return true;
 }
@@ -376,7 +380,8 @@ void Track::deleteForwardInfo(int startId, int endId) {
   if (startId < 0)
     startId += trackPoints_.size();
   if (endId < 0)
-    endId += trackPoints_.size() + 1;
+    endId += trackPoints_.size();
+  endId += 1;
 
   assert (endId >= startId);
 
@@ -400,7 +405,8 @@ void Track::deleteBackwardInfo(int startId, int endId) {
   if (startId < 0)
     startId += trackPoints_.size();
   if (endId < 0)
-    endId += trackPoints_.size() + 1;
+    endId += trackPoints_.size();
+  endId += 1;
 
   assert (endId >= startId);
 
@@ -424,7 +430,8 @@ void Track::deleteReferenceInfo(int startId, int endId) {
   if (startId < 0)
     startId += trackPoints_.size();
   if (endId < 0)
-    endId += trackPoints_.size() + 1;
+    endId += trackPoints_.size();
+  endId += 1;
 
   assert (endId >= startId);
 
@@ -448,7 +455,8 @@ void Track::deleteMeasurementInfo(int startId, int endId) {
   if (startId < 0)
     startId += trackPoints_.size();
   if (endId < 0)
-    endId += trackPoints_.size() + 1;
+    endId += trackPoints_.size();
+  endId += 1;
 
   assert (endId >= startId);
 
@@ -466,7 +474,7 @@ void Track::Print(const Option_t* option) const {
   opt.ToUpper();
   if (opt.Contains("C")) { // compact
 
-    std::cout << "   ";
+    std::cout << "\n   ";
     for (unsigned int i=0; i<trackPoints_.size(); ++i) {
 
       int color = 32*(size_t)(trackPoints_[i]) % 15;

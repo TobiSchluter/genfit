@@ -76,7 +76,7 @@ void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, dou
 }
 
 
-void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep)
+void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits)
 {
   currentState_.reset(new MeasuredStateOnPlane(rep));
   TVectorD seed(tr->getStateSeed());

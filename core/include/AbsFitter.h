@@ -33,8 +33,15 @@ class AbsFitter {
   AbsFitter() {}
   virtual ~AbsFitter() {}
 
-  virtual void processTrack(Track*, const AbsTrackRep*) = 0;
-  virtual void processTrack(Track*);
+  /**
+   * Process rep. Optionally resort the hits if necessary (and supported by the fitter)
+   */
+  virtual void processTrack(Track*, const AbsTrackRep*, bool resortHits = false) = 0;
+
+  /**
+   * Process all reps. Start with the cardinalRep and resort the hits if necessary (and supported by the fitter)
+   */
+  virtual void processTrack(Track*, bool resortHits = true);
 };
 
 }  /* End of namespace genfit */
