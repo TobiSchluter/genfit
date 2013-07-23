@@ -49,6 +49,8 @@ class MeasuredStateOnPlane : public StateOnPlane {
   const TMatrixDSym& getCov() const {return cov_;}
   TMatrixDSym& getCov() {return cov_;}
 
+  void blowUpCov(double blowUpFac, bool resetOffDiagonals = true);
+
   void setStateCov(const TVectorD& state, const TMatrixDSym& cov) {setState(state); setCov(cov);}
   void setStateCovPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane) {setStatePlane(state, plane); setCov(cov);}
   void setCov(const TMatrixDSym& cov) {if(cov_.GetNrows() == 0) cov_.ResizeTo(cov); cov_ = cov;}

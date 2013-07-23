@@ -41,4 +41,22 @@ void MeasuredStateOnPlane::Print(Option_t* option) const {
   }
 }
 
+void MeasuredStateOnPlane::blowUpCov(double blowUpFac, bool resetOffDiagonals) {
+
+  if (resetOffDiagonals) {
+    unsigned int dim = cov_.GetNcols();
+    for (unsigned int i=0; i<dim; ++i) {
+      for (unsigned int j=0; j<dim; ++j) {
+        if (i != j)
+          cov_(i,j) = 0; // reset off-diagonals
+        else
+          cov_(i,j) *= blowUpFac; // blow up diagonals
+      }
+    }
+  }
+  else
+    cov_ *= blowUpFac;
+
+}
+
 } /* End of namespace genfit */
