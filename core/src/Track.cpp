@@ -369,7 +369,7 @@ bool Track::sort() {
 }
 
 
-void Track::deleteForwardInfo(int startId, int endId) {
+void Track::deleteForwardInfo(int startId, int endId, const AbsTrackRep* rep) {
   // TODO: test
   #ifdef DEBUG
   std::cout << "Track::deleteForwardInfo from position " << startId  << " to " << endId << "\n";
@@ -386,14 +386,19 @@ void Track::deleteForwardInfo(int startId, int endId) {
   assert (endId >= startId);
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
-    const std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
-    for (std::vector<AbsFitterInfo*>::const_iterator fitterInfoIt = fitterInfos.begin(); fitterInfoIt != fitterInfos.end(); ++fitterInfoIt) {
-      (*fitterInfoIt)->deleteForwardInfo();
+    if (rep != NULL) {
+      (*pointIt)->getFitterInfo(rep)->deleteForwardInfo();
+    }
+    else {
+      const std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
+      for (std::vector<AbsFitterInfo*>::const_iterator fitterInfoIt = fitterInfos.begin(); fitterInfoIt != fitterInfos.end(); ++fitterInfoIt) {
+        (*fitterInfoIt)->deleteForwardInfo();
+      }
     }
   }
 }
 
-void Track::deleteBackwardInfo(int startId, int endId) {
+void Track::deleteBackwardInfo(int startId, int endId, const AbsTrackRep* rep) {
   // TODO: test
 
   #ifdef DEBUG
@@ -410,15 +415,21 @@ void Track::deleteBackwardInfo(int startId, int endId) {
 
   assert (endId >= startId);
 
+
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
-    const std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
-    for (std::vector<AbsFitterInfo*>::const_iterator fitterInfoIt = fitterInfos.begin(); fitterInfoIt != fitterInfos.end(); ++fitterInfoIt) {
-      (*fitterInfoIt)->deleteBackwardInfo();
+    if (rep != NULL) {
+      (*pointIt)->getFitterInfo(rep)->deleteBackwardInfo();
+    }
+    else {
+      const std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
+      for (std::vector<AbsFitterInfo*>::const_iterator fitterInfoIt = fitterInfos.begin(); fitterInfoIt != fitterInfos.end(); ++fitterInfoIt) {
+        (*fitterInfoIt)->deleteBackwardInfo();
+      }
     }
   }
 }
 
-void Track::deleteReferenceInfo(int startId, int endId) {
+void Track::deleteReferenceInfo(int startId, int endId, const AbsTrackRep* rep) {
   // TODO: test
 
   #ifdef DEBUG
@@ -436,14 +447,19 @@ void Track::deleteReferenceInfo(int startId, int endId) {
   assert (endId >= startId);
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
-    std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
-    for (std::vector<AbsFitterInfo*>::const_iterator fitterInfoIt = fitterInfos.begin(); fitterInfoIt != fitterInfos.end(); ++fitterInfoIt) {
-      (*fitterInfoIt)->deleteReferenceInfo();
+    if (rep != NULL) {
+      (*pointIt)->getFitterInfo(rep)->deleteReferenceInfo();
+    }
+    else {
+      std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
+      for (std::vector<AbsFitterInfo*>::const_iterator fitterInfoIt = fitterInfos.begin(); fitterInfoIt != fitterInfos.end(); ++fitterInfoIt) {
+        (*fitterInfoIt)->deleteReferenceInfo();
+      }
     }
   }
 }
 
-void Track::deleteMeasurementInfo(int startId, int endId) {
+void Track::deleteMeasurementInfo(int startId, int endId, const AbsTrackRep* rep) {
 
   // TODO: test. Do we also have to delete forward- and backward info if measurements are removed?
   #ifdef DEBUG
@@ -461,9 +477,14 @@ void Track::deleteMeasurementInfo(int startId, int endId) {
   assert (endId >= startId);
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
-    std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
-    for (std::vector<AbsFitterInfo*>::const_iterator fitterInfoIt = fitterInfos.begin(); fitterInfoIt != fitterInfos.end(); ++fitterInfoIt) {
-      (*fitterInfoIt)->deleteMeasurementInfo();
+    if (rep != NULL) {
+      (*pointIt)->getFitterInfo(rep)->deleteMeasurementInfo();
+    }
+    else {
+      std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
+      for (std::vector<AbsFitterInfo*>::const_iterator fitterInfoIt = fitterInfos.begin(); fitterInfoIt != fitterInfos.end(); ++fitterInfoIt) {
+        (*fitterInfoIt)->deleteMeasurementInfo();
+      }
     }
   }
 }
