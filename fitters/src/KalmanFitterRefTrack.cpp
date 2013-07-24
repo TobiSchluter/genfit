@@ -313,7 +313,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           //chi2 = covInv.Similarity(res);
 
           // ignore off diagonals
-          for (unsigned int j=0; j<seedState->getCov().GetNcols(); ++j) {
+          for (int j=0; j<seedState->getCov().GetNcols(); ++j) {
             chi2 += res[j]*res[j] / seedState->getCov()(j,j);
           }
 
