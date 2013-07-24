@@ -387,7 +387,8 @@ void Track::deleteForwardInfo(int startId, int endId, const AbsTrackRep* rep) {
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
     if (rep != NULL) {
-      (*pointIt)->getFitterInfo(rep)->deleteForwardInfo();
+      if ((*pointIt)->hasFitterInfo(rep))
+        (*pointIt)->getFitterInfo(rep)->deleteForwardInfo();
     }
     else {
       const std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
@@ -418,7 +419,8 @@ void Track::deleteBackwardInfo(int startId, int endId, const AbsTrackRep* rep) {
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
     if (rep != NULL) {
-      (*pointIt)->getFitterInfo(rep)->deleteBackwardInfo();
+      if ((*pointIt)->hasFitterInfo(rep))
+        (*pointIt)->getFitterInfo(rep)->deleteBackwardInfo();
     }
     else {
       const std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
@@ -448,7 +450,8 @@ void Track::deleteReferenceInfo(int startId, int endId, const AbsTrackRep* rep) 
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
     if (rep != NULL) {
-      (*pointIt)->getFitterInfo(rep)->deleteReferenceInfo();
+      if ((*pointIt)->hasFitterInfo(rep))
+        (*pointIt)->getFitterInfo(rep)->deleteReferenceInfo();
     }
     else {
       std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
@@ -478,7 +481,8 @@ void Track::deleteMeasurementInfo(int startId, int endId, const AbsTrackRep* rep
 
   for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
     if (rep != NULL) {
-      (*pointIt)->getFitterInfo(rep)->deleteMeasurementInfo();
+      if ((*pointIt)->hasFitterInfo(rep))
+        (*pointIt)->getFitterInfo(rep)->deleteMeasurementInfo();
     }
     else {
       std::vector<AbsFitterInfo*> fitterInfos = (*pointIt)->getFitterInfos();
