@@ -16,6 +16,7 @@
 #include <KalmanFitter.h>
 #include <KalmanFitterRefTrack.h>
 #include <KalmanFitterInfo.h>
+#include <KalmanFitStatus.h>
 #include <DAF.h>
 #include <MaterialInfo.h>
 #include <MeasuredStateOnPlane.h>
@@ -133,7 +134,7 @@ int main() {
         DafSimple,
         DafRef};
 
-  const unsigned int nEvents = 10;
+  const unsigned int nEvents = 1000;
   const double BField = 15.;       // kGauss
   const double momentum = 0.4;     // GeV
   const double theta = 100;         // degree
@@ -141,7 +142,7 @@ int main() {
   const double phiDetPlane = 0;         // degree
   const double pointDist = 5;      // cm; approx. distance between measurements generated w/ RKTrackRep
   const double pointDistDeg = 5;      // degree; distance between measurements generated w/ helix model
-  const double resolution = 0.02;   // cm; resolution of generated measurements
+  const double resolution = 0.2;   // cm; resolution of generated measurements
 
   const double resolutionWire = 5*resolution;   // cm; resolution of generated measurements
   const TVector3 wireDir(0,0,1);
@@ -164,15 +165,16 @@ int main() {
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
   const int nIter = 10; // max number of iterations
-  const double dChi2 = 1.E-3; // convergence criterion
+  const double dPVal = 1.E-3; // convergence criterion
 
   const bool resort = false;
 
   const int pdg = 13;               // particle pdg code
 
-  const bool smearPosMom = false;     // init the Reps with smeared pos and mom
+  const bool smearPosMom = true;     // init the Reps with smeared pos and mom
   const double posSmear = 10*resolution;     // cm
   const double momSmear = 5. /180.*TMath::Pi();     // rad
+  const double momMagSmear = 0.2;   // relative
   const double zSmearFac = 2;
 
   const bool HelixTest = true;      // use helix for creating measurements
@@ -206,7 +208,7 @@ int main() {
   measurementTypes.push_back(Wire);
   measurementTypes.push_back(WirePoint);
   measurementTypes.push_back(WirePoint);*/
-  for (int i = 0; i < 15; ++i)
+  for (int i = 0; i < 12; ++i)
     measurementTypes.push_back(Pixel);
 
 
@@ -214,12 +216,12 @@ int main() {
   genfit::AbsKalmanFitter* fitter;
   switch (fitterId) {
     case SimpleKalman:
-      fitter = new genfit::KalmanFitter(nIter);
+      fitter = new genfit::KalmanFitter(nIter, dPVal);
       fitter->setMultipleMeasurementHandling(mmHandling);
       break;
 
     case RefKalman:
-      fitter = new genfit::KalmanFitterRefTrack(nIter);
+      fitter = new genfit::KalmanFitterRefTrack(nIter, dPVal);
       fitter->setMultipleMeasurementHandling(mmHandling);
       break;
 
@@ -300,6 +302,7 @@ int main() {
 #endif
 
   double maxWeight(0);
+  unsigned int nTotalIter(0);
 
   // main loop
   for (unsigned int iEvent=0; iEvent<nEvents; ++iEvent){
@@ -337,6 +340,7 @@ int main() {
 
         momM.SetPhi(gRandom->Gaus(mom.Phi(),momSmear));
         momM.SetTheta(gRandom->Gaus(mom.Theta(),momSmear));
+        momM.SetMag(gRandom->Gaus(mom.Mag(), momMagSmear*mom.Mag()));
       }
 
 
@@ -354,7 +358,7 @@ int main() {
       if (!matFX) genfit::MaterialEffects::getInstance()->setNoEffects();
 
       // remember original initial state
-      const genfit::StateOnPlane stateRefOrig(stateSmeared);
+      const genfit::StateOnPlane stateRefOrig(stateRef);
 
       // create smeared measurements
       std::vector<genfit::AbsMeasurement*> measurements;
@@ -699,10 +703,11 @@ int main() {
         continue;
       }
 
-      assert(fitTrack->checkConsistency());
 
       if (debug) fitTrack->Print("C");
+      assert(fitTrack->checkConsistency());
 
+      nTotalIter += static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getNumIterations();
 
       // check if fit was successful
       //if (!fitter->isTrackFitted(fitTrack, rep)) {
@@ -830,6 +835,7 @@ int main() {
   }// end loop over events
 
   std::cout<<"maxWeight = " << maxWeight << std::endl;
+  std::cout<<"avg nr iterations = " << (double)nTotalIter/nEvents << std::endl;
 
 #ifndef VALGRIND
   /*if (debug) std::cout<<"Write Tree ...";
