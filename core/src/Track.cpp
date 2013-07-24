@@ -714,12 +714,12 @@ bool Track::checkConsistency() const {
     for (std::vector<AbsFitterInfo*>::const_iterator fi = fitterInfos.begin(); fi != fitterInfos.end(); ++fi) {
       // check for NULL
       if ((*fi) == NULL) {
-        std::cerr << "Track::checkConsistency(): FitterInfo is NULL" << std::endl;
+        std::cerr << "Track::checkConsistency(): FitterInfo is NULL. TrackPoint: " << *tp << std::endl;
         return false;
       }
 
       if (!( (*fi)->checkConsistency() ) ) {
-        std::cerr << "Track::checkConsistency(): FitterInfo not consistent" << std::endl;
+        std::cerr << "Track::checkConsistency(): FitterInfo not consistent. TrackPoint: " << *tp << std::endl;
         return false;
       }
 

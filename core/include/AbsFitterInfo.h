@@ -71,7 +71,7 @@ class AbsFitterInfo : public TObject {
   virtual void deleteReferenceInfo() = 0;
   virtual void deleteMeasurementInfo() = 0;
 
-  virtual MeasuredStateOnPlane getFittedState(bool biased = false) const = 0;
+  virtual MeasuredStateOnPlane* getFittedState(bool biased = false) const = 0;
   virtual MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const = 0;
 
   virtual void Print(const Option_t* = "") const {;}

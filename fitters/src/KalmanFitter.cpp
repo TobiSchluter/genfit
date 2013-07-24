@@ -117,7 +117,7 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHi
       #endif
 
       // Backwards iteration:
-      currentState_->getCov() *= blowUpFactor_;  // blow up cov
+      currentState_->blowUpCov(blowUpFactor_);  // blow up cov
       chi2BW = 0;
       ndfBW = 0;
       fitTrack(tr, rep, chi2BW, ndfBW, -1);
@@ -153,7 +153,7 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHi
         oldChi2FW = chi2FW;
         oldPvalFW = PvalFW;
         #endif
-        currentState_->getCov() *= blowUpFactor_;  // blow up cov
+        currentState_->blowUpCov(blowUpFactor_);  // blow up cov
       }
 
       if (nIt >= maxIterations_) {

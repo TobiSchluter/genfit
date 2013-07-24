@@ -71,7 +71,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   std::vector<double> getWeights() const;
   SharedPlanePtr getPlane() const;
   /** Get unbiased (default) or biased smoothed state */
-  MeasuredStateOnPlane getFittedState(bool biased = false) const;
+  MeasuredStateOnPlane* getFittedState(bool biased = false) const;
   /** Get unbiased (default) or biased residual from ith measurement */
   MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const; // also calculates covariance of the residual
 
@@ -81,13 +81,14 @@ class KalmanFitterInfo : public AbsFitterInfo {
   bool hasBackwardPrediction() const {return (backwardPrediction_.get() != NULL);}
   bool hasForwardUpdate() const {return (forwardUpdate_.get() != NULL);}
   bool hasBackwardUpdate() const {return (backwardUpdate_.get() != NULL);}
+  bool hasPredictionsAndUpdates() const {return (hasForwardPrediction() && hasBackwardPrediction() && hasForwardUpdate() && hasBackwardUpdate());}
 
   void setReferenceState(ReferenceStateOnPlane* referenceState) {referenceState_.reset(referenceState);}
-  void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction) {forwardPrediction_.reset(forwardPrediction);}
-  void setBackwardPrediction(MeasuredStateOnPlane* backwardPrediction) {backwardPrediction_.reset(backwardPrediction);}
+  void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction) {forwardPrediction_.reset(forwardPrediction); fittedStateUnbiased_.reset(); fittedStateBiased_.reset();}
+  void setBackwardPrediction(MeasuredStateOnPlane* backwardPrediction) {backwardPrediction_.reset(backwardPrediction); fittedStateUnbiased_.reset(); fittedStateBiased_.reset();}
   void setPrediction(MeasuredStateOnPlane* prediction, int direction)  {if (direction >=0) setForwardPrediction(prediction); else setBackwardPrediction(prediction);}
-  void setForwardUpdate(KalmanFittedStateOnPlane* forwardUpdate) {forwardUpdate_.reset(forwardUpdate);}
-  void setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate) {backwardUpdate_.reset(backwardUpdate);}
+  void setForwardUpdate(KalmanFittedStateOnPlane* forwardUpdate) {forwardUpdate_.reset(forwardUpdate); fittedStateUnbiased_.reset(); fittedStateBiased_.reset();}
+  void setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate) {backwardUpdate_.reset(backwardUpdate); fittedStateUnbiased_.reset(); fittedStateBiased_.reset();}
   void setUpdate(KalmanFittedStateOnPlane* update, int direction)  {if (direction >=0) setForwardUpdate(update); else setBackwardUpdate(update);}
   void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
   void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) { measurementsOnPlane_.push_back(measurementOnPlane); }
@@ -96,10 +97,10 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void setWeights(const std::vector<double>&);
   void setRep(const AbsTrackRep* rep);
 
-  void deleteForwardInfo();
-  void deleteBackwardInfo();
-  void deleteReferenceInfo();
-  void deleteMeasurementInfo();
+  void deleteForwardInfo() {setForwardPrediction(NULL); setForwardUpdate(NULL);}
+  void deleteBackwardInfo() {setBackwardPrediction(NULL); setBackwardUpdate(NULL);}
+  void deleteReferenceInfo() {setReferenceState(NULL);}
+  void deleteMeasurementInfo() {measurementsOnPlane_.clear();}
 
   virtual void Print(const Option_t* = "") const;
 
@@ -115,13 +116,18 @@ class KalmanFitterInfo : public AbsFitterInfo {
   boost::scoped_ptr<KalmanFittedStateOnPlane> forwardUpdate_; // Ownership
   boost::scoped_ptr<MeasuredStateOnPlane> backwardPrediction_; // Ownership
   boost::scoped_ptr<KalmanFittedStateOnPlane> backwardUpdate_; // Ownership
+  mutable boost::scoped_ptr<MeasuredStateOnPlane> fittedStateUnbiased_; //!  cache
+  mutable boost::scoped_ptr<MeasuredStateOnPlane> fittedStateBiased_; //!  cache
 #else
   class ReferenceStateOnPlane* referenceState_;
   class MeasuredStateOnPlane* forwardPrediction_;
   class KalmanFittedStateOnPlane* forwardUpdate_;
   class MeasuredStateOnPlane* backwardPrediction_;
   class KalmanFittedStateOnPlane* backwardUpdate_;
+  class MeasuredStateOnPlane* fittedStateUnbiased_; //!  cache
+  class MeasuredStateOnPlane* fittedStateBiased_; //!  cache
 #endif
+
 
  //> TODO ! ptr implement: to the special ownership version
   /* class owned_pointer_vector : private std::vector<MeasuredStateOnPlane*> {

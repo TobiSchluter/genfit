@@ -319,9 +319,9 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
     std::vector<double> phi;
     double phi_sum = 0;
     double phi_cut = 0;
-    const MeasuredStateOnPlane& smoothedState = kfi->getFittedState(true);
+    const MeasuredStateOnPlane* smoothedState = kfi->getFittedState(true);
 
-    TVectorD x_smoo(kfi->getMeasurementOnPlane()->getHMatrix() * smoothedState.getState());
+    TVectorD x_smoo(kfi->getMeasurementOnPlane()->getHMatrix() * smoothedState->getState());
 
     for(unsigned int j=0; j<nMeas; j++) {
       double* detV = new double(0);

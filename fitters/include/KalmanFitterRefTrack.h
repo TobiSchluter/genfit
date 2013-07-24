@@ -31,8 +31,8 @@ class KalmanFitterInfo;
 
 class KalmanFitterRefTrack : public AbsKalmanFitter {
  public:
-  KalmanFitterRefTrack(unsigned int maxIterations = 4, double deltaPval = 1e-2, double blowUpFactor = 1e3)
-    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor) {}
+  KalmanFitterRefTrack(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
+    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), deltaChi2Ref_(1) {}
   ~KalmanFitterRefTrack() {}
 
   /**
@@ -44,13 +44,26 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
    * Prepare the track: calc all reference states.
    * If #setSortingParams is true, the extrapolation lengths will be set as sorting parameters
    * of the TrackPoints.
+   * Returns if the track has been changed.
    */
-  void prepareTrack(Track* tr, const AbsTrackRep* rep, bool setSortingParams = false);
+  bool prepareTrack(Track* tr, const AbsTrackRep* rep, bool setSortingParams = false);
+
+  /**
+   * When will the reference track be updated?
+   * If (smoothedState - referenceState) * smoothedCov^(-1) * (smoothedState - referenceState)^T >= deltaChi2Ref_.
+   */
+  void setDeltaChi2Ref(double dChi2) {deltaChi2Ref_ = dChi2;}
 
  private:
   void processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, double& ndf, int direction);
 
+  double deltaChi2Ref_; // reference track update cut
+
+  std::vector<MeasuredStateOnPlane*> MOPsToDestruct_; //! helper for lifetime management
+
+ public:
   ClassDef(KalmanFitterRefTrack, 1)
+
 };
 
 }  /* End of namespace genfit */
