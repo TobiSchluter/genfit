@@ -257,7 +257,8 @@ void EventDisplay::drawEvent(unsigned int id) {
 
     KalmanFitterInfo* fi;
     KalmanFitterInfo* prevFi;
-    MeasuredStateOnPlane fittedState, prevFittedState;
+    MeasuredStateOnPlane* fittedState(NULL);
+    MeasuredStateOnPlane* prevFittedState(NULL);
 
     for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
 
@@ -279,9 +280,9 @@ void EventDisplay::drawEvent(unsigned int id) {
         continue;
       }
 
-      TVector3 track_pos = rep->getPos(&fittedState);
+      TVector3 track_pos = rep->getPos(fittedState);
 
-      double charge = rep->getCharge(&fittedState);
+      double charge = rep->getCharge(fittedState);
 
       const MeasurementOnPlane* mop = fi->getMeasurementOnPlane(); // FIXME draw all measurements, not only 1st
       const TVectorT<double>& hit_coords = mop->getState();
@@ -290,9 +291,9 @@ void EventDisplay::drawEvent(unsigned int id) {
       // finished getting the hit infos -----------------------------------------------------
 
       // sort hit infos into variables ------------------------------------------------------
-      TVector3 o = fittedState.getPlane()->getO();
-      TVector3 u = fittedState.getPlane()->getU();
-      TVector3 v = fittedState.getPlane()->getV();
+      TVector3 o = fittedState->getPlane()->getO();
+      TVector3 u = fittedState->getPlane()->getU();
+      TVector3 v = fittedState->getPlane()->getV();
 
       bool planar_hit = false;
       bool planar_pixel_hit = false;
@@ -439,7 +440,7 @@ void EventDisplay::drawEvent(unsigned int id) {
 
               if (eVec1.Cross(eVec2)*eval < 0)
                 eVec2 *= -1;
-              assert(eVec1.Cross(eVec2)*eval > 0);
+              //assert(eVec1.Cross(eVec2)*eval > 0);
 
               const TVector3 oldEVec1(eVec1);
               const TVector3 oldEVec2(eVec2);
@@ -503,7 +504,7 @@ void EventDisplay::drawEvent(unsigned int id) {
 
               if (eVec1.Cross(eVec2)*eval < 0)
                 eVec2 *= -1;
-              assert(eVec1.Cross(eVec2)*eval > 0);
+              //assert(eVec1.Cross(eVec2)*eval > 0);
 
               if (oldEVec1*eVec1 < 0) {
                 eVec1 *= -1;
@@ -550,9 +551,9 @@ void EventDisplay::drawEvent(unsigned int id) {
 
       if (j > 0) {
         if(drawTrack) {
-          makeLines(&prevFittedState, &fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers, drawErrors, 3);
+          makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers, drawErrors, 3);
           if (drawErrors) { // make sure to draw errors in both directions
-            makeLines(&prevFittedState, &fittedState, rep, charge > 0 ? kRed : kBlue, 1, false, drawErrors, 0, 0);
+            makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, false, drawErrors, 0, 0);
           }
         }
         if (drawForward)
