@@ -21,23 +21,6 @@
 
 namespace genfit {
 
-KalmanFittedStateOnPlane::KalmanFittedStateOnPlane() :
-  MeasuredStateOnPlane(), chiSquareIncrement_(0), ndf_(0)
-{
-  ;
-}
-
-KalmanFittedStateOnPlane::KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, double chiSquareIncrement, double ndf) :
-  MeasuredStateOnPlane(state, cov, plane, rep), chiSquareIncrement_(chiSquareIncrement), ndf_(ndf)
-{
-  ;
-}
-
-KalmanFittedStateOnPlane::KalmanFittedStateOnPlane(const MeasuredStateOnPlane& state, double chiSquareIncrement, double ndf) :
-  MeasuredStateOnPlane(state), chiSquareIncrement_(chiSquareIncrement), ndf_(ndf)
-{
-  ;
-}
 
 } /* End of namespace genfit */
 

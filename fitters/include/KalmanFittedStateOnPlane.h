@@ -39,6 +39,7 @@ class KalmanFittedStateOnPlane : public MeasuredStateOnPlane {
 
   KalmanFittedStateOnPlane();
   KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, double chiSquareIncrement, double ndf);
+  KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, const TVectorD& auxInfo, double chiSquareIncrement, double ndf);
   KalmanFittedStateOnPlane(const MeasuredStateOnPlane& state, double chiSquareIncrement, double ndf);
 
   double getChiSquareIncrement() const {return chiSquareIncrement_;}
@@ -61,6 +62,30 @@ class KalmanFittedStateOnPlane : public MeasuredStateOnPlane {
   ClassDef(KalmanFittedStateOnPlane,1)
 
 };
+
+inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane() :
+  MeasuredStateOnPlane(), chiSquareIncrement_(0), ndf_(0)
+{
+  ;
+}
+
+inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, double chiSquareIncrement, double ndf) :
+  MeasuredStateOnPlane(state, cov, plane, rep), chiSquareIncrement_(chiSquareIncrement), ndf_(ndf)
+{
+  ;
+}
+
+inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, const TVectorD& auxInfo, double chiSquareIncrement, double ndf) :
+  MeasuredStateOnPlane(state, cov, plane, rep, auxInfo), chiSquareIncrement_(chiSquareIncrement), ndf_(ndf)
+{
+  ;
+}
+
+inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane(const MeasuredStateOnPlane& state, double chiSquareIncrement, double ndf) :
+  MeasuredStateOnPlane(state), chiSquareIncrement_(chiSquareIncrement), ndf_(ndf)
+{
+  ;
+}
 
 } /* End of namespace genfit */
 /** @} */

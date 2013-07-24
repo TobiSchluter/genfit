@@ -42,6 +42,7 @@ class MeasuredStateOnPlane : public StateOnPlane {
 
   MeasuredStateOnPlane(const AbsTrackRep* rep = NULL);
   MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep);
+  MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
   MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov);
 
   MeasuredStateOnPlane& operator= (const MeasuredStateOnPlane& other);
@@ -77,6 +78,13 @@ inline MeasuredStateOnPlane::MeasuredStateOnPlane(const AbsTrackRep* rep) :
 
 inline MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep) :
   StateOnPlane(state, plane, rep), cov_(cov)
+{
+  assert(rep != NULL);
+  //assert(cov_.GetNcols() == (signed)rep->getDim());
+}
+
+inline MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, const TVectorD& auxInfo) :
+  StateOnPlane(state, plane, rep, auxInfo), cov_(cov)
 {
   assert(rep != NULL);
   //assert(cov_.GetNcols() == (signed)rep->getDim());
