@@ -458,26 +458,10 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       }
       else {
         assert (prevReferenceState != NULL);
-        //if (prevReferenceState != NULL) {
-          #ifdef DEBUG
-          std::cout << "extrapolate prevReferenceState to plane\n";
-          #endif
-          stateToExtrapolate = new MeasuredStateOnPlane(*prevReferenceState, TMatrixDSym(rep->getDim()));
-        //}
-        // Do not use prevSmoothedState, sice it could be defined in the wrong plane (WireHits, Spacepoint etc.)
-        /*else if (prevSmoothedState != NULL) {
-          #ifdef DEBUG
-          std::cout << "extrapolate prevSmoothedState to plane\n";
-          #endif
-          stateToExtrapolate = new MeasuredStateOnPlane(*prevSmoothedState);
-        }*/
-        /*else {
-          #ifdef DEBUG
-          std::cout << "extrapolate seed from track to plane\n";
-          #endif
-          stateToExtrapolate = new MeasuredStateOnPlane(rep);
-          rep->setPosMom(stateToExtrapolate, tr->getStateSeed());
-        }*/
+        #ifdef DEBUG
+        std::cout << "extrapolate prevReferenceState to plane\n";
+        #endif
+        stateToExtrapolate = new MeasuredStateOnPlane(*prevReferenceState, TMatrixDSym(rep->getDim()));
       }
       SOPsToDestruct_.push_back(stateToExtrapolate);
 
