@@ -760,7 +760,7 @@ void Track::trackHasChanged() {
 void Track::Streamer(TBuffer &R__b)
 {
    // Stream an object of class genfit::Track.
-
+  const bool streamTrackPoints = true; // debugging option
    //This works around a msvc bug and should be harmless on other platforms
    typedef ::genfit::Track thisClass;
    UInt_t R__s, R__c;
@@ -785,6 +785,7 @@ void Track::Streamer(TBuffer &R__b)
         }
       }
       R__b >> cardinalRep_;
+      if (streamTrackPoints)
       {
         std::vector<TrackPoint*> &R__stl =  trackPoints_;
         R__stl.clear();
@@ -845,6 +846,7 @@ void Track::Streamer(TBuffer &R__b)
         }
       }
       R__b << cardinalRep_;
+      if (streamTrackPoints)
       {
         std::vector<TrackPoint*> &R__stl =  trackPoints_;
         int R__n=(&R__stl) ? int(R__stl.size()) : 0;

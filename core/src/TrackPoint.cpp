@@ -215,7 +215,6 @@ void TrackPoint::Print(const Option_t*) const {
 void TrackPoint::Streamer(TBuffer &R__b)
 {
    // Stream an object of class genfit::TrackPoint.
-
    //This works around a msvc bug and should be harmless on other platforms
    typedef ::genfit::TrackPoint thisClass;
    UInt_t R__s, R__c;
@@ -241,10 +240,10 @@ void TrackPoint::Streamer(TBuffer &R__b)
          }
       }
       track_ = NULL;
-      int nTrackReps;
+      size_t nTrackReps;
       R__b >> nTrackReps;
       vFitterInfos_.resize(nTrackReps);
-      for (int i = 0; i < nTrackReps; ++i)
+      for (size_t i = 0; i < nTrackReps; ++i)
 	{
 	  int id;
 	  R__b >> id;
@@ -295,6 +294,7 @@ void TrackPoint::fixupRepsForReading()
   for (size_t i = 0; i < vFitterInfos_.size(); ++i) {
     // The vector is filled such that i corresponds to the id of the TrackRep.
     fitterInfos_[track_->getTrackRep(i)] = vFitterInfos_[i];
+    fitterInfos_[track_->getTrackRep(i)]->setRep(track_->getTrackRep(i));
   }
   vFitterInfos_.clear();
 }
