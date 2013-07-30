@@ -153,10 +153,10 @@ int main() {
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
-  const double outlierProb = -0.;
+  const double outlierProb = -0.1;
   const double outlierRange = 5;
 
-  const double hitSwitchProb = -0.; // probability to give hits to fit in wrong order (flip two hits)
+  const double hitSwitchProb = -0.1; // probability to give hits to fit in wrong order (flip two hits)
 
   //const eFitterType fitterId = SimpleKalman;
   const eFitterType fitterId = RefKalman;
@@ -167,11 +167,11 @@ int main() {
   const int nIter = 10; // max number of iterations
   const double dPVal = 1.E-3; // convergence criterion
 
-  const bool resort = false;
+  const bool resort = true;
 
   const int pdg = 13;               // particle pdg code
 
-  const bool smearPosMom = true;     // init the Reps with smeared pos and mom
+  const bool smearPosMom = false;     // init the Reps with smeared pos and mom
   const double posSmear = 10*resolution;     // cm
   const double momSmear = 5. /180.*TMath::Pi();     // rad
   const double momMagSmear = 0.2;   // relative
@@ -197,18 +197,16 @@ int main() {
   /*measurementTypes.push_back(Pixel);
   measurementTypes.push_back(Pixel);
   measurementTypes.push_back(Spacepoint);
-  measurementTypes.push_back(Spacepoint);
   measurementTypes.push_back(ProlateSpacepoint);
-  measurementTypes.push_back(ProlateSpacepoint);
-  measurementTypes.push_back(StripU);
+  measurementTypes.push_back(StripV);
   measurementTypes.push_back(StripU);
   measurementTypes.push_back(StripV);
-  measurementTypes.push_back(StripV);
-  measurementTypes.push_back(Wire);
-  measurementTypes.push_back(Wire);
-  measurementTypes.push_back(WirePoint);
-  measurementTypes.push_back(WirePoint);*/
-  for (int i = 0; i < 12; ++i)
+  measurementTypes.push_back(StripU);*/
+  //measurementTypes.push_back(Wire);
+  //measurementTypes.push_back(Wire);
+  //measurementTypes.push_back(WirePoint);
+  //measurementTypes.push_back(WirePoint);
+  for (int i = 0; i < 10; ++i)
     measurementTypes.push_back(Pixel);
 
 
@@ -285,11 +283,11 @@ int main() {
   gStyle->SetPalette(1);
   gStyle->SetOptFit(1111);
 
-  TH1D *hmomRes = new TH1D("hmomRes","mom res",2000,-0.01*momentum,0.01*momentum);
-  TH1D *hupRes = new TH1D("hupRes","u' res",2000,-0.05,0.05);
-  TH1D *hvpRes = new TH1D("hvpRes","v' res",2000,-0.05,0.05);
-  TH1D *huRes = new TH1D("huRes","u res",2000,-0.05,0.05);
-  TH1D *hvRes = new TH1D("hvRes","v res",2000,-0.05,0.05);
+  TH1D *hmomRes = new TH1D("hmomRes","mom res",500,-2*resolution*momentum,2*resolution*momentum);
+  TH1D *hupRes = new TH1D("hupRes","u' res",500,-5*resolution/measurementTypes.size(), 5*resolution/measurementTypes.size());
+  TH1D *hvpRes = new TH1D("hvpRes","v' res",500,-5*resolution/measurementTypes.size(), 5*resolution/measurementTypes.size());
+  TH1D *huRes = new TH1D("huRes","u res",500,-5*resolution, 5*resolution);
+  TH1D *hvRes = new TH1D("hvRes","v res",500,-5*resolution, 5*resolution);
 
   TH1D *hqopPu = new TH1D("hqopPu","q/p pull",200,-6.,6.);
   TH1D *pVal = new TH1D("pVal","p-value",100,0.,1.00000001);
@@ -303,6 +301,7 @@ int main() {
 
   double maxWeight(0);
   unsigned int nTotalIter(0);
+  unsigned int nSuccessfullFits(0);
 
   // main loop
   for (unsigned int iEvent=0; iEvent<nEvents; ++iEvent){
@@ -704,10 +703,16 @@ int main() {
       }
 
 
-      if (debug) fitTrack->Print("C");
+      if (debug)
+        fitTrack->Print("C");
       assert(fitTrack->checkConsistency());
 
-      nTotalIter += static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getNumIterations();
+#ifndef VALGRIND
+      // add track to event display
+      std::vector<genfit::Track*> event;
+      event.push_back(fitTrack);
+      display->addEvent(event);
+#endif
 
       // check if fit was successful
       //if (!fitter->isTrackFitted(fitTrack, rep)) {
@@ -716,13 +721,10 @@ int main() {
         continue;
       }
 
+      nTotalIter += static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getNumIterations();
+      nSuccessfullFits += 1;
 
-#ifndef VALGRIND
-      // add track to event display
-      std::vector<genfit::Track*> event;
-      event.push_back(fitTrack); 
-      display->addEvent(event);
-#endif
+
 
 
 
@@ -749,7 +751,8 @@ int main() {
       const TVectorD& state = kfsop->getState();
       const TMatrixDSym& cov = kfsop->getCov();
 
-      double pval = fitter->getPVal(fitTrack, rep); // FIXME choose fitter that has been used
+      double pval = fitter->getPVal(fitTrack, rep);
+      assert( fabs(pval - static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getBackwardPVal()) < 1E-10 );
 
       hmomRes->Fill( (charge/state[0]-momentum));
       hupRes->Fill(  (state[1]-referenceState[1]));
@@ -835,7 +838,8 @@ int main() {
   }// end loop over events
 
   std::cout<<"maxWeight = " << maxWeight << std::endl;
-  std::cout<<"avg nr iterations = " << (double)nTotalIter/nEvents << std::endl;
+  std::cout<<"avg nr iterations = " << (double)nTotalIter/nSuccessfullFits << std::endl;
+  std::cout<<"fit efficiency = " << (double)nSuccessfullFits/nEvents << std::endl;
 
 #ifndef VALGRIND
   /*if (debug) std::cout<<"Write Tree ...";
