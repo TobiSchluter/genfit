@@ -457,25 +457,27 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         }
       }
       else {
-        if (prevSmoothedState != NULL) {
-          #ifdef DEBUG
-          std::cout << "extrapolate prevSmoothedState to plane\n";
-          #endif
-          stateToExtrapolate = new MeasuredStateOnPlane(*prevSmoothedState);
-        }
-        else if (prevReferenceState != NULL) {
+        assert (prevReferenceState != NULL);
+        //if (prevReferenceState != NULL) {
           #ifdef DEBUG
           std::cout << "extrapolate prevReferenceState to plane\n";
           #endif
           stateToExtrapolate = new MeasuredStateOnPlane(*prevReferenceState, TMatrixDSym(rep->getDim()));
-        }
-        else {
+        //}
+        // Do not use prevSmoothedState, sice it could be defined in the wrong plane (WireHits, Spacepoint etc.)
+        /*else if (prevSmoothedState != NULL) {
+          #ifdef DEBUG
+          std::cout << "extrapolate prevSmoothedState to plane\n";
+          #endif
+          stateToExtrapolate = new MeasuredStateOnPlane(*prevSmoothedState);
+        }*/
+        /*else {
           #ifdef DEBUG
           std::cout << "extrapolate seed from track to plane\n";
           #endif
           stateToExtrapolate = new MeasuredStateOnPlane(rep);
           rep->setPosMom(stateToExtrapolate, tr->getStateSeed());
-        }
+        }*/
       }
       SOPsToDestruct_.push_back(stateToExtrapolate);
 
@@ -571,6 +573,9 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       #ifdef DEBUG
       std::cout << "set backwards update of first point as forward prediction (with blown up cov) \n";
       #endif
+      if (fi->getPlane() != firstBackwarUpdate->getPlane()) {
+        rep->extrapolateToPlane(firstBackwarUpdate, fi->getPlane());
+      }
       firstBackwarUpdate->blowUpCov(blowUpFactor_);
       fi->setForwardPrediction(firstBackwarUpdate);
       SOPsToDestruct_.erase( std::find(SOPsToDestruct_.begin(), SOPsToDestruct_.end(), firstBackwarUpdate) );
@@ -800,18 +805,34 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   // Calculate chi² increment.  At the first point chi2inc == 0 and
   // the matrix will not be invertible.
   double chi2inc = 0;
-  if (ndf != 0) {
+  TVectorD resNew(m.getState() - m.getHMatrix()*updated);
+  #ifdef DEBUGMATH
+  std::cout << " resNew "; resNew.Print();
+  #endif
+
+  // only calculate chi2inc if res != NULL.
+  // If matrix inversion fails, chi2inc = 0
+  if (resNew != 0) {
     TMatrixDSym Rinv(C);
     Rinv.Similarity(m.getHMatrix());
     Rinv -= m.getCov();
     Rinv *= -1;
-    tools::invertMatrix(Rinv);
 
-    TVectorD resNew(m.getState() - m.getHMatrix()*updated);
+    bool couldInvert(true);
+    try {
+      tools::invertMatrix(Rinv);
+    }
+    catch (Exception& e) {
+      std::cerr << e.what();
+      couldInvert = false;
+    }
 
-    chi2inc = Rinv.Similarity(resNew);
+    if (couldInvert)
+      chi2inc = Rinv.Similarity(resNew);
   }
+
   chi2 += chi2inc;
+
 
   double ndfInc = m.getState().GetNrows() * m.getWeight();
   ndf += ndfInc;
