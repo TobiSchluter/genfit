@@ -260,7 +260,9 @@ void TrackPoint::Streamer(TBuffer &R__b)
 	}
       for (size_t i = 0; i < vFitterInfos_.size(); ++i)
 	{
-	  vFitterInfos_[i]->setTrackPoint(this);
+	  // May not have FitterInfos for all reps.
+	  if (vFitterInfos_[i])
+	    vFitterInfos_[i]->setTrackPoint(this);
 	}
    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
@@ -293,6 +295,10 @@ void TrackPoint::fixupRepsForReading()
 {
   for (size_t i = 0; i < vFitterInfos_.size(); ++i) {
     // The vector is filled such that i corresponds to the id of the TrackRep.
+    
+    // May not have FitterInfos for all reps.
+    if (!vFitterInfos_[i])
+      continue;
     fitterInfos_[track_->getTrackRep(i)] = vFitterInfos_[i];
     fitterInfos_[track_->getTrackRep(i)]->setRep(track_->getTrackRep(i));
   }
