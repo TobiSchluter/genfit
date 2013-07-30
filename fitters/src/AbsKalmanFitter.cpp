@@ -36,7 +36,10 @@ using namespace genfit;
 
 
 
-void AbsKalmanFitter::getChiSquNdf(const Track* tr, const AbsTrackRep* rep, double& bChi2, double& fChi2, double& bNdf,  double& fNdf) const {
+void AbsKalmanFitter::getChiSquNdf(const Track* tr, const AbsTrackRep* rep,
+    double& bChi2, double& fChi2,
+    double& bNdf,  double& fNdf) const {
+
   bChi2 = 0;
   fChi2 = 0;
   bNdf = -1. * rep->getDim();

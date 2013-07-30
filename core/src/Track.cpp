@@ -18,6 +18,7 @@
 */
 
 #include "Track.h"
+#include "KalmanFitterInfo.h"
 
 #include <algorithm>
 #include <iostream>
@@ -363,7 +364,7 @@ bool Track::sort() {
   deleteForwardInfo(equalUntil+1, -1);
   deleteBackwardInfo(0, equalFrom-1);
 
-  deleteReferenceInfo(std::max(0, equalUntil), std::min((int)trackPoints_.size()-1, equalFrom));
+  deleteReferenceInfo(std::max(0, equalUntil+1), std::min((int)trackPoints_.size()-1, equalFrom-1));
 
   return true;
 }
@@ -658,6 +659,8 @@ void Track::Print(const Option_t* option) const {
 
 bool Track::checkConsistency() const {
 
+  std::map<const AbsTrackRep*, double> prevSegmentLengths;
+
   // check if seed is 6D
   if (stateSeed_.GetNrows() != 6) {
     std::cerr << "Track::checkConsistency(): stateSeed_ dimension != 6" << std::endl;
@@ -683,6 +686,8 @@ bool Track::checkConsistency() const {
       std::cerr << "Track::checkConsistency(): TrackRep pdg ID is not valid" << std::endl;
       return false;
     }
+
+    prevSegmentLengths[*rep] = 0;
   }
 
   // check TrackPoints
@@ -738,7 +743,20 @@ bool Track::checkConsistency() const {
         std::cerr << "Track::checkConsistency(): fitterInfo points to TrackRep which is not in Track" << std::endl;
         return false;
       }
+
+      if (dynamic_cast<KalmanFitterInfo*>(*fi) != NULL)
+      if (static_cast<KalmanFitterInfo*>(*fi)->hasReferenceState()) {
+        double prevLen = static_cast<KalmanFitterInfo*>(*fi)->getReferenceState()->getForwardSegmentLength();
+        double len = prevSegmentLengths[(*fi)->getRep()];
+        if (fabs(prevLen + len) > 1E-10 ) {
+          std::cerr << "Track::checkConsistency(): segment lengths of reference states don't match" << std::endl;
+          std::cerr << prevLen << " + " << len << " = " << prevLen + len << std::endl;
+          return false;
+        }
+        prevSegmentLengths[(*fi)->getRep()] = static_cast<KalmanFitterInfo*>(*fi)->getReferenceState()->getBackwardSegmentLength();
+      }
     }
+
   }
 
   return true;

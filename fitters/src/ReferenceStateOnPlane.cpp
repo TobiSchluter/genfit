@@ -31,7 +31,9 @@ ReferenceStateOnPlane::ReferenceStateOnPlane() :
   forwardTransportMatrix_(),
   backwardTransportMatrix_(),
   forwardNoiseMatrix_(),
-  backwardNoiseMatrix_()
+  backwardNoiseMatrix_(),
+  forwardDeltaState_(),
+  backwardDeltaState_()
 {
   ;
 }
@@ -42,10 +44,12 @@ ReferenceStateOnPlane::ReferenceStateOnPlane(const TVectorD& state,
   StateOnPlane(state, plane, rep),
   forwardSegmentLength_(0),
   backwardSegmentLength_(0),
-  forwardTransportMatrix_(),
-  backwardTransportMatrix_(),
-  forwardNoiseMatrix_(),
-  backwardNoiseMatrix_()
+  forwardTransportMatrix_(rep->getDim(), rep->getDim()),
+  backwardTransportMatrix_(rep->getDim(), rep->getDim()),
+  forwardNoiseMatrix_(rep->getDim()),
+  backwardNoiseMatrix_(rep->getDim()),
+  forwardDeltaState_(rep->getDim()),
+  backwardDeltaState_(rep->getDim())
 {
   ;
 }
@@ -54,48 +58,12 @@ ReferenceStateOnPlane::ReferenceStateOnPlane(const StateOnPlane& state) :
   StateOnPlane(state),
   forwardSegmentLength_(0),
   backwardSegmentLength_(0),
-  forwardTransportMatrix_(),
-  backwardTransportMatrix_(),
-  forwardNoiseMatrix_(),
-  backwardNoiseMatrix_()
-{
-  ;
-}
-
-ReferenceStateOnPlane::ReferenceStateOnPlane(const TVectorD& state,
-    SharedPlanePtr plane,
-    AbsTrackRep* rep,
-    double forwardSegmentLength,
-    double backwardSegmentLength,
-    const TMatrixD& forwardTransportMatrix,
-    const TMatrixD& backwardTransportMatrix,
-    const TMatrixDSym& forwardNoiseMatrix,
-    const TMatrixDSym& backwardNoiseMatrix) :
-  StateOnPlane(state, plane, rep),
-  forwardSegmentLength_(forwardSegmentLength),
-  backwardSegmentLength_(backwardSegmentLength),
-  forwardTransportMatrix_(forwardTransportMatrix),
-  backwardTransportMatrix_(backwardTransportMatrix),
-  forwardNoiseMatrix_(forwardNoiseMatrix),
-  backwardNoiseMatrix_(backwardNoiseMatrix)
-{
-  ;
-}
-
-ReferenceStateOnPlane::ReferenceStateOnPlane(const StateOnPlane& state,
-    double forwardSegmentLength,
-    double backwardSegmentLength,
-    const TMatrixD& forwardTransportMatrix,
-    const TMatrixD& backwardTransportMatrix,
-    const TMatrixDSym& forwardNoiseMatrix,
-    const TMatrixDSym& backwardNoiseMatrix) :
-  StateOnPlane(state),
-  forwardSegmentLength_(forwardSegmentLength),
-  backwardSegmentLength_(backwardSegmentLength),
-  forwardTransportMatrix_(forwardTransportMatrix),
-  backwardTransportMatrix_(backwardTransportMatrix),
-  forwardNoiseMatrix_(forwardNoiseMatrix),
-  backwardNoiseMatrix_(backwardNoiseMatrix)
+  forwardTransportMatrix_(state.getRep()->getDim(), state.getRep()->getDim()),
+  backwardTransportMatrix_(state.getRep()->getDim(), state.getRep()->getDim()),
+  forwardNoiseMatrix_(state.getRep()->getDim()),
+  backwardNoiseMatrix_(state.getRep()->getDim()),
+  forwardDeltaState_(state.getRep()->getDim()),
+  backwardDeltaState_(state.getRep()->getDim())
 {
   ;
 }
@@ -107,10 +75,12 @@ void ReferenceStateOnPlane::Print(Option_t* option) const {
   std::cout << " forwardSegmentLength: " << forwardSegmentLength_ << "\n";
   std::cout << " forwardTransportMatrix: "; forwardTransportMatrix_.Print();
   std::cout << " forwardNoiseMatrix: "; forwardNoiseMatrix_.Print();
+  std::cout << " forwardDeltaState: "; forwardDeltaState_.Print();
 
   std::cout << " backwardSegmentLength_: " << backwardSegmentLength_ << "\n";
   std::cout << " backwardTransportMatrix: "; backwardTransportMatrix_.Print();
   std::cout << " backwardNoiseMatrix: "; backwardNoiseMatrix_.Print();
+  std::cout << " backwardDeltaState: "; backwardDeltaState_.Print();
 
 }
 

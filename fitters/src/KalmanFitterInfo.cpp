@@ -318,7 +318,7 @@ void KalmanFitterInfo::setRep(const AbsTrackRep* rep) {
 void KalmanFitterInfo::setWeights(const std::vector<double>& weights) {
 
   if (weights.size() != getNumMeasurements()) {
-    Exception e("KalmanFitterInfo::setWeights: weights do nat have the same size as measurementsOnPlane", __LINE__,__FILE__);
+    Exception e("KalmanFitterInfo::setWeights: weights do not have the same size as measurementsOnPlane", __LINE__,__FILE__);
     throw e;
   }
 

@@ -44,6 +44,8 @@ RKTrackRep::RKTrackRep() :
   lastStartState_(this),
   RKStepsFXStart_(0),
   RKStepsFXStop_(0),
+  fJacobian_(5,5),
+  fNoise_(5),
   useCache_(false)
 {
   initArrays();
@@ -55,6 +57,8 @@ RKTrackRep::RKTrackRep(int pdgCode, char propDir) :
   lastStartState_(this),
   RKStepsFXStart_(0),
   RKStepsFXStop_(0),
+  fJacobian_(5,5),
+  fNoise_(5),
   useCache_(false)
 {
   initArrays();
@@ -100,6 +104,8 @@ std::cout << "RKTrackRep::extrapolateToPlane()\n";
 
   // back to 5D
   getState5(state, state7);
+
+  lastEndState_ = *state;
 
   return coveredDistance;
 }
@@ -183,6 +189,8 @@ std::cout << "RKTrackRep::extrapolateToLine()\n";
   std::cout << "RKTrackRep::extrapolateToLine(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (poca_onwire-poca).Mag() << " cm. Angle deviation: " << dir.Angle((poca_onwire-poca))-TMath::PiOver2() << " rad \n";
 #endif
 
+  lastEndState_ = *state;
+
   return tracklength;
 }
 
@@ -263,6 +271,8 @@ std::cout << "RKTrackRep::extrapolateToPoint()\n";
 #ifdef DEBUG
   std::cout << "RKTrackRep::extrapolateToPoint(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (point-poca).Mag() << " cm. Angle deviation: " << dir.Angle((point-poca))-TMath::PiOver2() << " rad \n";
 #endif
+
+  lastEndState_ = *state;
 
   return tracklength;
 }
@@ -369,6 +379,8 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane* state,
     getState5(state, state7);
   }
 
+  lastEndState_ = *state;
+
   return tracklength;
 }
 
@@ -380,6 +392,9 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane* state,
 
   // TODO: implement
   checkCache(state);
+
+  lastEndState_ = *state;
+
   return 0;
 }
 
@@ -441,33 +456,28 @@ double RKTrackRep::getSpu(const StateOnPlane* state) const
 }
 
 
-void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const {
-
-  // TODO: check accuracy and compare with getBackwardJacobianAndNoise()
+void RKTrackRep::calcForwardJacobianAndNoise() const {
 
 #ifdef DEBUG
-  std::cout << "RKTrackRep::getForwardJacobianAndNoise " << std::endl;
+  std::cout << "RKTrackRep::calcForwardJacobianAndNoise " << std::endl;
 #endif
 
   if (ExtrapSteps_.size() == 0) {
-    Exception exc("RKTrackRep::getForwardJacobianAndNoise ==> cache is empty. Extrapolation must run with a MeasuredStateOnPlane.",__LINE__,__FILE__);
+    Exception exc("RKTrackRep::calcForwardJacobianAndNoise ==> cache is empty. Extrapolation must run with a MeasuredStateOnPlane.",__LINE__,__FILE__);
     throw exc;
   }
 
-  jacobian.ResizeTo(5,5);
-  jacobian.SetMatrixArray(ExtrapSteps_.back().jac_);
-
-  noise.ResizeTo(5,5);
-  noise.SetMatrixArray(ExtrapSteps_.back().noise_);
+  fJacobian_.SetMatrixArray(ExtrapSteps_.back().jac_);
+  fNoise_.SetMatrixArray(ExtrapSteps_.back().noise_);
 
 #ifdef DEBUG
-  std::cout << "jacobian " << ExtrapSteps_.size()-1 << " "; jacobian.Print();
-  std::cout << "noise " << ExtrapSteps_.size()-1 << " "; noise.Print();
+  std::cout << "jacobian " << ExtrapSteps_.size()-1 << " "; fJacobian_.Print();
+  std::cout << "noise " << ExtrapSteps_.size()-1 << " "; fNoise_.Print();
 #endif
 
   for (unsigned int i=ExtrapSteps_.size()-2; i!=std::numeric_limits<unsigned int>::max(); --i) {
-    noise += TMatrixDSym(5, ExtrapSteps_[i].noise_).Similarity(jacobian);
-    jacobian *= TMatrixD(5,5, ExtrapSteps_[i].jac_);
+    fNoise_ += TMatrixDSym(5, ExtrapSteps_[i].noise_).Similarity(fJacobian_);
+    fJacobian_ *= TMatrixD(5,5, ExtrapSteps_[i].jac_);
 
 #ifdef DEBUG
   std::cout << "jacobian " << i << " "; TMatrixD(5,5, ExtrapSteps_[i].jac_).Print();
@@ -481,14 +491,32 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
   }
 
 #ifdef DEBUG
-  std::cout << "total jacobian : "; jacobian.Print();
-  std::cout << "total noise : "; noise.Print();
+  std::cout << "total jacobian : "; fJacobian_.Print();
+  std::cout << "total noise : "; fNoise_.Print();
 #endif
 
 }
 
 
-void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const {
+void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const {
+
+  jacobian.ResizeTo(5,5);
+  jacobian = fJacobian_;
+
+  noise.ResizeTo(5,5);
+  noise = fNoise_;
+
+  // lastEndState_ = jacobian * lastStartState_  + deltaState
+  deltaState.ResizeTo(5);
+  deltaState = lastEndState_.getState() - jacobian * lastStartState_.getState();
+
+#ifdef DEBUG
+  std::cout << "delta state : "; deltaState.Print();
+#endif
+}
+
+
+void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const {
 
 #ifdef DEBUG
   std::cout << "RKTrackRep::getBackwardJacobianAndNoise " << std::endl;
@@ -549,6 +577,13 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
   std::cout << "total noise : "; noise.Print();
 #endif
 
+  // lastStartState_ = jacobian * lastEndState_  + deltaState
+  deltaState.ResizeTo(5);
+  deltaState = lastStartState_.getState() - jacobian * lastEndState_.getState();
+
+#ifdef DEBUG
+  std::cout << "delta state : "; deltaState.Print();
+#endif
 }
 
 
@@ -1925,15 +1960,10 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
   if (fillExtrapSteps) {
     // propagate cov and add noise
-    TMatrixD jac;
-    TMatrixDSym noise;
+    calcForwardJacobianAndNoise();
 
-    getForwardJacobianAndNoise(jac, noise);
-
-    //cov->Print();
-
-    cov->Similarity(jac);
-    *cov += noise;
+    cov->Similarity(fJacobian_);
+    *cov += fNoise_;
 
 #ifdef DEBUG
     std::cout << "final covariance matrix after Extrap: "; cov->Print();

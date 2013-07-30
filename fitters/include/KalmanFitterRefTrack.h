@@ -32,8 +32,8 @@ class KalmanFitterInfo;
 class KalmanFitterRefTrack : public AbsKalmanFitter {
  public:
   KalmanFitterRefTrack(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
-    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), deltaChi2Ref_(1) {}
-  ~KalmanFitterRefTrack() {}
+    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), refitAll_(false), deltaChi2Ref_(1) {}
+  ~KalmanFitterRefTrack() {cleanSOPsToDestruct();}
 
   /**
    * Needs a prepared track!
@@ -48,6 +48,9 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
    */
   bool prepareTrack(Track* tr, const AbsTrackRep* rep, bool setSortingParams = false);
 
+
+  void setRefitAll(bool refit = true) {refitAll_ = refit;}
+
   /**
    * When will the reference track be updated?
    * If (smoothedState - referenceState) * smoothedCov^(-1) * (smoothedState - referenceState)^T >= deltaChi2Ref_.
@@ -57,9 +60,24 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
  private:
   void processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, double& ndf, int direction);
 
+  /**
+   * Remove referenceStates if they are too far from smoothed states.
+   * Does NOT remove forward and backward info, but returns from/to where they have to be removed later
+   * Return if anything has changed.
+   */
+  bool removeOutdated(Track* tr, const AbsTrackRep* rep, int& notChangedUntil, int& notChangedFrom) const;
+
+  /**
+   * If refitAll_, remove all information.
+   */
+  void removeForwardBackwardInfo(Track* tr, const AbsTrackRep* rep, int notChangedUntil, int notChangedFrom) const;
+
+  void cleanSOPsToDestruct();
+
+  bool refitAll_; // always refit all points or only if reference states have changed
   double deltaChi2Ref_; // reference track update cut
 
-  std::vector<MeasuredStateOnPlane*> MOPsToDestruct_; //! helper for lifetime management
+  std::vector<const StateOnPlane*> SOPsToDestruct_; //! ownership, "garbage collector" helper
 
  public:
   ClassDef(KalmanFitterRefTrack, 1)

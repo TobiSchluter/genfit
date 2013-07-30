@@ -31,6 +31,7 @@
 #include "Tools.h"
 
 #include <Math/ProbFunc.h>
+#include <algorithm>
 
 
 //#define DEBUG
@@ -38,7 +39,9 @@
 using namespace genfit;
 
 
-void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction)
+void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
+    double& chi2, double& ndf,
+    int direction)
 {
 
   if (multipleMeasurementHandling_ == unweightedClosestToReference) {
@@ -48,7 +51,8 @@ void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, dou
   }
 
   chi2 = 0;
-  ndf = 0;
+  ndf = -1. * rep->getDim();
+
 #ifdef DEBUG
   std::cout << tr->getNumPoints() << " TrackPoints in this track." << std::endl;
 #endif
@@ -70,6 +74,9 @@ void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, dou
     else
       fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep));
 
+    #ifdef DEBUG
+    std::cout << " process TrackPoint nr. " << i << "\n";
+    #endif
     processTrackPoint(tr, tp, fi, rep, chi2, ndf, direction);
 
   }
@@ -107,8 +114,6 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHi
       currentState_->Print();
       std::cout << "\033[0mfitting" << std::endl;
       #endif
-      chi2FW = 0;
-      ndfFW = 0;
       fitTrack(tr, rep, chi2FW, ndfFW, +1);
       #ifdef DEBUG
       std::cout << "\033[1;21mstate post forward" << std::endl;
@@ -118,8 +123,6 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHi
 
       // Backwards iteration:
       currentState_->blowUpCov(blowUpFactor_);  // blow up cov
-      chi2BW = 0;
-      ndfBW = 0;
       fitTrack(tr, rep, chi2BW, ndfBW, -1);
       #ifdef DEBUG
       std::cout << "\033[1;21mstate post backward" << std::endl;
@@ -173,8 +176,8 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHi
   status->setNumIterations(nIt);
   status->setForwardChiSqu(chi2FW);
   status->setBackwardChiSqu(chi2BW);
-  status->setForwardNdf(ndfFW);
-  status->setBackwardNdf(ndfBW);
+  status->setForwardNdf(std::max(0., ndfFW));
+  status->setBackwardNdf(std::max(0., ndfBW));
 }
 
 

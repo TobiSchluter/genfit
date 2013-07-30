@@ -45,6 +45,7 @@ DAF::DAF()
   kalman_.reset(new KalmanFitterRefTrack());
   kalman_->setMultipleMeasurementHandling(weightedAverage);
   kalman_->setMaxIterations(1);
+  static_cast<KalmanFitterRefTrack*>(kalman_.get())->setRefitAll();
 
   setAnnealingScheme(100, 0.1, 5);
   setProbCut(0.01);
@@ -56,6 +57,10 @@ DAF::DAF(AbsKalmanFitter* kalman)
   kalman_.reset(kalman);
   kalman_->setMaxIterations(1);
 
+  if (dynamic_cast<KalmanFitterRefTrack*>(kalman_.get()) != NULL) {
+    static_cast<KalmanFitterRefTrack*>(kalman_.get())->setRefitAll();
+  }
+
   setAnnealingScheme(100, 0.1, 5);
   setProbCut(0.01);
 }
@@ -64,7 +69,7 @@ DAF::DAF(AbsKalmanFitter* kalman)
 void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
 
 #ifdef DEBUG
-  std::cout<<"DAF::processTrack \n";
+  std::cout<<"DAF::processTrack //////////////////////////////////////////////////////////////// \n";
 #endif
 
   weights_.clear();
@@ -77,13 +82,16 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
   for(; iBeta != c_maxIter; ++iBeta) { // loop over. If no convergence is reached after 10 iterations just stop.
 
 #ifdef DEBUG
-      std::cout<<"DAF::processTrack, trackRep  " << rep << ", beta = " << betas_[iBeta] << "\n";
+      std::cout<<"DAF::processTrack, trackRep  " << rep << ", iteration " << iBeta << ", beta = " << betas_[iBeta] << "\n";
 #endif
 
     kalman_->processTrack(tr, resortHits);
 
     status = static_cast<KalmanFitStatus*>(tr->getFitStatus(rep));
     status->setIsFittedWithDaf();
+
+
+    // check break conditions
 
     if (! status->isFitted()){
       #ifdef DEBUG
@@ -93,12 +101,30 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
       break;
     }
 
-    if (iBeta > 0)
-      oldWeights = weights_.at(rep);
+    if( oneLastIter == true){
+      #ifdef DEBUG
+      std::cout << "DAF::break after one last iteration\n";
+      #endif
+      status->setIsFitConverged();
+      break;
+    }
+
+    if(iBeta == maxIterations_-1 ){
+      status->setIsFitConverged(false);
+      #ifdef DEBUG
+      std::cout << "DAF::number of max iterations reached!\n";
+      #endif
+      break;
+    }
+
+
+    // get and update weights
     getWeights(tr, rep);
+    if (iBeta > 0)
+      oldWeights = weights_;
 
     try{
-      weights_.at(rep) = calcWeights(tr, rep, betas_[iBeta]);
+      weights_ = calcWeights(tr, rep, betas_[iBeta]);
     } catch(Exception& e) {
       std::cerr<<e.what();
       e.info();
@@ -108,30 +134,18 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
       status->setIsFitConverged(false);
       break;
     }
-    if( oneLastIter == true){
-      #ifdef DEBUG
-      std::cout << "DAF::break after one last iteration\n";
-      #endif
-      status->setIsFitConverged();
-      break;
-    }
+
+    // check if converged
     if (iBeta > 0) {
       if ( isConvergent(oldWeights, rep) ){
         #ifdef DEBUG
-        std::cout << "DAF::convergence reached in iteration " << iBeta << "\n";
+        std::cout << "DAF::convergence reached in iteration " << iBeta << " -> Do one last iteration with updated weights.\n";
         #endif
         oneLastIter = true;
         status->setIsFitConverged();
       }
     }
 
-      if(iBeta == maxIterations_-1 ){
-        status->setIsFitConverged(false);
-        #ifdef DEBUG
-        std::cout << "DAF::number of max iterations reached!\n";
-        #endif
-        break;
-      }
   } // end loop over betas
 
   status->setNumIterations(iBeta+1);
@@ -219,13 +233,17 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) 
 
 bool DAF::isConvergent(const std::vector<std::vector<double> >& oldWeights, const AbsTrackRep* rep) const {
   const int n = oldWeights.size();
-  const std::vector<std::vector<double> >& newWeights = weights_.at(rep);
-  assert(n == int(newWeights.size()));
+  assert(n == int(weights_.size()));
   for( int i = 0; i != n; ++i){
     const int m = oldWeights[i].size();
-    assert(m == int(newWeights[i].size()));
+    if (m != int(weights_[i].size())) {
+      std::cout << "m = " << m << ", newWeights[i].size() = " << weights_[i].size() << std::endl;
+      printWeights(oldWeights);
+      printWeights(weights_);
+      assert(m == int(weights_[i].size()));
+    }
     for( int j = 0; j != m; ++j){
-      if( fabs(oldWeights[i][j] - newWeights[i][j]) > deltaWeight_ ){
+      if( fabs(oldWeights[i][j] - weights_[i][j]) > deltaWeight_ ){
         return false;
       }
     }
@@ -237,8 +255,10 @@ bool DAF::isConvergent(const std::vector<std::vector<double> >& oldWeights, cons
 void DAF::getWeights(const Track* tr, const AbsTrackRep* rep) {
 
 #ifdef DEBUG
-      std::cout<<"DAF::getWeights \n";
+  std::cout<<"DAF::getWeights \n";
 #endif
+
+  weights_.clear();
 
   std::vector< TrackPoint* > trackPoints = tr->getPointsWithMeasurement();
   for (std::vector< TrackPoint* >::iterator tp = trackPoints.begin(); tp != trackPoints.end(); ++tp) {
@@ -251,25 +271,16 @@ void DAF::getWeights(const Track* tr, const AbsTrackRep* rep) {
     unsigned int nMeas = kfi->getNumMeasurements();
     std::vector<double> weights;
     weights.reserve(nMeas);
-#ifdef DEBUG
-      std::cout<<"(";
-#endif
     for (unsigned int i=0; i<nMeas; ++i) {
       weights.push_back(kfi->getMeasurementOnPlane(i)->getWeight());
-#ifdef DEBUG
-      std::cout<<kfi->getMeasurementOnPlane(i)->getWeight();
-      if (i<nMeas-1)
-        std::cout<<", ";
-#endif
     }
-#ifdef DEBUG
-      std::cout<<") ";
-#endif
-    weights_[rep].push_back(weights);
+    weights_.push_back(weights);
   }
+
 #ifdef DEBUG
-      std::cout<<"\n";
+  printWeights(weights_);
 #endif
+
 }
 
 
@@ -358,35 +369,37 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
 
     }
 
-#ifdef DEBUG
-      std::cout<<"(";
-#endif
     for(unsigned int j=0; j<nMeas; j++) {
       double weight = phi[j]/(phi_sum+phi_cut);
       weights.push_back(weight);
       kfi->getMeasurementOnPlane(j)->setWeight(weight);
-#ifdef DEBUG
-      std::cout<<weight;
-      if (j<nMeas-1)
-        std::cout<<", ";
-#endif
     }
-#ifdef DEBUG
-      std::cout<<") ";
-#endif
 
     ret_val.push_back(weights);
-
-
   }
-#ifdef DEBUG
-      std::cout<<"\n";
-#endif
 
+#ifdef DEBUG
+  printWeights(ret_val);
+#endif
 
   return ret_val;
 
 }
+
+
+void DAF::printWeights(const std::vector<std::vector<double> >& weights) const {
+  for (unsigned int i=0; i< weights.size(); ++i){
+    std::cout << "(";
+      for (unsigned int j=0; j<weights[i].size(); ++j) {
+        if (j > 0)
+          std::cout << ", ";
+        std::cout << weights[i][j];
+      }
+    std::cout << ") ";
+  }
+  std::cout << "\n";
+}
+
 
 // Customized from generated Streamer.
 void DAF::Streamer(TBuffer &R__b)

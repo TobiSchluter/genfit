@@ -42,22 +42,6 @@ class ReferenceStateOnPlane : public StateOnPlane {
       SharedPlanePtr plane,
       AbsTrackRep* rep);
   ReferenceStateOnPlane(const StateOnPlane& state);
-  ReferenceStateOnPlane(const TVectorD& state,
-      SharedPlanePtr plane,
-      AbsTrackRep* rep,
-      double forwardSegmentLength,
-      double backwardSegmentLength,
-      const TMatrixD& forwardTransportMatrix,
-      const TMatrixD& backwardTransportMatrix,
-      const TMatrixDSym& forwardNoiseMatrix,
-      const TMatrixDSym& backwardNoiseMatrix);
-  ReferenceStateOnPlane(const StateOnPlane& state,
-      double forwardSegmentLength,
-      double backwardSegmentLength,
-      const TMatrixD& forwardTransportMatrix,
-      const TMatrixD& backwardTransportMatrix,
-      const TMatrixDSym& forwardNoiseMatrix,
-      const TMatrixDSym& backwardNoiseMatrix);
 
   void setForwardSegmentLength(double len) {forwardSegmentLength_ = len;}
   void setBackwardSegmentLength(double len) {backwardSegmentLength_ = len;}
@@ -67,6 +51,10 @@ class ReferenceStateOnPlane : public StateOnPlane {
   void setForwardNoiseMatrix(const TMatrixDSym& mat) {forwardNoiseMatrix_.ResizeTo(mat); forwardNoiseMatrix_=mat;}
   void setBackwardNoiseMatrix(const TMatrixDSym& mat) {backwardNoiseMatrix_.ResizeTo(mat); backwardNoiseMatrix_=mat;}
   void setNoiseMatrix(const TMatrixDSym& mat, int direction) {if (direction >= 0) setForwardNoiseMatrix(mat); else setBackwardNoiseMatrix(mat);}
+  void setForwardDeltaState(const TVectorD& mat) {forwardDeltaState_.ResizeTo(mat); forwardDeltaState_=mat;}
+  void setBackwardDeltaState(const TVectorD& mat) {backwardDeltaState_.ResizeTo(mat); backwardDeltaState_=mat;}
+  void setDeltaState(const TVectorD& mat, int direction) {if (direction >= 0) setForwardDeltaState(mat); else setBackwardDeltaState(mat);}
+
 
   double getForwardSegmentLength() const {return forwardSegmentLength_;}
   double getBackwardSegmentLength() const {return backwardSegmentLength_;}
@@ -76,17 +64,27 @@ class ReferenceStateOnPlane : public StateOnPlane {
   const TMatrixDSym& getForwardNoiseMatrix() const {return forwardNoiseMatrix_;}
   const TMatrixDSym& getBackwardNoiseMatrix() const {return backwardNoiseMatrix_;}
   const TMatrixDSym& getNoiseMatrix(int direction) const {if (direction >= 0) return forwardNoiseMatrix_; return backwardNoiseMatrix_;}
+  const TVectorD& getForwardDeltaState() const {return forwardDeltaState_;}
+  const TVectorD& getBackwardDeltaState() const {return backwardDeltaState_;}
+  const TVectorD& getDeltaState(int direction) const {if (direction >= 0) return forwardDeltaState_; return backwardDeltaState_;}
 
   virtual void Print(Option_t* option = "") const;
 
  protected:
 
+  /**
+   * p = F * p_old + c
+   * C = F * C_old * F^T + N
+   */
+
   double forwardSegmentLength_; // Segment length from previous referenceState
   double backwardSegmentLength_; //  Segment length from next referenceState
-  TMatrixD forwardTransportMatrix_; // transport matrix from previous referenceState
-  TMatrixD backwardTransportMatrix_; // transport matrix from next referenceState
-  TMatrixDSym forwardNoiseMatrix_; // noise matrix for transport from previous referenceState
-  TMatrixDSym backwardNoiseMatrix_; // noise matrix for transport from next referenceState
+  TMatrixD forwardTransportMatrix_; // transport matrix F from previous referenceState
+  TMatrixD backwardTransportMatrix_; // transport matrix F from next referenceState
+  TMatrixDSym forwardNoiseMatrix_; // noise matrix N for transport from previous referenceState
+  TMatrixDSym backwardNoiseMatrix_; // noise matrix N for transport from next referenceState
+  TVectorD forwardDeltaState_; // c
+  TVectorD backwardDeltaState_; // c
 
 
   ClassDef(ReferenceStateOnPlane,0)

@@ -110,10 +110,10 @@ class RKTrackRep : public AbsTrackRep {
   double getSpu(const StateOnPlane* state) const;
 
   /** Get the jacobian and noise matrix of the last extrapolation  */
-  virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const;
+  virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const;
 
   /** Get the jacobian and noise matrix of the last extrapolation if it would have been done in opposite direction  */
-  virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise) const;
+  virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const;
 
 
   virtual void setPosMom(StateOnPlane* state, const TVector3& pos, const TVector3& mom) const;
@@ -162,6 +162,8 @@ class RKTrackRep : public AbsTrackRep {
                     MeasuredStateOnPlane* state) const; // plane must already be set!
 
   void calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const;
+
+  void calcForwardJacobianAndNoise() const;
 
   void transformM6P(const M6x6& in6x6,
                     const M1x7& state7,
@@ -224,10 +226,14 @@ class RKTrackRep : public AbsTrackRep {
 
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
+  mutable StateOnPlane lastEndState_; //! state where the last extrapolation has ended
   mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
   mutable int RKStepsFXStart_; //!
   mutable int RKStepsFXStop_; //!
   mutable std::vector<ExtrapStep> ExtrapSteps_; //! steps made in Extrap during last extrapolation
+
+  mutable TMatrixD fJacobian_; //!
+  mutable TMatrixDSym fNoise_; //!
 
   mutable bool useCache_; //! use cached RKSteps_ for extrapolation
 

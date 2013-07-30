@@ -104,8 +104,10 @@ class DAF : public AbsKalmanFitter {
     */
   std::vector<std::vector<double> > calcWeights(Track* trk, const AbsTrackRep* rep, double beta);
 
+  void printWeights(const std::vector<std::vector<double> >& weights) const;
+
   double deltaWeight_; // convergence criterium
-  std::map<const AbsTrackRep*, std::vector<std::vector<double> > > weights_;  //! not written/read by Streamer
+  std::vector<std::vector<double> > weights_;  //! not written/read by Streamer
   std::vector<double> betas_;
   std::map<int,double>  chi2Cuts_;
 #ifndef __CINT__

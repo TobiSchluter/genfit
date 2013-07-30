@@ -25,6 +25,7 @@
 #define genfit_KalmanFitStatus_h
 
 #include "FitStatus.h"
+#include <Math/ProbFunc.h>
 
 namespace genfit {
 
@@ -47,6 +48,8 @@ class KalmanFitStatus : public FitStatus {
   double getBackwardChiSqu() const {return bChi2_;}
   double getForwardNdf() const {return fNdf_;}
   double getBackwardNdf() const {return bNdf_;}
+  double getForwardPVal() const {return ROOT::Math::chisquared_cdf_c(fChi2_, fNdf_);}
+  double getBackwardPVal() const {return ROOT::Math::chisquared_cdf_c(bChi2_, bNdf_);}
 
   void setNumIterations(unsigned int numIterations) {numIterations_ = numIterations;}
   void setIsFittedWithDaf(bool fittedWithDaf = true) {fittedWithDaf_ = fittedWithDaf;}
