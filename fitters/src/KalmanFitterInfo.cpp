@@ -184,9 +184,6 @@ SharedPlanePtr KalmanFitterInfo::getPlane() const {
 
 
 MeasuredStateOnPlane* KalmanFitterInfo::getFittedState(bool biased) const {
-  // TODO: Test
-
-
   if (biased) {
     if (fittedStateBiased_.get() != NULL)
       return fittedStateBiased_.get();

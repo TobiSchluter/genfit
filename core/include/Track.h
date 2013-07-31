@@ -69,7 +69,7 @@ class Track : public TObject {
 
   bool hasFitStatus(const AbsTrackRep* rep) const {if (fitStatuses_.find(rep) == fitStatuses_.end()) return false; return (fitStatuses_.at(rep) != NULL);}
   FitStatus* getFitStatus(const AbsTrackRep* rep) const {return fitStatuses_.at(rep);}
-  void setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep) {fitStatuses_[rep] = fitStatus;} // FIXME memory leak
+  void setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep);
 
   const TVectorD& getStateSeed() const {return stateSeed_;}
   void setStateSeed(const TVectorD& s) {stateSeed_.ResizeTo(s); stateSeed_ = s;}

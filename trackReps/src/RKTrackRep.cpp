@@ -178,7 +178,7 @@ std::cout << "RKTrackRep::extrapolateToLine()\n";
   }
 
   if (dynamic_cast<MeasuredStateOnPlane*>(state) != NULL) { // now do the full extrapolation with covariance matrix
-    tracklength = extrapolateToPlane(state, plane); // FIXME state is not the original state anymore!
+    tracklength = extrapolateToPlane(state, plane);
   }
   else {
     state->setPlane(plane);
@@ -260,7 +260,7 @@ std::cout << "RKTrackRep::extrapolateToPoint()\n";
   }
 
   if (dynamic_cast<MeasuredStateOnPlane*>(state) != NULL) { // now do the full extrapolation with covariance matrix
-    tracklength = extrapolateToPlane(state, plane); // FIXME state is not the original state anymore!
+    tracklength = extrapolateToPlane(state, plane);
   }
   else {
     state->setPlane(plane);
@@ -372,7 +372,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane* state,
   }
 
   if (dynamic_cast<MeasuredStateOnPlane*>(state) != NULL) { // now do the full extrapolation with covariance matrix
-    tracklength = extrapolateToPlane(state, plane); // FIXME state is not the original state anymore!
+    tracklength = extrapolateToPlane(state, plane);
   }
   else {
     state->setPlane(plane);
@@ -1828,13 +1828,17 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     StepLimits limits;
     limits.setLimit(stp_sMaxArg, maxStep);
 
-    if( ! RKutta(SU, destPlane, charge, state7, &J_MMT_, coveredDistance, checkJacProj, noiseProjection, limits, onlyOneStep, !fillExtrapSteps) ) {
+    if( ! RKutta(SU, destPlane, charge, state7, &J_MMT_,
+        coveredDistance, checkJacProj, noiseProjection,
+        limits, onlyOneStep, !fillExtrapSteps) ) {
       Exception exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
     }
 
     bool atPlane(limits.getLowestLimit().first == stp_plane);
+    if (limits.getLowestLimit().first == stp_boundary)
+      isAtBoundary = true;
 
 
 #ifdef DEBUG
@@ -1888,7 +1892,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       ExtrapStep extrapStep;
 
       // calc J_pM
-      if (atPlane) { //FIXME also calculate jacobians correctly if onlyOneStep or stopAtBoundary
+      if (atPlane) {
         if (!checkJacProj) {
           Exception exc("RKTrackRep::Extrap ==> checkJacProj is false",__LINE__,__FILE__);
           exc.setFatal();
@@ -1927,14 +1931,11 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
 
     // check if at boundary
-    if (limits.getLowestLimit().first == stp_boundary) {
-      isAtBoundary = true;
-      if (stopAtBoundary) {
-        #ifdef DEBUG
-        std::cout << "stopAtBoundary -> break; \n ";
-        #endif
-        break;
-      }
+    if (stopAtBoundary) {
+      #ifdef DEBUG
+      std::cout << "stopAtBoundary -> break; \n ";
+      #endif
+      break;
     }
 
     if (onlyOneStep) {
@@ -1944,7 +1945,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       break;
     }
 
-    //break we arrived at destPlane
+    //break if we arrived at destPlane
     if(atPlane) {
       #ifdef DEBUG
         std::cout << "arrived at destPlane with a distance of  " << destPlane.distance(state7[0], state7[1], state7[2]) << " cm left. ";

@@ -197,12 +197,19 @@ int Track::getIdForRep(const AbsTrackRep* rep) const
 }
 
 
+void setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep) {
+  if (fitStatuses_.find(rep) != fitStatuses_.end())
+    delete fitStatuses_.at(rep);
+
+  fitStatuses_[rep] = fitStatus;
+}
+
+
 void Track::insertPoint(TrackPoint* point, int id) {
 
   #ifdef DEBUG
   std::cout << "Track::insertPoint at position " << id  << "\n";
   #endif
-  // TODO: test
   assert(point!=NULL);
   trackHasChanged();
 
@@ -323,7 +330,6 @@ void Track::setCardinalRep(int id) {
 
 
 bool Track::sort() {
-  // TODO: test
   #ifdef DEBUG
   std::cout << "Track::sort \n";
   #endif
@@ -371,7 +377,6 @@ bool Track::sort() {
 
 
 void Track::deleteForwardInfo(int startId, int endId, const AbsTrackRep* rep) {
-  // TODO: test
   #ifdef DEBUG
   std::cout << "Track::deleteForwardInfo from position " << startId  << " to " << endId << "\n";
   #endif
