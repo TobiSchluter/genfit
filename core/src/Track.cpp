@@ -197,7 +197,7 @@ int Track::getIdForRep(const AbsTrackRep* rep) const
 }
 
 
-void setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep) {
+void Track::setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep) {
   if (fitStatuses_.find(rep) != fitStatuses_.end())
     delete fitStatuses_.at(rep);
 
@@ -511,51 +511,51 @@ void Track::Print(const Option_t* option) const {
       int color = 32*(size_t)(trackPoints_[i]) % 15;
       switch (color) {
         case 0:
-          std::cout<<"\e[1;30m";
+          std::cout<<"\033[1;30m";
           break;
         case 1:
-          std::cout<<"\e[0;34m";
+          std::cout<<"\033[0;34m";
           break;
         case 2:
-          std::cout<<"\e[1;34m";
+          std::cout<<"\033[1;34m";
           break;
         case 3:
-          std::cout<<"\e[0;32m";
+          std::cout<<"\033[0;32m";
           break;
         case 4:
-          std::cout<<"\e[1;32m";
+          std::cout<<"\033[1;32m";
           break;
         case 5:
-          std::cout<<"\e[0;36m";
+          std::cout<<"\033[0;36m";
           break;
         case 6:
-          std::cout<<"\e[1;36m";
+          std::cout<<"\033[1;36m";
           break;
         case 7:
-          std::cout<<"\e[0;31m";
+          std::cout<<"\033[0;31m";
           break;
         case 8:
-          std::cout<<"\e[1;31m";
+          std::cout<<"\033[1;31m";
           break;
         case 9:
-          std::cout<<"\e[0;35m";
+          std::cout<<"\033[0;35m";
           break;
         case 10:
-          std::cout<<"\e[1;35m";
+          std::cout<<"\033[1;35m";
           break;
         case 11:
-          std::cout<<"\e[0;33m";
+          std::cout<<"\033[0;33m";
           break;
         case 12:
-          std::cout<<"\e[1;33m";
+          std::cout<<"\033[1;33m";
           break;
         case 13:
-          std::cout<<"\e[0;37m";
+          std::cout<<"\033[0;37m";
           break;
         default:
           ;
       }
-      std::cout << trackPoints_[i] << "\e[00m  ";
+      std::cout << trackPoints_[i] << "\033[00m  ";
     }
     std::cout << "\n";
 
