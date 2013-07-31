@@ -102,8 +102,20 @@ int randomSign() {
 }
 
 
-bool compareMatrices(TMatrixTBase<double>& A, TMatrixTBase<double>& B, double maxAbsErr, double maxRelErr) {
+bool compareMatrices(const TMatrixTBase<double>& A, const TMatrixTBase<double>& B, double maxRelErr) {
   bool retVal = true;
+
+  // search max abs value
+  double max(0);
+  for (int i=0; i<A.GetNrows(); ++i) {
+    for (int j=0; j<A.GetNcols(); ++j) {
+      if (fabs(A(i,j) > max))
+        max = fabs(A(i,j));
+    }
+  }
+
+  double maxAbsErr = maxRelErr*max;
+
   for (int i=0; i<A.GetNrows(); ++i) {
     for (int j=0; j<A.GetNcols(); ++j) {
       double absErr = A(i,j) - B(i,j);
@@ -284,10 +296,20 @@ bool compareForthBackExtrapolation() {
 
 bool compareForthBackJacNoise() {
 
-  double epsilonJac = 0.004; // absolute  // best reached: 5.E-5
-  double deltaJac = 0.11; // relative     // best reached: 0.01
-  double epsilonNoise = 2.E-3;
-  double deltaNoise = 0.02;
+  bool retVal(true);
+
+  bool fx( randomSign() > 0);
+  genfit::MaterialEffects::getInstance()->setNoEffects(!fx);
+
+  double deltaJac = 0.005; // relative
+  double deltaNoise = 0.00001;
+  double deltaState = 3.E-6; // absolute
+
+  if (fx) {
+    deltaJac = 0.1; // relative
+    deltaNoise = 0.1;
+    deltaState = 5.E-4; // absolute
+  }
 
   int pdg = randomPdg();
   genfit::AbsTrackRep* rep;
@@ -303,7 +325,8 @@ bool compareForthBackJacNoise() {
 
   TMatrixD jac_f, jac_fi, jac_b, jac_bi;
   TMatrixDSym noise_f, noise_fi, noise_b, noise_bi;
-
+  TVectorD c_f, c_fi, c_b, c_bi;
+  TVectorD state_man, stateOrig_man;
 
   // original state and plane
   genfit::MeasuredStateOnPlane state(rep);
@@ -346,24 +369,27 @@ bool compareForthBackJacNoise() {
   genfit::SharedPlanePtr plane(planePtr);
 */
 
-  // manual calculation
-  TMatrixD jac_f_man;
-  rep->calcJacobianNumerically(&origState, plane, jac_f_man);
+  // numerical calculation
+  TMatrixD jac_f_num;
+  rep->calcJacobianNumerically(&origState, plane, jac_f_num);
 
   double extrapLen(0);
 
   // forth
+  genfit::StateOnPlane extrapolatedState;
   try {
     //std::cout << "DO FORTH EXTRAPOLATION \n";
     extrapLen = rep->extrapolateToPlane(&state, plane);
     //std::cout << "GET INFO FOR FORTH EXTRAPOLATION \n";
-    rep->getForwardJacobianAndNoise(jac_f, noise_f);
-    rep->getBackwardJacobianAndNoise(jac_fi, noise_fi);
+    extrapolatedState = state;
+    rep->getForwardJacobianAndNoise(jac_f, noise_f, c_f);
+    rep->getBackwardJacobianAndNoise(jac_fi, noise_fi, c_fi);
   }
   catch (genfit::Exception& e) {
     std::cerr << e.what();
 
     delete rep;
+    genfit::MaterialEffects::getInstance()->setNoEffects(false);
     return false;
   }
 
@@ -372,60 +398,101 @@ bool compareForthBackJacNoise() {
     //std::cout << "DO BACK EXTRAPOLATION \n";
     rep->extrapolateToPlane(&state, origPlane);
     //std::cout << "GET INFO FOR BACK EXTRAPOLATION \n";
-    rep->getForwardJacobianAndNoise(jac_b, noise_b);
-    rep->getBackwardJacobianAndNoise(jac_bi, noise_bi);
+    rep->getForwardJacobianAndNoise(jac_b, noise_b, c_b);
+    rep->getBackwardJacobianAndNoise(jac_bi, noise_bi, c_bi);
   }
   catch (genfit::Exception& e) {
     std::cerr << e.what();
 
     delete rep;
+    genfit::MaterialEffects::getInstance()->setNoEffects(false);
     return false;
   }
 
 
   // compare
-  if (!isCovMatrix(state.getCov()) ||
-      !compareMatrices(jac_f, jac_f_man, 2*epsilonJac, 2*deltaJac) ||
-      !compareMatrices(jac_f, jac_bi, epsilonJac, deltaJac) ||
-      !compareMatrices(jac_b, jac_fi, epsilonJac, deltaJac) ||
-      !compareMatrices(noise_f, noise_bi, epsilonNoise, deltaNoise) ||
-      !compareMatrices(noise_b, noise_fi, epsilonNoise, deltaNoise)) {
+  if (!((origState.getState() - state.getState()).Abs()  < deltaState) ) {
+    std::cout << "(origState.getState() - state.getState()) ";
+    (origState.getState() - state.getState()).Print();
 
-    double rotAngleDeg = rotAngle / TMath::Pi() * 180;
-    if (rotAngleDeg > 180) rotAngleDeg -= 360;
-    std::cout << "rotAngle = " << rotAngleDeg << " ° \n";
-    std::cout << "extrapLen = " << extrapLen << " cm \n";
+    retVal = false;
+  }
 
-    origState.Print();
-    state.Print();
+  // check c
+  if (!((jac_f * origState.getState() + c_f  -  extrapolatedState.getState()).Abs() < deltaState) ||
+      !((jac_bi * origState.getState() + c_bi  -  extrapolatedState.getState()).Abs() < deltaState) ||
+      !((jac_b * extrapolatedState.getState() + c_b  -  origState.getState()).Abs() < deltaState) ||
+      !((jac_fi * extrapolatedState.getState() + c_fi  -  origState.getState()).Abs() < deltaState)   ) {
 
-    std::cout << "origPlane "; origPlane->Print();
-    std::cout << "plane "; plane->Print();
+    std::cout << "(jac_f * origState.getState() + c_f  -  extrapolatedState.getState()) ";
+    (jac_f * origState.getState() + c_f  -  extrapolatedState.getState()).Print();
+    std::cout << "(jac_bi * origState.getState() + c_bi  -  extrapolatedState.getState()) ";
+    (jac_bi * origState.getState() + c_bi  -  extrapolatedState.getState()).Print();
+    std::cout << "(jac_b * extrapolatedState.getState() + c_b  -  origState.getState()) ";
+    (jac_b * extrapolatedState.getState() + c_b  -  origState.getState()).Print();
+    std::cout << "(jac_fi * extrapolatedState.getState() + c_fi  -  origState.getState()) ";
+    (jac_fi * extrapolatedState.getState() + c_fi  -  origState.getState()).Print();
 
-    std::cout << "jac_f_man = "; jac_f_man.Print();
+    retVal = false;
+  }
+
+  if (!isCovMatrix(state.getCov())) {
+    retVal = false;
+  }
+
+
+  // compare
+  if (!compareMatrices(jac_f, jac_bi, deltaJac)) {
     std::cout << "jac_f = "; jac_f.Print();
     std::cout << "jac_bi = "; jac_bi.Print();
-    std::cout << "jac_b = "; jac_b.Print();
-    std::cout << "jac_fi = "; jac_fi.Print();
-
-    std::cout << "noise_f = "; noise_f.Print();
-    std::cout << "noise_bi = "; noise_bi.Print();
-    std::cout << "noise_b = "; noise_b.Print();
-    std::cout << "noise_fi = "; noise_fi.Print();
-
-    /*std::cout << "jac difference (jac_f - jac_bi) = "; (jac_f - jac_bi).Print();
-    std::cout << "jac difference (jac_b - jac_fi) = "; (jac_b - jac_fi).Print();
-    std::cout << "noise difference (noise_f - noise_bi) = "; (noise_f - noise_bi).Print();
-    std::cout << "noise difference (noise_b - noise_fi) = "; (noise_b - noise_fi).Print();*/
-
     std::cout << std::endl;
 
-    delete rep;
-    return false;
+    retVal = false;
+  }
+
+  // compare
+  if (!compareMatrices(jac_b, jac_fi, deltaJac)) {
+    std::cout << "jac_b = "; jac_b.Print();
+    std::cout << "jac_fi = "; jac_fi.Print();
+    std::cout << std::endl;
+
+    retVal = false;
+  }
+
+  // compare
+  if (!compareMatrices(noise_f, noise_bi, deltaNoise)) {
+    std::cout << "noise_f = "; noise_f.Print();
+    std::cout << "noise_bi = "; noise_bi.Print();
+    std::cout << std::endl;
+
+    retVal = false;
+  }
+
+  // compare
+  if (!compareMatrices(noise_b, noise_fi, deltaNoise)) {
+    std::cout << "noise_b = "; noise_b.Print();
+    std::cout << "noise_fi = "; noise_fi.Print();
+    std::cout << std::endl;
+
+    retVal = false;
+  }
+
+
+  if (!fx) {
+    // compare
+    if (!compareMatrices(jac_f, jac_f_num, deltaJac)) {
+      std::cout << "jac_f = "; jac_f.Print();
+      std::cout << "jac_f_num = "; jac_f_num.Print();
+      std::cout << std::endl;
+
+      retVal = false;
+    }
   }
 
   delete rep;
-  return true;
+  genfit::MaterialEffects::getInstance()->setNoEffects(false);
+
+  return retVal;
 }
 
 
@@ -739,15 +806,8 @@ int main() {
 
   TDatabasePDG::Instance()->GetParticle(211);
 
-  /*genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(false);
-  genfit::MaterialEffects::getInstance()->setNoiseBetheBloch(false);
-  genfit::MaterialEffects::getInstance()->setNoiseCoulomb(false);
-  genfit::MaterialEffects::getInstance()->setEnergyLossBrems(false);
-  genfit::MaterialEffects::getInstance()->setNoiseBrems(false);*/
-  //genfit::MaterialEffects::getInstance()->setNoEffects();
-  /*genfit::Track* testTrack = new genfit::Track();
 
-
+/*
   TString outname = "test.root";
   TFile *file = TFile::Open(outname,"RECREATE");
   TTree *tree = new TTree("t","Tracks");
