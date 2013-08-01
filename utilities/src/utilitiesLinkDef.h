@@ -26,5 +26,8 @@
 
 
 #pragma link C++ class genfit::HelixTrackModel+;
+#pragma link C++ class genfit::MeasurementCreator+;
+
 
 #endif
+

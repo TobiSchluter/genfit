@@ -181,6 +181,7 @@ SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp" "${libra
 
 SET(UTILITIES_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/HelixTrackModel.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/MeasurementCreator.h
 )
 ROOT_GENERATE_DICTIONARY("${UTILITIES_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/utilities/include"

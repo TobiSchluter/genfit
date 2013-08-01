@@ -53,6 +53,10 @@ namespace genfit {
 
 class HelixTrackModel : public TObject {
 
+  /**
+   * Helix track model for testing purposes
+   */
+
  public:
 
   // Constructors/Destructors ---------
