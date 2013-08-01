@@ -44,6 +44,8 @@
 
 #include <EventDisplay.h>
 
+#include <HelixTrackModel.h>
+
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TDatabasePDG.h>
@@ -140,9 +142,8 @@ int main() {
   const double theta = 100;         // degree
   const double thetaDetPlane = 90;         // degree
   const double phiDetPlane = 0;         // degree
-  const double pointDist = 5;      // cm; approx. distance between measurements generated w/ RKTrackRep
-  const double pointDistDeg = 5;      // degree; distance between measurements generated w/ helix model
-  const double resolution = 0.2;   // cm; resolution of generated measurements
+  const double pointDist = 5;      // cm; approx. distance between measurements
+  const double resolution = 0.02;   // cm; resolution of generated measurements
 
   const double resolutionWire = 5*resolution;   // cm; resolution of generated measurements
   const TVector3 wireDir(0,0,1);
@@ -283,9 +284,10 @@ int main() {
   gStyle->SetPalette(1);
   gStyle->SetOptFit(1111);
 
-  TH1D *hmomRes = new TH1D("hmomRes","mom res",500,-2*resolution*momentum,2*resolution*momentum);
-  TH1D *hupRes = new TH1D("hupRes","u' res",500,-5*resolution/measurementTypes.size(), 5*resolution/measurementTypes.size());
-  TH1D *hvpRes = new TH1D("hvpRes","v' res",500,-5*resolution/measurementTypes.size(), 5*resolution/measurementTypes.size());
+  double s = measurementTypes.size();
+  TH1D *hmomRes = new TH1D("hmomRes","mom res",500,-2*resolution*momentum/s,2*resolution*momentum/s);
+  TH1D *hupRes = new TH1D("hupRes","u' res",500,-5*resolution/s, 5*resolution/s);
+  TH1D *hvpRes = new TH1D("hvpRes","v' res",500,-5*resolution/s, 5*resolution/s);
   TH1D *huRes = new TH1D("huRes","u res",500,-5*resolution, 5*resolution);
   TH1D *hvRes = new TH1D("hvRes","v res",500,-5*resolution, 5*resolution);
 
@@ -317,17 +319,14 @@ int main() {
       mom.SetTheta(theta*TMath::Pi()/180);
       mom.SetMag(momentum);
 
+      if (debug) {
+        std::cout << "start values \n";
+        pos.Print();
+        mom.Print();
+      }
+
       // calc helix parameters
-      TVector3 dir2D(mom);
-      dir2D.SetZ(0);
-      dir2D.SetMag(1.);
-      double R = 100.*mom.Perp()/(0.0299792458*BField);
-      double sgn = 1;
-      if (charge<0) sgn=-1.;
-      TVector3 center = pos + sgn * R * dir2D.Orthogonal();
-      double alpha0 = (pos-center).Phi();
-
-
+      genfit::HelixTrackModel helix(pos, mom, charge);
 
       // smeared start values
       TVector3 posM(pos);
@@ -377,16 +376,12 @@ int main() {
             dir.SetMag(1);
           }
           else {
-            double angle = alpha0 - sgn * pointDistDeg/180.*TMath::Pi()*i;
-            TVector3 radius(R,0,0);
-            radius.SetPhi(angle);
-            point = center + radius;
-            point.SetZ(pos.Z() + ((alpha0-angle)*R * TMath::Tan(mom.Theta()-TMath::Pi()*0.5) ));
-            if (debug) {std::cout << "(true) track position"; point.Print();}
+            helix.getPosDir(i*pointDist, point, dir);
+            if (debug) {
+              std::cout << "true point"; point.Print();
+              std::cout << "true dir"; dir.Print();
+            }
 
-            dir = mom;
-            dir.SetPhi(mom.Phi()+(angle-alpha0));
-            dir.SetMag(1);
           }
 
 

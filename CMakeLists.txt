@@ -25,6 +25,7 @@ SET(GF_INC_DIRS
 	./fitters/include/
 	./measurements/include/ 
 	./trackReps/include/
+	./utilities/include/
 )
 
 #search for boost, provide some information to user
@@ -90,6 +91,7 @@ AUX_SOURCE_DIRECTORY( ./finitePlanes/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./fitters/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./measurements/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./trackReps/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./utilities/src  library_sources )
 
 # Dictionary generation.  For the time being, we list classes one-by-one.
 MACRO (ROOT_GENERATE_DICTIONARY INFILES INCLUDE_DIRS_IN LINKDEF_FILE OUTFILE)
@@ -155,15 +157,6 @@ ROOT_GENERATE_DICTIONARY("${FITTERS_DICTIONARY_SOURCES}"
 			 "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cpp")
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cpp" "${library_sources}")
 
-SET(TRACKREPS_DICTIONARY_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include/RKTrackRep.h
-)
-ROOT_GENERATE_DICTIONARY("${TRACKREPS_DICTIONARY_SOURCES}"
-                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include"
-			 "${CMAKE_CURRENT_SOURCE_DIR}/trackReps/src/trackRepsLinkDef.h"
-			 "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp")
-SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp" "${library_sources}")
-
 SET(MEASUREMENTS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/PlanarMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/ProlateSpacepointMeasurement.h
@@ -176,6 +169,25 @@ ROOT_GENERATE_DICTIONARY("${MEASUREMENTS_DICTIONARY_SOURCES}"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/measurements/src/measurementsLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cpp")
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cpp" "${library_sources}")
+
+SET(TRACKREPS_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include/RKTrackRep.h
+)
+ROOT_GENERATE_DICTIONARY("${TRACKREPS_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/trackReps/src/trackRepsLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp" "${library_sources}")
+
+SET(UTILITIES_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/HelixTrackModel.h
+)
+ROOT_GENERATE_DICTIONARY("${UTILITIES_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/utilities/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/utilities/src/utilitiesLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cpp" "${library_sources}")
+
 
 ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources})
 INSTALL( TARGETS ${PROJECT_NAME} DESTINATION lib )
