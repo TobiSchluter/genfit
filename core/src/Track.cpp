@@ -276,9 +276,32 @@ void Track::deletePoint(int id) {
 }
 
 
-void Track::mergeTrack(int i, Track other) {
-  // TODO: implement
-  trackHasChanged();
+void Track::mergeTrack(const Track* other, int id) {
+
+  if (other->getNumPoints() == 0)
+    return;
+
+  std::map<const AbsTrackRep*, AbsTrackRep*> thisRepOtherRep;
+  std::vector<const AbsTrackRep*> otherRepsToRemove;
+
+  for (std::vector<AbsTrackRep*>::const_iterator thisRep=trackReps_.begin(); thisRep!=trackReps_.end(); ++thisRep) {
+    for (std::vector<AbsTrackRep*>::const_iterator otherRep=other->trackReps_.begin(); otherRep!=other->trackReps_.end(); ++otherRep) {
+      if ((*thisRep)->isSame(*otherRep))
+        thisRepOtherRep[(*thisRep)] = *otherRep;
+      else
+        otherRepsToRemove.push_back(*otherRep);
+    }
+  }
+
+  for (std::vector<TrackPoint*>::const_iterator otherTp=other->trackPoints_.begin(); otherTp!=other->trackPoints_.end(); ++otherTp) {
+    insertPoint(new TrackPoint(**otherTp, thisRepOtherRep, &otherRepsToRemove), id);
+    if (id >= 0)
+      ++id;
+  }
+
+  // FIXME instead of insertPoint, make insertPoints method an use that!
+
+
 }
 
 

@@ -71,7 +71,9 @@ TrackPoint::TrackPoint(const TrackPoint& rhs) :
   }
 }
 
-TrackPoint::TrackPoint(const TrackPoint& rhs, const std::map<const AbsTrackRep*, AbsTrackRep*>& map) :
+TrackPoint::TrackPoint(const TrackPoint& rhs,
+    const std::map<const AbsTrackRep*, AbsTrackRep*>& map,
+    const std::vector<const genfit::AbsTrackRep*> * repsToIgnore) :
   sortingParameter_(rhs.sortingParameter_), track_(rhs.track_)
 {
   // clone rawMeasurements
@@ -83,6 +85,10 @@ TrackPoint::TrackPoint(const TrackPoint& rhs, const std::map<const AbsTrackRep*,
 
   // copy fitterInfos
   for (std::map<const AbsTrackRep*, AbsFitterInfo* >::const_iterator it = rhs.fitterInfos_.begin(); it != rhs.fitterInfos_.end();  ++it ) {
+    if (repsToIgnore != NULL) {
+      if (std::find(repsToIgnore->begin(), repsToIgnore->end(), it->first) != repsToIgnore->end())
+        continue;
+    }
     AbsFitterInfo* fi = it->second->clone();
     fi->setRep(map.at(it->first));
     fi->setTrackPoint(this);

@@ -141,6 +141,7 @@ class RKTrackRep : public AbsTrackRep {
                      bool varField = true,
                      bool calcOnlyLastRowOfJ = false) const;
 
+  virtual bool isSame(const AbsTrackRep* other);
 
  private:
 

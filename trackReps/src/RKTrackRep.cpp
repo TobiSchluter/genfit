@@ -2006,4 +2006,15 @@ void RKTrackRep::checkCache(const StateOnPlane* state) const {
 }
 
 
+bool RKTrackRep::isSame(const AbsTrackRep* other) {
+  if (getPDG() != other->getPDG())
+    return false;
+
+  if (dynamic_cast<const RKTrackRep*>(other) == NULL)
+    return false;
+
+  return true;
+}
+
+
 } /* End of namespace genfit */

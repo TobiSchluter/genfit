@@ -54,7 +54,9 @@ class TrackPoint : public TObject {
   TrackPoint(const TrackPoint&); // copy constructor
   TrackPoint& operator=(const TrackPoint&); // assignment operator
 
-  TrackPoint(const TrackPoint&, const std::map<const genfit::AbsTrackRep*, genfit::AbsTrackRep*>&); // custom copy constructor where all TrackRep pointers are exchanged according to the map.
+  //! custom copy constructor where all TrackRep pointers are exchanged according to the map.
+  //! FitterInfos with a rep in repsToIgnore will NOT be copied.
+  TrackPoint(const TrackPoint&, const std::map<const genfit::AbsTrackRep*, genfit::AbsTrackRep*>&, const std::vector<const genfit::AbsTrackRep*> * repsToIgnore = NULL);
 
   ~TrackPoint();
 

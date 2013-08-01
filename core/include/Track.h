@@ -83,7 +83,13 @@ class Track : public TObject {
 
   void deletePoint(int id);
 
-  void mergeTrack(int i, Track other);
+  /**
+   * Merge two tracks. The TrackPoints of other will be inserted
+   * after id (per default, they will be appended at the end).
+   * The other track will not be altered, the TrackPoints will be (deep) copied.
+   * Only copies the TrackPoints, NOT the reps, fit statuses and seed state.
+   */
+  void mergeTrack(const Track* other, int id = -1);
 
   void addTrackRep(AbsTrackRep* trackRep);
   /** Delete a #TrackRep and all corresponding #FitterInfos in the #TrackPoints
