@@ -64,6 +64,7 @@
 #include <TMath.h>
 #include <TString.h>
 
+#define FILENAME "/tmp/streamerTest.root"
 
 void handler(int sig) {
   void *array[10];
@@ -111,7 +112,30 @@ int randomSign() {
 }
 
 
+bool emptyTrackTest()
+{
+  TFile *f = TFile::Open(FILENAME, "RECREATE");
+  f->cd();
+  genfit::Track *t = new genfit::Track();
+  if (!t->checkConsistency())
+    return false;
+  t->Write("direct");
+  f->Close();
+  delete f;
+
+  f = TFile::Open(FILENAME, "READ");
+  t = (genfit::Track*)f->Get("direct");
+  return t->checkConsistency();
+}
+
+
 int main() {
+  if (!emptyTrackTest())
+    {
+      std::cout << "enptyTrackTest failed." << std::endl;
+      return 1;
+    }
+
   enum eFitterType { SimpleKalman = 0,
 		     RefKalman,
 		     DafSimple,
@@ -249,7 +273,7 @@ int main() {
   TMatrixDSym covFinal;
   genfit::DetPlane planeFinal;
 
-  TFile* fOut = new TFile("/tmp/streamerTest.root", "RECREATE");
+  TFile* fOut = new TFile(FILENAME, "RECREATE");
   fOut->cd();
   TTree* tResults = new TTree("tResults", "results from track fit");
   tResults->Branch("gfTrack", "genfit::Track", &fitTrack, 32000, -1);
@@ -694,7 +718,7 @@ int main() {
   fOut->Write();
   delete fOut;
 
-  fOut = TFile::Open("/tmp/streamerTest.root", "READ");
+  fOut = TFile::Open(FILENAME, "READ");
   fOut->GetObject("tResults", tResults);
   TMatrixDSym *pMatrix = 0;
   tResults->SetBranchAddress("covFinal", &pMatrix);

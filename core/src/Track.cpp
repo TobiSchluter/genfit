@@ -696,8 +696,8 @@ bool Track::checkConsistency() const {
   }
 
   // check if cardinalRep_ is in range of trackReps_
-  if (cardinalRep_ >= trackReps_.size()) {
-    std::cerr << "Track::checkConsistency(): cardinalRep id out of bounds" << std::endl;
+  if (trackReps_.size() && cardinalRep_ >= trackReps_.size()) {
+    std::cerr << "Track::checkConsistency(): cardinalRep id " << cardinalRep_ << " out of bounds" << std::endl;
     return false;
   }
 
