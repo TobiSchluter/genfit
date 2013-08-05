@@ -448,14 +448,14 @@ double RKTrackRep::getCharge(const StateOnPlane* state) const
 
 double RKTrackRep::getMomVar(const MeasuredStateOnPlane* stateInput) {
   // p(qop) = q/qop
-  // dp/d(qop) = 1 / (2*sqrt(qop))
-  // delta p = delta qop * dp/d(qop) = delta qop / (2*sqrt(qop))
+  // dp/d(qop) = - q / (qop^2)
+  // (delta p) = (delta qop) * |dp/d(qop)| = delta qop * |q / (qop^2)|
+  // (var p) = (var qop) * q^2 / (qop^4)
 
   // delta means sigma
   // cov(0,0) is sigma^2
 
-  double sigma = sqrt(stateInput->getCov()(0,0) / stateInput->getState()(0)) * 0.5;
-  return sigma*sigma;
+  return stateInput->getCov()(0,0) * pow(getCharge(stateInput), 2)  / pow(stateInput->getState()(0), 4);
 }
 
 
