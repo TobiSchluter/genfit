@@ -104,6 +104,9 @@ class RKTrackRep : public AbsTrackRep {
   virtual TVector3 getMom(const StateOnPlane* stateInput) const;
   virtual void getPosMom(const StateOnPlane* stateInput, TVector3& pos, TVector3& mom) const;
 
+  /** get the variance of the absolute value of the momentum  */
+  virtual double getMomVar(const MeasuredStateOnPlane* stateInput);
+
   /** Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance */
   virtual void getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const;
   virtual double getCharge(const StateOnPlane* state) const;

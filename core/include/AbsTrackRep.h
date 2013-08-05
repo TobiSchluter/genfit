@@ -77,6 +77,9 @@ class AbsTrackRep : public TObject {
   virtual void getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const = 0;
   virtual void get6DStateCov(const MeasuredStateOnPlane* stateInput, TVectorD& stateVec, TMatrixDSym& cov) const;
 
+  /** get the variance of the absolute value of the momentum  */
+  virtual double getMomVar(const MeasuredStateOnPlane* stateInput) = 0;
+
   int getPDG() const {return pdgCode_;}
   virtual double getCharge(const StateOnPlane* state) const = 0;
   char getPropDir() const {return propDir_;}
