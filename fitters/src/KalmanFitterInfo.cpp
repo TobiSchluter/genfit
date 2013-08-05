@@ -295,7 +295,7 @@ void KalmanFitterInfo::setMeasurementsOnPlane(const std::vector< genfit::Measure
     addMeasurementOnPlane(*m);
   }
 
-  if (! measurementsOnPlane.empty())
+  if (measurementsOnPlane.size() != 0)
     setPlane(measurementsOnPlane[0]->getPlane());
 }
 

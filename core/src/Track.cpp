@@ -149,10 +149,10 @@ TrackPoint* Track::getPointWithMeasurement(int id) const {
 
   int idMeas(0);
 
-  for (unsigned int i=0; i<trackPoints_.size(); ++i) {
-    if (trackPoints_[i]->hasRawMeasurements()) {
+  for (std::vector<TrackPoint*>::const_iterator tp = trackPoints_.begin(); tp != trackPoints_.end(); ++tp) {
+    if ((*tp)->hasRawMeasurements()) {
       if (id == idMeas)
-        return trackPoints_.at(i);
+        return (*tp);
       ++idMeas;
     }
   }

@@ -22,7 +22,7 @@
 #include <Exception.h>
 #include <FieldManager.h>
 #include <MaterialEffects.h>
-#include "MeasuredStateOnPlane.h"
+#include <MeasuredStateOnPlane.h>
 
 #include <TDatabasePDG.h>
 #include <TDecompLU.h>
@@ -30,7 +30,8 @@
 
 #include <map>
 
-#include "boost/shared_ptr.hpp"
+#include <boost/shared_ptr.hpp>
+
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
 //#define DEBUG
@@ -72,27 +73,31 @@ RKTrackRep::~RKTrackRep() {
 
 double RKTrackRep::extrapolateToPlane(StateOnPlane* state,
     SharedPlanePtr plane,
-    bool stopAtBoundary) const {
+    bool stopAtBoundary,
+    bool calcJacobianNoise) const {
 
 #ifdef DEBUG
 std::cout << "RKTrackRep::extrapolateToPlane()\n";
 #endif
 
   checkCache(state);
-  bool calcCov(dynamic_cast<MeasuredStateOnPlane*>(state) != NULL);
 
   // to 7D
   M1x7 state7;
   getState7(state, state7);
+  bool fillExtrapSteps(false);
   TMatrixDSym* covPtr(NULL);
 
-  if (calcCov) {
+  if (dynamic_cast<MeasuredStateOnPlane*>(state) != NULL) {
     covPtr = &(static_cast<MeasuredStateOnPlane*>(state)->getCov());
+    fillExtrapSteps = true;
   }
+  else if (calcJacobianNoise)
+    fillExtrapSteps = true;
 
   // actual extrapolation
   bool isAtBoundary(false);
-  double coveredDistance = Extrap(*(state->getPlane()), *plane, getCharge(state), isAtBoundary, state7, covPtr, false, stopAtBoundary);
+  double coveredDistance = Extrap(*(state->getPlane()), *plane, getCharge(state), isAtBoundary, state7, fillExtrapSteps, covPtr, false, stopAtBoundary);
 
   if (stopAtBoundary && isAtBoundary) {
     state->setPlane(SharedPlanePtr(new DetPlane(TVector3(state7[0], state7[1], state7[2]),
@@ -149,7 +154,7 @@ std::cout << "RKTrackRep::extrapolateToLine()\n";
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, charge, isAtBoundary, state7, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, charge, isAtBoundary, state7, false, NULL, true, stopAtBoundary, maxStep);
     tracklength += step;
 
     dir.SetXYZ(state7[3], state7[4], state7[5]);
@@ -232,7 +237,7 @@ std::cout << "RKTrackRep::extrapolateToPoint()\n";
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, true, stopAtBoundary, maxStep);
     tracklength += step;
 
     dir.SetXYZ(state7[3], state7[4], state7[5]);
@@ -355,7 +360,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane* state,
     plane->setO(dest);
     plane->setUV((dest-linePoint).Cross(lineDirection), lineDirection);
 
-    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -1766,6 +1771,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
                           double charge,
                           bool& isAtBoundary,
                           M1x7& state7,
+                          bool fillExtrapSteps,
                           TMatrixDSym* cov, // 5D
                           bool onlyOneStep,
                           bool stopAtBoundary,
@@ -1774,7 +1780,6 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
   static const unsigned int maxNumIt(500);
   unsigned int numIt(0);
 
-  bool fillExtrapSteps(cov != NULL);
   double coveredDistance(0.);
   double dqop(0.);
   TMatrixD noiseProjection(7,7);
@@ -1976,8 +1981,10 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     // propagate cov and add noise
     calcForwardJacobianAndNoise();
 
-    cov->Similarity(fJacobian_);
-    *cov += fNoise_;
+    if (cov != NULL) {
+      cov->Similarity(fJacobian_);
+      *cov += fNoise_;
+    }
 
 #ifdef DEBUG
     std::cout << "final covariance matrix after Extrap: "; cov->Print();

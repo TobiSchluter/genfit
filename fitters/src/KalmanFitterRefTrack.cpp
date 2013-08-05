@@ -364,9 +364,9 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         #ifdef DEBUG
         std::cout << "TrackPoint already has referenceState but previous referenceState has been altered -> update transport matrices and continue \n";
         #endif
-        MeasuredStateOnPlane* stateToExtrapolate = new MeasuredStateOnPlane(*prevReferenceState, TMatrixDSym(rep->getDim()));
+        StateOnPlane* stateToExtrapolate = new StateOnPlane(*prevReferenceState);
         SOPsToDestruct_.push_back(stateToExtrapolate);
-        double segmentLen = rep->extrapolateToPlane(stateToExtrapolate, fitterInfo->getReferenceState()->getPlane());
+        double segmentLen = rep->extrapolateToPlane(stateToExtrapolate, fitterInfo->getReferenceState()->getPlane(), false, true);
         #ifdef DEBUG
         std::cout << "extrapolated stateToExtrapolate (prevReferenceState) by " << segmentLen << " cm.\n";
         #endif
@@ -433,7 +433,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
       // do extrapolation and set reference state infos
-      MeasuredStateOnPlane* stateToExtrapolate(NULL);
+      StateOnPlane* stateToExtrapolate(NULL);
       if (prevFitterInfo == NULL) { // first measurement
         #ifdef DEBUG
         std::cout << "prevFitterInfo == NULL \n";
@@ -442,19 +442,19 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           #ifdef DEBUG
           std::cout << "extrapolate smoothedState to plane\n";
           #endif
-          stateToExtrapolate = new MeasuredStateOnPlane(*smoothedState);
+          stateToExtrapolate = new StateOnPlane(*smoothedState);
         }
         else if (referenceState != NULL) {
           #ifdef DEBUG
           std::cout << "extrapolate referenceState to plane\n";
           #endif
-          stateToExtrapolate = new MeasuredStateOnPlane(*referenceState, TMatrixDSym(rep->getDim()));
+          stateToExtrapolate = new StateOnPlane(*referenceState);
         }
         else {
           #ifdef DEBUG
           std::cout << "extrapolate seed from track to plane\n";
           #endif
-          stateToExtrapolate = new MeasuredStateOnPlane(rep);
+          stateToExtrapolate = new StateOnPlane(rep);
           rep->setPosMom(stateToExtrapolate, tr->getStateSeed());
         }
       }
@@ -463,11 +463,11 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         #ifdef DEBUG
         std::cout << "extrapolate prevReferenceState to plane\n";
         #endif
-        stateToExtrapolate = new MeasuredStateOnPlane(*prevReferenceState, TMatrixDSym(rep->getDim()));
+        stateToExtrapolate = new StateOnPlane(*prevReferenceState);
       }
       SOPsToDestruct_.push_back(stateToExtrapolate);
 
-      double segmentLen = rep->extrapolateToPlane(stateToExtrapolate, plane);
+      double segmentLen = rep->extrapolateToPlane(stateToExtrapolate, plane, false, true);
       trackLen += segmentLen;
       #ifdef DEBUG
       std::cout << "extrapolated stateToExtrapolate by " << segmentLen << " cm.\n";

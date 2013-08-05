@@ -121,7 +121,7 @@ double AbsKalmanFitter::getPVal(const Track* tr, const AbsTrackRep* rep, int dir
 bool AbsKalmanFitter::isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const {
   std::vector< TrackPoint* > points = tr->getPointsWithMeasurement();
 
-  if (points.empty())
+  if (points.size() == 0)
     return true;
 
   for (std::vector<TrackPoint*>::const_iterator pIt = points.begin(), pEnd = points.end(); pIt != pEnd; ++pIt) {
@@ -147,7 +147,7 @@ bool AbsKalmanFitter::isTrackFitted(const Track* tr, const AbsTrackRep* rep) con
 
   std::vector< TrackPoint* > points = tr->getPointsWithMeasurement();
 
-  if (points.empty())
+  if (points.size() == 0)
     return true;
 
   for (std::vector<TrackPoint*>::const_iterator pIt = points.begin(), pEnd = points.end(); pIt != pEnd; ++pIt) {

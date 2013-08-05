@@ -69,7 +69,8 @@ class RKTrackRep : public AbsTrackRep {
    */
   virtual double extrapolateToPlane(StateOnPlane* state,
       SharedPlanePtr plane,
-      bool stopAtBoundary = false) const;
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const;
 
   virtual double extrapolateToLine(StateOnPlane* state,
       const TVector3& linePoint,
@@ -220,6 +221,7 @@ class RKTrackRep : public AbsTrackRep {
                 double charge,
                 bool& isAtBoundary,
                 M1x7& state7,
+                bool fillExtrapSteps,
                 TMatrixDSym* cov = nullptr,
                 bool onlyOneStep = false,
                 bool stopAtBoundary = false,

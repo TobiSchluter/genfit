@@ -32,10 +32,13 @@ class AbsTrackRep : public TObject {
   /** Extrapolates the stateInput to plane, and returns the extrapolation length
    * and, via reference, the extrapolated statePrediction.
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
+   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
+   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToPlane(StateOnPlane* state,
       SharedPlanePtr plane,
-      bool stopAtBoundary = false) const = 0;
+      bool stopAtBoundary = false,
+      bool calcJacobianNoise = false) const = 0;
 
   virtual double extrapolateToLine(StateOnPlane* state,
       const TVector3& linePoint,
