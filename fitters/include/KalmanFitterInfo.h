@@ -69,7 +69,6 @@ class KalmanFitterInfo : public AbsFitterInfo {
   unsigned int getNumMeasurements() const {return measurementsOnPlane_.size();}
   /** Get weights of measurements */
   std::vector<double> getWeights() const;
-  SharedPlanePtr getPlane() const;
   /** Get unbiased (default) or biased smoothed state */
   MeasuredStateOnPlane* getFittedState(bool biased = false) const;
   /** Get unbiased (default) or biased residual from ith measurement */
@@ -84,11 +83,11 @@ class KalmanFitterInfo : public AbsFitterInfo {
   bool hasPredictionsAndUpdates() const {return (hasForwardPrediction() && hasBackwardPrediction() && hasForwardUpdate() && hasBackwardUpdate());}
 
   void setReferenceState(ReferenceStateOnPlane* referenceState) {referenceState_.reset(referenceState);}
-  void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction) {forwardPrediction_.reset(forwardPrediction); fittedStateUnbiased_.reset(); fittedStateBiased_.reset();}
-  void setBackwardPrediction(MeasuredStateOnPlane* backwardPrediction) {backwardPrediction_.reset(backwardPrediction); fittedStateUnbiased_.reset(); fittedStateBiased_.reset();}
+  void setForwardPrediction(MeasuredStateOnPlane* forwardPrediction);
+  void setBackwardPrediction(MeasuredStateOnPlane* backwardPrediction);
   void setPrediction(MeasuredStateOnPlane* prediction, int direction)  {if (direction >=0) setForwardPrediction(prediction); else setBackwardPrediction(prediction);}
-  void setForwardUpdate(KalmanFittedStateOnPlane* forwardUpdate) {forwardUpdate_.reset(forwardUpdate); fittedStateUnbiased_.reset(); fittedStateBiased_.reset();}
-  void setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate) {backwardUpdate_.reset(backwardUpdate); fittedStateUnbiased_.reset(); fittedStateBiased_.reset();}
+  void setForwardUpdate(KalmanFittedStateOnPlane* forwardUpdate);
+  void setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate);
   void setUpdate(KalmanFittedStateOnPlane* update, int direction)  {if (direction >=0) setForwardUpdate(update); else setBackwardUpdate(update);}
   void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
   void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) { measurementsOnPlane_.push_back(measurementOnPlane); }

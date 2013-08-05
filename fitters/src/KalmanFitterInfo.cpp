@@ -166,23 +166,6 @@ std::vector<double> KalmanFitterInfo::getWeights() const {
 }
 
 
-SharedPlanePtr KalmanFitterInfo::getPlane() const {
-  if (hasReferenceState())
-    return referenceState_->getPlane();
-  if (getNumMeasurements() != 0)
-    return measurementsOnPlane_[0]->getPlane();
-  if (hasForwardPrediction())
-    return forwardPrediction_->getPlane();
-  if (hasBackwardPrediction())
-    return backwardPrediction_->getPlane();
-  if (hasReferenceState())
-    return referenceState_->getPlane();
-
-  Exception e("KalmanFitterInfo::getPlane: no plane available.", __LINE__,__FILE__);
-  throw e;
-}
-
-
 MeasuredStateOnPlane* KalmanFitterInfo::getFittedState(bool biased) const {
   if (biased) {
     if (fittedStateBiased_.get() != NULL)
@@ -272,12 +255,48 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeas
 }
 
 
+void KalmanFitterInfo::setForwardPrediction(MeasuredStateOnPlane* forwardPrediction) {
+  forwardPrediction_.reset(forwardPrediction);
+  fittedStateUnbiased_.reset();
+  fittedStateBiased_.reset();
+  if (forwardPrediction_)
+    setPlane(forwardPrediction_->getPlane());
+}
+
+void KalmanFitterInfo::setBackwardPrediction(MeasuredStateOnPlane* backwardPrediction) {
+  backwardPrediction_.reset(backwardPrediction);
+  fittedStateUnbiased_.reset();
+  fittedStateBiased_.reset();
+  if (backwardPrediction_)
+    setPlane(backwardPrediction_->getPlane());
+}
+
+void KalmanFitterInfo::setForwardUpdate(KalmanFittedStateOnPlane* forwardUpdate) {
+  forwardUpdate_.reset(forwardUpdate);
+  fittedStateUnbiased_.reset();
+  fittedStateBiased_.reset();
+  if (forwardUpdate_)
+    setPlane(forwardUpdate_->getPlane());
+}
+
+void KalmanFitterInfo::setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate) {
+  backwardUpdate_.reset(backwardUpdate);
+  fittedStateUnbiased_.reset();
+  fittedStateBiased_.reset();
+  if (backwardUpdate_)
+    setPlane(backwardUpdate_->getPlane());
+}
+
+
 void KalmanFitterInfo::setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane) {
   measurementsOnPlane_.clear();
 
   for (std::vector<MeasurementOnPlane*>::const_iterator m = measurementsOnPlane.begin(), mend = measurementsOnPlane.end(); m < mend; ++m) {
     addMeasurementOnPlane(*m);
   }
+
+  if (! measurementsOnPlane.empty())
+    setPlane(measurementsOnPlane[0]->getPlane());
 }
 
 
@@ -391,17 +410,7 @@ bool KalmanFitterInfo::checkConsistency() const {
     return false;
   }*/
 
-  SharedPlanePtr plane;
-  if (referenceState_) {
-    plane = referenceState_->getPlane();
-  }
-  else if (measurementsOnPlane_.size() > 0) {
-    plane = measurementsOnPlane_[0]->getPlane();
-  }
-  else if (forwardUpdate_ || backwardUpdate_) {
-    std::cerr << "KalmanFitterInfo::checkConsistency(): update w/o prediction or measurement" << std::endl;
-    return false;
-  }
+  SharedPlanePtr plane = getPlane();
 
   if (plane.get() == NULL) {
     if (!(referenceState_ || forwardPrediction_ || forwardUpdate_ || backwardPrediction_ || backwardUpdate_ || measurementsOnPlane_.size() > 0))

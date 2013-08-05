@@ -71,8 +71,11 @@ class AbsFitterInfo : public TObject {
   virtual void deleteReferenceInfo() = 0;
   virtual void deleteMeasurementInfo() = 0;
 
+  SharedPlanePtr getPlane() const {return sharedPlane_;}
   virtual MeasuredStateOnPlane* getFittedState(bool biased = false) const = 0;
   virtual MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const = 0;
+
+  void setPlane(SharedPlanePtr plane) {sharedPlane_ = plane;}
 
   virtual void Print(const Option_t* = "") const {;}
 
@@ -88,11 +91,16 @@ class AbsFitterInfo : public TObject {
    */
   const AbsTrackRep* rep_; //! No ownership
 
-  ClassDef(AbsFitterInfo,1)
+  SharedPlanePtr sharedPlane_; // Shared ownership.
+
 
  private:
   AbsFitterInfo(const AbsFitterInfo&); // copy constructor
   AbsFitterInfo& operator=(const AbsFitterInfo&); // assignment operator
+
+
+ public:
+  ClassDef(AbsFitterInfo,1)
 };
 
 // Needed for boost cloneability:
