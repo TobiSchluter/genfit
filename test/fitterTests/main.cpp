@@ -160,6 +160,8 @@ int main() {
 
   const double hitSwitchProb = -0.1; // probability to give hits to fit in wrong order (flip two hits)
 
+  const int splitTrack = -1; // for track merging testing:
+
   //const eFitterType fitterId = SimpleKalman;
   const eFitterType fitterId = RefKalman;
   //const eFitterType fitterId = DafRef;
@@ -278,6 +280,7 @@ int main() {
   // prepare output tree for Tracks 
   // std::unique_ptr<genfit::Track> fitTrack(new genfit::Track());
   genfit::Track* fitTrack = new genfit::Track();
+  genfit::Track* secondTrack = new genfit::Track();
 #ifndef VALGRIND
   // init rootapp (for drawing histograms)
   TApplication* rootapp = new TApplication("rootapp", 0, 0);
@@ -401,12 +404,16 @@ int main() {
 
       // create track
       fitTrack = new genfit::Track(rep, rep->get6DState(&stateSmeared)); //initialized with smeared rep
+      secondTrack = new genfit::Track(rep, rep->get6DState(&stateSmeared)); //initialized with smeared rep
       //if (debug) fitTrack->Print("C");
 
+      assert(fitTrack->checkConsistency());
       //fitTrack->addTrackRep(rep->clone()); // check if everything works fine with more than one rep
 
       // add measurements
       for(unsigned int i=0; i<measurements.size(); ++i){
+        if (splitTrack > 0 && i >= splitTrack)
+          break;
         std::vector<genfit::AbsMeasurement*> measVec;
         measVec.push_back(measurements[i]);
         if (i>0 && hitSwitchProb > gRandom->Uniform(1.))
@@ -414,10 +421,28 @@ int main() {
         else
           fitTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack));
 
+        assert(fitTrack->checkConsistency());
         //if (debug) fitTrack->Print("C");
       }
 
-      // print trackCand
+      if (splitTrack > 0) {
+        for(unsigned int i=splitTrack; i<measurements.size(); ++i){
+          std::vector<genfit::AbsMeasurement*> measVec;
+          measVec.push_back(measurements[i]);
+          if (i>0 && hitSwitchProb > gRandom->Uniform(1.))
+            secondTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack), -2);
+          else
+            secondTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack));
+
+          //if (debug) fitTrack->Print("C");
+        }
+      }
+
+      assert(fitTrack->checkConsistency());
+      assert(secondTrack->checkConsistency());
+
+
+
       //if (debug) fitTrack->Print();
 
       assert(fitTrack->checkConsistency());
@@ -427,6 +452,8 @@ int main() {
         if (debug) std::cout<<"Starting the fitter"<<std::endl;
         CALLGRIND_START_INSTRUMENTATION
         fitter->processTrack(fitTrack, resort);
+        if (splitTrack > 0)
+          fitter->processTrack(secondTrack, resort);
         CALLGRIND_STOP_INSTRUMENTATION
         CALLGRIND_DUMP_STATS
         if (debug) std::cout<<"fitter is finished!"<<std::endl;
@@ -437,10 +464,32 @@ int main() {
         continue;
       }
 
+      if (splitTrack > 0) {
+        if (debug) fitTrack->Print("C");
+        if (debug) secondTrack->Print("C");
+
+        fitTrack->mergeTrack(secondTrack);
+
+        if (debug) fitTrack->Print("C");
+
+        try{
+          if (debug) std::cout<<"Starting the fitter"<<std::endl;
+          fitter->processTrack(fitTrack, resort);
+          if (debug) std::cout<<"fitter is finished!"<<std::endl;
+        }
+        catch(genfit::Exception& e){
+          std::cerr << e.what();
+          std::cerr << "Exception, next track" << std::endl;
+          continue;
+        }
+      }
+
 
       if (debug)
         fitTrack->Print("C");
+
       assert(fitTrack->checkConsistency());
+      assert(secondTrack->checkConsistency());
 
 #ifndef VALGRIND
       // add track to event display
