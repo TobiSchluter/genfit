@@ -114,7 +114,7 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
 
     try {
       #ifdef DEBUG
-      std::cout << " KalmanFitterRefTrack::processTrack, iteration nr. " << nIt << "\n";
+      std::cout << " KalmanFitterRefTrack::processTrack with rep " << rep << " (id == " << tr->getIdForRep(rep) << ")"<< ", iteration nr. " << nIt << "\n";
       #endif
 
       // prepare
@@ -233,9 +233,6 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
 
   }
 
-
-  // check
-  assert(tr->checkConsistency());
 
   status->setIsFitted();
   status->setHasTrackChanged(false);
@@ -418,6 +415,19 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         #endif
         plane = trackPoint->getRawMeasurement(0)->constructPlane(prevReferenceState);
       }
+      else if (rep != tr->getCardinalRep() &&
+                dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
+                static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
+        #ifdef DEBUG
+        std::cout << "construct plane with smoothed state of cardinal rep fit \n";
+        #endif
+        TVector3 pos, mom;
+        tr->getCardinalRep()->getPosMom(static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
+        StateOnPlane* cardinalState = new StateOnPlane(rep);
+        SOPsToDestruct_.push_back(cardinalState);
+        rep->setPosMom(cardinalState, pos, mom); // also fills auxInfo
+        plane = trackPoint->getRawMeasurement(0)->constructPlane(cardinalState);
+      }
       else {
         #ifdef DEBUG
         std::cout << "construct plane with state from track \n";
@@ -449,6 +459,17 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           std::cout << "extrapolate referenceState to plane\n";
           #endif
           stateToExtrapolate = new StateOnPlane(*referenceState);
+        }
+        else if (rep != tr->getCardinalRep() &&
+                  dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
+                  static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
+          #ifdef DEBUG
+          std::cout << "extrapolate smoothed state of cardinal rep fit to plane\n";
+          #endif
+          TVector3 pos, mom;
+          tr->getCardinalRep()->getPosMom(static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
+          stateToExtrapolate = new StateOnPlane(rep);
+          rep->setPosMom(stateToExtrapolate, pos, mom);
         }
         else {
           #ifdef DEBUG
@@ -575,7 +596,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
   // self check
-  assert(tr->checkConsistency());
+  //assert(tr->checkConsistency());
   assert(isTrackPrepared(tr, rep));
 
   return changedSmthg;

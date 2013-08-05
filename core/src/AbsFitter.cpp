@@ -32,6 +32,9 @@ void AbsFitter::processTrack(Track* tr, bool resortHits) {
     if (tr->getTrackRep(i) != cardRep)
       processTrack(tr, tr->getTrackRep(i), false);
   }
+
+  // self check
+  assert(tr->checkConsistency());
 }
 
 } /* End of namespace genfit */

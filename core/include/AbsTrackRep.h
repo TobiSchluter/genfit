@@ -114,6 +114,9 @@ class AbsTrackRep : public TObject {
   //! Switch propagation direction. Has no effect if propDir_ is set to 0.
   void switchPropDir(){propDir_ = -1*propDir_;}
 
+  //! check if other is of same type (e.g. RKTrackRep).
+  virtual bool isSameType(const AbsTrackRep* other) = 0;
+
   //! check if other is of same type (e.g. RKTrackRep) and has same pdg code.
   virtual bool isSame(const AbsTrackRep* other) = 0;
 

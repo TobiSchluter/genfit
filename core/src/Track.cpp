@@ -18,6 +18,8 @@
 */
 
 #include "Track.h"
+
+#include "Exception.h"
 #include "KalmanFitterInfo.h"
 
 #include <algorithm>
@@ -332,20 +334,41 @@ void Track::deletePoint(int id) {
 
 void Track::mergeTrack(const Track* other, int id) {
 
+  #ifdef DEBUG
+  std::cout << "Track::mergeTrack\n";
+  #endif
+
   if (other->getNumPoints() == 0)
     return;
 
   std::map<const AbsTrackRep*, AbsTrackRep*> thisRepOtherRep;
   std::vector<const AbsTrackRep*> otherRepsToRemove;
 
-  for (std::vector<AbsTrackRep*>::const_iterator thisRep=trackReps_.begin(); thisRep!=trackReps_.end(); ++thisRep) {
-    for (std::vector<AbsTrackRep*>::const_iterator otherRep=other->trackReps_.begin(); otherRep!=other->trackReps_.end(); ++otherRep) {
-      if ((*thisRep)->isSame(*otherRep))
+  for (std::vector<AbsTrackRep*>::const_iterator otherRep=other->trackReps_.begin(); otherRep!=other->trackReps_.end(); ++otherRep) {
+    bool found(false);
+    for (std::vector<AbsTrackRep*>::const_iterator thisRep=trackReps_.begin(); thisRep!=trackReps_.end(); ++thisRep) {
+      if ((*thisRep)->isSame(*otherRep)) {
         thisRepOtherRep[(*thisRep)] = *otherRep;
-      else
-        otherRepsToRemove.push_back(*otherRep);
+        #ifdef DEBUG
+        std::cout << " map other rep " << *otherRep << " to " << (*thisRep) << "\n";
+        #endif
+        if (found) {
+          Exception exc("Track::mergeTrack ==> more than one matching rep.",__LINE__,__FILE__);
+          exc.setFatal();
+          throw exc;
+        }
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      otherRepsToRemove.push_back(*otherRep);
+      #ifdef DEBUG
+      std::cout << " remove other rep " << *otherRep << "\n";
+      #endif
     }
   }
+
 
   std::vector<TrackPoint*> points;
   points.reserve(other->getNumPoints());
@@ -582,7 +605,7 @@ void Track::Print(const Option_t* option) const {
   opt.ToUpper();
   if (opt.Contains("C")) { // compact
 
-    std::cout << "\n   ";
+    std::cout << "\n    ";
     for (unsigned int i=0; i<trackPoints_.size(); ++i) {
 
       int color = 32*(size_t)(trackPoints_[i]) % 15;
@@ -636,75 +659,79 @@ void Track::Print(const Option_t* option) const {
     }
     std::cout << "\n";
 
-    std::cout << "  ";
+    std::cout << "   ";
     for (unsigned int i=0; i<trackPoints_.size(); ++i) {
       printf("% -9.3g  ", trackPoints_[i]->getSortingParameter());
     }
-    std::cout << "\n";
 
-    std::cout << "   ";
-    for (unsigned int i=0; i<trackPoints_.size(); ++i) {
-      if (! trackPoints_[i]->hasFitterInfo(getCardinalRep())) {
-        std::cout << "           ";
-        continue;
+    for (std::vector<AbsTrackRep*>::const_iterator rep = trackReps_.begin(); rep != trackReps_.end(); ++rep) {
+      std::cout << "\n" << getIdForRep(*rep) << "   ";
+      for (unsigned int i=0; i<trackPoints_.size(); ++i) {
+        if (! trackPoints_[i]->hasFitterInfo(*rep)) {
+          std::cout << "           ";
+          continue;
+        }
+        AbsFitterInfo* fi = trackPoints_[i]->getFitterInfo(*rep);
+        if (fi->hasMeasurements())
+          std::cout << "M";
+        else
+          std::cout << " ";
+
+        if (fi->hasReferenceState())
+          std::cout << "R";
+        else
+          std::cout << " ";
+
+        std::cout << "         ";
       }
-      AbsFitterInfo* fi = trackPoints_[i]->getFitterInfo(getCardinalRep());
-      if (fi->hasMeasurements())
-        std::cout << "M";
-      else
-        std::cout << " ";
+      std::cout << "\n";
 
-      if (fi->hasReferenceState())
-        std::cout << "R";
-      else
-        std::cout << " ";
+      std::cout << " -> ";
+      for (unsigned int i=0; i<trackPoints_.size(); ++i) {
+        if (! trackPoints_[i]->hasFitterInfo(*rep)) {
+          std::cout << "           ";
+          continue;
+        }
+        AbsFitterInfo* fi = trackPoints_[i]->getFitterInfo(*rep);
+        if (fi->hasForwardPrediction())
+          std::cout << "P";
+        else
+          std::cout << " ";
 
-      std::cout << "         ";
-    }
-    std::cout << "\n";
+        if (fi->hasForwardUpdate())
+          std::cout << "U";
+        else
+          std::cout << " ";
 
-    std::cout << "-> ";
-    for (unsigned int i=0; i<trackPoints_.size(); ++i) {
-      if (! trackPoints_[i]->hasFitterInfo(getCardinalRep())) {
-        std::cout << "           ";
-        continue;
+        std::cout << "         ";
       }
-      AbsFitterInfo* fi = trackPoints_[i]->getFitterInfo(getCardinalRep());
-      if (fi->hasForwardPrediction())
-        std::cout << "P";
-      else
-        std::cout << " ";
+      std::cout << "\n";
 
-      if (fi->hasForwardUpdate())
-        std::cout << "U";
-      else
-        std::cout << " ";
+      std::cout << " <- ";
+      for (unsigned int i=0; i<trackPoints_.size(); ++i) {
+        if (! trackPoints_[i]->hasFitterInfo(*rep)) {
+          std::cout << "           ";
+          continue;
+        }
+        AbsFitterInfo* fi = trackPoints_[i]->getFitterInfo(*rep);
+        if (fi->hasBackwardPrediction())
+          std::cout << "P";
+        else
+          std::cout << " ";
 
-      std::cout << "         ";
-    }
-    std::cout << "\n";
+        if (fi->hasBackwardUpdate())
+          std::cout << "U";
+        else
+          std::cout << " ";
 
-    std::cout << "<- ";
-    for (unsigned int i=0; i<trackPoints_.size(); ++i) {
-      if (! trackPoints_[i]->hasFitterInfo(getCardinalRep())) {
-        std::cout << "           ";
-        continue;
+        std::cout << "         ";
       }
-      AbsFitterInfo* fi = trackPoints_[i]->getFitterInfo(getCardinalRep());
-      if (fi->hasBackwardPrediction())
-        std::cout << "P";
-      else
-        std::cout << " ";
 
-      if (fi->hasBackwardUpdate())
-        std::cout << "U";
-      else
-        std::cout << " ";
+      std::cout << "\n";
 
-      std::cout << "         ";
-    }
+    } //end loop over reps
+
     std::cout << "\n";
-
     return;
   }
 
@@ -828,18 +855,19 @@ bool Track::checkConsistency() const {
 
       if (dynamic_cast<KalmanFitterInfo*>(*fi) != NULL)
       if (static_cast<KalmanFitterInfo*>(*fi)->hasReferenceState()) {
-        double prevLen = static_cast<KalmanFitterInfo*>(*fi)->getReferenceState()->getForwardSegmentLength();
-        double len = prevSegmentLengths[(*fi)->getRep()];
+        double len = static_cast<KalmanFitterInfo*>(*fi)->getReferenceState()->getForwardSegmentLength();
+        double prevLen = prevSegmentLengths[(*fi)->getRep()];
         if (fabs(prevLen + len) > 1E-10 ) {
           std::cerr << "Track::checkConsistency(): segment lengths of reference states don't match" << std::endl;
           std::cerr << prevLen << " + " << len << " = " << prevLen + len << std::endl;
+          std::cerr << "TrackPoint " << *tp << ", FitterInfo " << *fi << ", rep " << getIdForRep((*fi)->getRep()) << std::endl;
           return false;
         }
         prevSegmentLengths[(*fi)->getRep()] = static_cast<KalmanFitterInfo*>(*fi)->getReferenceState()->getBackwardSegmentLength();
       }
-    }
+    } // end loop over FitterInfos
 
-  }
+  } // end loop over TrackPoints
 
   return true;
 }
