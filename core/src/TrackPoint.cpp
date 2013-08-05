@@ -46,9 +46,7 @@ TrackPoint::TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurem
   rawMeasurements_.reserve(rawMeasurements.size());
 
   for (std::vector<AbsMeasurement*>::const_iterator m = rawMeasurements.begin(); m != rawMeasurements.end(); ++m) {
-    assert(*m != NULL);
-    (*m)->setTrackPoint(this);
-    rawMeasurements_.push_back(*m);
+    addRawMeasurement(*m);
   }
 }
 
@@ -59,7 +57,6 @@ TrackPoint::TrackPoint(const TrackPoint& rhs) :
   // clone rawMeasurements
   for (std::vector<AbsMeasurement*>::const_iterator it = rhs.rawMeasurements_.begin(); it != rhs.rawMeasurements_.end(); ++it) {
     AbsMeasurement* tp = (*it)->clone();
-    tp->setTrackPoint(this);
     addRawMeasurement(tp);
   }
 
@@ -78,9 +75,8 @@ TrackPoint::TrackPoint(const TrackPoint& rhs,
 {
   // clone rawMeasurements
   for (std::vector<AbsMeasurement*>::const_iterator it = rhs.rawMeasurements_.begin(); it!=rhs.rawMeasurements_.end(); ++it) {
-    AbsMeasurement* tp = (*it)->clone();
-    tp->setTrackPoint(this);
-    addRawMeasurement(tp);
+    AbsMeasurement* m = (*it)->clone();
+    addRawMeasurement(m);
   }
 
   // copy fitterInfos
@@ -108,7 +104,6 @@ TrackPoint& TrackPoint::operator=(const TrackPoint& rhs) {
   // clone rawMeasurements
   for (std::vector<AbsMeasurement*>::const_iterator it = rhs.rawMeasurements_.begin(); it!=rhs.rawMeasurements_.end(); ++it) {
     AbsMeasurement* tp = (*it)->clone();
-    tp->setTrackPoint(this);
     addRawMeasurement(tp);
   }
 

@@ -80,8 +80,8 @@ class TrackPoint : public TObject {
 
 
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
-  //! Takes ownership
-  void addRawMeasurement(AbsMeasurement* rawMeasurement) {assert(rawMeasurement!=NULL); rawMeasurements_.push_back(rawMeasurement);}
+  //! Takes ownership and sets this as measurement's trackPoint
+  void addRawMeasurement(AbsMeasurement* rawMeasurement) {assert(rawMeasurement!=NULL); rawMeasurement->setTrackPoint(this); rawMeasurements_.push_back(rawMeasurement);}
   //! Takes Ownership
   void setFitterInfo(genfit::AbsFitterInfo* fitterInfo) {
     if (fitterInfos_.find(fitterInfo->getRep()) != fitterInfos_.end()) { delete fitterInfos_[fitterInfo->getRep()]; }
@@ -108,8 +108,7 @@ class TrackPoint : public TObject {
    *  Can be more than one, e.g. multiple measurements in the same Si detector, left and right measurements of a wire detector etc.
    * @element-type AbsMeasurement
    */
-  std::vector<AbsMeasurement*> rawMeasurements_;
-  //std::vector<AbsMeasurement*> rawMeasurements_; // Ownership
+  std::vector<AbsMeasurement*> rawMeasurements_; // Ownership
 
   std::map< const AbsTrackRep*, AbsFitterInfo* > fitterInfos_; //! Ownership over FitterInfos
 

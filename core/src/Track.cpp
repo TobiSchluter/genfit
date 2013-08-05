@@ -34,7 +34,7 @@
 namespace genfit {
 
 Track::Track() :
-  cardinalRep_(0), stateSeed_(6)
+  cardinalRep_(0), fitStatuses_(), stateSeed_(6)
 {
   ;
 }
@@ -46,9 +46,9 @@ Track::Track(const TrackCand& trackCand) :
 }
 
 Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
-  cardinalRep_(0), stateSeed_(stateSeed)
+  cardinalRep_(0), fitStatuses_(), stateSeed_(stateSeed)
 {
-  trackReps_.push_back(trackRep);
+  addTrackRep(trackRep);
 }
 
 
@@ -306,7 +306,8 @@ void Track::mergeTrack(const Track* other, int id) {
 
 
 void Track::addTrackRep(AbsTrackRep* trackRep) {
-  trackReps_.push_back( trackRep );
+  trackReps_.push_back(trackRep);
+  fitStatuses_[trackRep] = new FitStatus();
 }
 
 
@@ -796,6 +797,9 @@ void Track::trackHasChanged() {
   #ifdef DEBUG
   std::cout << "Track::trackHasChanged \n";
   #endif
+
+  if (fitStatuses_.empty())
+    return;
 
   for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it=fitStatuses_.begin(); it!=fitStatuses_.end(); ++it) {
     it->second->setHasTrackChanged();
