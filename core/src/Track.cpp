@@ -207,6 +207,8 @@ void Track::setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep) {
 
 void Track::insertPoint(TrackPoint* point, int id) {
 
+  point->setTrack(this);
+
   #ifdef DEBUG
   std::cout << "Track::insertPoint at position " << id  << "\n";
   #endif
@@ -223,6 +225,13 @@ void Track::insertPoint(TrackPoint* point, int id) {
   if (id == -1 || id == (int)trackPoints_.size()) {
     trackPoints_.push_back(point);
     deleteReferenceInfo(std::max(0, (int)trackPoints_.size()-2), (int)trackPoints_.size()-1);
+
+    // delete fitter infos if inserted point has a measurement
+    if (point->hasRawMeasurements()) {
+      deleteForwardInfo(-1, -1);
+      deleteBackwardInfo(0, -2);
+    }
+
     return;
   }
 
@@ -243,6 +252,51 @@ void Track::insertPoint(TrackPoint* point, int id) {
 
   // delete reference info of neighbouring points
   deleteReferenceInfo(std::max(0, id-1), std::min((int)trackPoints_.size()-1, id+1));
+}
+
+
+void Track::insertPoints(std::vector<genfit::TrackPoint*> points, int id) {
+
+  int nBefore = getNumPoints();
+  int n = points.size();
+
+  if (n == 0)
+    return;
+  if (n == 1)
+    insertPoint(points[0], id);
+
+  for (std::vector<genfit::TrackPoint*>::iterator p = points.begin(); p != points.end(); ++p)
+    (*p)->setTrack(this);
+
+  if (id == -1 || id == (int)trackPoints_.size()) {
+    trackPoints_.insert(trackPoints_.end(), points.begin(), points.end());
+
+    deleteReferenceInfo(std::max(0, nBefore-1), nBefore);
+
+    deleteForwardInfo(nBefore, -1);
+    deleteBackwardInfo(0, std::max(0, nBefore-1));
+
+    return;
+  }
+
+
+  assert(id < (ssize_t)trackPoints_.size() || -id-1 <= (ssize_t)trackPoints_.size());
+
+  if (id < 0)
+    id += trackPoints_.size() + 1;
+
+
+  // insert
+  trackPoints_.insert(trackPoints_.begin() + id, points.begin(), points.end());  // insert inserts BEFORE
+
+  // delete fitter infos if inserted point has a measurement
+  deleteForwardInfo(id, -1);
+  deleteBackwardInfo(0, id+n);
+
+  // delete reference info of neighbouring points
+  deleteReferenceInfo(std::max(0, id-1), std::min((int)trackPoints_.size()-1, id));
+  deleteReferenceInfo(std::max(0, id+n-1), std::min((int)trackPoints_.size()-1, id+n));
+
 }
 
 
@@ -293,15 +347,14 @@ void Track::mergeTrack(const Track* other, int id) {
     }
   }
 
+  std::vector<TrackPoint*> points;
+  points.reserve(other->getNumPoints());
+
   for (std::vector<TrackPoint*>::const_iterator otherTp=other->trackPoints_.begin(); otherTp!=other->trackPoints_.end(); ++otherTp) {
-    insertPoint(new TrackPoint(**otherTp, thisRepOtherRep, &otherRepsToRemove), id);
-    if (id >= 0)
-      ++id;
+    points.push_back(new TrackPoint(**otherTp, thisRepOtherRep, &otherRepsToRemove));
   }
 
-  // FIXME instead of insertPoint, make insertPoints method an use that!
-
-
+  insertPoints(points, id);
 }
 
 

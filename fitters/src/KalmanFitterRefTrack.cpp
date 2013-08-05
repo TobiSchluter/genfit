@@ -355,6 +355,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           #endif
           prevReferenceState = referenceState;
           trackLen += referenceState->getForwardSegmentLength();
+          if (setSortingParams)
+            trackPoint->setSortingParameter(trackLen);
           continue;
         }
 

@@ -81,6 +81,8 @@ class Track : public TObject {
    */
   void insertPoint(TrackPoint* point, int id = -1);
 
+  void insertPoints(std::vector<genfit::TrackPoint*> points, int id = -1);
+
   void deletePoint(int id);
 
   /**
