@@ -27,15 +27,6 @@
 
 namespace genfit {
 
-DetPlane::DetPlane(const TVector3& o,
-                       const TVector3& u,
-                       const TVector3& v,
-                       AbsFinitePlane* finite)
-  :o_(o), u_(u), v_(v), finitePlane_(finite)
-{
-  sane();
-}
-
 
 DetPlane::DetPlane(AbsFinitePlane* finite)
   :finitePlane_(finite)
@@ -45,6 +36,16 @@ DetPlane::DetPlane(AbsFinitePlane* finite)
   u_.SetXYZ(1.,0.,0.);
   v_.SetXYZ(0.,1.,0.);
   // sane() not needed here
+}
+
+
+DetPlane::DetPlane(const TVector3& o,
+                       const TVector3& u,
+                       const TVector3& v,
+                       AbsFinitePlane* finite)
+  :o_(o), u_(u), v_(v), finitePlane_(finite)
+{
+  sane();
 }
 
 DetPlane::DetPlane(const TVector3& o,
@@ -347,9 +348,14 @@ void DetPlane::Streamer(TBuffer &R__b)
       o_.Streamer(R__b);
       u_.Streamer(R__b);
       v_.Streamer(R__b);
-      AbsFinitePlane *p = 0;
-      R__b >> p;
-      finitePlane_.reset(p);
+      finitePlane_.reset();
+      char flag;
+      R__b >> flag;
+      if (flag)	{
+	AbsFinitePlane *p = 0;
+	R__b >> p;
+	finitePlane_.reset(p->clone());
+      }
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
@@ -357,7 +363,14 @@ void DetPlane::Streamer(TBuffer &R__b)
       o_.Streamer(R__b);
       u_.Streamer(R__b);
       v_.Streamer(R__b);
-      R__b << finitePlane_.get();
+      if (finitePlane_) {
+	R__b << (char)1;
+	AbsFinitePlane *p = finitePlane_->clone();
+	R__b << p;
+	delete p;
+      } else {
+	R__b << (char)0;
+      }
       R__b.SetByteCount(R__c, kTRUE);
    }
 }

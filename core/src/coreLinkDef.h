@@ -14,11 +14,11 @@
 
 // These need their owners fixed up after reading.
 #pragma link C++ class genfit::AbsMeasurement; // trackPoint_
-#pragma link C++ class genfit::AbsFitterInfo; // trackPoint_, rep_
 
 // These cannot be dealt with by default streamers because of
 // shared_ptrs<> or scoped_ptrs<>.  Additionally, they may need their
 // owners fixed up.
+#pragma link C++ class genfit::AbsFitterInfo-; // trackPoint_, rep_, sharedPlanePtr
 #pragma link C++ class genfit::DetPlane-;  // scoped_ptr<> finitePlane_
 #pragma link C++ class genfit::StateOnPlane-;  // rep_, sharedPlanePtr
 #pragma link C++ class genfit::Track-;

@@ -49,7 +49,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
   KalmanFitterInfo();
   KalmanFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep);
-  ~KalmanFitterInfo();
+  virtual ~KalmanFitterInfo();
 
   virtual KalmanFitterInfo* clone() const;
 

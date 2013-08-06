@@ -180,7 +180,6 @@ class DetPlane : public TObject {
   void reset();
 
  private:
-
   // Private Methods -----------------
   void sane(); // ensures orthonormal coordinates
 

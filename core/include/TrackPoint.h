@@ -58,7 +58,7 @@ class TrackPoint : public TObject {
   //! FitterInfos with a rep in repsToIgnore will NOT be copied.
   TrackPoint(const TrackPoint&, const std::map<const genfit::AbsTrackRep*, genfit::AbsTrackRep*>&, const std::vector<const genfit::AbsTrackRep*> * repsToIgnore = NULL);
 
-  ~TrackPoint();
+  virtual ~TrackPoint();
 
 
   double getSortingParameter() const {return sortingParameter_;}

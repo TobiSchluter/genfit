@@ -48,6 +48,8 @@ class StateOnPlane : public TObject {
 
   StateOnPlane& operator= (const StateOnPlane& other);
 
+  virtual ~StateOnPlane() {}
+
   const TVectorD& getState() const {return state_;}
   TVectorD& getState() {return state_;}
   const TVectorD& getAuxInfo() const {return auxInfo_;}

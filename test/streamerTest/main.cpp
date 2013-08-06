@@ -125,7 +125,10 @@ bool emptyTrackTest()
 
   f = TFile::Open(FILENAME, "READ");
   t = (genfit::Track*)f->Get("direct");
-  return t->checkConsistency();
+  bool result = t->checkConsistency();
+  delete t;
+  delete f;
+  return result;
 }
 
 
@@ -680,7 +683,7 @@ int main() {
     }
 
 
-    if (debug) fitTrack->Print("C");
+    //if (debug) fitTrack->Print("C");
     assert(fitTrack->checkConsistency());
 
     nTotalIter += static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getNumIterations();
@@ -711,6 +714,7 @@ int main() {
     rep->get6DStateCov(kfsop, stateFinal, covFinal);
     planeFinal = *stateRefOrig.getPlane();
     tResults->Fill();
+    //fitTrack->Print();
     delete fitTrack;
     fitTrack = 0;
   }// end loop over events
@@ -727,7 +731,8 @@ int main() {
   tResults->SetBranchAddress("gfTrack", &fitTrack);
 
   for (Long_t nEntry = 0; nEntry < tResults->GetEntries(); ++nEntry) {
-    tResults->GetEntry(0);
+    tResults->GetEntry(nEntry);
+    //fitTrack->Print();
     if (!fitTrack->checkConsistency())
       {
 	std::cout << "stored track inconsistent" << std::endl;
@@ -755,7 +760,7 @@ int main() {
 	}
   }
   std::cout << "stored tracks are identical to fitted tracks, as far as tested." << std::endl;
+  delete fitTrack;
+  std::cout << "deleteing didn't segfault" << std::endl;
   return 0;
 }
-
-

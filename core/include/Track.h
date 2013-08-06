@@ -41,8 +41,8 @@ class Track : public TObject {
 
   Track(const Track&); // copy constructor
 
-  ~Track();
-
+  virtual ~Track();
+  virtual void Clear(Option_t* = "");
 
   TrackPoint* getPoint(int id) const;
   std::vector< genfit::TrackPoint* > getPoints() const;

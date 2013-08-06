@@ -47,6 +47,8 @@ class MeasuredStateOnPlane : public StateOnPlane {
 
   MeasuredStateOnPlane& operator= (const MeasuredStateOnPlane& other);
 
+  virtual ~MeasuredStateOnPlane() {}
+
   const TMatrixDSym& getCov() const {return cov_;}
   TMatrixDSym& getCov() {return cov_;}
 

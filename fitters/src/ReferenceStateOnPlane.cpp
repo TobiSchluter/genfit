@@ -40,7 +40,7 @@ ReferenceStateOnPlane::ReferenceStateOnPlane() :
 
 ReferenceStateOnPlane::ReferenceStateOnPlane(const TVectorD& state,
     SharedPlanePtr plane,
-    AbsTrackRep* rep) :
+    const AbsTrackRep* rep) :
   StateOnPlane(state, plane, rep),
   forwardSegmentLength_(0),
   backwardSegmentLength_(0),
@@ -54,6 +54,24 @@ ReferenceStateOnPlane::ReferenceStateOnPlane(const TVectorD& state,
   ;
 }
 
+ReferenceStateOnPlane::ReferenceStateOnPlane(const TVectorD& state,
+    SharedPlanePtr plane,
+    const AbsTrackRep* rep,
+    const TVectorD& auxInfo) :
+  StateOnPlane(state, plane, rep, auxInfo),
+  forwardSegmentLength_(0),
+  backwardSegmentLength_(0),
+  forwardTransportMatrix_(rep->getDim(), rep->getDim()),
+  backwardTransportMatrix_(rep->getDim(), rep->getDim()),
+  forwardNoiseMatrix_(rep->getDim()),
+  backwardNoiseMatrix_(rep->getDim()),
+  forwardDeltaState_(rep->getDim()),
+  backwardDeltaState_(rep->getDim())
+{
+  ;
+}
+
+
 ReferenceStateOnPlane::ReferenceStateOnPlane(const StateOnPlane& state) :
   StateOnPlane(state),
   forwardSegmentLength_(0),
@@ -65,7 +83,8 @@ ReferenceStateOnPlane::ReferenceStateOnPlane(const StateOnPlane& state) :
   forwardDeltaState_(state.getRep()->getDim()),
   backwardDeltaState_(state.getRep()->getDim())
 {
-  ;
+  std::cout << "should never come here" << std::endl;
+  exit(0);
 }
 
 

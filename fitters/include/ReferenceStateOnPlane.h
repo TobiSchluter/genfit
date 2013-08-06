@@ -40,8 +40,14 @@ class ReferenceStateOnPlane : public StateOnPlane {
   ReferenceStateOnPlane();
   ReferenceStateOnPlane(const TVectorD& state,
       SharedPlanePtr plane,
-      AbsTrackRep* rep);
+      const AbsTrackRep* rep);
+  ReferenceStateOnPlane(const TVectorD& state,
+      SharedPlanePtr plane,
+      const AbsTrackRep* rep,
+      const TVectorD& auxInfo);
   ReferenceStateOnPlane(const StateOnPlane& state);
+
+  virtual ~ReferenceStateOnPlane() {}
 
   void setForwardSegmentLength(double len) {forwardSegmentLength_ = len;}
   void setBackwardSegmentLength(double len) {backwardSegmentLength_ = len;}
@@ -87,7 +93,7 @@ class ReferenceStateOnPlane : public StateOnPlane {
   TVectorD backwardDeltaState_; // c
 
 
-  ClassDef(ReferenceStateOnPlane,0)
+  ClassDef(ReferenceStateOnPlane,1)
 
 };
 

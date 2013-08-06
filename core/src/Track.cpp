@@ -113,9 +113,16 @@ Track::Track(const Track& rhs)
 
 
 Track::~Track() {
+  this->Clear();
+}
+
+void Track::Clear(Option_t*)
+{
+  // This function is needed for TClonesArray embedding.
   // FIXME: smarter containers or pointers needed ...
   for (size_t i = 0; i < trackPoints_.size(); ++i)
     delete trackPoints_[i];
+  // ?trackPoints_.clear();
 
   for (std::map< const AbsTrackRep*, FitStatus* >::iterator it = fitStatuses_.begin(); it!= fitStatuses_.end(); ++it)
     delete it->second;
@@ -947,6 +954,7 @@ void Track::Streamer(TBuffer &R__b)
    typedef ::genfit::Track thisClass;
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      this->Clear();
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
       TObject::Streamer(R__b);
       {

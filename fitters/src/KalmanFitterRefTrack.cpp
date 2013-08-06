@@ -525,7 +525,10 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
       // create new reference state
       newRefState = true;
-      referenceState = new ReferenceStateOnPlane(*stateToExtrapolate);
+      referenceState = new ReferenceStateOnPlane(stateToExtrapolate->getState(),
+						 stateToExtrapolate->getPlane(),
+						 stateToExtrapolate->getRep(),
+						 stateToExtrapolate->getAuxInfo());
       referenceState->setForwardSegmentLength(segmentLen);
       referenceState->setForwardTransportMatrix(FTransportMatrix);
       referenceState->setForwardNoiseMatrix(FNoiseMatrix);

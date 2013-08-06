@@ -445,7 +445,7 @@ bool KalmanFitterInfo::checkConsistency() const {
   int dim = rep_->getDim(); // check dim
   if (referenceState_) {
     if(referenceState_->getPlane() != plane) {
-      std::cerr << "KalmanFitterInfo::checkConsistency(): referenceState_ is not defined with the correct plane" << std::endl;
+      std::cerr << "KalmanFitterInfo::checkConsistency(): referenceState_ is not defined with the correct plane " << referenceState_->getPlane().get() << " vs. " << plane.get() << std::endl;
       return false;
     }
     if (referenceState_->getRep() != rep_) {
@@ -571,39 +571,45 @@ void KalmanFitterInfo::Streamer(TBuffer &R__b)
       //This works around a msvc bug and should be harmless on other platforms
       typedef genfit::AbsFitterInfo baseClass0;
       baseClass0::Streamer(R__b);
-      {
-	ReferenceStateOnPlane *p = 0;
-	R__b >> p;
-	p->setRep(this->getRep());
-	referenceState_.reset(p);
+      int flag;
+      R__b >> flag;
+      referenceState_.reset();
+      forwardPrediction_.reset();
+      forwardUpdate_.reset();  
+      backwardUpdate_.reset();
+      measurementsOnPlane_.clear();
+      if (flag & 1) {
+	referenceState_.reset(new ReferenceStateOnPlane());
+	referenceState_->Streamer(R__b);
+	referenceState_->setPlane(getPlane());
+	// rep needs to be fixed up
       }
-      {
-	MeasuredStateOnPlane *p = 0;
-	R__b >> p;
-	p->setRep(this->getRep());
-	forwardPrediction_.reset(p);
+      if (flag & (1 << 1)) {
+	forwardPrediction_.reset(new MeasuredStateOnPlane());
+	forwardPrediction_->Streamer(R__b);
+	forwardPrediction_->setPlane(getPlane());
+	// rep needs to be fixed up
       }
-      {
-	KalmanFittedStateOnPlane *p = 0;
-	R__b >> p;
-	p->setRep(this->getRep());
-	forwardUpdate_.reset(p);
+      if (flag & (1 << 2)) {
+	forwardUpdate_.reset(new KalmanFittedStateOnPlane());
+	forwardUpdate_->Streamer(R__b);
+	forwardUpdate_->setPlane(getPlane());
+	// rep needs to be fixed up
       }
-      {
-	MeasuredStateOnPlane *p = 0;
-	R__b >> p;
-	p->setRep(this->getRep());
-	backwardPrediction_.reset(p);
+      if (flag & (1 << 3)) {	
+	backwardPrediction_.reset(new MeasuredStateOnPlane());
+	backwardPrediction_->Streamer(R__b);
+	backwardPrediction_->setPlane(getPlane());
+	// rep needs to be fixed up
       }
-      {
-	KalmanFittedStateOnPlane *p = 0;
-	R__b >> p;
-	p->setRep(this->getRep());
-	backwardUpdate_.reset(p);
+      if (flag & (1 << 4)) {	
+	backwardUpdate_.reset(new KalmanFittedStateOnPlane());
+	backwardUpdate_->Streamer(R__b);
+	backwardUpdate_->setPlane(getPlane());
+	// rep needs to be fixed up
       }
       {
 	std::vector<genfit::MeasurementOnPlane*,std::allocator<genfit::MeasurementOnPlane*> > &R__stl =  measurementsOnPlane_;
-         R__stl.clear();
          TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::MeasurementOnPlane));
          if (R__tcl1==0) {
             Error("measurementsOnPlane_ streamer","Missing the TClass object for genfit::MeasurementOnPlane!");
@@ -613,8 +619,9 @@ void KalmanFitterInfo::Streamer(TBuffer &R__b)
          R__b >> R__n;
          R__stl.reserve(R__n);
          for (R__i = 0; R__i < R__n; R__i++) {
-            genfit::MeasurementOnPlane* R__t;
-            R__t = (genfit::MeasurementOnPlane*)R__b.ReadObjectAny(R__tcl1);
+	   genfit::MeasurementOnPlane* R__t = new MeasurementOnPlane();
+	    R__t->Streamer(R__b);
+	    R__t->setPlane(getPlane());
             R__stl.push_back(R__t);
          }
       }
@@ -624,11 +631,22 @@ void KalmanFitterInfo::Streamer(TBuffer &R__b)
       //This works around a msvc bug and should be harmless on other platforms
       typedef genfit::AbsFitterInfo baseClass0;
       baseClass0::Streamer(R__b);
-      R__b << referenceState_.get();
-      R__b << forwardPrediction_.get();
-      R__b << forwardUpdate_.get();
-      R__b << backwardPrediction_.get();
-      R__b << backwardUpdate_.get();
+      int flag = (!!referenceState_
+		  | (!!forwardPrediction_ << 1)
+		  | (!!forwardUpdate_ << 2)
+		  | (!!backwardPrediction_ << 3)
+		  | (!!backwardUpdate_ << 4));
+      R__b << flag;
+      if (flag & 1)
+	referenceState_->Streamer(R__b);
+      if (flag & (1 << 1))
+	forwardPrediction_->Streamer(R__b);
+      if (flag & (1 << 2))
+	forwardUpdate_->Streamer(R__b);
+      if (flag & (1 << 3))
+	backwardPrediction_->Streamer(R__b);
+      if (flag & (1 << 4))
+	backwardUpdate_->Streamer(R__b);
       {
 	std::vector<genfit::MeasurementOnPlane*,std::allocator<genfit::MeasurementOnPlane*> > &R__stl =  measurementsOnPlane_;
          int R__n=(&R__stl) ? int(R__stl.size()) : 0;
@@ -636,7 +654,7 @@ void KalmanFitterInfo::Streamer(TBuffer &R__b)
          if(R__n) {
 	   std::vector<genfit::MeasurementOnPlane*,std::allocator<genfit::MeasurementOnPlane*> >::iterator R__k;
             for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
-            R__b << (*R__k);
+	      (*R__k)->Streamer(R__b);
             }
          }
       }

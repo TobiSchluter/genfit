@@ -99,9 +99,8 @@ void PlanarMeasurement::Streamer(TBuffer &R__b)
       //This works around a msvc bug and should be harmless on other platforms
       typedef genfit::AbsMeasurement baseClass0;
       baseClass0::Streamer(R__b);
-      DetPlane* p = 0;
-      R__b >> p;
-      this->physicalPlane_.reset(p);
+      physicalPlane_.reset(new DetPlane());
+      physicalPlane_->Streamer(R__b);
       R__b >> planeId_;
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
    } else {
@@ -109,7 +108,7 @@ void PlanarMeasurement::Streamer(TBuffer &R__b)
       //This works around a msvc bug and should be harmless on other platforms
       typedef genfit::AbsMeasurement baseClass0;
       baseClass0::Streamer(R__b);
-      R__b << physicalPlane_.get();
+      physicalPlane_->Streamer(R__b);
       R__b << planeId_;
       R__b.SetByteCount(R__c, kTRUE);
    }

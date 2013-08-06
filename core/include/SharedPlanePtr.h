@@ -33,7 +33,7 @@
 namespace genfit {
 
 #ifndef __CINT__
-typedef boost::shared_ptr< const genfit::DetPlane > SharedPlanePtr;
+typedef boost::shared_ptr< genfit::DetPlane > SharedPlanePtr;
 #else
 class SharedPlanePtr;
 #endif

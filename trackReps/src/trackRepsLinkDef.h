@@ -5,6 +5,6 @@
 #pragma link off all functions;
 
 
-#pragma link C++ class genfit::RKTrackRep;
+#pragma link C++ class genfit::RKTrackRep-;
 
 #endif
