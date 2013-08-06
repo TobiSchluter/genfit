@@ -34,7 +34,7 @@ class FitStatus : public TObject {
  public:
 
   FitStatus() :
-    isFitted_(false), isFitConverged_(false), hasTrackChanged_(false), charge_(0) {;}
+    isFitted_(false), isFitConverged_(false), trackHasChanged_(false), trackIsPruned_(false), charge_(0) {;}
 
   virtual ~FitStatus() {};
 
@@ -42,12 +42,14 @@ class FitStatus : public TObject {
 
   bool isFitted() const {return isFitted_;}
   bool isFitConverged() const {return isFitConverged_;}
-  bool hasTrackChanged() const {return hasTrackChanged_;}
+  bool hasTrackChanged() const {return trackHasChanged_;}
+  bool isTrackPruned() const {return trackIsPruned_;}
   double getCharge() const {return charge_;}
 
   void setIsFitted(bool fitted = true) {isFitted_ = fitted;}
   void setIsFitConverged(bool fitConverged = true) {isFitConverged_ = fitConverged;}
-  void setHasTrackChanged(bool trackChanged = true) {hasTrackChanged_ = trackChanged;}
+  void setHasTrackChanged(bool trackChanged = true) {trackHasChanged_ = trackChanged;}
+  void setIsTrackPruned(bool pruned = true) {trackIsPruned_ = pruned;}
   void setCharge(double charge) {charge_ = charge;}
 
   void Print(const Option_t* = "") const {
@@ -58,7 +60,8 @@ class FitStatus : public TObject {
         std::cout << " fit has converged,";
       else
         std::cout << " fit has NOT converged,";
-      if (hasTrackChanged_) std::cout << " track has changed since the fit,";
+      if (trackHasChanged_) std::cout << " track has changed since the fit,";
+      if (trackIsPruned_) std::cout << " track is pruned,";
       std::cout << " fitted charge = " << charge_ << " \n";
     }
     else
@@ -69,7 +72,8 @@ class FitStatus : public TObject {
 
   bool isFitted_; // has the track been fitted
   bool isFitConverged_; // did the fit converge
-  bool hasTrackChanged_; // has anything in the Track been changed sinde the fit -> fit isn't valid anymore
+  bool trackHasChanged_; // has anything in the Track been changed sinde the fit -> fit isn't valid anymore
+  bool trackIsPruned_; // Information has been stripped off, no refitting possible!
   double charge_; // fitted charge
 
   ClassDef(FitStatus,1);

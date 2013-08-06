@@ -82,6 +82,7 @@ class TrackPoint : public TObject {
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
   //! Takes ownership and sets this as measurement's trackPoint
   void addRawMeasurement(AbsMeasurement* rawMeasurement) {assert(rawMeasurement!=NULL); rawMeasurement->setTrackPoint(this); rawMeasurements_.push_back(rawMeasurement);}
+  void deleteRawMeasurements();
   //! Takes Ownership
   void setFitterInfo(genfit::AbsFitterInfo* fitterInfo) {
     if (fitterInfos_.find(fitterInfo->getRep()) != fitterInfos_.end()) { delete fitterInfos_[fitterInfo->getRep()]; }

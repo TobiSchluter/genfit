@@ -600,6 +600,57 @@ void Track::deleteMeasurementInfo(int startId, int endId, const AbsTrackRep* rep
 }
 
 
+void Track::prune(const Option_t*) {
+
+  // Todo: make options
+
+  for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it=fitStatuses_.begin(); it!=fitStatuses_.end(); ++it) {
+    it->second->setIsTrackPruned();
+  }
+
+  // prune trackPoints
+  TrackPoint* firstPoint = getPointWithMeasurement(0);
+  TrackPoint* lastPoint = getPointWithMeasurement(-1);
+  for (unsigned int i = 0; i<trackPoints_.size(); ++i) {
+    if (trackPoints_[i] != firstPoint && trackPoints_[i] != lastPoint) {
+      delete trackPoints_[i];
+      trackPoints_.erase(trackPoints_.begin()+i);
+      --i;
+    }
+  }
+
+  // prune TrackReps
+  for (unsigned int i = 0; i < trackReps_.size(); ++i) {
+    if (i != cardinalRep_) {
+      deleteTrackRep(i);
+      --i;
+    }
+  }
+
+
+  // from remaining trackPoints: prune measurementsOnPlane, unneeded fitterInfoStuff
+  for (unsigned int i = 0; i<trackPoints_.size(); ++i) {
+    trackPoints_[i]->deleteRawMeasurements();
+
+    std::vector< genfit::AbsFitterInfo* > fis =  trackPoints_[i]->getFitterInfos();
+    for (unsigned int j = 0; j<fis.size(); ++j) {
+      if (i != 0)
+        fis[j]->deleteBackwardInfo();
+      if (i != fis.size())
+        fis[j]->deleteForwardInfo();
+      fis[j]->deleteReferenceInfo();
+      fis[j]->deleteMeasurementInfo();
+    }
+  }
+
+
+  #ifdef DEBUG
+  std::cout << "pruned Track: "; Print();
+  #endif
+
+}
+
+
 void Track::Print(const Option_t* option) const {
   TString opt = option;
   opt.ToUpper();

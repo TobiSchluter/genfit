@@ -95,6 +95,11 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& c
 void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits)
 {
 
+  if (tr->getFitStatus(rep) != NULL && tr->getFitStatus(rep)->isTrackPruned()) {
+    Exception exc("KalmanFitterRefTrack::processTrack: Cannot process pruned track!", __LINE__,__FILE__);
+    throw exc;
+  }
+
 #ifdef DEBUG
   double oldChi2FW = 1e6;
   double oldPvalFW = 0.;

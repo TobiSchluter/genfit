@@ -85,6 +85,12 @@ void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
 
 void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits)
 {
+
+  if (tr->getFitStatus(rep) != NULL && tr->getFitStatus(rep)->isTrackPruned()) {
+    Exception exc("KalmanFitter::processTrack: Cannot process pruned track!", __LINE__,__FILE__);
+    throw exc;
+  }
+
   currentState_.reset(new MeasuredStateOnPlane(rep));
   TVectorD seed(tr->getStateSeed());
   TMatrixDSym cov(6);

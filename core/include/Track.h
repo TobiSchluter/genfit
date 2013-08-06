@@ -94,6 +94,7 @@ class Track : public TObject {
   void mergeTrack(const Track* other, int id = -1);
 
   void addTrackRep(AbsTrackRep* trackRep);
+
   /** Delete a #TrackRep and all corresponding #FitterInfos in the #TrackPoints
    */
   void deleteTrackRep(int id);
@@ -108,6 +109,8 @@ class Track : public TObject {
   void deleteBackwardInfo(int startId, int endId, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
   void deleteReferenceInfo(int startId, int endId, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
   void deleteMeasurementInfo(int startId, int endId, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
+
+  void prune(const Option_t* = "");
 
   void Print(const Option_t* = "") const;
 

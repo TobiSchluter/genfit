@@ -189,6 +189,14 @@ bool TrackPoint::hasFitterInfo(const AbsTrackRep* rep) const {
 }
 
 
+void TrackPoint::deleteRawMeasurements() {
+  for (size_t i = 0; i < rawMeasurements_.size(); ++i)
+    delete rawMeasurements_[i];
+
+  rawMeasurements_.clear();
+}
+
+
 void TrackPoint::Print(const Option_t*) const {
   std::cout << "genfit::TrackPoint, belonging to Track " << track_ << "; sorting parameter = " << sortingParameter_ << "\n";
   std::cout << "contains " << rawMeasurements_.size() << " rawMeasurements and " << getFitterInfos().size() << " fitterInfos for " << fitterInfos_.size() << " TrackReps.\n";
