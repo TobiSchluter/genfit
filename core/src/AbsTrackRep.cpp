@@ -139,7 +139,7 @@ void AbsTrackRep::calcJacobianNumerically(const genfit::StateOnPlane* origState,
 
 
 void AbsTrackRep::Print(const Option_t*) const {
-  std::cout << "genfit::TrackRep, pdgCode = " << pdgCode_ << ". PropDir = " << (int)propDir_ << "\n";
+  std::cout << "genfit::AbsTrackRep, pdgCode = " << pdgCode_ << ". PropDir = " << (int)propDir_ << "\n";
 }
 
 
