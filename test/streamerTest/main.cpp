@@ -121,6 +121,7 @@ bool emptyTrackTest()
     return false;
   t->Write("direct");
   f->Close();
+  delete t;
   delete f;
 
   f = TFile::Open(FILENAME, "READ");
@@ -762,5 +763,7 @@ int main() {
   std::cout << "stored tracks are identical to fitted tracks, as far as tested." << std::endl;
   delete fitTrack;
   std::cout << "deleteing didn't segfault" << std::endl;
+
+  delete fitter;
   return 0;
 }
