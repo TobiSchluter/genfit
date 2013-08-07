@@ -57,8 +57,7 @@ class AbsFinitePlane : public TObject {
   AbsFinitePlane& operator=(const AbsFinitePlane&);
 
 
-  //ClassDef(AbsFinitePlane,1)
-
+  ClassDef(AbsFinitePlane,1)
 };
 
 } /* End of namespace genfit */
