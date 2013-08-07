@@ -51,7 +51,7 @@ void StateOnPlane::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
-      TObject::Streamer(R__b);
+      //TObject::Streamer(R__b);
       state_.Streamer(R__b);
       auxInfo_.Streamer(R__b);
       sharedPlane_.reset(new DetPlane());
@@ -60,7 +60,7 @@ void StateOnPlane::Streamer(TBuffer &R__b)
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
-      TObject::Streamer(R__b);
+      //TObject::Streamer(R__b);
       state_.Streamer(R__b);
       auxInfo_.Streamer(R__b);
       sharedPlane_->Streamer(R__b);

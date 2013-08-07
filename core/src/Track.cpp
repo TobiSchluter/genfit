@@ -850,7 +850,7 @@ bool Track::checkConsistency() const {
     // check for valid pdg code
     TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle((*rep)->getPDG());
     if (particle == NULL) {
-      std::cerr << "Track::checkConsistency(): TrackRep pdg ID is not valid" << std::endl;
+      std::cerr << "Track::checkConsistency(): TrackRep pdg ID " << (*rep)->getPDG() << " is not valid" << std::endl;
       return false;
     }
 
@@ -956,7 +956,7 @@ void Track::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       this->Clear();
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
-      TObject::Streamer(R__b);
+      //TObject::Streamer(R__b);
       {
         std::vector<AbsTrackRep*> &R__stl =  trackReps_;
         R__stl.clear();
@@ -1018,7 +1018,7 @@ void Track::Streamer(TBuffer &R__b)
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
-      TObject::Streamer(R__b);
+      //TObject::Streamer(R__b);
       {
         std::vector<AbsTrackRep*> &R__stl =  trackReps_;
         int R__n=(&R__stl) ? int(R__stl.size()) : 0;

@@ -220,7 +220,6 @@ void TrackPoint::Print(const Option_t*) const {
 //
 // This is modified from the auto-generated Streamer.
 //
-// While reading, fitterInfos_ will be filled in by calling  
 void TrackPoint::Streamer(TBuffer &R__b)
 {
    // Stream an object of class genfit::TrackPoint.
@@ -229,7 +228,7 @@ void TrackPoint::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
-      TObject::Streamer(R__b);
+      //TObject::Streamer(R__b);
       R__b >> sortingParameter_;
       {
 	std::vector<genfit::AbsMeasurement*,std::allocator<genfit::AbsMeasurement*> > &R__stl =  rawMeasurements_;
@@ -275,7 +274,7 @@ void TrackPoint::Streamer(TBuffer &R__b)
 	}
    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
-      TObject::Streamer(R__b);
+      //TObject::Streamer(R__b);
       R__b << sortingParameter_;
       {
 	std::vector<genfit::AbsMeasurement*,std::allocator<genfit::AbsMeasurement*> > &R__stl =  rawMeasurements_;

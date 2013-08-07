@@ -5,12 +5,14 @@
 #pragma link off all functions;
 
 // These need no special treatment.
-#pragma link C++ class genfit::AbsFinitePlane;
-#pragma link C++ class genfit::RectangularFinitePlane;
+#pragma link C++ class genfit::AbsFinitePlane+;
+#pragma link C++ class genfit::RectangularFinitePlane+;
+#pragma link C++ class genfit::FitStatus+;
+
+// These inherit from classes with custom streamers, or reference share_ptrs in their interfaces.
 #pragma link C++ class genfit::AbsTrackRep;
 #pragma link C++ class genfit::MeasurementOnPlane;
 #pragma link C++ class genfit::MeasuredStateOnPlane;
-#pragma link C++ class genfit::FitStatus;
 
 // These need their owners fixed up after reading.
 #pragma link C++ class genfit::AbsMeasurement; // trackPoint_
