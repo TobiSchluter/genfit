@@ -45,7 +45,7 @@ void AbsKalmanFitter::getChiSquNdf(const Track* tr, const AbsTrackRep* rep,
   bNdf = -1. * rep->getDim();
   fNdf = -1. * rep->getDim();
 
-  std::vector<TrackPoint*> pointsWM = tr->getPointsWithMeasurement();
+  const std::vector<TrackPoint*>& pointsWM = tr->getPointsWithMeasurement();
   for (std::vector<TrackPoint*>::const_iterator tpIter = pointsWM.begin(), endIter = pointsWM.end(); tpIter != endIter; ++tpIter) {
     AbsFitterInfo* afi = (*tpIter)->getFitterInfo(rep);
     KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>(afi);
@@ -119,7 +119,7 @@ double AbsKalmanFitter::getPVal(const Track* tr, const AbsTrackRep* rep, int dir
 
 
 bool AbsKalmanFitter::isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const {
-  std::vector< TrackPoint* > points = tr->getPointsWithMeasurement();
+  const std::vector<TrackPoint*>& points = tr->getPointsWithMeasurement();
 
   if (points.size() == 0)
     return true;
@@ -145,7 +145,7 @@ bool AbsKalmanFitter::isTrackFitted(const Track* tr, const AbsTrackRep* rep) con
 
   // in depth check
 
-  std::vector< TrackPoint* > points = tr->getPointsWithMeasurement();
+  const std::vector< TrackPoint* >& points = tr->getPointsWithMeasurement();
 
   if (points.size() == 0)
     return true;

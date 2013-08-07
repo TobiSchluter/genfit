@@ -45,6 +45,8 @@ Track::Track(const TrackCand& trackCand) :
   cardinalRep_(0)
 {
   // TODO: implement
+
+  fillPointsWithMeasurement();
 }
 
 Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
@@ -75,6 +77,8 @@ Track::Track(const Track& rhs)
   for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it=rhs.fitStatuses_.begin(); it!=rhs.fitStatuses_.end(); ++it) {
     setFitStatus(it->second->clone(), oldRepNewRep[it->first]);
   }
+
+  fillPointsWithMeasurement();
 
   // self test
   assert(checkConsistency());
@@ -140,59 +144,11 @@ TrackPoint* Track::getPoint(int id) const {
 }
 
 
-std::vector<TrackPoint*> Track::getPoints() const {
-  std::vector< TrackPoint* > retVal;
-  retVal.reserve(trackPoints_.size());
-
-  for (std::vector<TrackPoint*>::const_iterator it = trackPoints_.begin(); it != trackPoints_.end(); ++it) {
-    retVal.push_back(*it);
-  }
-
-  return retVal;
-}
-
-
 TrackPoint* Track::getPointWithMeasurement(int id) const {
   if (id < 0)
     id += trackPoints_.size();
 
-  int idMeas(0);
-
-  for (std::vector<TrackPoint*>::const_iterator tp = trackPoints_.begin(); tp != trackPoints_.end(); ++tp) {
-    if ((*tp)->hasRawMeasurements()) {
-      if (id == idMeas)
-        return (*tp);
-      ++idMeas;
-    }
-  }
-
-  return NULL;
-}
-
-
-std::vector<TrackPoint*> Track::getPointsWithMeasurement() const {
-  std::vector<TrackPoint*> retVal;
-
-  for (std::vector<TrackPoint*>::const_iterator it = trackPoints_.begin(); it != trackPoints_.end(); ++it) {
-    if ((*it)->hasRawMeasurements()) {
-      retVal.push_back(*it);
-    }
-  }
-
-  return retVal;
-}
-
-
-unsigned int Track::getNumPointsWithMeasurement() const {
-  unsigned int retVal(0);
-
-  for (std::vector<TrackPoint*>::const_iterator it = trackPoints_.begin(); it != trackPoints_.end(); ++it) {
-    if ((*it)->hasRawMeasurements()) {
-      ++retVal;
-    }
-  }
-
-  return retVal;
+  return trackPointsWithMeasurement_.at(id);
 }
 
 
@@ -228,11 +184,19 @@ void Track::insertPoint(TrackPoint* point, int id) {
 
   if (trackPoints_.size() == 0) {
     trackPoints_.push_back(point);
+
+    if (point->hasRawMeasurements())
+      trackPointsWithMeasurement_.push_back(point);
+
     return;
   }
 
   if (id == -1 || id == (int)trackPoints_.size()) {
     trackPoints_.push_back(point);
+
+    if (point->hasRawMeasurements())
+      trackPointsWithMeasurement_.push_back(point);
+
     deleteReferenceInfo(std::max(0, (int)trackPoints_.size()-2), (int)trackPoints_.size()-1);
 
     // delete fitter infos if inserted point has a measurement
@@ -261,6 +225,8 @@ void Track::insertPoint(TrackPoint* point, int id) {
 
   // delete reference info of neighbouring points
   deleteReferenceInfo(std::max(0, id-1), std::min((int)trackPoints_.size()-1, id+1));
+
+  fillPointsWithMeasurement();
 }
 
 
@@ -271,8 +237,10 @@ void Track::insertPoints(std::vector<genfit::TrackPoint*> points, int id) {
 
   if (n == 0)
     return;
-  if (n == 1)
+  if (n == 1) {
     insertPoint(points[0], id);
+    return;
+  }
 
   for (std::vector<genfit::TrackPoint*>::iterator p = points.begin(); p != points.end(); ++p)
     (*p)->setTrack(this);
@@ -284,6 +252,8 @@ void Track::insertPoints(std::vector<genfit::TrackPoint*> points, int id) {
 
     deleteForwardInfo(nBefore, -1);
     deleteBackwardInfo(0, std::max(0, nBefore-1));
+
+    fillPointsWithMeasurement();
 
     return;
   }
@@ -306,6 +276,7 @@ void Track::insertPoints(std::vector<genfit::TrackPoint*> points, int id) {
   deleteReferenceInfo(std::max(0, id-1), std::min((int)trackPoints_.size()-1, id));
   deleteReferenceInfo(std::max(0, id+n-1), std::min((int)trackPoints_.size()-1, id+n));
 
+  fillPointsWithMeasurement();
 }
 
 
@@ -333,6 +304,10 @@ void Track::deletePoint(int id) {
   deleteReferenceInfo(std::max(0, id-1), std::min((int)trackPoints_.size()-1, id+1));
 
   // delete point
+  std::vector<TrackPoint*>::iterator it = std::find(trackPointsWithMeasurement_.begin(), trackPointsWithMeasurement_.end(), trackPoints_[id]);
+  if (it != trackPointsWithMeasurement_.end())
+    trackPointsWithMeasurement_.erase(it);
+
   delete trackPoints_[id];
   trackPoints_.erase(trackPoints_.begin()+id);
 
@@ -650,6 +625,7 @@ void Track::prune(const Option_t*) {
     }
   }
 
+  fillPointsWithMeasurement();
 
   #ifdef DEBUG
   std::cout << "pruned Track: "; Print();
@@ -927,6 +903,28 @@ bool Track::checkConsistency() const {
 
   } // end loop over TrackPoints
 
+
+  // check trackPointsWithMeasurement_
+  std::vector<TrackPoint*> trackPointsWithMeasurement;
+
+  for (std::vector<TrackPoint*>::const_iterator it = trackPoints_.begin(); it != trackPoints_.end(); ++it) {
+    if ((*it)->hasRawMeasurements()) {
+      trackPointsWithMeasurement.push_back(*it);
+    }
+  }
+
+  if (trackPointsWithMeasurement.size() != trackPointsWithMeasurement_.size()) {
+    std::cerr << "Track::checkConsistency(): trackPointsWithMeasurement_ has incorrect size" << std::endl;
+    return false;
+  }
+
+  for (unsigned int i = 0; i < trackPointsWithMeasurement.size(); ++i) {
+    if (trackPointsWithMeasurement[i] != trackPointsWithMeasurement_[i]) {
+      std::cerr << "Track::checkConsistency(): trackPointsWithMeasurement_ is not correct" << std::endl;
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -942,6 +940,17 @@ void Track::trackHasChanged() {
 
   for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it=fitStatuses_.begin(); it!=fitStatuses_.end(); ++it) {
     it->second->setHasTrackChanged();
+  }
+}
+
+
+void Track::fillPointsWithMeasurement() {
+  trackPointsWithMeasurement_.clear();
+
+  for (std::vector<TrackPoint*>::const_iterator it = trackPoints_.begin(); it != trackPoints_.end(); ++it) {
+    if ((*it)->hasRawMeasurements()) {
+      trackPointsWithMeasurement_.push_back(*it);
+    }
   }
 }
 
@@ -1016,6 +1025,8 @@ void Track::Streamer(TBuffer &R__b)
       }
       stateSeed_.Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+
+      fillPointsWithMeasurement();
    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
       //TObject::Streamer(R__b);

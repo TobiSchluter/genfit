@@ -260,8 +260,8 @@ void DAF::getWeights(const Track* tr, const AbsTrackRep* rep) {
 
   weights_.clear();
 
-  std::vector< TrackPoint* > trackPoints = tr->getPointsWithMeasurement();
-  for (std::vector< TrackPoint* >::iterator tp = trackPoints.begin(); tp != trackPoints.end(); ++tp) {
+  const std::vector< TrackPoint* >& trackPoints = tr->getPointsWithMeasurement();
+  for (std::vector< TrackPoint* >::const_iterator tp = trackPoints.begin(); tp != trackPoints.end(); ++tp) {
     AbsFitterInfo* fi = (*tp)->getFitterInfo(rep);
     if (dynamic_cast<KalmanFitterInfo*>(fi) == NULL){
       Exception exc("DAF::getWeights ==> can only use KalmanFitterInfos",__LINE__,__FILE__);
@@ -292,8 +292,8 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
 
   std::vector<std::vector<double> > ret_val;
 
-  std::vector< TrackPoint* > trackPoints = tr->getPointsWithMeasurement();
-  for (std::vector< TrackPoint* >::iterator tp = trackPoints.begin(); tp != trackPoints.end(); ++tp) {
+  const std::vector< TrackPoint* >& trackPoints = tr->getPointsWithMeasurement();
+  for (std::vector< TrackPoint* >::const_iterator tp = trackPoints.begin(); tp != trackPoints.end(); ++tp) {
 
     AbsFitterInfo* fi = (*tp)->getFitterInfo(rep);
     if (dynamic_cast<KalmanFitterInfo*>(fi) == NULL){

@@ -45,12 +45,12 @@ class Track : public TObject {
   virtual void Clear(Option_t* = "");
 
   TrackPoint* getPoint(int id) const;
-  std::vector< genfit::TrackPoint* > getPoints() const;
+  const std::vector< genfit::TrackPoint* > & getPoints() const {return trackPoints_;}
   unsigned int getNumPoints() const {return trackPoints_.size();}
 
   TrackPoint* getPointWithMeasurement(int id) const;
-  std::vector< genfit::TrackPoint* > getPointsWithMeasurement() const;
-  unsigned int getNumPointsWithMeasurement() const;
+  const std::vector< genfit::TrackPoint* > & getPointsWithMeasurement() const  {return trackPointsWithMeasurement_;}
+  unsigned int getNumPointsWithMeasurement() const {return trackPointsWithMeasurement_.size();}
 
   AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id);}
   unsigned int getNumReps() const {return trackReps_.size();}
@@ -122,10 +122,13 @@ class Track : public TObject {
 
   Track& operator=(const Track&); // assignment operator  // delete until properly implemented
 
+  void fillPointsWithMeasurement();
+
   std::vector<AbsTrackRep*> trackReps_; // Ownership
   unsigned int cardinalRep_; // THE selected rep, default = 0;
 
   std::vector<TrackPoint*> trackPoints_; // Ownership
+  std::vector<TrackPoint*> trackPointsWithMeasurement_; //! helper
 
   std::map< const AbsTrackRep*, FitStatus* > fitStatuses_; // Ownership over FitStatus*
 
