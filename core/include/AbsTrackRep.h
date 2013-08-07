@@ -132,6 +132,7 @@ class AbsTrackRep : public TObject {
   int pdgCode_;
   char propDir_;  // propagation direction (-1, 0, 1) -> (backward, auto, forward)
 
+  ClassDef(AbsTrackRep,1);
 };
 
 } /* End of namespace genfit */
