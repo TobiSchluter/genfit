@@ -35,7 +35,7 @@ class KalmanFitStatus : public FitStatus {
 
   KalmanFitStatus() :
     FitStatus(), numIterations_(0), fittedWithDaf_(false), fittedWithReferenceTrack_(false),
-    fChi2_(0), bChi2_(0), fNdf_(0), bNdf_(0) {;}
+    trackLen_(0), fChi2_(0), bChi2_(0), fNdf_(0), bNdf_(0) {;}
 
   virtual ~KalmanFitStatus() {};
 
@@ -44,6 +44,7 @@ class KalmanFitStatus : public FitStatus {
   unsigned int getNumIterations() const {return numIterations_;}
   bool isFittedWithDaf() const {return fittedWithDaf_;}
   bool isFittedWithReferenceTrack() const {return fittedWithReferenceTrack_;}
+  double getTrackLen() const {return trackLen_;}
   double getForwardChiSqu() const {return fChi2_;}
   double getBackwardChiSqu() const {return bChi2_;}
   double getForwardNdf() const {return fNdf_;}
@@ -54,6 +55,7 @@ class KalmanFitStatus : public FitStatus {
   void setNumIterations(unsigned int numIterations) {numIterations_ = numIterations;}
   void setIsFittedWithDaf(bool fittedWithDaf = true) {fittedWithDaf_ = fittedWithDaf;}
   void setIsFittedWithReferenceTrack(bool fittedWithReferenceTrack = true) {fittedWithReferenceTrack_ = fittedWithReferenceTrack;}
+  void setTrackLen(double trackLen) {trackLen_ = trackLen;}
   void setForwardChiSqu(double fChi2) {fChi2_ = fChi2;}
   void setBackwardChiSqu(double bChi2) {bChi2_ = bChi2;}
   void setForwardNdf(double fNdf) {fNdf_ = fNdf;}
@@ -65,6 +67,7 @@ class KalmanFitStatus : public FitStatus {
     if (fittedWithReferenceTrack_) std::cout << " track has been fitted with reference track,";
     if (isFitted_) {
       std::cout << " numIterations = " << numIterations_ << ", ";
+      std::cout << "track length = " << trackLen_ << ", ";
       std::cout << "fChi2 = " << fChi2_ << ", ";
       std::cout << "bChi2 = " << bChi2_ << ", ";
       std::cout << "fNdf = " << fNdf_ << ", ";
@@ -78,6 +81,8 @@ class KalmanFitStatus : public FitStatus {
   unsigned int numIterations_; // number of iterations that have been performed
   bool fittedWithDaf_;
   bool fittedWithReferenceTrack_;
+
+  double trackLen_;
 
   double fChi2_; // chi^2 of the forward fit
   double bChi2_; // chi^2 of the backward fit

@@ -597,6 +597,13 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
     }
   }
 
+  KalmanFitStatus* fitStatus = dynamic_cast<KalmanFitStatus*>(tr->getFitStatus(rep));
+  if (fitStatus != NULL)
+    fitStatus->setTrackLen(trackLen);
+
+  #ifdef DEBUG
+  std::cout << "trackLen of reference track = " << trackLen << "\n";
+  #endif
 
 
   // clean up
