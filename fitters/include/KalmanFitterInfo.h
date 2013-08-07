@@ -90,7 +90,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdate);
   void setUpdate(KalmanFittedStateOnPlane* update, int direction)  {if (direction >=0) setForwardUpdate(update); else setBackwardUpdate(update);}
   void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
-  void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) { measurementsOnPlane_.push_back(measurementOnPlane); }
+  void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane);
   void addMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
   /** Set weights of measurements */
   void setWeights(const std::vector<double>&);

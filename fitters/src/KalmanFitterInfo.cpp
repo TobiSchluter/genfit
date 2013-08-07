@@ -300,6 +300,13 @@ void KalmanFitterInfo::setMeasurementsOnPlane(const std::vector< genfit::Measure
 }
 
 
+void KalmanFitterInfo::addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane) {
+  if (measurementsOnPlane_.size() == 0)
+    setPlane(measurementOnPlane->getPlane());
+
+  measurementsOnPlane_.push_back(measurementOnPlane);
+}
+
 void KalmanFitterInfo::addMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane) {
   for (std::vector<MeasurementOnPlane*>::const_iterator m = measurementsOnPlane.begin(), mend = measurementsOnPlane.end(); m < mend; ++m) {
     addMeasurementOnPlane(*m);
