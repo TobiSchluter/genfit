@@ -256,7 +256,7 @@ void EventDisplay::drawEvent(unsigned int id) {
     unsigned int numhits = track->getNumPointsWithMeasurement();
 
     KalmanFitterInfo* fi;
-    KalmanFitterInfo* prevFi;
+    KalmanFitterInfo* prevFi = 0;
     MeasuredStateOnPlane* fittedState(NULL);
     MeasuredStateOnPlane* prevFittedState(NULL);
 
