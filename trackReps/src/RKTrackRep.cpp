@@ -1515,7 +1515,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       }
 
       //save old jacobianT
-      double* covAsPtr = (double*)jacobianT;
+      double* covAsPtr = *jacobianT;
       noiseProjection.SetMatrixArray(covAsPtr); // data is copied here
 
 #ifdef DEBUG
