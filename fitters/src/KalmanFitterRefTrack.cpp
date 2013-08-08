@@ -203,7 +203,7 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
       // See if p-value only changed little.  If the initial
       // parameters are very far off, initial chi^2 and the chi^2
       // after the first iteration will be both very close to zero, so
-      // we need to force at least two iterations here.  Convergence
+      // we need to have at least two iterations here.  Convergence
       // doesn't make much sense before running twice anyway.
       if (nIt > 1 && fabs(oldPvalBW - PvalBW) < deltaPval_)  {
         // Finished
@@ -291,10 +291,12 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
   unsigned int nPoints = tr->getNumPoints();
 
 
+  unsigned int i=0;
+
   try {
 
     // loop over TrackPoints
-    for (unsigned int i=0; i<nPoints; ++i) {
+    for (; i<nPoints; ++i) {
 
       TrackPoint* trackPoint = tr->getPoint(i);
 
@@ -368,6 +370,11 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         #endif
         StateOnPlane* stateToExtrapolate = new StateOnPlane(*prevReferenceState);
         SOPsToDestruct_.push_back(stateToExtrapolate);
+
+		// make sure track is consistent if extrapolation fails
+        prevReferenceState->resetBackward();
+        referenceState->resetForward();
+
         double segmentLen = rep->extrapolateToPlane(stateToExtrapolate, fitterInfo->getReferenceState()->getPlane(), false, true);
         #ifdef DEBUG
         std::cout << "extrapolated stateToExtrapolate (prevReferenceState) by " << segmentLen << " cm.\n";
@@ -493,6 +500,11 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       }
       SOPsToDestruct_.push_back(stateToExtrapolate);
 
+      // make sure track is consistent if extrapolation fails
+      if (prevReferenceState != NULL)
+        prevReferenceState->resetBackward();
+      fitterInfo->deleteReferenceInfo();
+
       double segmentLen = rep->extrapolateToPlane(stateToExtrapolate, plane, false, true);
       trackLen += segmentLen;
       #ifdef DEBUG
@@ -534,13 +546,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       referenceState->setForwardNoiseMatrix(FNoiseMatrix);
       referenceState->setForwardDeltaState(forwardDeltaState);
 
-      referenceState->setBackwardSegmentLength(0);
-      BTransportMatrix.UnitMatrix();
-      referenceState->setBackwardTransportMatrix(BTransportMatrix);
-      BNoiseMatrix.Zero();
-      referenceState->setBackwardNoiseMatrix(BNoiseMatrix);
-      backwardDeltaState.Zero();
-      referenceState->setBackwardDeltaState(backwardDeltaState);
+      referenceState->resetBackward();
 
       fitterInfo->setReferenceState(referenceState);
 
@@ -569,12 +575,22 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
   }
   catch (Exception& e) {
-    //std::cerr << e.what();
+    std::cerr << e.what();
+
+    #ifdef DEBUG
+    std::cout << "exception at hit " << i << "\n";
+    #endif
+
     // clean up
     cleanSOPsToDestruct();
     removeForwardBackwardInfo(tr, rep, notChangedUntil, notChangedFrom);
 
-    throw e;
+    //prevReferenceState->resetForward();
+    //referenceState->resetBackward();
+
+    Exception exc("KalmanFitterRefTrack::prepareTrack: got an exception.",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
   }
 
 
@@ -686,6 +702,10 @@ KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& not
       #endif
     }
 
+
+    #ifdef DEBUG
+    std::cout << "remove reference info \n";
+    #endif
 
     fitterInfo->deleteReferenceInfo();
     changedSmthg = true;
