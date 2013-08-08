@@ -74,6 +74,9 @@ class ReferenceStateOnPlane : public StateOnPlane {
   const TVectorD& getBackwardDeltaState() const {return backwardDeltaState_;}
   const TVectorD& getDeltaState(int direction) const {if (direction >= 0) return forwardDeltaState_; return backwardDeltaState_;}
 
+  void resetForward();
+  void resetBackward();
+
   virtual void Print(Option_t* option = "") const;
 
  protected:

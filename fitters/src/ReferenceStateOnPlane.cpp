@@ -88,6 +88,21 @@ ReferenceStateOnPlane::ReferenceStateOnPlane(const StateOnPlane& state) :
 }
 
 
+void ReferenceStateOnPlane::resetForward() {
+  forwardSegmentLength_ = 0;
+  forwardTransportMatrix_.UnitMatrix();
+  forwardNoiseMatrix_.Zero();
+  forwardDeltaState_.Zero();
+}
+
+void ReferenceStateOnPlane::resetBackward() {
+  backwardSegmentLength_ = 0;
+  backwardTransportMatrix_.UnitMatrix();
+  backwardNoiseMatrix_.Zero();
+  backwardDeltaState_.Zero();
+}
+
+
 void ReferenceStateOnPlane::Print(Option_t* option) const {
   StateOnPlane::Print();
 
