@@ -101,7 +101,6 @@ MeasurementOnPlane KalmanFitterInfo::getAvgWeightedMeasurementOnPlane() const {
     retVal.getCov().Zero();
 
     TMatrixDSym covInv;
-    std::vector<TMatrixDSym> weightedCovInvs;
 
     for(unsigned int i=0; i<measurementsOnPlane_.size(); ++i) {
 
@@ -114,17 +113,14 @@ MeasurementOnPlane KalmanFitterInfo::getAvgWeightedMeasurementOnPlane() const {
 
       tools::invertMatrix(measurementsOnPlane_[i]->getCov(), covInv); // invert cov
       covInv *= measurementsOnPlane_[i]->getWeight(); // weigh cov
-      weightedCovInvs.push_back(covInv); // cov is already inverted and weighted
       retVal.getCov() += covInv; // cov is already inverted and weighted
+
+      retVal.getState() += covInv * measurementsOnPlane_[i]->getState();
     }
 
-    // invert fHitCov
+    // invert Cov
     tools::invertMatrix(retVal.getCov());
 
-    //set the weighted-mean coord
-    for(unsigned int i=0; i<measurementsOnPlane_.size(); ++i) {
-      retVal.getState() += weightedCovInvs[i] * measurementsOnPlane_[i]->getState();
-    }
     retVal.getState() *= retVal.getCov();
   }
 
