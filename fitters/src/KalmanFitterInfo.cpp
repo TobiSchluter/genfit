@@ -285,6 +285,8 @@ void KalmanFitterInfo::setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdat
 
 
 void KalmanFitterInfo::setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane) {
+  for (size_t i = 0; i < measurementsOnPlane_.size(); ++i)
+    delete measurementsOnPlane_[i];  
   measurementsOnPlane_.clear();
 
   for (std::vector<MeasurementOnPlane*>::const_iterator m = measurementsOnPlane.begin(), mend = measurementsOnPlane.end(); m < mend; ++m) {
