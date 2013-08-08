@@ -804,7 +804,7 @@ void Track::Print(const Option_t* option) const {
 
 bool Track::checkConsistency() const {
 
-  std::map<const AbsTrackRep*, double> prevSegmentLengths;
+  std::map<const AbsTrackRep*, const KalmanFitterInfo*> prevFis;
 
   // check if seed is 6D
   if (stateSeed_.GetNrows() != 6) {
@@ -832,7 +832,6 @@ bool Track::checkConsistency() const {
       return false;
     }
 
-    prevSegmentLengths[*rep] = 0;
   }
 
   // check TrackPoints
@@ -889,18 +888,25 @@ bool Track::checkConsistency() const {
         return false;
       }
 
-      if (dynamic_cast<KalmanFitterInfo*>(*fi) != NULL)
-      if (static_cast<KalmanFitterInfo*>(*fi)->hasReferenceState()) {
-        double len = static_cast<KalmanFitterInfo*>(*fi)->getReferenceState()->getForwardSegmentLength();
-        double prevLen = prevSegmentLengths[(*fi)->getRep()];
-        if (fabs(prevLen + len) > 1E-10 ) {
-          std::cerr << "Track::checkConsistency(): segment lengths of reference states at TrackPoint " << (*tp) << " don't match" << std::endl;
-          std::cerr << prevLen << " + " << len << " = " << prevLen + len << std::endl;
-          std::cerr << "TrackPoint " << *tp << ", FitterInfo " << *fi << ", rep " << getIdForRep((*fi)->getRep()) << std::endl;
-          return false;
+      if (dynamic_cast<KalmanFitterInfo*>(*fi) != NULL) {
+        if (prevFis[(*fi)->getRep()] != NULL &&
+            static_cast<KalmanFitterInfo*>(*fi)->hasReferenceState() &&
+            prevFis[(*fi)->getRep()]->hasReferenceState() ) {
+          double len = static_cast<KalmanFitterInfo*>(*fi)->getReferenceState()->getForwardSegmentLength();
+          double prevLen = prevFis[(*fi)->getRep()]->getReferenceState()->getBackwardSegmentLength();
+          if (fabs(prevLen + len) > 1E-10 ) {
+            std::cerr << "Track::checkConsistency(): segment lengths of reference states for rep " << (*fi)->getRep() << " (id " << getIdForRep((*fi)->getRep()) << ") at TrackPoint " << (*tp) << " don't match" << std::endl;
+            std::cerr << prevLen << " + " << len << " = " << prevLen + len << std::endl;
+            std::cerr << "TrackPoint " << *tp << ", FitterInfo " << *fi << ", rep " << getIdForRep((*fi)->getRep()) << std::endl;
+            return false;
+          }
         }
-        prevSegmentLengths[(*fi)->getRep()] = static_cast<KalmanFitterInfo*>(*fi)->getReferenceState()->getBackwardSegmentLength();
+
+        prevFis[(*fi)->getRep()] = static_cast<KalmanFitterInfo*>(*fi);
       }
+      else
+        prevFis[(*fi)->getRep()] = NULL;
+
     } // end loop over FitterInfos
 
   } // end loop over TrackPoints
