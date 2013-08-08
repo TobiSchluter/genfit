@@ -19,7 +19,7 @@
 
 #include "MeasurementCreator.h"
 
-
+#include <iostream>
 
 #include <PlanarMeasurement.h>
 #include <ProlateSpacepointMeasurement.h>
