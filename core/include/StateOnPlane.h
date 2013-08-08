@@ -75,7 +75,7 @@ class StateOnPlane : public TObject {
 
   /** Pointer to TrackRep with respect to which StateOnPlane is defined
    */
-  const AbsTrackRep* rep_; // No ownership
+  const AbsTrackRep* rep_; //! No ownership
 
 
   ClassDef(StateOnPlane,1)
