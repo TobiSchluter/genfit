@@ -454,6 +454,8 @@ bool Track::sort() {
 
   deleteReferenceInfo(std::max(0, equalUntil+1), std::min((int)trackPoints_.size()-1, equalFrom-1));
 
+  fillPointsWithMeasurement();
+
   return true;
 }
 
@@ -892,7 +894,7 @@ bool Track::checkConsistency() const {
         double len = static_cast<KalmanFitterInfo*>(*fi)->getReferenceState()->getForwardSegmentLength();
         double prevLen = prevSegmentLengths[(*fi)->getRep()];
         if (fabs(prevLen + len) > 1E-10 ) {
-          std::cerr << "Track::checkConsistency(): segment lengths of reference states don't match" << std::endl;
+          std::cerr << "Track::checkConsistency(): segment lengths of reference states at TrackPoint " << (*tp) << " don't match" << std::endl;
           std::cerr << prevLen << " + " << len << " = " << prevLen + len << std::endl;
           std::cerr << "TrackPoint " << *tp << ", FitterInfo " << *fi << ", rep " << getIdForRep((*fi)->getRep()) << std::endl;
           return false;
@@ -921,6 +923,8 @@ bool Track::checkConsistency() const {
   for (unsigned int i = 0; i < trackPointsWithMeasurement.size(); ++i) {
     if (trackPointsWithMeasurement[i] != trackPointsWithMeasurement_[i]) {
       std::cerr << "Track::checkConsistency(): trackPointsWithMeasurement_ is not correct" << std::endl;
+      std::cerr << "has         id " << i << ", adress " << trackPointsWithMeasurement_[i] << std::endl;
+      std::cerr << "should have id " << i << ", adress " << trackPointsWithMeasurement[i] << std::endl;
       return false;
     }
   }
