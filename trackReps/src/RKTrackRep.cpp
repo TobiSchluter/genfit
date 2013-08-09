@@ -488,24 +488,19 @@ void RKTrackRep::calcForwardJacobianAndNoise() const {
   fJacobian_.SetMatrixArray(ExtrapSteps_.back().jac_);
   fNoise_.SetMatrixArray(ExtrapSteps_.back().noise_);
 
-#ifdef DEBUG
+/*#ifdef DEBUG
   std::cout << "jacobian " << ExtrapSteps_.size()-1 << " "; fJacobian_.Print();
   std::cout << "noise " << ExtrapSteps_.size()-1 << " "; fNoise_.Print();
-#endif
+#endif*/
 
   for (unsigned int i=ExtrapSteps_.size()-2; i!=std::numeric_limits<unsigned int>::max(); --i) {
     fNoise_ += TMatrixDSym(5, ExtrapSteps_[i].noise_).Similarity(fJacobian_);
     fJacobian_ *= TMatrixD(5,5, ExtrapSteps_[i].jac_);
 
-#ifdef DEBUG
+/*#ifdef DEBUG
   std::cout << "jacobian " << i << " "; TMatrixD(5,5, ExtrapSteps_[i].jac_).Print();
   std::cout << "noise " << i << " "; TMatrixDSym(5, ExtrapSteps_[i].noise_).Print();
-#endif
-
-#ifdef DEBUG
-  std::cout << "jacobian " << i << " "; TMatrixD(5,5, ExtrapSteps_[i].jac_).Print();
-  std::cout << "noise " << i << " "; TMatrixDSym(5, ExtrapSteps_[i].noise_).Print();
-#endif
+#endif*/
   }
 
 #ifdef DEBUG
@@ -560,10 +555,10 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
   noise.SetMatrixArray(ExtrapSteps_.front().noise_);
   noise.Similarity(jacobian);
 
-#ifdef DEBUG
+/*#ifdef DEBUG
   std::cout << "inverted jacobian 0 "; jacobian.Print();
   std::cout << "inverted noise 0 "; noise.Print();
-#endif
+#endif*/
   for (unsigned int i=1; i!=ExtrapSteps_.size(); ++i) {
     TMatrixD nextJac(5,5, ExtrapSteps_[i].jac_);
     TDecompLU invertAlgo2(nextJac);
@@ -574,20 +569,16 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
       throw e;
     }
 
-#ifdef DEBUG
+/*#ifdef DEBUG
   std::cout << "inverted jacobian " << i << " "; nextJac.Print();
-#endif
+#endif*/
 
     jacobian *= nextJac;
     noise += (TMatrixDSym(5, ExtrapSteps_[i].noise_)).Similarity(jacobian);
 
-#ifdef DEBUG
+/*#ifdef DEBUG
   std::cout << "inverted noise " << i << " "; ((TMatrixDSym(5, ExtrapSteps_[i].noise_)).Similarity(jacobian)).Print();
-#endif
-
-#ifdef DEBUG
-  std::cout << "inverted noise " << i << " "; ((TMatrixDSym(5, ExtrapSteps_[i].noise_)).Similarity(jacobian)).Print();
-#endif
+#endif*/
   }
 
 #ifdef DEBUG
@@ -795,7 +786,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
 
   // First point
   r[0] = R[0];           r[1] = R[1];           r[2]=R[2];
-  FieldManager::getFieldVal(r[0], r[1], r[2], H0[0], H0[1], H0[2]);       // magnetic field in 10^-4 T = kGauss
+  FieldManager::getInstance()->getFieldVal(r[0], r[1], r[2], H0[0], H0[1], H0[2]);       // magnetic field in 10^-4 T = kGauss
   H0[0] *= PS2; H0[1] *= PS2; H0[2] *= PS2;     // H0 is PS2*(Hx, Hy, Hz) @ R0
   A0 = A[1]*H0[2]-A[2]*H0[1]; B0 = A[2]*H0[0]-A[0]*H0[2]; C0 = A[0]*H0[1]-A[1]*H0[0]; // (ax, ay, az) x H0
   A2 = A[0]+A0              ; B2 = A[1]+B0              ; C2 = A[2]+C0              ; // (A0, B0, C0) + (ax, ay, az)
@@ -804,7 +795,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   // Second point
   if (varField) {
     r[0] += A1*S4;         r[1] += B1*S4;         r[2] += C1*S4;
-    FieldManager::getFieldVal(r[0], r[1], r[2], H1[0], H1[1], H1[2]);
+    FieldManager::getInstance()->getFieldVal(r[0], r[1], r[2], H1[0], H1[1], H1[2]);
     H1[0] *= PS2; H1[1] *= PS2; H1[2] *= PS2; // H1 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * [(A0, B0, C0) + 2*(ax, ay, az)]
   }
   else { H1[0] = H0[0]; H1[1] = H0[1]; H1[2] = H0[2];  }; // invalid: H1 = H0; !!
@@ -815,7 +806,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
   // Last point
   if (varField) {
     r[0]=R[0]+S*A4;         r[1]=R[1]+S*B4;         r[2]=R[2]+S*C4;  //setup.Field(r,H2);
-    FieldManager::getFieldVal(r[0], r[1], r[2], H2[0], H2[1], H2[2]);
+    FieldManager::getInstance()->getFieldVal(r[0], r[1], r[2], H2[0], H2[1], H2[2]);
     H2[0] *= PS2; H2[1] *= PS2; H2[2] *= PS2; // H2 is PS2*(Hx, Hy, Hz) @ (x, y, z) + 0.25*S * (A4, B4, C4)
   }
   else { H2[0] = H0[0]; H2[1] = H0[1]; H2[2] = H0[2];  }; // invalid: H2 = H0; !!
@@ -1064,13 +1055,13 @@ void RKTrackRep::transformPM7(const MeasuredStateOnPlane* state,
 
 
 void RKTrackRep::calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const {
-#ifdef DEBUG
+/*#ifdef DEBUG
   std::cout << "RKTrackRep::calcJ_pM_5x7 \n";
   std::cout << "  U = "; U.Print();
   std::cout << "  V = "; V.Print();
   std::cout << "  pTilde = "; RKTools::printDim(pTilde, 3,1);
   std::cout << "  spu = " << spu << "\n";
-#endif
+#endif*/
 
   const double pTildeMag = sqrt(pTilde[0]*pTilde[0] + pTilde[1]*pTilde[1] + pTilde[2]*pTilde[2]);
   const double pTildeMag2 = pTildeMag*pTildeMag;
@@ -1100,9 +1091,9 @@ void RKTrackRep::calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& 
   J_pM_5x7_[18] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
   J_pM_5x7_[19] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
 
-#ifdef DEBUG
+/*#ifdef DEBUG
   std::cout << "  J_pM_5x7_ = "; RKTools::printDim(J_pM_5x7_, 5,7);
-#endif
+#endif*/
 }
 
 
@@ -1189,13 +1180,13 @@ void RKTrackRep::transformM7P(const M7x7& in7x7,
 
 void RKTrackRep::calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const {
 
-#ifdef DEBUG
+/*#ifdef DEBUG
   std::cout << "RKTrackRep::calcJ_Mp_7x5 \n";
   std::cout << "  U = "; U.Print();
   std::cout << "  V = "; V.Print();
   std::cout << "  W = "; W.Print();
   std::cout << "  A = "; RKTools::printDim(A, 3,1);
-#endif
+#endif*/
 
   const double AtU = A[0]*U.X() + A[1]*U.Y() + A[2]*U.Z();
   const double AtV = A[0]*V.X() + A[1]*V.Y() + A[2]*V.Z();
@@ -1223,9 +1214,9 @@ void RKTrackRep::calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVecto
   J_Mp_7x5_[9]  = V.Y(); // [1][4]
   J_Mp_7x5_[14] = V.Z(); // [2][4]
 
-#ifdef DEBUG
+/*#ifdef DEBUG
   std::cout << "  J_Mp_7x5_ = "; RKTools::printDim(J_Mp_7x5_, 7,5);
-#endif
+#endif*/
 
 }
 
@@ -1987,7 +1978,9 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     }
 
 #ifdef DEBUG
-    std::cout << "final covariance matrix after Extrap: "; cov->Print();
+    if (cov != NULL) {
+      std::cout << "final covariance matrix after Extrap: "; cov->Print();
+    }
 #endif
   }
 

@@ -31,6 +31,11 @@
 
 namespace genfit {
 
+struct fieldCache {
+  double posX; double posY; double posZ;
+  double Bx; double By; double Bz;
+};
+
 /** @brief Singleton which provides access to magnetic field for track representations
  *
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
@@ -43,46 +48,17 @@ class FieldManager {
  public:
 
   AbsBField* getField(){
-    if(field_==NULL){
-      std::cerr << "FieldManager hasn't been initialized with a correct AbsBField pointer!" << std::endl;
-      std::string msg("FieldManager hasn't been initialized with a correct AbsBField pointer!");
-      std::runtime_error err(msg);
-      throw err;
-    }
+    checkInitialized();
     return field_;
   }
 
-  static TVector3 getFieldVal(const TVector3& position){
-    if(instance_==NULL){
-      std::cerr << "FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!" << std::endl;
-      std::string msg("FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!");
-      std::runtime_error err(msg);
-      throw err;
-    }
-    if(field_==NULL){
-      std::cerr << "FieldManager hasn't been initialized with a correct AbsBField pointer!" << std::endl;
-      std::string msg("FieldManager hasn't been initialized with a correct AbsBField pointer!");
-      std::runtime_error err(msg);
-      throw err;
-    }
+  //! This does NOT use the cache!
+  TVector3 getFieldVal(const TVector3& position){
+    checkInitialized();
     return field_->get(position);
   }
 
-  static void getFieldVal(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz){
-    if(instance_==NULL){
-      std::cerr << "FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!" << std::endl;
-      std::string msg("FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!");
-      std::runtime_error err(msg);
-      throw err;
-    }
-    if(field_==NULL){
-      std::cerr << "FieldManager hasn't been initialized with a correct AbsBField pointer!" << std::endl;
-      std::string msg("FieldManager hasn't been initialized with a correct AbsBField pointer!");
-      std::runtime_error err(msg);
-      throw err;
-    }
-    return field_->get(posX, posY, posZ, Bx, By, Bz);
-  }
+  void getFieldVal(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz);
 
   //! set the magnetic field here. Magnetic field classes must be derived from AbsBField.
   void init(AbsBField* b) {
@@ -90,6 +66,26 @@ class FieldManager {
   }
 
   bool isInitialized() { return field_ != NULL; }
+
+  void checkInitialized() {
+    if(! isInitialized()){
+      std::cerr << "FieldManager hasn't been initialized with a correct AbsBField pointer!" << std::endl;
+      std::string msg("FieldManager hasn't been initialized with a correct AbsBField pointer!");
+      std::runtime_error err(msg);
+      throw err;
+    }
+  }
+
+  static void checkInstanciated() {
+    if(instance_==NULL){
+      std::cerr << "FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!" << std::endl;
+      std::string msg("FieldManager hasn't been instantiated yet, call getInstance() and init() before getFieldVal()!");
+      std::runtime_error err(msg);
+      throw err;
+    }
+  }
+
+  void useCache(bool opt = true, unsigned int nBuckets = 8);
 
   static FieldManager* getInstance(){
     if(instance_ == NULL) {
@@ -101,9 +97,13 @@ class FieldManager {
 
  private:
 
-  FieldManager(){}
+  FieldManager() {}
   static FieldManager* instance_;
   static AbsBField* field_;
+
+  static bool useCache_;
+  static unsigned int n_buckets_;
+  static fieldCache* cache_;
 
 };
 
