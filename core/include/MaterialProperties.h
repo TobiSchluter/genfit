@@ -49,7 +49,6 @@ class MaterialProperties : public TObject {
   double getA() const {return A_;}
   double getRadLen() const {return radiationLength_;}
   double getMEE() const {return mEE_;}
-  double getSegmentLength() const {return segmentLength_;}
 
   void getMaterialProperties(double& density,
                              double& Z,
@@ -63,9 +62,6 @@ class MaterialProperties : public TObject {
                              const double& radiationLength,
                              const double& mEE);
 
-  void setSegmentLength(const double& segmentLength) {segmentLength_ = segmentLength;}
-  void addToSegmentLength(const double& deltaSegmentLength) {segmentLength_ += deltaSegmentLength;}
-
   void Print(const Option_t* = "") const;
 
  private:
@@ -76,9 +72,6 @@ class MaterialProperties : public TObject {
   double A_; // Mass number A of material
   double radiationLength_; // radiation length
   double mEE_; // mean excitation energy [eV]
-
-  // aux variables
-  double segmentLength_; // approximate track segment length in the material
 
 };
 

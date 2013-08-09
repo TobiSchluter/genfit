@@ -41,6 +41,8 @@ namespace genfit {
 struct RKStep {
   MaterialProperties materialProperties_;
   M1x7 state7_; // 7D state vector
+  double stepSize_;
+  StepLimits limits_;
 };
 
 struct ExtrapStep {
@@ -228,7 +230,7 @@ class RKTrackRep : public AbsTrackRep {
                 bool stopAtBoundary = false,
                 double maxStep = 1.E99) const;
 
-  void checkCache(const StateOnPlane& state) const;
+  void checkCache(const StateOnPlane& state, const SharedPlanePtr* plane) const;
 
 
 
@@ -243,6 +245,7 @@ class RKTrackRep : public AbsTrackRep {
   mutable TMatrixDSym fNoise_; //!
 
   mutable bool useCache_; //! use cached RKSteps_ for extrapolation
+  mutable unsigned int cachePos_; //!
 
   // auxiliary variables and arrays
   // needed in Extrap()

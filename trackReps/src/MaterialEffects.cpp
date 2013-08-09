@@ -115,6 +115,10 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
                                 M7x7* noise)
 {
 
+#ifdef DEBUG
+    std::cout << "     MaterialEffects::effects \n";
+#endif
+
   if (noEffects_) return 0.;
 
   if (materialInterface_ == nullptr) {
@@ -132,41 +136,45 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
 
   for ( std::vector<RKStep>::const_iterator it = steps.begin() + materialsFXStart; it !=  steps.begin() + materialsFXStop; ++it) { // loop over steps
 
-#ifdef DEBUG
-    std::cerr << "     calculate matFX ";
-    if (doNoise) std::cerr << " and noise";
-    std::cerr << " for "; it->materialProperties_.Print();
+    double realPath = it->stepSize_;
+    if (fabs(realPath) < 1.E-8) {
+      // do material effects only if distance is not too small
+      continue;
+    }
+
+    #ifdef DEBUG
+    std::cout << "     calculate matFX ";
+    if (doNoise) std::cout << " and noise";
+    std::cout << " for ";
+    std::cout << "stepSize = " << it->stepSize_ << "\t";
+    it->materialProperties_.Print();
 #endif
 
-    double realPath = it->materialProperties_.getSegmentLength();
     double stepSign(1.);
     if (realPath < 0)
       stepSign = -1.;
     realPath = fabs(realPath);
     stepSize_ = realPath;
 
-    if (realPath > 1.E-8) { // do material effects only if distance is not too small
+    it->materialProperties_.getMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
 
+    if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
 
-      it->materialProperties_.getMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
+      if (energyLossBetheBloch_)
+        momLoss += stepSign * this->energyLossBetheBloch(mom);
+      if (doNoise && energyLossBetheBloch_ && noiseBetheBloch_)
+        this->noiseBetheBloch(mom, *noise);
 
-      if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
+      if (doNoise && noiseCoulomb_)
+        this->noiseCoulomb(mom, *noise, *((M1x3*) &it->state7_[3]) );
 
-        if (energyLossBetheBloch_)
-          momLoss += stepSign * this->energyLossBetheBloch(mom);
-        if (doNoise && energyLossBetheBloch_ && noiseBetheBloch_)
-          this->noiseBetheBloch(mom, *noise);
+      if (energyLossBrems_)
+        momLoss += stepSign * this->energyLossBrems(mom);
+      if (doNoise && energyLossBrems_ && noiseBrems_)
+        this->noiseBrems(mom, *noise);
 
-        if (doNoise && noiseCoulomb_)
-          this->noiseCoulomb(mom, *noise, *((M1x3*) &it->state7_[3]) );
-
-        if (energyLossBrems_)
-          momLoss += stepSign * this->energyLossBrems(mom);
-        if (doNoise && energyLossBrems_ && noiseBrems_)
-          this->noiseBrems(mom, *noise);
-
-      }
     }
+
   } // end loop over steps
 
   return momLoss;
@@ -227,7 +235,7 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
 
 #ifdef DEBUG
-    std::cerr << "     currentMaterial "; currentMaterial.Print();
+    std::cout << "     currentMaterial "; currentMaterial.Print();
 #endif
 
   // limit due to momloss
@@ -243,7 +251,7 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   limits.setLimit(stp_momLoss, maxStepMomLoss);
 
 #ifdef DEBUG
-    std::cerr << "     momLoss exceeded after a step of " <<  maxStepMomLoss << "\n";
+    std::cout << "     momLoss exceeded after a step of " <<  maxStepMomLoss << "\n";
 #endif
 
 
@@ -251,9 +259,7 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   sMax = limits.getLowestLimitSignedVal();
 
   stepSize_ = limits.getStepSign() * minStep + materialInterface_->findNextBoundary(rep, state7, sMax, varField);
-  if (fabs(stepSize_) < fabs(sMax)) {
-    limits.setLimit(stp_boundary, stepSize_);
-  }
+  limits.setLimit(stp_boundary, stepSize_);
 
 
   relMomLoss += relMomLossPer_cm * limits.getLowestLimitVal();
@@ -383,7 +389,7 @@ void MaterialEffects::noiseCoulomb(const double& mom,
     sigma2 = 0.0136 * 0.0136 * charge_ * charge_ / (beta_ * beta_ * mom * mom) * stepOverRadLength * logCor * logCor;
   }
   assert(sigma2 >= 0.0);
-  //XXX std::cerr << "MaterialEffects::noiseCoulomb the MSC variance is " << sigma2 << std::endl;
+  //XXX std::cout << "MaterialEffects::noiseCoulomb the MSC variance is " << sigma2 << std::endl;
 
   double noiseAfter[7 * 7]; // will hold the new MSC noise to cause by the current stepSize_ length
   memset(noiseAfter, 0x00, 7 * 7 * sizeof(double));
@@ -435,7 +441,7 @@ void MaterialEffects::noiseCoulomb(const double& mom,
   noiseAfter[3 * 7 + 5] = noiseAfter[5 * 7 + 3];
   noiseAfter[4 * 7 + 5] = noiseAfter[5 * 7 + 4];
   noiseAfter[5 * 7 + 5] = sigma2 * sinTheta2;
-//    std::cerr << "new noise\n";
+//    std::cout << "new noise\n";
 //    RKTools::printDim(noiseAfter, 7,7);
   for (unsigned int i = 0; i < 7 * 7; ++i) {
     noise[i] += noiseAfter[i];
@@ -616,7 +622,7 @@ void MaterialEffects::noiseBrems(const double& mom,
 
   double minusXOverLn2  = -1.442695 * fabs(stepSize_) / radiationLength_;
   double sigma2 = 1.44*(pow(3., minusXOverLn2) - pow(4., minusXOverLn2)) / (mom*mom);
-  //XXX std::cerr << "breams sigma: " << sigma2E << std::endl;
+  //XXX std::cout << "breams sigma: " << sigma2E << std::endl;
   assert(sigma2 >= 0.0);
   noise[6 * 7 + 6] +=  sigma2;
 

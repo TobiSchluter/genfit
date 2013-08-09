@@ -145,7 +145,7 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 #ifdef DEBUG
       std::cout << "   next boundary is further away than sMax \n";
 #endif
-      return sMax;
+      return s + stepSign*safety;
     }
 
     if (slDist < delta) { // very near the boundary

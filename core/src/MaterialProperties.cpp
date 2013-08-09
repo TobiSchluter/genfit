@@ -45,8 +45,7 @@ MaterialProperties::MaterialProperties() :
   Z_(0),
   A_(0),
   radiationLength_(0),
-  mEE_(0),
-  segmentLength_(0)
+  mEE_(0)
 {
   ;
 }
@@ -61,8 +60,7 @@ MaterialProperties::MaterialProperties(const double& density,
   Z_(Z),
   A_(A),
   radiationLength_(radiationLength),
-  mEE_(mEE),
-  segmentLength_(segmentLength)
+  mEE_(mEE)
 {
   ;
 }
@@ -99,8 +97,7 @@ void MaterialProperties::Print(const Option_t*) const {
                "Z = " << Z_ << ", \t" <<
                "A = " << A_ << ", \t" <<
                "radiationLength = " << radiationLength_ << ", \t" <<
-               "mEE = " << mEE_ << ", \t" <<
-               "segmentLength = " << segmentLength_ << "\n";
+               "mEE = " << mEE_ << "\n";
 }
 
 

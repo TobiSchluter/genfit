@@ -721,6 +721,7 @@ int main() {
 
   // open event display
   display->setOptions("ABDEFHMPT"); // G show geometry
+  if (matFX) display->setOptions("ABDEFGHMPT"); // G show geometry
   display->open();
 
   //rootapp->Run();

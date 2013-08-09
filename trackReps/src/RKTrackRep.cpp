@@ -47,7 +47,8 @@ RKTrackRep::RKTrackRep() :
   RKStepsFXStop_(0),
   fJacobian_(5,5),
   fNoise_(5),
-  useCache_(false)
+  useCache_(false),
+  cachePos_(0)
 {
   initArrays();
 }
@@ -60,7 +61,8 @@ RKTrackRep::RKTrackRep(int pdgCode, char propDir) :
   RKStepsFXStop_(0),
   fJacobian_(5,5),
   fNoise_(5),
-  useCache_(false)
+  useCache_(false),
+  cachePos_(0)
 {
   initArrays();
 }
@@ -80,7 +82,7 @@ double RKTrackRep::extrapolateToPlane(StateOnPlane& state,
 std::cout << "RKTrackRep::extrapolateToPlane()\n";
 #endif
 
-  checkCache(state);
+  checkCache(state, &plane);
 
   // to 7D
   M1x7 state7;
@@ -125,7 +127,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
 std::cout << "RKTrackRep::extrapolateToLine()\n";
 #endif
 
-  checkCache(state);
+  checkCache(state, NULL);
 
   static const unsigned int maxIt(1000);
 
@@ -208,7 +210,7 @@ double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
 std::cout << "RKTrackRep::extrapolateToPoint()\n";
 #endif
 
-  checkCache(state);
+  checkCache(state, NULL);
 
   static const unsigned int maxIt(1000);
 
@@ -293,7 +295,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
   std::cout << "RKTrackRep::extrapolateToCylinder()\n";
   #endif
 
-  checkCache(state);
+  checkCache(state, NULL);
 
   static const unsigned int maxIt(1000);
 
@@ -395,8 +397,14 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
     const TVector3& point,
     bool stopAtBoundary) const {
 
+#ifdef DEBUG
+std::cout << "RKTrackRep::extrapolateToSphere()\n";
+#endif
+
+  checkCache(state, NULL);
+
   // TODO: implement
-  checkCache(state);
+
 
   lastEndState_ = state;
 
@@ -1437,9 +1445,9 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
     // check if we went back and forth multiple times -> we don't come closer to the plane!
     if (counter > 3){
-      if (S                                                         *RKSteps_[counter-1].materialProperties_.getSegmentLength() < 0 &&
-          RKSteps_[counter-1].materialProperties_.getSegmentLength()*RKSteps_[counter-2].materialProperties_.getSegmentLength() < 0 &&
-          RKSteps_[counter-2].materialProperties_.getSegmentLength()*RKSteps_[counter-3].materialProperties_.getSegmentLength() < 0){
+      if (S                            *RKSteps_[counter-1].stepSize_ < 0 &&
+          RKSteps_[counter-1].stepSize_*RKSteps_[counter-2].stepSize_ < 0 &&
+          RKSteps_[counter-2].stepSize_*RKSteps_[counter-3].stepSize_ < 0){
         Exception exc("RKTrackRep::RKutta ==> Do not get closer to plane!",__LINE__,__FILE__);
         exc.setFatal();
         throw exc;
@@ -1510,8 +1518,8 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       noiseProjection.SetMatrixArray(covAsPtr); // data is copied here
 
 #ifdef DEBUG
-      std::cout << "  Jacobian^T of extrapolation before Projection:\n";
-      RKTools::printDim(*jacobianT, 7,7);
+      //std::cout << "  Jacobian^T of extrapolation before Projection:\n";
+      //RKTools::printDim(*jacobianT, 7,7);
       std::cout << "  Project Jacobian of extrapolation onto destination plane\n";
 #endif
       An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
@@ -1530,8 +1538,8 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
 
 #ifdef DEBUG
-      std::cout << "  Jacobian^T of extrapolation after Projection:\n";
-      RKTools::printDim(*jacobianT, 7,7);
+      //std::cout << "  Jacobian^T of extrapolation after Projection:\n";
+      //RKTools::printDim(*jacobianT, 7,7);
 #endif
 
       if (!calcOnlyLastRowOfJ) {
@@ -1565,10 +1573,32 @@ double RKTrackRep::estimateStep(const M1x7& state7,
                                 double& relMomLoss,
                                 StepLimits& limits) const {
 
+  if (useCache_) {
+    if (cachePos_ > RKSteps_.size()) {
+      useCache_ = false;
+    }
+    else {
+      if (RKSteps_[cachePos_].limits_.getLowestLimit().first == stp_plane) {
+        // we need to step exactly to the plane, so don't use the cache!
+        useCache_ = false;
+        RKSteps_.erase(RKSteps_.begin() + cachePos_, RKSteps_.end());
+      }
+      else {
+        std::cout << " RKTrackRep::estimateStep: use stepSize " << cachePos_ << " from cache: " << RKSteps_[cachePos_].stepSize_ << "\n";
+        #ifdef DEBUG
+        #endif
+        //for(int n = 0; n < 1*7; ++n) RKSteps_[cachePos_].state7_[n] = state7[n];
+        ++RKStepsFXStop_;
+        limits = RKSteps_[cachePos_].limits_;
+        return RKSteps_[cachePos_++].stepSize_;
+      }
+    }
+  }
+
   limits.setLimit(stp_sMax, 25.); // max. step allowed [cm]
 
-  #ifdef DEBUG
     std::cout << " RKTrackRep::estimateStep \n";
+  #ifdef DEBUG
     std::cout << "  position:  "; TVector3(state7[0], state7[1], state7[2]).Print();
     std::cout << "  direction: "; TVector3(state7[3], state7[4], state7[5]).Print();
   #endif
@@ -1734,7 +1764,8 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
   double finalStep = limits.getLowestLimitSignedVal();
 
-  RKSteps_.back().materialProperties_.setSegmentLength(finalStep);
+  RKSteps_.back().stepSize_ = finalStep;
+  RKSteps_.back().limits_ = limits;
 
   #ifdef DEBUG
     std::cout << "  --> Step to be used: " << finalStep << "\n";
@@ -1853,6 +1884,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 #ifdef DEBUG
     std::cout<<"RKSteps \n";
     for (std::vector<RKStep>::iterator it = RKSteps_.begin(); it != RKSteps_.end(); ++it){
+      std::cout << "stepSize = " << it->stepSize_ << "\t";
       it->materialProperties_.Print();
     }
     std::cout<<"\n";
@@ -1889,6 +1921,9 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         state7[6] = qop;
 
         // correct state7 with dx/dqop, dy/dqop ... Greatly improves extrapolation accuracy!
+        #ifdef DEBUG
+        std::cout << "correct state7 with dx/dqop, dy/dqop ...\n";
+        #endif
         for (unsigned int i=0; i<6; ++i) {
           state7[i] += 0.5 * dqop * J_MMT_[6*7 + i];
         }
@@ -1927,14 +1962,14 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
       ExtrapSteps_.push_back(extrapStep);
 
-      #ifdef DEBUG
+      /*#ifdef DEBUG
       std::cout<<"ExtrapSteps \n";
       for (std::vector<ExtrapStep>::iterator it = ExtrapSteps_.begin(); it != ExtrapSteps_.end(); ++it){
         std::cout << "5D Jacobian: "; RKTools::printDim((it->jac_), 5,5);
         std::cout << "5D noise:    "; RKTools::printDim((it->noise_), 5,5);
       }
       std::cout<<"\n";
-      #endif
+      #endif*/
     }
 
 
@@ -1988,33 +2023,69 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 }
 
 
-void RKTrackRep::checkCache(const StateOnPlane& state) const {
-
-  // TODO: implement using cache!!!
+void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* plane) const {
 
   if (state.getRep() != this){
     Exception exc("RKTrackRep::checkCache ==> state is defined wrt. another TrackRep",__LINE__,__FILE__);
     throw exc;
   }
 
-  if (state.getPlane() == lastStartState_.getPlane() &&
-      state.getState() == lastStartState_.getState()) {
+  cachePos_ = 0;
+  RKStepsFXStart_ = 0;
+  RKStepsFXStop_ = 0;
+  ExtrapSteps_.clear();
+  initArrays();
+
+
+  if (plane != NULL &&
+      state.getPlane() == lastStartState_.getPlane() &&
+      state.getState() == lastStartState_.getState() &&
+      (*plane)->distance(getPos(lastEndState_)) <= MINSTEP) {
     useCache_ = true;
-    RKStepsFXStart_ = 0;
-    RKStepsFXStop_ = 0;
+
+    // clean up cache. Only use steps with same sign.
+    double firstStep(0);
+    for (unsigned int i=0; i<RKSteps_.size(); ++i) {
+      if (i == 0) {
+        firstStep = RKSteps_[0].stepSize_;
+        continue;
+      }
+      if (RKSteps_[i].stepSize_ * firstStep < 0) {
+        if (RKSteps_[i-1].materialProperties_ == RKSteps_[i].materialProperties_) {
+          RKSteps_[i-1].stepSize_ += RKSteps_[i].stepSize_;
+        }
+        RKSteps_.erase(RKSteps_.begin()+i, RKSteps_.end());
+      }
+    }
+
 #ifdef DEBUG
     std::cout << "RKTrackRep::checkCache: use cached material and step values.\n";
 #endif
   }
   else {
+
+#ifdef DEBUG
+    std::cout << "RKTrackRep::checkCache: can NOT use cached material and step values.\n";
+
+    if (plane != NULL) {
+      if (state.getPlane() != lastStartState_.getPlane()) {
+        std::cout << "state.getPlane() != lastStartState_.getPlane()\n";
+      }
+      else {
+        if (! (state.getState() == lastStartState_.getState())) {
+          std::cout << "state.getState() != lastStartState_.getState()\n";
+        }
+        else if (lastEndState_.getPlane().get() != NULL) {
+          std::cout << "distance " << (*plane)->distance(getPos(lastEndState_)) << "\n";
+        }
+      }
+    }
+#endif
+
     useCache_ = false;
     RKSteps_.clear();
-    RKStepsFXStart_ = 0;
-    RKStepsFXStop_ = 0;
-    ExtrapSteps_.clear();
 
     lastStartState_.setStatePlane(state.getState(), state.getPlane());
-    initArrays();
   }
 }
 
