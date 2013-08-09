@@ -257,8 +257,8 @@ void EventDisplay::drawEvent(unsigned int id) {
 
     KalmanFitterInfo* fi;
     KalmanFitterInfo* prevFi = 0;
-    MeasuredStateOnPlane* fittedState(NULL);
-    MeasuredStateOnPlane* prevFittedState(NULL);
+    const MeasuredStateOnPlane* fittedState(NULL);
+    const MeasuredStateOnPlane* prevFittedState(NULL);
 
     for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
 
@@ -272,7 +272,7 @@ void EventDisplay::drawEvent(unsigned int id) {
         continue;
       }
       try {
-        fittedState = fi->getFittedState(true);
+        fittedState = &(fi->getFittedState(true));
       }
       catch (Exception& e) {
         std::cerr << e.what();

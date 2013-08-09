@@ -162,17 +162,17 @@ std::vector<double> KalmanFitterInfo::getWeights() const {
 }
 
 
-MeasuredStateOnPlane* KalmanFitterInfo::getFittedState(bool biased) const {
+const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const {
   if (biased) {
     if (fittedStateBiased_.get() != NULL)
-      return fittedStateBiased_.get();
+      return *fittedStateBiased_;
 
     if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(-1) == this->getTrackPoint()) {// last measurement
       assert(forwardUpdate_.get() != NULL);
       #ifdef DEBUG
       std::cout << "KalmanFitterInfo::getFittedState - biased at last measurement = forwardUpdate_ \n";
       #endif
-      return forwardUpdate_.get();
+      return *forwardUpdate_;
     }
     else if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(0) == this->getTrackPoint()) { // first measurement
       assert(backwardUpdate_.get() != NULL);
@@ -180,7 +180,7 @@ MeasuredStateOnPlane* KalmanFitterInfo::getFittedState(bool biased) const {
       std::cout << "KalmanFitterInfo::getFittedState - biased at first measurement = backwardUpdate_ \n";
       backwardUpdate_->Print();
       #endif
-      return backwardUpdate_.get();
+      return *backwardUpdate_;
     }
 
     assert(forwardUpdate_.get() != NULL);
@@ -189,25 +189,25 @@ MeasuredStateOnPlane* KalmanFitterInfo::getFittedState(bool biased) const {
     std::cout << "KalmanFitterInfo::getFittedState - biased = mean(forwardUpdate_, backwardPrediction_) \n";
     #endif
     fittedStateBiased_.reset(new MeasuredStateOnPlane(calcAverageState(forwardUpdate_.get(), backwardPrediction_.get())));
-    return fittedStateBiased_.get();
+    return *fittedStateBiased_;
   }
   else { // unbiased
     if (fittedStateUnbiased_.get() != NULL)
-      return fittedStateUnbiased_.get();
+      return *fittedStateUnbiased_;
 
     if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(-1) == this->getTrackPoint()) { // last measurement
       assert(forwardPrediction_.get() != NULL);
       #ifdef DEBUG
       std::cout << "KalmanFitterInfo::getFittedState - unbiased at last measurement = forwardPrediction_ \n";
       #endif
-      return forwardPrediction_.get();
+      return *forwardPrediction_;
     }
     else if (this->getTrackPoint()->getTrack()->getPointWithMeasurement(0) == this->getTrackPoint()) { // first measurement
       assert(backwardPrediction_.get() != NULL);
       #ifdef DEBUG
       std::cout << "KalmanFitterInfo::getFittedState - unbiased at first measurement = backwardPrediction_ \n";
       #endif
-      return backwardPrediction_.get();
+      return *backwardPrediction_;
     }
 
     assert(forwardPrediction_.get() != NULL);
@@ -216,7 +216,7 @@ MeasuredStateOnPlane* KalmanFitterInfo::getFittedState(bool biased) const {
     std::cout << "KalmanFitterInfo::getFittedState - unbiased = mean(forwardPrediction_, backwardPrediction_) \n";
     #endif
     fittedStateUnbiased_.reset(new MeasuredStateOnPlane(calcAverageState(forwardPrediction_.get(), backwardPrediction_.get())));
-    return fittedStateUnbiased_.get();
+    return *fittedStateUnbiased_;
   }
 
 }
@@ -225,29 +225,29 @@ MeasuredStateOnPlane* KalmanFitterInfo::getFittedState(bool biased) const {
 MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeasurement) const {
   // TODO: Test
 
-  const MeasuredStateOnPlane* smoothedState = getFittedState(biased);
+  const MeasuredStateOnPlane& smoothedState = getFittedState(biased);
   const MeasurementOnPlane* measurement = measurementsOnPlane_.at(iMeasurement);
   SharedPlanePtr plane = measurement->getPlane();
 
   // check equality of planes and reps
-  if(*(smoothedState->getPlane()) != *plane) {
+  if(*(smoothedState.getPlane()) != *plane) {
     Exception e("KalmanFitterInfo::getResidual: smoothedState and measurement are not defined in the same plane.", __LINE__,__FILE__);
     throw e;
   }
-  if(smoothedState->getRep() != measurement->getRep()) {
+  if(smoothedState.getRep() != measurement->getRep()) {
     Exception e("KalmanFitterInfo::getResidual: smoothedState and measurement are not defined wrt the same TrackRep.", __LINE__,__FILE__);
     throw e;
   }
 
   const TMatrixD& H = measurement->getHMatrix();
 
-  TVectorD res = measurement->getState() - (H * smoothedState->getState());
+  TVectorD res = measurement->getState() - (H * smoothedState.getState());
 
-  TMatrixDSym cov(smoothedState->getCov());
+  TMatrixDSym cov(smoothedState.getCov());
   cov.Similarity(H);
   cov += measurement->getCov();
 
-  return MeasurementOnPlane(res, cov, plane, smoothedState->getRep(), H, measurement->getWeight());
+  return MeasurementOnPlane(res, cov, plane, smoothedState.getRep(), H, measurement->getWeight());
 }
 
 

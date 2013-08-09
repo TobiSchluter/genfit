@@ -70,7 +70,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   /** Get weights of measurements */
   std::vector<double> getWeights() const;
   /** Get unbiased or biased (default) smoothed state */
-  MeasuredStateOnPlane* getFittedState(bool biased = true) const;
+  const MeasuredStateOnPlane& getFittedState(bool biased = true) const;
   /** Get unbiased (default) or biased residual from ith measurement */
   MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const; // also calculates covariance of the residual
 

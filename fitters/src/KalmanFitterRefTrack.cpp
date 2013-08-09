@@ -339,7 +339,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
       // get smoothedState if available
       if (fitterInfo->hasPredictionsAndUpdates()) {
-        smoothedState = fitterInfo->getFittedState(true);
+        smoothedState = &(fitterInfo->getFittedState(true));
       }
       else {
         smoothedState = NULL;
@@ -434,7 +434,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         std::cout << "construct plane with smoothed state of cardinal rep fit \n";
         #endif
         TVector3 pos, mom;
-        tr->getCardinalRep()->getPosMom(*static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
+        tr->getCardinalRep()->getPosMom(static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
         StateOnPlane* cardinalState = new StateOnPlane(rep);
         SOPsToDestruct_.push_back(cardinalState);
         rep->setPosMom(*cardinalState, pos, mom); // also fills auxInfo
@@ -479,7 +479,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           std::cout << "extrapolate smoothed state of cardinal rep fit to plane\n";
           #endif
           TVector3 pos, mom;
-          tr->getCardinalRep()->getPosMom(*static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
+          tr->getCardinalRep()->getPosMom(static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
           stateToExtrapolate = new StateOnPlane(rep);
           rep->setPosMom(*stateToExtrapolate, pos, mom);
         }
@@ -680,13 +680,13 @@ KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& not
       }
 
 
-      const MeasuredStateOnPlane* smoothedState = fitterInfo->getFittedState(true);
-      TVectorD res(smoothedState->getState() - fitterInfo->getReferenceState()->getState());
+      const MeasuredStateOnPlane& smoothedState = fitterInfo->getFittedState(true);
+      TVectorD res(smoothedState.getState() - fitterInfo->getReferenceState()->getState());
       double chi2(0);
 
       // calculate chi2, ignore off diagonals
-      for (int j=0; j<smoothedState->getCov().GetNcols(); ++j)
-        chi2 += res[j]*res[j] / smoothedState->getCov()(j,j);
+      for (int j=0; j<smoothedState.getCov().GetNcols(); ++j)
+        chi2 += res[j]*res[j] / smoothedState.getCov()(j,j);
 
       if (chi2 < deltaChi2Ref_) {
         // reference state is near smoothed state ->  do not update reference state
