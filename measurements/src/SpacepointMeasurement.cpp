@@ -40,14 +40,14 @@ SpacepointMeasurement::SpacepointMeasurement(const TVectorD& rawHitCoords, const
 }
 
 
-SharedPlanePtr SpacepointMeasurement::constructPlane(const StateOnPlane* state) const {
+SharedPlanePtr SpacepointMeasurement::constructPlane(const StateOnPlane& state) const {
 
   // copy state. Neglect covariance.
-  StateOnPlane st(*state);
+  StateOnPlane st(state);
 
   const TVector3 point(rawHitCoords_(0), rawHitCoords_(1), rawHitCoords_(2));
 
-  const AbsTrackRep* rep = state->getRep();
+  const AbsTrackRep* rep = state.getRep();
   rep->extrapolateToPoint(st, point);
 
   const TVector3& dirInPoca = rep->getMom(st);

@@ -50,7 +50,7 @@ class SpacepointMeasurement : public AbsMeasurement {
 
   virtual AbsMeasurement* clone() const {return new SpacepointMeasurement(*this);}
 
-  virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const;
+  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
 
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr) const;
 

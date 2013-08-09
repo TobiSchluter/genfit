@@ -66,7 +66,7 @@ class WireMeasurement : public AbsMeasurement {
     * trajectory, whereas the wire position for hits with large drift radii is further away
     * from the trajectory and will therefore bias the fit if not weighted down.
     */
-  virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const;
+  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
 
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr) const;
 

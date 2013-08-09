@@ -32,6 +32,8 @@
 #include "KalmanFitterInfo.h"
 #include "KalmanFitStatus.h"
 
+#include "boost/scoped_ptr.hpp"
+
 #include <Math/ProbFunc.h>
 
 
@@ -368,14 +370,13 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         #ifdef DEBUG
         std::cout << "TrackPoint already has referenceState but previous referenceState has been altered -> update transport matrices and continue \n";
         #endif
-        StateOnPlane* stateToExtrapolate = new StateOnPlane(*prevReferenceState);
-        SOPsToDestruct_.push_back(stateToExtrapolate);
+        StateOnPlane stateToExtrapolate(*prevReferenceState);
 
 		// make sure track is consistent if extrapolation fails
         prevReferenceState->resetBackward();
         referenceState->resetForward();
 
-        double segmentLen = rep->extrapolateToPlane(*stateToExtrapolate, fitterInfo->getReferenceState()->getPlane(), false, true);
+        double segmentLen = rep->extrapolateToPlane(stateToExtrapolate, fitterInfo->getReferenceState()->getPlane(), false, true);
         #ifdef DEBUG
         std::cout << "extrapolated stateToExtrapolate (prevReferenceState) by " << segmentLen << " cm.\n";
         #endif
@@ -413,19 +414,19 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         #ifdef DEBUG
         std::cout << "construct plane with smoothedState \n";
         #endif
-        plane = trackPoint->getRawMeasurement(0)->constructPlane(smoothedState);
+        plane = trackPoint->getRawMeasurement(0)->constructPlane(*smoothedState);
       }
       else if (prevSmoothedState != NULL) {
         #ifdef DEBUG
         std::cout << "construct plane with prevSmoothedState \n";
         #endif
-        plane = trackPoint->getRawMeasurement(0)->constructPlane(prevSmoothedState);
+        plane = trackPoint->getRawMeasurement(0)->constructPlane(*prevSmoothedState);
       }
       else if (prevReferenceState != NULL) {
         #ifdef DEBUG
         std::cout << "construct plane with prevReferenceState \n";
         #endif
-        plane = trackPoint->getRawMeasurement(0)->constructPlane(prevReferenceState);
+        plane = trackPoint->getRawMeasurement(0)->constructPlane(*prevReferenceState);
       }
       else if (rep != tr->getCardinalRep() &&
                 dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
@@ -435,18 +436,16 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         #endif
         TVector3 pos, mom;
         tr->getCardinalRep()->getPosMom(static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
-        StateOnPlane* cardinalState = new StateOnPlane(rep);
-        SOPsToDestruct_.push_back(cardinalState);
-        rep->setPosMom(*cardinalState, pos, mom); // also fills auxInfo
+        StateOnPlane cardinalState(rep);
+        rep->setPosMom(cardinalState, pos, mom); // also fills auxInfo
         plane = trackPoint->getRawMeasurement(0)->constructPlane(cardinalState);
       }
       else {
         #ifdef DEBUG
         std::cout << "construct plane with state from track \n";
         #endif
-        StateOnPlane* seedFromTrack = new StateOnPlane(rep);
-        SOPsToDestruct_.push_back(seedFromTrack);
-        rep->setPosMom(*seedFromTrack, tr->getStateSeed()); // also fills auxInfo
+        StateOnPlane seedFromTrack(rep);
+        rep->setPosMom(seedFromTrack, tr->getStateSeed()); // also fills auxInfo
         plane = trackPoint->getRawMeasurement(0)->constructPlane(seedFromTrack);
       }
 
@@ -455,7 +454,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
       // do extrapolation and set reference state infos
-      StateOnPlane* stateToExtrapolate(NULL);
+      boost::scoped_ptr<StateOnPlane> stateToExtrapolate(NULL);
       if (prevFitterInfo == NULL) { // first measurement
         #ifdef DEBUG
         std::cout << "prevFitterInfo == NULL \n";
@@ -464,13 +463,13 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           #ifdef DEBUG
           std::cout << "extrapolate smoothedState to plane\n";
           #endif
-          stateToExtrapolate = new StateOnPlane(*smoothedState);
+          stateToExtrapolate.reset(new StateOnPlane(*smoothedState));
         }
         else if (referenceState != NULL) {
           #ifdef DEBUG
           std::cout << "extrapolate referenceState to plane\n";
           #endif
-          stateToExtrapolate = new StateOnPlane(*referenceState);
+          stateToExtrapolate.reset(new StateOnPlane(*referenceState));
         }
         else if (rep != tr->getCardinalRep() &&
                   dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
@@ -480,14 +479,14 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           #endif
           TVector3 pos, mom;
           tr->getCardinalRep()->getPosMom(static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
-          stateToExtrapolate = new StateOnPlane(rep);
+          stateToExtrapolate.reset(new StateOnPlane(rep));
           rep->setPosMom(*stateToExtrapolate, pos, mom);
         }
         else {
           #ifdef DEBUG
           std::cout << "extrapolate seed from track to plane\n";
           #endif
-          stateToExtrapolate = new StateOnPlane(rep);
+          stateToExtrapolate.reset(new StateOnPlane(rep));
           rep->setPosMom(*stateToExtrapolate, tr->getStateSeed());
         }
       }
@@ -496,9 +495,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         #ifdef DEBUG
         std::cout << "extrapolate prevReferenceState to plane\n";
         #endif
-        stateToExtrapolate = new StateOnPlane(*prevReferenceState);
+        stateToExtrapolate.reset(new StateOnPlane(*prevReferenceState));
       }
-      SOPsToDestruct_.push_back(stateToExtrapolate);
 
       // make sure track is consistent if extrapolation fails
       if (prevReferenceState != NULL)

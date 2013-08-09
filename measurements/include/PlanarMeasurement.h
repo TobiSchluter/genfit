@@ -50,7 +50,7 @@ class PlanarMeasurement : public AbsMeasurement {
 
   int getPlaneId() const {return planeId_;}
 
-  virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const;
+  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
 
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr) const;
 

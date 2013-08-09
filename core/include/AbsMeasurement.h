@@ -62,7 +62,7 @@ class AbsMeasurement : public TObject {
   /**
    * Construct (virtual) detector plane (use state's TrackRep). It's possible to make corrections to the plane here.
    */
-  virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const = 0;
+  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const = 0;
 
   /**
    * Construct measurement on given plane wrt. given TrackRep. The raw measurement has to be projected onto the plane. It's possible to make corrections to the coordinates here.

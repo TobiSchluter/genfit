@@ -202,7 +202,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   if (fi->getNumMeasurements() == 0) {
     std::vector< genfit::AbsMeasurement* > rawMeasurements =  tp->getRawMeasurements();
     // construct plane with first measurement
-    SharedPlanePtr plane = rawMeasurements[0]->constructPlane(currentState_.get());
+    SharedPlanePtr plane = rawMeasurements[0]->constructPlane(*currentState_);
     for (std::vector< genfit::AbsMeasurement* >::iterator it = rawMeasurements.begin(); it != rawMeasurements.end(); ++it) {
       fi->setMeasurementsOnPlane((*it)->constructMeasurementsOnPlane(rep, plane));
     }

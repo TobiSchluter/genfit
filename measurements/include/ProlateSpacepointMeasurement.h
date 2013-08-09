@@ -51,7 +51,7 @@ class ProlateSpacepointMeasurement : public SpacepointMeasurement {
 
   virtual AbsMeasurement* clone() const {return new ProlateSpacepointMeasurement(*this);}
 
-  virtual SharedPlanePtr constructPlane(const StateOnPlane* state) const;
+  virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
 
 
   const TVector3& getLargestErrorDirection(){return largestErrorDirection_;}
