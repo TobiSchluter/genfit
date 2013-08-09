@@ -35,27 +35,27 @@ class AbsTrackRep : public TObject {
    * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
    * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
-  virtual double extrapolateToPlane(StateOnPlane* state,
+  virtual double extrapolateToPlane(StateOnPlane& state,
       SharedPlanePtr plane,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const = 0;
 
-  virtual double extrapolateToLine(StateOnPlane* state,
+  virtual double extrapolateToLine(StateOnPlane& state,
       const TVector3& linePoint,
       const TVector3& lineDirection,
       bool stopAtBoundary = false) const = 0;
 
-  virtual double extrapolateToPoint(StateOnPlane* state,
+  virtual double extrapolateToPoint(StateOnPlane& state,
       const TVector3& point,
       bool stopAtBoundary = false) const = 0;
 
-  virtual double extrapolateToCylinder(StateOnPlane* state,
+  virtual double extrapolateToCylinder(StateOnPlane& state,
       double radius,
       const TVector3& linePoint = TVector3(0.,0.,0.),
       const TVector3& lineDirection = TVector3(0.,0.,1.),
       bool stopAtBoundary = false) const = 0;
 
-  virtual double extrapolateToSphere(StateOnPlane* state,
+  virtual double extrapolateToSphere(StateOnPlane& state,
       double radius,
       const TVector3& point = TVector3(0.,0.,0.),
       bool stopAtBoundary = false) const = 0;
@@ -68,23 +68,23 @@ class AbsTrackRep : public TObject {
 
   virtual unsigned int getDim() const = 0;
 
-  virtual TVector3 getPos(const StateOnPlane* stateInput) const = 0;
+  virtual TVector3 getPos(const StateOnPlane& stateInput) const = 0;
 
-  virtual TVector3 getMom(const StateOnPlane* stateInput) const = 0;
-  TVector3 getDir(const StateOnPlane* stateInput) const {return getMom(stateInput).Unit();}
-  virtual void getPosMom(const StateOnPlane* stateInput, TVector3& pos, TVector3& mom) const = 0;
-  void getPosDir(const StateOnPlane* stateInput, TVector3& pos, TVector3& dir) const {getPosMom(stateInput, pos, dir); dir.SetMag(1.);}
-  virtual TVectorD get6DState(const StateOnPlane* stateInput) const;
+  virtual TVector3 getMom(const StateOnPlane& stateInput) const = 0;
+  TVector3 getDir(const StateOnPlane& stateInput) const {return getMom(stateInput).Unit();}
+  virtual void getPosMom(const StateOnPlane& stateInput, TVector3& pos, TVector3& mom) const = 0;
+  void getPosDir(const StateOnPlane& stateInput, TVector3& pos, TVector3& dir) const {getPosMom(stateInput, pos, dir); dir.SetMag(1.);}
+  virtual TVectorD get6DState(const StateOnPlane& stateInput) const;
 
   /** Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance */
-  virtual void getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const = 0;
-  virtual void get6DStateCov(const MeasuredStateOnPlane* stateInput, TVectorD& stateVec, TMatrixDSym& cov) const;
+  virtual void getPosMomCov(const MeasuredStateOnPlane& stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const = 0;
+  virtual void get6DStateCov(const MeasuredStateOnPlane& stateInput, TVectorD& stateVec, TMatrixDSym& cov) const;
 
   /** get the variance of the absolute value of the momentum  */
-  virtual double getMomVar(const MeasuredStateOnPlane* stateInput) = 0;
+  virtual double getMomVar(const MeasuredStateOnPlane& stateInput) = 0;
 
   int getPDG() const {return pdgCode_;}
-  virtual double getCharge(const StateOnPlane* state) const = 0;
+  virtual double getCharge(const StateOnPlane& state) const = 0;
   char getPropDir() const {return propDir_;}
 
   /** Get the jacobian and noise matrix of the last extrapolation  */
@@ -94,15 +94,15 @@ class AbsTrackRep : public TObject {
   virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const = 0;
 
   /** Calculate Jacobian of transportation numerically. Slow but accurate. Can be used to validate (semi)analytic calculations. */
-  void calcJacobianNumerically(const genfit::StateOnPlane* origState,
+  void calcJacobianNumerically(const genfit::StateOnPlane& origState,
                                    const genfit::SharedPlanePtr destPlane,
                                    TMatrixD& jacobian);
 
-  virtual void setPosMom(StateOnPlane* stateInput, const TVector3& pos, const TVector3& mom) const = 0;
-  virtual void setPosMom(StateOnPlane* stateInput, const TVectorD& state6) const = 0;
-  virtual void setPosMomErr(MeasuredStateOnPlane* stateInput, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const = 0;
-  virtual void setPosMomCov(MeasuredStateOnPlane* stateInput, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const = 0;
-  virtual void setPosMomCov(MeasuredStateOnPlane* stateInput, const TVectorD& state6, const TMatrixDSym& cov6x6) const = 0;
+  virtual void setPosMom(StateOnPlane& stateInput, const TVector3& pos, const TVector3& mom) const = 0;
+  virtual void setPosMom(StateOnPlane& stateInput, const TVectorD& state6) const = 0;
+  virtual void setPosMomErr(MeasuredStateOnPlane& stateInput, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const = 0;
+  virtual void setPosMomCov(MeasuredStateOnPlane& stateInput, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const = 0;
+  virtual void setPosMomCov(MeasuredStateOnPlane& stateInput, const TVectorD& state6, const TMatrixDSym& cov6x6) const = 0;
 
   //! Set propagation direction. (-1, 0, 1) -> (backward, auto, forward)
   void setPropDir(int dir) {

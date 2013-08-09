@@ -65,9 +65,9 @@ SharedPlanePtr WireMeasurement::constructPlane(const StateOnPlane* state) const 
 
   // point of closest approach
   const AbsTrackRep* rep = state->getRep();
-  rep->extrapolateToLine(&st, wire1, wireDirection);
+  rep->extrapolateToLine(st, wire1, wireDirection);
   //const TVector3& poca = rep->getPos(&st);
-  TVector3 dirInPoca = rep->getMom(&st);
+  TVector3 dirInPoca = rep->getMom(st);
   dirInPoca.SetMag(1.);
   //const TVector3& pocaOnWire = wire1 + wireDirection.Dot(poca - wire1)*wireDirection;
  

@@ -173,7 +173,7 @@ bool checkSetGetPosMom() {
 
 
   genfit::StateOnPlane state(rep);
-  rep->setPosMom(&state, pos, mom);
+  rep->setPosMom(state, pos, mom);
 
   // check if we can set another position in the same plane
   if (randomSign() == 1) {
@@ -190,7 +190,7 @@ bool checkSetGetPosMom() {
     mom.SetMag(0.5);
     mom *= randomSign();
 
-    rep->setPosMom(&state, pos, mom);
+    rep->setPosMom(state, pos, mom);
 
     // check if plane has changed
     if (state.getPlane() != plane) {
@@ -202,13 +202,13 @@ bool checkSetGetPosMom() {
 
 
   // compare
-  if ((pos - rep->getPos(&state)).Mag() > epsilonLen ||
-      (mom - rep->getMom(&state)).Mag() > epsilonMom) {
+  if ((pos - rep->getPos(state)).Mag() > epsilonLen ||
+      (mom - rep->getMom(state)).Mag() > epsilonMom) {
 
     state.Print();
 
-    std::cout << "pos difference = " << (pos - rep->getPos(&state)).Mag() << "\n";
-    std::cout << "mom difference = " << (mom - rep->getMom(&state)).Mag() << "\n";
+    std::cout << "pos difference = " << (pos - rep->getPos(state)).Mag() << "\n";
+    std::cout << "mom difference = " << (mom - rep->getMom(state)).Mag() << "\n";
 
     std::cout << std::endl;
 
@@ -239,7 +239,7 @@ bool compareForthBackExtrapolation() {
 
 
   genfit::StateOnPlane state(rep);
-  rep->setPosMom(&state, pos, mom);
+  rep->setPosMom(state, pos, mom);
 
   genfit::SharedPlanePtr origPlane = state.getPlane();
   genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,randomSign()*10,0), TVector3(0,randomSign()*1,0)));
@@ -249,7 +249,7 @@ bool compareForthBackExtrapolation() {
   // forth
   double extrapLen(0);
   try {
-    extrapLen = rep->extrapolateToPlane(&state, plane);
+    extrapLen = rep->extrapolateToPlane(state, plane);
   }
   catch (genfit::Exception& e) {
     std::cerr << e.what();
@@ -261,7 +261,7 @@ bool compareForthBackExtrapolation() {
   // back
   double backExtrapLen(0);
   try {
-    backExtrapLen = rep->extrapolateToPlane(&state, origPlane);
+    backExtrapLen = rep->extrapolateToPlane(state, origPlane);
   }
   catch (genfit::Exception& e) {
     std::cerr << e.what();
@@ -271,15 +271,15 @@ bool compareForthBackExtrapolation() {
   }
 
   // compare
-  if ((rep->getPos(&origState) - rep->getPos(&state)).Mag() > epsilonLen ||
-      (rep->getMom(&origState) - rep->getMom(&state)).Mag() > epsilonMom ||
+  if ((rep->getPos(origState) - rep->getPos(state)).Mag() > epsilonLen ||
+      (rep->getMom(origState) - rep->getMom(state)).Mag() > epsilonMom ||
       fabs(extrapLen + backExtrapLen) > epsilonLen) {
 
     origState.Print();
     state.Print();
 
-    std::cout << "pos difference = " << (rep->getPos(&origState) - rep->getPos(&state)).Mag() << "\n";
-    std::cout << "mom difference = " << (rep->getMom(&origState) - rep->getMom(&state)).Mag() << "\n";
+    std::cout << "pos difference = " << (rep->getPos(origState) - rep->getPos(state)).Mag() << "\n";
+    std::cout << "mom difference = " << (rep->getMom(origState) - rep->getMom(state)).Mag() << "\n";
     std::cout << "len difference = " << extrapLen + backExtrapLen << "\n";
 
     std::cout << std::endl;
@@ -330,7 +330,7 @@ bool compareForthBackJacNoise() {
 
   // original state and plane
   genfit::MeasuredStateOnPlane state(rep);
-  rep->setPosMom(&state, pos, mom);
+  rep->setPosMom(state, pos, mom);
 
   static const double smear = 0.2;
   TVector3 normal(mom);
@@ -344,7 +344,7 @@ bool compareForthBackJacNoise() {
   origPlanePtr->rotate(rotAngleOrig);
   genfit::SharedPlanePtr origPlane(origPlanePtr);
   //genfit::SharedPlanePtr origPlane = state.getPlane();
-  rep->extrapolateToPlane(&state, origPlane);
+  rep->extrapolateToPlane(state, origPlane);
 
   const genfit::StateOnPlane origState(state);
 
@@ -371,7 +371,7 @@ bool compareForthBackJacNoise() {
 
   // numerical calculation
   TMatrixD jac_f_num;
-  rep->calcJacobianNumerically(&origState, plane, jac_f_num);
+  rep->calcJacobianNumerically(origState, plane, jac_f_num);
 
   double extrapLen(0);
 
@@ -379,7 +379,7 @@ bool compareForthBackJacNoise() {
   genfit::StateOnPlane extrapolatedState;
   try {
     //std::cout << "DO FORTH EXTRAPOLATION \n";
-    extrapLen = rep->extrapolateToPlane(&state, plane);
+    extrapLen = rep->extrapolateToPlane(state, plane);
     //std::cout << "GET INFO FOR FORTH EXTRAPOLATION \n";
     extrapolatedState = state;
     rep->getForwardJacobianAndNoise(jac_f, noise_f, c_f);
@@ -396,7 +396,7 @@ bool compareForthBackJacNoise() {
   // back
   try {
     //std::cout << "DO BACK EXTRAPOLATION \n";
-    rep->extrapolateToPlane(&state, origPlane);
+    rep->extrapolateToPlane(state, origPlane);
     //std::cout << "GET INFO FOR BACK EXTRAPOLATION \n";
     rep->getForwardJacobianAndNoise(jac_b, noise_b, c_b);
     rep->getBackwardJacobianAndNoise(jac_bi, noise_bi, c_bi);
@@ -514,7 +514,7 @@ bool checkStopAtBoundary() {
 
 
   genfit::StateOnPlane state(rep);
-  rep->setPosMom(&state, pos, mom);
+  rep->setPosMom(state, pos, mom);
 
   genfit::SharedPlanePtr origPlane = state.getPlane();
   genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,randomSign()*10,0), TVector3(0,randomSign()*1,0)));
@@ -523,7 +523,7 @@ bool checkStopAtBoundary() {
 
   // forth
   try {
-    rep->extrapolateToPlane(&state, plane, true);
+    rep->extrapolateToPlane(state, plane, true);
   }
   catch (genfit::Exception& e) {
     std::cerr << e.what();
@@ -534,12 +534,12 @@ bool checkStopAtBoundary() {
 
 
   // compare
-  if (fabs(rep->getPos(&state).Perp() - matRadius) > epsilonLen) {
+  if (fabs(rep->getPos(state).Perp() - matRadius) > epsilonLen) {
 
       origState.Print();
       state.Print();
 
-      std::cerr << "radius difference = " << rep->getPos(&state).Perp() - matRadius << "\n";
+      std::cerr << "radius difference = " << rep->getPos(state).Perp() - matRadius << "\n";
 
       std::cerr << std::endl;
 
@@ -569,7 +569,7 @@ bool checkErrorPropagation() {
 
 
   genfit::MeasuredStateOnPlane state(rep);
-  rep->setPosMom(&state, pos, mom);
+  rep->setPosMom(state, pos, mom);
 
   genfit::SharedPlanePtr origPlane = state.getPlane();
   genfit::SharedPlanePtr plane(new genfit::DetPlane(TVector3(0,randomSign()*50,0), TVector3(0,randomSign()*1,0)));
@@ -578,7 +578,7 @@ bool checkErrorPropagation() {
 
   // forth
   try {
-    rep->extrapolateToPlane(&state, plane);
+    rep->extrapolateToPlane(state, plane);
   }
   catch (genfit::Exception& e) {
     std::cerr << e.what();
@@ -620,7 +620,7 @@ bool checkExtrapolateToLine() {
 
 
   genfit::StateOnPlane state(rep);
-  rep->setPosMom(&state, pos, mom);
+  rep->setPosMom(state, pos, mom);
 
   genfit::SharedPlanePtr origPlane = state.getPlane();
   genfit::StateOnPlane origState(state);
@@ -630,7 +630,7 @@ bool checkExtrapolateToLine() {
 
   // forth
   try {
-    rep->extrapolateToLine(&state, linePoint, lineDirection, false);
+    rep->extrapolateToLine(state, linePoint, lineDirection, false);
   }
   catch (genfit::Exception& e) {
     std::cerr << e.what();
@@ -643,14 +643,14 @@ bool checkExtrapolateToLine() {
   // compare
   if (fabs(state.getPlane()->distance(linePoint)) > epsilonLen ||
       fabs(state.getPlane()->distance(linePoint+lineDirection)) > epsilonLen ||
-      (rep->getMom(&state).Unit() * state.getPlane()->getNormal()) > epsilonMom) {
+      (rep->getMom(state).Unit() * state.getPlane()->getNormal()) > epsilonMom) {
 
       origState.Print();
       state.Print();
 
       std::cout << "distance of linePoint to plane = " << state.getPlane()->distance(linePoint) << "\n";
       std::cout << "distance of linePoint+lineDirection to plane = " << state.getPlane()->distance(linePoint+lineDirection) << "\n";
-      std::cout << "direction * plane normal = " << rep->getMom(&state).Unit() * state.getPlane()->getNormal() << "\n";
+      std::cout << "direction * plane normal = " << rep->getMom(state).Unit() * state.getPlane()->getNormal() << "\n";
 
       delete rep;
       return false;
@@ -678,7 +678,7 @@ bool checkExtrapolateToPoint() {
 
 
   genfit::StateOnPlane state(rep);
-  rep->setPosMom(&state, pos, mom);
+  rep->setPosMom(state, pos, mom);
 
   genfit::SharedPlanePtr origPlane = state.getPlane();
   genfit::StateOnPlane origState(state);
@@ -687,7 +687,7 @@ bool checkExtrapolateToPoint() {
 
   // forth
   try {
-    rep->extrapolateToPoint(&state, point, false);
+    rep->extrapolateToPoint(state, point, false);
   }
   catch (genfit::Exception& e) {
     std::cerr << e.what();
@@ -699,13 +699,13 @@ bool checkExtrapolateToPoint() {
 
   // compare
   if (fabs(state.getPlane()->distance(point)) > epsilonLen ||
-      fabs((rep->getMom(&state).Unit() * state.getPlane()->getNormal())) - 1 > epsilonMom) {
+      fabs((rep->getMom(state).Unit() * state.getPlane()->getNormal())) - 1 > epsilonMom) {
 
       origState.Print();
       state.Print();
 
       std::cout << "distance of point to plane = " << state.getPlane()->distance(point) << "\n";
-      std::cout << "direction * plane normal = " << rep->getMom(&state).Unit() * state.getPlane()->getNormal() << "\n";
+      std::cout << "direction * plane normal = " << rep->getMom(state).Unit() * state.getPlane()->getNormal() << "\n";
 
       delete rep;
       return false;
@@ -733,7 +733,7 @@ bool checkExtrapolateToCylinder() {
 
 
   genfit::StateOnPlane state(rep);
-  rep->setPosMom(&state, pos, mom);
+  rep->setPosMom(state, pos, mom);
 
   genfit::SharedPlanePtr origPlane = state.getPlane();
   genfit::StateOnPlane origState(state);
@@ -744,7 +744,7 @@ bool checkExtrapolateToCylinder() {
 
   // forth
   try {
-    rep->extrapolateToCylinder(&state, radius, linePoint, lineDirection, false);
+    rep->extrapolateToCylinder(state, radius, linePoint, lineDirection, false);
   }
   catch (genfit::Exception& e) {
     std::cerr << e.what();
@@ -759,11 +759,11 @@ bool checkExtrapolateToCylinder() {
   }
 
   TVector3 pocaOnLine(lineDirection);
-  double t = 1./(pocaOnLine.Mag2()) * ((rep->getPos(&state)*pocaOnLine) - (linePoint*pocaOnLine));
+  double t = 1./(pocaOnLine.Mag2()) * ((rep->getPos(state)*pocaOnLine) - (linePoint*pocaOnLine));
   pocaOnLine *= t;
   pocaOnLine += linePoint;
 
-  TVector3 radiusVec = rep->getPos(&state) - pocaOnLine;
+  TVector3 radiusVec = rep->getPos(state) - pocaOnLine;
 
   // compare
   if (fabs(lineDirection*radiusVec) > epsilonLen ||

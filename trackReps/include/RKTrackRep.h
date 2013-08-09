@@ -67,27 +67,27 @@ class RKTrackRep : public AbsTrackRep {
    * and, via reference, the extrapolated statePrediction.
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    */
-  virtual double extrapolateToPlane(StateOnPlane* state,
+  virtual double extrapolateToPlane(StateOnPlane& state,
       SharedPlanePtr plane,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const;
 
-  virtual double extrapolateToLine(StateOnPlane* state,
+  virtual double extrapolateToLine(StateOnPlane& state,
       const TVector3& linePoint,
       const TVector3& lineDirection,
       bool stopAtBoundary = false) const;
 
-  virtual double extrapolateToPoint(StateOnPlane* state,
+  virtual double extrapolateToPoint(StateOnPlane& state,
       const TVector3& point,
       bool stopAtBoundary = false) const;
 
-  virtual double extrapolateToCylinder(StateOnPlane* state,
+  virtual double extrapolateToCylinder(StateOnPlane& state,
       double radius,
       const TVector3& linePoint = TVector3(0.,0.,0.),
       const TVector3& lineDirection = TVector3(0.,0.,1.),
       bool stopAtBoundary = false) const;
 
-  virtual double extrapolateToSphere(StateOnPlane* state,
+  virtual double extrapolateToSphere(StateOnPlane& state,
       double radius,
       const TVector3& point = TVector3(0.,0.,0.),
       bool stopAtBoundary = false) const;
@@ -100,18 +100,18 @@ class RKTrackRep : public AbsTrackRep {
 
   unsigned int getDim() const {return 5;}
 
-  virtual TVector3 getPos(const StateOnPlane* stateInput) const;
+  virtual TVector3 getPos(const StateOnPlane& stateInput) const;
 
-  virtual TVector3 getMom(const StateOnPlane* stateInput) const;
-  virtual void getPosMom(const StateOnPlane* stateInput, TVector3& pos, TVector3& mom) const;
+  virtual TVector3 getMom(const StateOnPlane& stateInput) const;
+  virtual void getPosMom(const StateOnPlane& stateInput, TVector3& pos, TVector3& mom) const;
 
   /** get the variance of the absolute value of the momentum  */
-  virtual double getMomVar(const MeasuredStateOnPlane* stateInput);
+  virtual double getMomVar(const MeasuredStateOnPlane& stateInput);
 
   /** Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance */
-  virtual void getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const;
-  virtual double getCharge(const StateOnPlane* state) const;
-  double getSpu(const StateOnPlane* state) const;
+  virtual void getPosMomCov(const MeasuredStateOnPlane& stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const;
+  virtual double getCharge(const StateOnPlane& state) const;
+  double getSpu(const StateOnPlane& state) const;
 
   /** Get the jacobian and noise matrix of the last extrapolation  */
   virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const;
@@ -120,15 +120,15 @@ class RKTrackRep : public AbsTrackRep {
   virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const;
 
 
-  virtual void setPosMom(StateOnPlane* state, const TVector3& pos, const TVector3& mom) const;
-  virtual void setPosMom(StateOnPlane* stateInput, const TVectorD& state6) const;
-  virtual void setPosMomErr(MeasuredStateOnPlane* state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const;
-  virtual void setPosMomCov(MeasuredStateOnPlane* state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const;
-  virtual void setPosMomCov(MeasuredStateOnPlane* state, const TVectorD& state6, const TMatrixDSym& cov6x6) const;
+  virtual void setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const;
+  virtual void setPosMom(StateOnPlane& stateInput, const TVectorD& state6) const;
+  virtual void setPosMomErr(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const;
+  virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const;
+  virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state6, const TMatrixDSym& cov6x6) const;
 
 
-  void setCharge(StateOnPlane* state, double charge) const {(state->getAuxInfo())(0) = charge;}
-  void setSpu(StateOnPlane* state, double spu) const {(state->getAuxInfo())(1) = spu;}
+  void setCharge(StateOnPlane& state, double charge) const {(state.getAuxInfo())(0) = charge;}
+  void setSpu(StateOnPlane& state, double spu) const {(state.getAuxInfo())(1) = spu;}
 
   //! The actual Runge Kutta propagation
   /** propagate #state7 with step #S. Fills #SA (Start directions derivatives dA/S).
@@ -152,20 +152,20 @@ class RKTrackRep : public AbsTrackRep {
 
   void initArrays() const;
 
-  void getState7(const StateOnPlane* state, M1x7& state7) const;
-  void getState5(StateOnPlane* state, const M1x7& state7) const; // state7 must already lie on plane of state!
+  void getState7(const StateOnPlane& state, M1x7& state7) const;
+  void getState5(StateOnPlane& state, const M1x7& state7) const; // state7 must already lie on plane of state!
 
-  void transformPM7(const MeasuredStateOnPlane* state,
+  void transformPM7(const MeasuredStateOnPlane& state,
                     M7x7& out7x7) const;
 
   void calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
 
-  void transformPM6(const MeasuredStateOnPlane* state,
+  void transformPM6(const MeasuredStateOnPlane& state,
                     M6x6& out6x6) const;
 
   void transformM7P(const M7x7& in7x7,
                     const M1x7& state7,
-                    MeasuredStateOnPlane* state) const; // plane must already be set!
+                    MeasuredStateOnPlane& state) const; // plane must already be set!
 
   void calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const;
 
@@ -173,7 +173,7 @@ class RKTrackRep : public AbsTrackRep {
 
   void transformM6P(const M6x6& in6x6,
                     const M1x7& state7,
-                    MeasuredStateOnPlane* state) const; // plane and charge must already be set!
+                    MeasuredStateOnPlane& state) const; // plane and charge must already be set!
 
   //! Propagates the particle through the magnetic field.
   /** If the propagation is successful and the plane is reached, the function returns true.
@@ -228,7 +228,7 @@ class RKTrackRep : public AbsTrackRep {
                 bool stopAtBoundary = false,
                 double maxStep = 1.E99) const;
 
-  void checkCache(const StateOnPlane* state) const;
+  void checkCache(const StateOnPlane& state) const;
 
 
 

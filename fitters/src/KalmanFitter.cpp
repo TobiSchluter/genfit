@@ -94,7 +94,7 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHi
   currentState_.reset(new MeasuredStateOnPlane(rep));
   TVectorD seed(tr->getStateSeed());
   TMatrixDSym cov(6);
-  rep->setPosMomCov(currentState_.get(), seed, cov);
+  rep->setPosMomCov(*currentState_, seed, cov);
 
   currentState_->getCov().UnitMatrix();
   //currentState_->getCov() *= blowUpFactor_; // FIXME find good start values
@@ -178,7 +178,7 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHi
   }
 
   status->setIsFitted();
-  status->setCharge(rep->getCharge(static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
+  status->setCharge(rep->getCharge(*static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
   status->setNumIterations(nIt);
   status->setForwardChiSqu(chi2FW);
   status->setBackwardChiSqu(chi2BW);
@@ -220,7 +220,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   double extLen = rep->extrapolateToPlane(state, plane);
   std::cout << "extrapolated by " << extLen << std::endl;
 #else
-  rep->extrapolateToPlane(state, plane);
+  rep->extrapolateToPlane(*state, plane);
 #endif
   //std::cout << "after extrap: " << std::endl;
   //state.Print();

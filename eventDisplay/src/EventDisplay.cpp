@@ -280,9 +280,9 @@ void EventDisplay::drawEvent(unsigned int id) {
         continue;
       }
 
-      TVector3 track_pos = rep->getPos(fittedState);
+      TVector3 track_pos = rep->getPos(*fittedState);
 
-      double charge = rep->getCharge(fittedState);
+      double charge = rep->getCharge(*fittedState);
 
       const MeasurementOnPlane* mop = fi->getMeasurementOnPlane(); // FIXME draw all measurements, not only 1st
       const TVectorT<double>& hit_coords = mop->getState();
@@ -356,8 +356,8 @@ void EventDisplay::drawEvent(unsigned int id) {
           const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth = 2, int markerPos = 1)
         {
           TVector3 pos, dir, oldPos, oldDir;
-          rep->getPosDir(state, pos, dir);
-          rep->getPosDir(prevState, oldPos, oldDir);
+          rep->getPosDir(*state, pos, dir);
+          rep->getPosDir(*prevState, oldPos, oldDir);
 
           double distA = (pos-oldPos).Mag();
           double distB = distA;
@@ -405,7 +405,7 @@ void EventDisplay::drawEvent(unsigned int id) {
               // get cov at first plane
               TMatrixDSym cov;
               TVector3 position, direction;
-              rep->getPosMomCov(measuredState, position, direction, cov);
+              rep->getPosMomCov(*measuredState, position, direction, cov);
 
               // get eigenvalues & -vectors
               TMatrixDEigen eigen_values(cov.GetSub(0,2, 0,2));
@@ -463,7 +463,7 @@ void EventDisplay::drawEvent(unsigned int id) {
 
               MeasuredStateOnPlane stateCopy(*measuredState);
               try{
-                rep->extrapolateToPlane(&stateCopy, SharedPlanePtr(newPlane));
+                rep->extrapolateToPlane(stateCopy, SharedPlanePtr(newPlane));
               }
               catch(Exception& e){
                 std::cerr<<e.what();
@@ -471,7 +471,7 @@ void EventDisplay::drawEvent(unsigned int id) {
               }
 
               // get cov at 2nd plane
-              rep->getPosMomCov(&stateCopy, position, direction, cov);
+              rep->getPosMomCov(stateCopy, position, direction, cov);
 
               // get eigenvalues & -vectors
               TMatrixDEigen eigen_values2(cov.GetSub(0,2, 0,2));

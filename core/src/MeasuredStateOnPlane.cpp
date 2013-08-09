@@ -34,7 +34,7 @@ void MeasuredStateOnPlane::Print(Option_t* option) const {
     std::cout << " defined in plane "; sharedPlane_->Print();
     TVector3 pos, mom;
     TMatrixDSym cov(6,6);
-    getRep()->getPosMomCov(this, pos, mom, cov);
+    getRep()->getPosMomCov(*this, pos, mom, cov);
     std::cout << " 3D position: "; pos.Print();
     std::cout << " 3D momentum: "; mom.Print();
     //std::cout << " 6D covariance: "; cov.Print();

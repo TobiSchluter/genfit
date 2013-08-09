@@ -44,7 +44,7 @@ AbsTrackRep::AbsTrackRep(const AbsTrackRep& rep) :
 }
 
 
-TVectorD AbsTrackRep::get6DState(const StateOnPlane* stateInput) const {
+TVectorD AbsTrackRep::get6DState(const StateOnPlane& stateInput) const {
   TVector3 pos, mom;
   getPosMom(stateInput, pos, mom);
 
@@ -62,7 +62,7 @@ TVectorD AbsTrackRep::get6DState(const StateOnPlane* stateInput) const {
 }
 
 
-void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane* stateInput, TVectorD& stateVec, TMatrixDSym& cov) const {
+void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane& stateInput, TVectorD& stateVec, TMatrixDSym& cov) const {
   TVector3 pos, mom;
   getPosMomCov(stateInput, pos, mom, cov);
 
@@ -78,7 +78,7 @@ void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane* stateInput, TVectorD
 }
 
 
-void AbsTrackRep::calcJacobianNumerically(const genfit::StateOnPlane* origState,
+void AbsTrackRep::calcJacobianNumerically(const genfit::StateOnPlane& origState,
                                                const genfit::SharedPlanePtr destPlane,
                                                TMatrixD& jacobian) {
 
@@ -102,27 +102,27 @@ void AbsTrackRep::calcJacobianNumerically(const genfit::StateOnPlane* origState,
   TVectorD leftShort(getDim()), leftFull(getDim());
   for (size_t i = 0; i < getDim(); ++i) {
     {
-      genfit::StateOnPlane stateCopy(*origState);
+      genfit::StateOnPlane stateCopy(origState);
       (stateCopy.getState())(i) += stepX / 2;
-      extrapolateToPlane(&stateCopy, destPlane);
+      extrapolateToPlane(stateCopy, destPlane);
       rightShort = stateCopy.getState();
     }
     {
-      genfit::StateOnPlane stateCopy(*origState);
+      genfit::StateOnPlane stateCopy(origState);
       (stateCopy.getState())(i) -= stepX / 2;
-      extrapolateToPlane(&stateCopy, destPlane);
+      extrapolateToPlane(stateCopy, destPlane);
       leftShort = stateCopy.getState();
     }
     {
-      genfit::StateOnPlane stateCopy(*origState);
+      genfit::StateOnPlane stateCopy(origState);
       (stateCopy.getState())(i) += stepX;
-      extrapolateToPlane(&stateCopy, destPlane);
+      extrapolateToPlane(stateCopy, destPlane);
       rightFull = stateCopy.getState();
     }
     {
-      genfit::StateOnPlane stateCopy(*origState);
+      genfit::StateOnPlane stateCopy(origState);
       (stateCopy.getState())(i) -= stepX;
-      extrapolateToPlane(&stateCopy, destPlane);
+      extrapolateToPlane(stateCopy, destPlane);
       leftFull = stateCopy.getState();
     }
 

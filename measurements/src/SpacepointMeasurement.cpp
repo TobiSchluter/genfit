@@ -48,9 +48,9 @@ SharedPlanePtr SpacepointMeasurement::constructPlane(const StateOnPlane* state) 
   const TVector3 point(rawHitCoords_(0), rawHitCoords_(1), rawHitCoords_(2));
 
   const AbsTrackRep* rep = state->getRep();
-  rep->extrapolateToPoint(&st, point);
+  rep->extrapolateToPoint(st, point);
 
-  const TVector3& dirInPoca = rep->getMom(&st);
+  const TVector3& dirInPoca = rep->getMom(st);
 
   return SharedPlanePtr(new DetPlane(point, dirInPoca));
 }

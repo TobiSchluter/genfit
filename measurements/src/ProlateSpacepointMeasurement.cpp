@@ -49,9 +49,9 @@ SharedPlanePtr ProlateSpacepointMeasurement::constructPlane(const StateOnPlane* 
   const TVector3 wire1(rawHitCoords_(0), rawHitCoords_(1), rawHitCoords_(2));
 
   const AbsTrackRep* rep = state->getRep();
-  rep->extrapolateToLine(&st, wire1, largestErrorDirection_);
+  rep->extrapolateToLine(st, wire1, largestErrorDirection_);
 
-  TVector3 dirInPoca = rep->getMom(&st);
+  TVector3 dirInPoca = rep->getMom(st);
   dirInPoca.SetMag(1.);
 
   // check if direction is parallel to wire

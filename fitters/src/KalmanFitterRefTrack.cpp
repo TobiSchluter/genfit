@@ -130,7 +130,7 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
         status->setIsFitted();
         status->setIsFitConverged();
         status->setHasTrackChanged(false);
-        status->setCharge(rep->getCharge(static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
+        status->setCharge(rep->getCharge(*static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
         status->setNumIterations(nIt-1);
         status->setForwardChiSqu(chi2FW);
         status->setBackwardChiSqu(chi2BW);
@@ -241,7 +241,7 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
 
   status->setIsFitted();
   status->setHasTrackChanged(false);
-  status->setCharge(rep->getCharge(static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
+  status->setCharge(rep->getCharge(*static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
   status->setNumIterations(nIt);
   status->setForwardChiSqu(chi2FW);
   status->setBackwardChiSqu(chi2BW);
@@ -375,7 +375,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         prevReferenceState->resetBackward();
         referenceState->resetForward();
 
-        double segmentLen = rep->extrapolateToPlane(stateToExtrapolate, fitterInfo->getReferenceState()->getPlane(), false, true);
+        double segmentLen = rep->extrapolateToPlane(*stateToExtrapolate, fitterInfo->getReferenceState()->getPlane(), false, true);
         #ifdef DEBUG
         std::cout << "extrapolated stateToExtrapolate (prevReferenceState) by " << segmentLen << " cm.\n";
         #endif
@@ -434,10 +434,10 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         std::cout << "construct plane with smoothed state of cardinal rep fit \n";
         #endif
         TVector3 pos, mom;
-        tr->getCardinalRep()->getPosMom(static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
+        tr->getCardinalRep()->getPosMom(*static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
         StateOnPlane* cardinalState = new StateOnPlane(rep);
         SOPsToDestruct_.push_back(cardinalState);
-        rep->setPosMom(cardinalState, pos, mom); // also fills auxInfo
+        rep->setPosMom(*cardinalState, pos, mom); // also fills auxInfo
         plane = trackPoint->getRawMeasurement(0)->constructPlane(cardinalState);
       }
       else {
@@ -446,7 +446,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         #endif
         StateOnPlane* seedFromTrack = new StateOnPlane(rep);
         SOPsToDestruct_.push_back(seedFromTrack);
-        rep->setPosMom(seedFromTrack, tr->getStateSeed()); // also fills auxInfo
+        rep->setPosMom(*seedFromTrack, tr->getStateSeed()); // also fills auxInfo
         plane = trackPoint->getRawMeasurement(0)->constructPlane(seedFromTrack);
       }
 
@@ -479,16 +479,16 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           std::cout << "extrapolate smoothed state of cardinal rep fit to plane\n";
           #endif
           TVector3 pos, mom;
-          tr->getCardinalRep()->getPosMom(static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
+          tr->getCardinalRep()->getPosMom(*static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
           stateToExtrapolate = new StateOnPlane(rep);
-          rep->setPosMom(stateToExtrapolate, pos, mom);
+          rep->setPosMom(*stateToExtrapolate, pos, mom);
         }
         else {
           #ifdef DEBUG
           std::cout << "extrapolate seed from track to plane\n";
           #endif
           stateToExtrapolate = new StateOnPlane(rep);
-          rep->setPosMom(stateToExtrapolate, tr->getStateSeed());
+          rep->setPosMom(*stateToExtrapolate, tr->getStateSeed());
         }
       }
       else {
@@ -505,7 +505,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         prevReferenceState->resetBackward();
       fitterInfo->deleteReferenceInfo();
 
-      double segmentLen = rep->extrapolateToPlane(stateToExtrapolate, plane, false, true);
+      double segmentLen = rep->extrapolateToPlane(*stateToExtrapolate, plane, false, true);
       trackLen += segmentLen;
       #ifdef DEBUG
       std::cout << "extrapolated stateToExtrapolate by " << segmentLen << " cm.\n";
@@ -605,7 +605,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       std::cout << "set backwards update of first point as forward prediction (with blown up cov) \n";
       #endif
       if (fi->getPlane() != firstBackwarUpdate->getPlane()) {
-        rep->extrapolateToPlane(firstBackwarUpdate, fi->getPlane());
+        rep->extrapolateToPlane(*firstBackwarUpdate, fi->getPlane());
       }
       firstBackwarUpdate->blowUpCov(blowUpFactor_);
       fi->setForwardPrediction(firstBackwarUpdate);

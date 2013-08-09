@@ -269,6 +269,7 @@ int main() {
   TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
   genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,BField));
+  genfit::FieldManager::getInstance()->useCache(true, 8);
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
   const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
@@ -361,11 +362,11 @@ int main() {
       genfit::AbsTrackRep* rep = new genfit::RKTrackRep(pdg);
       genfit::AbsTrackRep* secondRep = new genfit::RKTrackRep(-211);
       genfit::StateOnPlane stateRef(rep);
-      rep->setPosMom(&stateRef, pos, mom);
+      rep->setPosMom(stateRef, pos, mom);
 
       // smeared start state
       genfit::StateOnPlane stateSmeared(rep);
-      rep->setPosMom(&stateSmeared, posM, momM);
+      rep->setPosMom(stateSmeared, posM, momM);
 
       //rep->setPropDir(1);
 
@@ -407,8 +408,8 @@ int main() {
 
 
       // create track
-      fitTrack = new genfit::Track(rep, rep->get6DState(&stateSmeared)); //initialized with smeared rep
-      secondTrack = new genfit::Track(rep, rep->get6DState(&stateSmeared)); //initialized with smeared rep
+      fitTrack = new genfit::Track(rep, rep->get6DState(stateSmeared)); //initialized with smeared rep
+      secondTrack = new genfit::Track(rep, rep->get6DState(stateSmeared)); //initialized with smeared rep
       if (twoReps) {
         fitTrack->addTrackRep(secondRep);
         secondTrack->addTrackRep(secondRep);
@@ -449,11 +450,7 @@ int main() {
       assert(fitTrack->checkConsistency());
       assert(secondTrack->checkConsistency());
 
-
-
       //if (debug) fitTrack->Print();
-
-      assert(fitTrack->checkConsistency());
 
       // do the fit
       try{
@@ -526,7 +523,7 @@ int main() {
 
       // extrapolate back to reference plane.
       try{
-        rep->extrapolateToPlane(kfsop, stateRefOrig.getPlane());;
+        rep->extrapolateToPlane(*kfsop, stateRefOrig.getPlane());;
       }
       catch(genfit::Exception& e){
         std::cerr<<"Exception, next track"<<std::endl;

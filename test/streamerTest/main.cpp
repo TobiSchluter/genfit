@@ -330,11 +330,11 @@ int main() {
     // trackrep for creating measurements
     genfit::AbsTrackRep* rep = new genfit::RKTrackRep(pdg);
     genfit::StateOnPlane stateRef(rep);
-    rep->setPosMom(&stateRef, pos, mom);
+    rep->setPosMom(stateRef, pos, mom);
 
     // smeared start state
     genfit::StateOnPlane stateSmeared(rep);
-    rep->setPosMom(&stateSmeared, posM, momM);
+    rep->setPosMom(stateSmeared, posM, momM);
 
     //rep->setPropDir(1);
 
@@ -357,7 +357,7 @@ int main() {
       for (unsigned int i=0; i<measurementTypes.size(); ++i){
 	// get current position and momentum
 	if (!HelixTest) {
-	  rep->getPosMom(&stateRef, point, dir);
+	  rep->getPosMom(stateRef, point, dir);
 	  dir.SetMag(1);
 	}
 	else {
@@ -632,7 +632,7 @@ int main() {
 	  // stepalong (approximately)
 	  dir.SetMag(pointDist);
 	  genfit::SharedPlanePtr pl(new genfit::DetPlane(point+dir, dir));
-	  rep->extrapolateToPlane(&stateRef, pl);
+	  rep->extrapolateToPlane(stateRef, pl);
 	}
       }
 
@@ -649,7 +649,7 @@ int main() {
 
 
     // create track
-    fitTrack = new genfit::Track(rep, rep->get6DState(&stateSmeared)); //initialized with smeared rep
+    fitTrack = new genfit::Track(rep, rep->get6DState(stateSmeared)); //initialized with smeared rep
     //if (debug) fitTrack->Print("C");
 
     //fitTrack->addTrackRep(rep->clone()); // check if everything works fine with more than one rep
@@ -704,7 +704,7 @@ int main() {
 
     // extrapolate back to reference plane.
     try{
-      rep->extrapolateToPlane(kfsop, stateRefOrig.getPlane());;
+      rep->extrapolateToPlane(*kfsop, stateRefOrig.getPlane());;
     }
     catch(genfit::Exception& e){
       std::cerr<<"Exception, next track"<<std::endl;
@@ -712,7 +712,7 @@ int main() {
       continue; // here is a memleak!
     }
 
-    rep->get6DStateCov(kfsop, stateFinal, covFinal);
+    rep->get6DStateCov(*kfsop, stateFinal, covFinal);
     planeFinal = *stateRefOrig.getPlane();
     tResults->Fill();
     //fitTrack->Print();
@@ -745,14 +745,14 @@ int main() {
 
     // extrapolate back to reference plane.
     try{
-      rep->extrapolateToPlane(kfsop, genfit::SharedPlanePtr(plane));
+      rep->extrapolateToPlane(*kfsop, genfit::SharedPlanePtr(plane));
     }
     catch(genfit::Exception& e){
       std::cerr<<"Exception, next track"<<std::endl;
       std::cerr << e.what();
     }
 
-    rep->get6DStateCov(kfsop, stateFinal, covFinal);
+    rep->get6DStateCov(*kfsop, stateFinal, covFinal);
     for (int i = 0; i < covFinal.GetNrows(); ++i)
       for (int j = 0; j < covFinal.GetNrows(); ++j)
 	if ((covFinal - *pMatrix)(i,j) != 0) {

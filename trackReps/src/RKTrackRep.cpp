@@ -71,7 +71,7 @@ RKTrackRep::~RKTrackRep() {
 }
 
 
-double RKTrackRep::extrapolateToPlane(StateOnPlane* state,
+double RKTrackRep::extrapolateToPlane(StateOnPlane& state,
     SharedPlanePtr plane,
     bool stopAtBoundary,
     bool calcJacobianNoise) const {
@@ -88,8 +88,8 @@ std::cout << "RKTrackRep::extrapolateToPlane()\n";
   bool fillExtrapSteps(false);
   TMatrixDSym* covPtr(NULL);
 
-  if (dynamic_cast<MeasuredStateOnPlane*>(state) != NULL) {
-    covPtr = &(static_cast<MeasuredStateOnPlane*>(state)->getCov());
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
+    covPtr = &(static_cast<MeasuredStateOnPlane*>(&state)->getCov());
     fillExtrapSteps = true;
   }
   else if (calcJacobianNoise)
@@ -97,26 +97,26 @@ std::cout << "RKTrackRep::extrapolateToPlane()\n";
 
   // actual extrapolation
   bool isAtBoundary(false);
-  double coveredDistance = Extrap(*(state->getPlane()), *plane, getCharge(state), isAtBoundary, state7, fillExtrapSteps, covPtr, false, stopAtBoundary);
+  double coveredDistance = Extrap(*(state.getPlane()), *plane, getCharge(state), isAtBoundary, state7, fillExtrapSteps, covPtr, false, stopAtBoundary);
 
   if (stopAtBoundary && isAtBoundary) {
-    state->setPlane(SharedPlanePtr(new DetPlane(TVector3(state7[0], state7[1], state7[2]),
+    state.setPlane(SharedPlanePtr(new DetPlane(TVector3(state7[0], state7[1], state7[2]),
                                                 TVector3(state7[3], state7[4], state7[5]))));
   }
   else {
-    state->setPlane(plane);
+    state.setPlane(plane);
   }
 
   // back to 5D
   getState5(state, state7);
 
-  lastEndState_ = *state;
+  lastEndState_ = state;
 
   return coveredDistance;
 }
 
 
-double RKTrackRep::extrapolateToLine(StateOnPlane* state,
+double RKTrackRep::extrapolateToLine(StateOnPlane& state,
     const TVector3& linePoint,
     const TVector3& lineDirection,
     bool stopAtBoundary) const {
@@ -140,7 +140,7 @@ std::cout << "RKTrackRep::extrapolateToLine()\n";
   TVector3 poca, poca_onwire;
   bool isAtBoundary(false);
 
-  DetPlane startPlane(*(state->getPlane()));
+  DetPlane startPlane(*(state.getPlane()));
   boost::shared_ptr<genfit::DetPlane> plane(new DetPlane(linePoint, dir.Cross(lineDirection), lineDirection));
   unsigned int iterations(0);
 
@@ -182,11 +182,11 @@ std::cout << "RKTrackRep::extrapolateToLine()\n";
     plane->setU(dir.Cross(lineDirection));
   }
 
-  if (dynamic_cast<MeasuredStateOnPlane*>(state) != NULL) { // now do the full extrapolation with covariance matrix
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
     tracklength = extrapolateToPlane(state, plane);
   }
   else {
-    state->setPlane(plane);
+    state.setPlane(plane);
     getState5(state, state7);
   }
 
@@ -194,13 +194,13 @@ std::cout << "RKTrackRep::extrapolateToLine()\n";
   std::cout << "RKTrackRep::extrapolateToLine(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (poca_onwire-poca).Mag() << " cm. Angle deviation: " << dir.Angle((poca_onwire-poca))-TMath::PiOver2() << " rad \n";
 #endif
 
-  lastEndState_ = *state;
+  lastEndState_ = state;
 
   return tracklength;
 }
 
 
-double RKTrackRep::extrapolateToPoint(StateOnPlane* state,
+double RKTrackRep::extrapolateToPoint(StateOnPlane& state,
     const TVector3& point,
     bool stopAtBoundary) const {
 
@@ -223,7 +223,7 @@ std::cout << "RKTrackRep::extrapolateToPoint()\n";
   TVector3 poca;
   bool isAtBoundary(false);
 
-  DetPlane startPlane(*(state->getPlane()));
+  DetPlane startPlane(*(state.getPlane()));
   boost::shared_ptr<genfit::DetPlane> plane(new DetPlane(point, dir));
   unsigned int iterations(0);
 
@@ -264,11 +264,11 @@ std::cout << "RKTrackRep::extrapolateToPoint()\n";
     plane->setNormal(dir);
   }
 
-  if (dynamic_cast<MeasuredStateOnPlane*>(state) != NULL) { // now do the full extrapolation with covariance matrix
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
     tracklength = extrapolateToPlane(state, plane);
   }
   else {
-    state->setPlane(plane);
+    state.setPlane(plane);
     getState5(state, state7);
   }
 
@@ -277,13 +277,13 @@ std::cout << "RKTrackRep::extrapolateToPoint()\n";
   std::cout << "RKTrackRep::extrapolateToPoint(): Reached POCA after " << iterations+1 << " iterations. Distance: " << (point-poca).Mag() << " cm. Angle deviation: " << dir.Angle((point-poca))-TMath::PiOver2() << " rad \n";
 #endif
 
-  lastEndState_ = *state;
+  lastEndState_ = state;
 
   return tracklength;
 }
 
 
-double RKTrackRep::extrapolateToCylinder(StateOnPlane* state,
+double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     double radius,
     const TVector3& linePoint,
     const TVector3& lineDirection,
@@ -307,7 +307,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane* state,
 
   bool isAtBoundary(false);
 
-  DetPlane startPlane(*(state->getPlane()));
+  DetPlane startPlane(*(state.getPlane()));
   boost::shared_ptr<genfit::DetPlane> plane(new DetPlane());
   unsigned int iterations(0);
 
@@ -376,21 +376,21 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane* state,
 
   }
 
-  if (dynamic_cast<MeasuredStateOnPlane*>(state) != NULL) { // now do the full extrapolation with covariance matrix
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
     tracklength = extrapolateToPlane(state, plane);
   }
   else {
-    state->setPlane(plane);
+    state.setPlane(plane);
     getState5(state, state7);
   }
 
-  lastEndState_ = *state;
+  lastEndState_ = state;
 
   return tracklength;
 }
 
 
-double RKTrackRep::extrapolateToSphere(StateOnPlane* state,
+double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
     double radius,
     const TVector3& point,
     bool stopAtBoundary) const {
@@ -398,13 +398,13 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane* state,
   // TODO: implement
   checkCache(state);
 
-  lastEndState_ = *state;
+  lastEndState_ = state;
 
   return 0;
 }
 
 
-TVector3 RKTrackRep::getPos(const StateOnPlane* stateInput) const {
+TVector3 RKTrackRep::getPos(const StateOnPlane& stateInput) const {
   M1x7 state7;
   getState7(stateInput, state7);
 
@@ -412,7 +412,7 @@ TVector3 RKTrackRep::getPos(const StateOnPlane* stateInput) const {
 }
 
 
-TVector3 RKTrackRep::getMom(const StateOnPlane* stateInput) const {
+TVector3 RKTrackRep::getMom(const StateOnPlane& stateInput) const {
   M1x7 state7;
   getState7(stateInput, state7);
 
@@ -422,7 +422,7 @@ TVector3 RKTrackRep::getMom(const StateOnPlane* stateInput) const {
 }
 
 
-void RKTrackRep::getPosMom(const StateOnPlane* stateInput, TVector3& pos, TVector3& mom) const {
+void RKTrackRep::getPosMom(const StateOnPlane& stateInput, TVector3& pos, TVector3& mom) const {
   M1x7 state7;
   getState7(stateInput, state7);
 
@@ -432,17 +432,17 @@ void RKTrackRep::getPosMom(const StateOnPlane* stateInput, TVector3& pos, TVecto
 }
 
 
-void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane* stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const {
+void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane& stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const {
   getPosMom(stateInput, pos, mom);
   cov.ResizeTo(6,6);
   transformPM6(stateInput, *((M6x6*) cov.GetMatrixArray()));
 }
 
-double RKTrackRep::getCharge(const StateOnPlane* state) const
+double RKTrackRep::getCharge(const StateOnPlane& state) const
 {
-  const TVectorD& auxInfo = state->getAuxInfo();
+  const TVectorD& auxInfo = state.getAuxInfo();
   if (auxInfo.GetNrows() == 2)
-    return (state->getAuxInfo())(0);
+    return (state.getAuxInfo())(0);
   else {
     TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(pdgCode_);
     assert(particle != NULL);
@@ -451,7 +451,7 @@ double RKTrackRep::getCharge(const StateOnPlane* state) const
 }
 
 
-double RKTrackRep::getMomVar(const MeasuredStateOnPlane* stateInput) {
+double RKTrackRep::getMomVar(const MeasuredStateOnPlane& stateInput) {
   // p(qop) = q/qop
   // dp/d(qop) = - q / (qop^2)
   // (delta p) = (delta qop) * |dp/d(qop)| = delta qop * |q / (qop^2)|
@@ -460,15 +460,15 @@ double RKTrackRep::getMomVar(const MeasuredStateOnPlane* stateInput) {
   // delta means sigma
   // cov(0,0) is sigma^2
 
-  return stateInput->getCov()(0,0) * pow(getCharge(stateInput), 2)  / pow(stateInput->getState()(0), 4);
+  return stateInput.getCov()(0,0) * pow(getCharge(stateInput), 2)  / pow(stateInput.getState()(0), 4);
 }
 
 
-double RKTrackRep::getSpu(const StateOnPlane* state) const
+double RKTrackRep::getSpu(const StateOnPlane& state) const
 {
-  const TVectorD& auxInfo = state->getAuxInfo();
+  const TVectorD& auxInfo = state.getAuxInfo();
   if (auxInfo.GetNrows() == 2)
-    return state->getAuxInfo()(1);
+    return state.getAuxInfo()(1);
   else
     return 1.;
 }
@@ -597,15 +597,15 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 
 
 
-void RKTrackRep::setPosMom(StateOnPlane* state, const TVector3& pos, const TVector3& mom) const {
+void RKTrackRep::setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const {
 
-  if (state->getRep() != this){
+  if (state.getRep() != this){
     Exception exc("RKTrackRep::setPosMom ==> state is defined wrt. another TrackRep",__LINE__,__FILE__);
     throw exc;
   }
 
   // init auxInfo if that has not yet happened
-  TVectorD& auxInfo = state->getAuxInfo();
+  TVectorD& auxInfo = state.getAuxInfo();
   if (auxInfo.GetNrows() != 2) {
     auxInfo.ResizeTo(2);
     TParticlePDG * part = TDatabasePDG::Instance()->GetParticle(pdgCode_);
@@ -617,7 +617,7 @@ void RKTrackRep::setPosMom(StateOnPlane* state, const TVector3& pos, const TVect
     setSpu(state, 1.);
   }
 
-  if (state->getPlane() != NULL && state->getPlane()->distance(pos) < MINSTEP) { // pos is on plane -> do not change plane!
+  if (state.getPlane() != NULL && state.getPlane()->distance(pos) < MINSTEP) { // pos is on plane -> do not change plane!
 
     M1x7 state7;
 
@@ -643,9 +643,9 @@ void RKTrackRep::setPosMom(StateOnPlane* state, const TVector3& pos, const TVect
 
     // TODO: Raise Warning that a new plane has been created!
     SharedPlanePtr plane(new DetPlane(pos, mom));
-    state->setPlane(plane);
+    state.setPlane(plane);
 
-    TVectorD& state5(state->getState());
+    TVectorD& state5(state.getState());
 
     state5(0) = getCharge(state)/mom.Mag(); // q/p
     state5(1) = 0.; // u'
@@ -659,7 +659,7 @@ void RKTrackRep::setPosMom(StateOnPlane* state, const TVector3& pos, const TVect
 }
 
 
-void RKTrackRep::setPosMom(StateOnPlane* stateInput, const TVectorD& state6) const {
+void RKTrackRep::setPosMom(StateOnPlane& stateInput, const TVectorD& state6) const {
   if (state6.GetNrows()!=6){
     Exception exc("RKTrackRep::setPosMom ==> state has to be 6d (x, y, z, px, py, pz)",__LINE__,__FILE__);
     throw exc;
@@ -668,21 +668,21 @@ void RKTrackRep::setPosMom(StateOnPlane* stateInput, const TVectorD& state6) con
 }
 
 
-void RKTrackRep::setPosMomErr(MeasuredStateOnPlane* state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const {
+void RKTrackRep::setPosMomErr(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const {
 
   // TODO: test!
 
   setPosMom(state, pos, mom);
 
-  const TVector3& U(state->getPlane()->getU());
-  const TVector3& V(state->getPlane()->getV());
-  TVector3 W(state->getPlane()->getNormal());
+  const TVector3& U(state.getPlane()->getU());
+  const TVector3& V(state.getPlane()->getV());
+  TVector3 W(state.getPlane()->getNormal());
 
   double pw = mom * W;
   double pu = mom * U;
   double pv = mom * V;
 
-  TMatrixDSym& cov(state->getCov());
+  TMatrixDSym& cov(state.getCov());
 
   cov(0,0) = pow(getCharge(state), 2) / pow(mom.Mag(), 6) *
              (mom.X()*mom.X() * momErr.X()*momErr.X()+
@@ -710,7 +710,7 @@ void RKTrackRep::setPosMomErr(MeasuredStateOnPlane* state, const TVector3& pos, 
 
 
 
-void RKTrackRep::setPosMomCov(MeasuredStateOnPlane* state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const {
+void RKTrackRep::setPosMomCov(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const {
 
   if (cov6x6.GetNcols()!=6 || cov6x6.GetNrows()!=6){
     Exception exc("RKTrackRep::setPosMomCov ==> cov has to be 6x6 (x, y, z, px, py, pz)",__LINE__,__FILE__);
@@ -728,7 +728,7 @@ void RKTrackRep::setPosMomCov(MeasuredStateOnPlane* state, const TVector3& pos, 
 
 }
 
-void RKTrackRep::setPosMomCov(MeasuredStateOnPlane* state, const TVectorD& state6, const TMatrixDSym& cov6x6) const {
+void RKTrackRep::setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state6, const TMatrixDSym& cov6x6) const {
 
   if (state6.GetNrows()!=6){
     Exception exc("RKTrackRep::setPosMomCov ==> state has to be 6d (x, y, z, px, py, pz)",__LINE__,__FILE__);
@@ -960,14 +960,14 @@ void RKTrackRep::initArrays() const {
 }
 
 
-void RKTrackRep::getState7(const StateOnPlane* state, M1x7& state7) const {
+void RKTrackRep::getState7(const StateOnPlane& state, M1x7& state7) const {
 
-  const TVector3& U(state->getPlane()->getU());
-  const TVector3& V(state->getPlane()->getV());
-  const TVector3& O(state->getPlane()->getO());
-  TVector3 W(state->getPlane()->getNormal());
+  const TVector3& U(state.getPlane()->getU());
+  const TVector3& V(state.getPlane()->getV());
+  const TVector3& O(state.getPlane()->getO());
+  TVector3 W(state.getPlane()->getNormal());
 
-  const TVectorD& state5(state->getState());
+  const TVectorD& state5(state.getState());
 
   double spu = getSpu(state);
 
@@ -987,19 +987,19 @@ void RKTrackRep::getState7(const StateOnPlane* state, M1x7& state7) const {
 }
 
 
-void RKTrackRep::getState5(StateOnPlane* state, const M1x7& state7) const {
+void RKTrackRep::getState5(StateOnPlane& state, const M1x7& state7) const {
 
   // state5: (q/p, u', v'. u. v)
 
   double spu(1.);
 
-  const TVector3& O(state->getPlane()->getO());
-  const TVector3& U(state->getPlane()->getU());
-  const TVector3& V(state->getPlane()->getV());
-  TVector3 W(state->getPlane()->getNormal());
+  const TVector3& O(state.getPlane()->getO());
+  const TVector3& U(state.getPlane()->getU());
+  const TVector3& V(state.getPlane()->getV());
+  TVector3 W(state.getPlane()->getNormal());
 
   TVector3 posShift(state7[0], state7[1], state7[2]);
-  posShift -= state->getPlane()->getO();
+  posShift -= state.getPlane()->getO();
 
   // force A to be in normal direction and set spu accordingly
   double AtW = state7[3]*W.X() + state7[4]*W.Y() + state7[5]*W.Z();
@@ -1009,7 +1009,7 @@ void RKTrackRep::getState5(StateOnPlane* state, const M1x7& state7) const {
     spu = -1.;
   }
 
-  TVectorD& state5 = state->getState();
+  TVectorD& state5 = state.getState();
 
   state5(0) = state7[6]; // q/p
   state5(1) = (state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z()) / AtW; // u' = (dir * U) / (A * W)
@@ -1027,15 +1027,15 @@ void RKTrackRep::getState5(StateOnPlane* state, const M1x7& state7) const {
 
 
 
-void RKTrackRep::transformPM7(const MeasuredStateOnPlane* state,
+void RKTrackRep::transformPM7(const MeasuredStateOnPlane& state,
                               M7x7& out7x7) const {
 
   // get vectors and aux variables
-  const TVector3& U(state->getPlane()->getU());
-  const TVector3& V(state->getPlane()->getV());
-  TVector3 W(state->getPlane()->getNormal());
+  const TVector3& U(state.getPlane()->getU());
+  const TVector3& V(state.getPlane()->getV());
+  TVector3 W(state.getPlane()->getNormal());
 
-  const TVectorD& state5(state->getState());
+  const TVectorD& state5(state.getState());
   double spu(getSpu(state));
 
   M1x3 pTilde;
@@ -1048,7 +1048,7 @@ void RKTrackRep::transformPM7(const MeasuredStateOnPlane* state,
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
   // the multiplication can be done much faster directly on array level
   // out = J_pM^T * in5x5 * J_pM
-  const M5x5& in5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
+  const M5x5& in5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
   RKTools::J_pMTxcov5xJ_pM(J_pM_5x7_, in5x5_, out7x7);
 
 }
@@ -1097,15 +1097,15 @@ void RKTrackRep::calcJ_pM_5x7(const TVector3& U, const TVector3& V, const M1x3& 
 }
 
 
-void RKTrackRep::transformPM6(const MeasuredStateOnPlane* state,
+void RKTrackRep::transformPM6(const MeasuredStateOnPlane& state,
                               M6x6& out6x6) const {
 
   // get vectors and aux variables
-  const TVector3& U(state->getPlane()->getU());
-  const TVector3& V(state->getPlane()->getV());
-  TVector3 W(state->getPlane()->getNormal());
+  const TVector3& U(state.getPlane()->getU());
+  const TVector3& V(state.getPlane()->getV());
+  TVector3 W(state.getPlane()->getNormal());
 
-  const TVectorD& state5(state->getState());
+  const TVectorD& state5(state.getState());
   double spu(getSpu(state));
 
   M1x3 pTilde;
@@ -1150,7 +1150,7 @@ void RKTrackRep::transformPM6(const MeasuredStateOnPlane* state,
 
   // do the transformation
   // out = J_pM^T * in5x5 * J_pM
-  const M5x5& in5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
+  const M5x5& in5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
   RKTools::J_pMTxcov5xJ_pM(J_pM_5x6_, in5x5_, out6x6);
 
 }
@@ -1158,12 +1158,12 @@ void RKTrackRep::transformPM6(const MeasuredStateOnPlane* state,
 
 void RKTrackRep::transformM7P(const M7x7& in7x7,
                               const M1x7& state7,
-                              MeasuredStateOnPlane* state) const { // plane must already be set!
+                              MeasuredStateOnPlane& state) const { // plane must already be set!
 
   // get vectors and aux variables
-  const TVector3& U(state->getPlane()->getU());
-  const TVector3& V(state->getPlane()->getV());
-  TVector3 W(state->getPlane()->getNormal());
+  const TVector3& U(state.getPlane()->getU());
+  const TVector3& V(state.getPlane()->getV());
+  TVector3 W(state.getPlane()->getNormal());
 
   M1x3& A = *((M1x3*) &state7[3]);
 
@@ -1172,7 +1172,7 @@ void RKTrackRep::transformM7P(const M7x7& in7x7,
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
   // the multiplication can be done much faster directly on array level
   // out5x5 = J_Mp^T * in * J_Mp
-  M5x5& out5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
+  M5x5& out5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
   RKTools::J_MpTxcov7xJ_Mp(J_Mp_7x5_, in7x7, out5x5_);
 
 }
@@ -1223,12 +1223,12 @@ void RKTrackRep::calcJ_Mp_7x5(const TVector3& U, const TVector3& V, const TVecto
 
 void RKTrackRep::transformM6P(const M6x6& in6x6,
                               const M1x7& state7,
-                              MeasuredStateOnPlane* state) const { // plane and charge must already be set!
+                              MeasuredStateOnPlane& state) const { // plane and charge must already be set!
 
   // get vectors and aux variables
-  const TVector3& U(state->getPlane()->getU());
-  const TVector3& V(state->getPlane()->getV());
-  TVector3 W(state->getPlane()->getNormal());
+  const TVector3& U(state.getPlane()->getU());
+  const TVector3& V(state.getPlane()->getV());
+  TVector3 W(state.getPlane()->getNormal());
 
   const double AtU = state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z();
   const double AtV = state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z();
@@ -1264,7 +1264,7 @@ void RKTrackRep::transformM6P(const M6x6& in6x6,
 
   // do the transformation
   // out5x5 = J_Mp^T * in * J_Mp
-  M5x5& out5x5_ = *((M5x5*) state->getCov().GetMatrixArray());
+  M5x5& out5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
   RKTools::J_MpTxcov6xJ_Mp(J_Mp_6x5_, in6x6, out5x5_);
 
 }
@@ -1988,17 +1988,17 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 }
 
 
-void RKTrackRep::checkCache(const StateOnPlane* state) const {
+void RKTrackRep::checkCache(const StateOnPlane& state) const {
 
   // TODO: implement using cache!!!
 
-  if (state->getRep() != this){
+  if (state.getRep() != this){
     Exception exc("RKTrackRep::checkCache ==> state is defined wrt. another TrackRep",__LINE__,__FILE__);
     throw exc;
   }
 
-  if (state->getPlane() == lastStartState_.getPlane() &&
-      state->getState() == lastStartState_.getState()) {
+  if (state.getPlane() == lastStartState_.getPlane() &&
+      state.getState() == lastStartState_.getState()) {
     useCache_ = true;
     RKStepsFXStart_ = 0;
     RKStepsFXStop_ = 0;
@@ -2013,7 +2013,7 @@ void RKTrackRep::checkCache(const StateOnPlane* state) const {
     RKStepsFXStop_ = 0;
     ExtrapSteps_.clear();
 
-    lastStartState_.setStatePlane(state->getState(), state->getPlane());
+    lastStartState_.setStatePlane(state.getState(), state.getPlane());
     initArrays();
   }
 }
