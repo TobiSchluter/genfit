@@ -1584,8 +1584,8 @@ double RKTrackRep::estimateStep(const M1x7& state7,
         RKSteps_.erase(RKSteps_.begin() + cachePos_, RKSteps_.end());
       }
       else {
-        std::cout << " RKTrackRep::estimateStep: use stepSize " << cachePos_ << " from cache: " << RKSteps_[cachePos_].stepSize_ << "\n";
         #ifdef DEBUG
+        std::cout << " RKTrackRep::estimateStep: use stepSize " << cachePos_ << " from cache: " << RKSteps_[cachePos_].stepSize_ << "\n";
         #endif
         //for(int n = 0; n < 1*7; ++n) RKSteps_[cachePos_].state7_[n] = state7[n];
         ++RKStepsFXStop_;
@@ -1597,8 +1597,8 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
   limits.setLimit(stp_sMax, 25.); // max. step allowed [cm]
 
-    std::cout << " RKTrackRep::estimateStep \n";
   #ifdef DEBUG
+    std::cout << " RKTrackRep::estimateStep \n";
     std::cout << "  position:  "; TVector3(state7[0], state7[1], state7[2]).Print();
     std::cout << "  direction: "; TVector3(state7[3], state7[4], state7[5]).Print();
   #endif
