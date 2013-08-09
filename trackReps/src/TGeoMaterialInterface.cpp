@@ -35,12 +35,54 @@ double MeanExcEnergy_get(int Z);
 double MeanExcEnergy_get(TGeoMaterial*);
 
 
+TGeoMaterialInterface::TGeoMaterialInterface() : whichNavig_(0) {
+  gGeoManager->AddNavigator();
+}
+
 void
 TGeoMaterialInterface::initTrack(double posX, double posY, double posZ,
                                    double dirX, double dirY, double dirZ){
+  #ifdef DEBUG
+  std::cout << "TGeoMaterialInterface::initTrack. \n";
+  std::cout << "Pos    "; TVector3(posX, posY, posZ).Print();
+  std::cout << "Dir    "; TVector3(dirX, dirY, dirZ).Print();
+  #endif
 
-  gGeoManager->InitTrack(posX, posY, posZ,
-                         dirX, dirY, dirZ);
+  const Double_t * pt = gGeoManager->GetCurrentPoint();
+
+  if (posX == pt[0] &&
+      posY == pt[1] &&
+      posZ == pt[2]) {
+    // position does not change
+    gGeoManager->SetCurrentDirection(dirX, dirY, dirZ);
+    #ifdef DEBUG
+    std::cout << "just init dir (default navigator)! \n";
+    #endif
+  }
+  else {
+
+    whichNavig_ = (whichNavig_ + 1) % 2;
+    gGeoManager->SetCurrentNavigator(whichNavig_);
+    pt = gGeoManager->GetCurrentPoint();
+
+    if (posX == pt[0] &&
+        posY == pt[1] &&
+        posZ == pt[2]) {
+      // position does not change
+      gGeoManager->SetCurrentDirection(dirX, dirY, dirZ);
+      #ifdef DEBUG
+      std::cout << "just init dir (second navigator)! \n";
+      #endif
+    }
+    else {
+      gGeoManager->InitTrack(posX, posY, posZ,
+                             dirX, dirY, dirZ);
+    }
+  }
+
+  #ifdef DEBUG
+  std::cout << "\n";
+  #endif
 
 }
 
