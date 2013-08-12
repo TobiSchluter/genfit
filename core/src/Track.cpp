@@ -642,18 +642,20 @@ double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
     if (pointIt == trackPoints_.begin() + startId) { // first hit
       m2 = rep->getMass(state); // GeV
       m2 *= m2;
+      state = (*pointIt)->getFitterInfo(rep)->getFittedState();
     }
     else {
       p = rep->getMomMag(state);
+      // extrapolate previous state
       trackLen = rep->extrapolateToPlane(state, (*pointIt)->getFitterInfo(rep)->getPlane()); // [cm]
+      state = (*pointIt)->getFitterInfo(rep)->getFittedState(); // get current state
       p += rep->getMomMag(state);
-      p *= 0.5; // average momentum of step [GeV]
+      p *= 0.5; // average momentum of last and current state [GeV]
 
       beta = p / sqrt(m2 + p*p);
       tof += 1.E9 * trackLen / (c*beta); // [ns]
     }
 
-    state = (*pointIt)->getFitterInfo(rep)->getFittedState();
   }
 
   return tof;

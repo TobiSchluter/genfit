@@ -557,7 +557,8 @@ int main() {
       trackLenRes->Fill( (trueLen - fitTrack->getTrackLen(rep)) / trueLen );
 
       if (debug) {
-        std::cout << "true track length = " << trueLen << "; fitted length = " << static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getTrackLen() << "\n";
+        std::cout << "true track length = " << trueLen << "; fitted length = " << fitTrack->getTrackLen(rep) << "\n";
+        std::cout << "fitted tof = " << fitTrack->getTOF(rep) << " ns\n";
       }
 
       // print covariance
