@@ -591,9 +591,16 @@ double Track::getTrackLen(AbsTrackRep* rep, int startId, int endId) const {
     startId += trackPoints_.size();
   if (endId < 0)
     endId += trackPoints_.size();
-  endId += 1;
 
-  assert (endId >= startId);
+  bool backwards(false);
+  if (startId > endId) {
+    double temp = startId;
+    startId = endId;
+    endId = temp;
+    backwards = true;
+  }
+
+  endId += 1;
 
 
   double trackLen(0);
@@ -612,6 +619,9 @@ double Track::getTrackLen(AbsTrackRep* rep, int startId, int endId) const {
     state = (*pointIt)->getFitterInfo(rep)->getFittedState();
   }
 
+  if (backwards)
+    trackLen *= -1.;
+
   return trackLen;
 }
 
@@ -622,9 +632,16 @@ double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
     startId += trackPoints_.size();
   if (endId < 0)
     endId += trackPoints_.size();
-  endId += 1;
 
-  assert (endId >= startId);
+  bool backwards(false);
+  if (startId > endId) {
+    double temp = startId;
+    startId = endId;
+    endId = temp;
+    backwards = true;
+  }
+
+  endId += 1;
 
 
   double tof(0);
@@ -657,6 +674,9 @@ double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
     }
 
   }
+
+  if (backwards)
+    tof *= -1.;
 
   return tof;
 }
