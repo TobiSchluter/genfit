@@ -27,6 +27,7 @@
 #include <map>
 
 #include <TDatabasePDG.h>
+#include <TMath.h>
 
 //#include <glog/logging.h>
 
@@ -612,6 +613,50 @@ double Track::getTrackLen(AbsTrackRep* rep, int startId, int endId) const {
   }
 
   return trackLen;
+}
+
+
+double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
+
+  if (startId < 0)
+    startId += trackPoints_.size();
+  if (endId < 0)
+    endId += trackPoints_.size();
+  endId += 1;
+
+  assert (endId >= startId);
+
+
+  double tof(0);
+  double trackLen(0);
+  double p(0), m2(0), beta(0);
+  static const double c = TMath::Ccgs(); // cm/s
+  StateOnPlane state;
+
+  for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
+    if (! (*pointIt)->hasFitterInfo(rep)) {
+      Exception e("Track::getTOF: trackPoint has no fitterInfo", __LINE__,__FILE__);
+      throw e;
+    }
+
+    if (pointIt == trackPoints_.begin() + startId) { // first hit
+      m2 = rep->getMass(state); // GeV
+      m2 *= m2;
+    }
+    else {
+      p = rep->getMomMag(state);
+      trackLen = rep->extrapolateToPlane(state, (*pointIt)->getFitterInfo(rep)->getPlane()); // [cm]
+      p += rep->getMomMag(state);
+      p *= 0.5; // average momentum of step [GeV]
+
+      beta = p / sqrt(m2 + p*p);
+      tof += 1.E9 * trackLen / (c*beta); // [ns]
+    }
+
+    state = (*pointIt)->getFitterInfo(rep)->getFittedState();
+  }
+
+  return tof;
 }
 
 
