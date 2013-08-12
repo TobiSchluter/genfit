@@ -461,7 +461,9 @@ double RKTrackRep::getCharge(const StateOnPlane& state) const
 
 double RKTrackRep::getMomMag(const StateOnPlane& stateInput) {
   // p = q / qop
-  return getCharge(stateInput)/stateInput.getState()(0);
+  double p = getCharge(stateInput)/stateInput.getState()(0);
+  assert (p>=0);
+  return p;
 }
 
 

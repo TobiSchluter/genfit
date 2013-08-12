@@ -270,7 +270,7 @@ void MaterialEffects::getParticleParameters(double mom)
 {
   TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(pdg_);
   charge_ = part->Charge() / (3.);
-  mass_ = part->Mass();
+  mass_ = part->Mass(); // GeV
 
   beta_ = mom / sqrt(mass_ * mass_ + mom * mom);
 
