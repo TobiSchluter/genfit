@@ -554,7 +554,7 @@ int main() {
       huPu->Fill(   (state[3]-referenceState[3]) / sqrt(cov[3][3]) );
       hvPu->Fill(   (state[4]-referenceState[4]) / sqrt(cov[4][4]) );
 
-      trackLenRes->Fill( (trueLen - static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getTrackLen()) / trueLen );
+      trackLenRes->Fill( (trueLen - fitTrack->getTrackLen(rep)) / trueLen );
 
       if (debug) {
         std::cout << "true track length = " << trueLen << "; fitted length = " << static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getTrackLen() << "\n";

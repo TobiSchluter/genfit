@@ -584,6 +584,37 @@ void Track::deleteMeasurementInfo(int startId, int endId, const AbsTrackRep* rep
 }
 
 
+double Track::getTrackLen(AbsTrackRep* rep, int startId, int endId) const {
+
+  if (startId < 0)
+    startId += trackPoints_.size();
+  if (endId < 0)
+    endId += trackPoints_.size();
+  endId += 1;
+
+  assert (endId >= startId);
+
+
+  double trackLen(0);
+  StateOnPlane state;
+
+  for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
+    if (! (*pointIt)->hasFitterInfo(rep)) {
+      Exception e("Track::getTracklength: trackPoint has no fitterInfo", __LINE__,__FILE__);
+      throw e;
+    }
+
+    if (pointIt != trackPoints_.begin() + startId) {
+      trackLen += rep->extrapolateToPlane(state, (*pointIt)->getFitterInfo(rep)->getPlane());
+    }
+
+    state = (*pointIt)->getFitterInfo(rep)->getFittedState();
+  }
+
+  return trackLen;
+}
+
+
 void Track::prune(const Option_t*) {
 
   // Todo: make options
