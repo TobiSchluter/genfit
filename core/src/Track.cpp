@@ -646,7 +646,7 @@ double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
 
   double tof(0);
   double trackLen(0);
-  double p(0), m2(0), beta(0);
+  double p1(0), p2(0), m(0), m2(0), beta(0);
   static const double c = TMath::Ccgs(); // cm/s
   StateOnPlane state;
 
@@ -657,20 +657,28 @@ double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
     }
 
     if (pointIt == trackPoints_.begin() + startId) { // first hit
-      m2 = rep->getMass(state); // GeV
-      m2 *= m2;
+      m = rep->getMass(state); // GeV
+      m2 = m*m;
       state = (*pointIt)->getFitterInfo(rep)->getFittedState();
     }
     else {
-      p = rep->getMomMag(state);
+      p1 = rep->getMomMag(state);
       // extrapolate previous state
       trackLen = rep->extrapolateToPlane(state, (*pointIt)->getFitterInfo(rep)->getPlane()); // [cm]
       state = (*pointIt)->getFitterInfo(rep)->getFittedState(); // get current state
-      p += rep->getMomMag(state);
-      p *= 0.5; // average momentum of last and current state [GeV]
+      p2 = rep->getMomMag(state);
 
-      beta = p / sqrt(m2 + p*p);
-      tof += 1.E9 * trackLen / (c*beta); // [ns]
+      if (fabs(p1-p2) < 1E-6) {
+        double p = (p1+p2)/2.;
+        beta = p / sqrt(m2 + p*p);
+        tof += 1.E9 * trackLen / (c*beta); // [ns]
+      }
+      else {
+        // assume linear momentum loss
+        tof += 1.E9 / c / (p1 - p2) * trackLen *
+               (sqrt(m2 + p1*p1) - sqrt(m2 + p2*p2) +
+                m * log( p1/p2 * (m + sqrt(m2 + p2*p2)) / (m + sqrt(m2 + p1*p1)) ) ); // [ns]
+      }
     }
 
   }
