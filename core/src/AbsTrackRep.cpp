@@ -20,6 +20,8 @@
 #include "AbsTrackRep.h"
 #include "StateOnPlane.h"
 
+#include <TDatabasePDG.h>
+
 #include <iostream>
 
 
@@ -75,6 +77,11 @@ void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane& stateInput, TVectorD
   stateVec(3) = mom.X();
   stateVec(4) = mom.Y();
   stateVec(5) = mom.Z();
+}
+
+
+double AbsTrackRep::getMass(const StateOnPlane& state) const {
+  return TDatabasePDG::Instance()->GetParticle(pdgCode_)->Mass();
 }
 
 
