@@ -87,7 +87,7 @@ class TrackPoint : public TObject {
   void setFitterInfo(genfit::AbsFitterInfo* fitterInfo) {
     if (fitterInfos_.find(fitterInfo->getRep()) != fitterInfos_.end()) { delete fitterInfos_[fitterInfo->getRep()]; }
     fitterInfos_[fitterInfo->getRep()] = fitterInfo; }
-  void deleteFitterInfo(AbsTrackRep* rep) {delete fitterInfos_[rep]; fitterInfos_.erase(rep);}
+  void deleteFitterInfo(const AbsTrackRep* rep) {delete fitterInfos_[rep]; fitterInfos_.erase(rep);}
 
   //void setMaterial(MaterialInfo* material);
 
