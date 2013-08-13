@@ -29,7 +29,7 @@ class AbsTrackRep : public TObject {
 
   virtual AbsTrackRep* clone() const = 0;
 
-  /** Extrapolates the stateInput to plane, and returns the extrapolation length
+  /** Extrapolates the state to plane, and returns the extrapolation length
    * and, via reference, the extrapolated statePrediction.
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
@@ -68,25 +68,27 @@ class AbsTrackRep : public TObject {
 
   virtual unsigned int getDim() const = 0;
 
-  virtual TVector3 getPos(const StateOnPlane& stateInput) const = 0;
+  virtual TVector3 getPos(const StateOnPlane& state) const = 0;
 
-  virtual TVector3 getMom(const StateOnPlane& stateInput) const = 0;
-  TVector3 getDir(const StateOnPlane& stateInput) const {return getMom(stateInput).Unit();}
-  virtual void getPosMom(const StateOnPlane& stateInput, TVector3& pos, TVector3& mom) const = 0;
-  void getPosDir(const StateOnPlane& stateInput, TVector3& pos, TVector3& dir) const {getPosMom(stateInput, pos, dir); dir.SetMag(1.);}
-  virtual TVectorD get6DState(const StateOnPlane& stateInput) const;
+  virtual TVector3 getMom(const StateOnPlane& state) const = 0;
+  TVector3 getDir(const StateOnPlane& state) const {return getMom(state).Unit();}
+  virtual void getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const = 0;
+  void getPosDir(const StateOnPlane& state, TVector3& pos, TVector3& dir) const {getPosMom(state, pos, dir); dir.SetMag(1.);}
+  virtual TVectorD get6DState(const StateOnPlane& state) const;
 
   /** Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance */
-  virtual void getPosMomCov(const MeasuredStateOnPlane& stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const = 0;
-  virtual void get6DStateCov(const MeasuredStateOnPlane& stateInput, TVectorD& stateVec, TMatrixDSym& cov) const;
+  virtual void getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const = 0;
+  virtual void get6DStateCov(const MeasuredStateOnPlane& state, TVectorD& stateVec, TMatrixDSym& cov) const;
 
   //! get the magnitude of the momentum in GeV
-  virtual double getMomMag(const StateOnPlane& stateInput) = 0;
+  virtual double getMomMag(const StateOnPlane& state) = 0;
   /** get the variance of the absolute value of the momentum  */
-  virtual double getMomVar(const MeasuredStateOnPlane& stateInput) = 0;
+  virtual double getMomVar(const MeasuredStateOnPlane& state) = 0;
 
   int getPDG() const {return pdgCode_;}
   virtual double getCharge(const StateOnPlane& state) const = 0;
+  //! get charge over momentum
+  virtual double getQop(const StateOnPlane& state) const = 0;
   double getMass(const StateOnPlane& state) const;
   char getPropDir() const {return propDir_;}
 
@@ -101,11 +103,15 @@ class AbsTrackRep : public TObject {
                                    const genfit::SharedPlanePtr destPlane,
                                    TMatrixD& jacobian);
 
-  virtual void setPosMom(StateOnPlane& stateInput, const TVector3& pos, const TVector3& mom) const = 0;
-  virtual void setPosMom(StateOnPlane& stateInput, const TVectorD& state6) const = 0;
-  virtual void setPosMomErr(MeasuredStateOnPlane& stateInput, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const = 0;
-  virtual void setPosMomCov(MeasuredStateOnPlane& stateInput, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const = 0;
-  virtual void setPosMomCov(MeasuredStateOnPlane& stateInput, const TVectorD& state6, const TMatrixDSym& cov6x6) const = 0;
+  virtual void setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const = 0;
+  virtual void setPosMom(StateOnPlane& state, const TVectorD& state6) const = 0;
+  virtual void setPosMomErr(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const = 0;
+  virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const = 0;
+  virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state6, const TMatrixDSym& cov6x6) const = 0;
+
+  //! Set the sign of the charge according to charge
+  virtual void setChargeSign(StateOnPlane& state, double charge) const = 0;
+  virtual void setQop(StateOnPlane& state, double qop) const = 0;
 
   //! Set propagation direction. (-1, 0, 1) -> (backward, auto, forward)
   void setPropDir(int dir) {

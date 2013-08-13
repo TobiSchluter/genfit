@@ -46,9 +46,9 @@ AbsTrackRep::AbsTrackRep(const AbsTrackRep& rep) :
 }
 
 
-TVectorD AbsTrackRep::get6DState(const StateOnPlane& stateInput) const {
+TVectorD AbsTrackRep::get6DState(const StateOnPlane& state) const {
   TVector3 pos, mom;
-  getPosMom(stateInput, pos, mom);
+  getPosMom(state, pos, mom);
 
   TVectorD stateVec(6);
 
@@ -64,9 +64,9 @@ TVectorD AbsTrackRep::get6DState(const StateOnPlane& stateInput) const {
 }
 
 
-void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane& stateInput, TVectorD& stateVec, TMatrixDSym& cov) const {
+void AbsTrackRep::get6DStateCov(const MeasuredStateOnPlane& state, TVectorD& stateVec, TMatrixDSym& cov) const {
   TVector3 pos, mom;
-  getPosMomCov(stateInput, pos, mom, cov);
+  getPosMomCov(state, pos, mom, cov);
 
   stateVec.ResizeTo(6);
 

@@ -65,7 +65,7 @@ class RKTrackRep : public AbsTrackRep {
 
   virtual AbsTrackRep* clone() const {return new RKTrackRep(*this);}
 
-  /** Extrapolates the stateInput to plane, and returns the extrapolation length
+  /** Extrapolates the state to plane, and returns the extrapolation length
    * and, via reference, the extrapolated statePrediction.
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    */
@@ -102,18 +102,19 @@ class RKTrackRep : public AbsTrackRep {
 
   unsigned int getDim() const {return 5;}
 
-  virtual TVector3 getPos(const StateOnPlane& stateInput) const;
+  virtual TVector3 getPos(const StateOnPlane& state) const;
 
-  virtual TVector3 getMom(const StateOnPlane& stateInput) const;
-  virtual void getPosMom(const StateOnPlane& stateInput, TVector3& pos, TVector3& mom) const;
+  virtual TVector3 getMom(const StateOnPlane& state) const;
+  virtual void getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const;
 
-  virtual double getMomMag(const StateOnPlane& stateInput);
+  virtual double getMomMag(const StateOnPlane& state);
   /** get the variance of the absolute value of the momentum  */
-  virtual double getMomVar(const MeasuredStateOnPlane& stateInput);
+  virtual double getMomVar(const MeasuredStateOnPlane& state);
 
   /** Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance */
-  virtual void getPosMomCov(const MeasuredStateOnPlane& stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const;
+  virtual void getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const;
   virtual double getCharge(const StateOnPlane& state) const;
+  virtual double getQop(const StateOnPlane& state) const {return state.getState()(0);}
   double getSpu(const StateOnPlane& state) const;
 
   /** Get the jacobian and noise matrix of the last extrapolation  */
@@ -124,10 +125,14 @@ class RKTrackRep : public AbsTrackRep {
 
 
   virtual void setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const;
-  virtual void setPosMom(StateOnPlane& stateInput, const TVectorD& state6) const;
+  virtual void setPosMom(StateOnPlane& state, const TVectorD& state6) const;
   virtual void setPosMomErr(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) const;
   virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const;
   virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state6, const TMatrixDSym& cov6x6) const;
+
+  //! Set the sign of the charge according to charge
+  virtual void setChargeSign(StateOnPlane& state, double charge) const;
+  virtual void setQop(StateOnPlane& state, double qop) const {state.getState()(0) = qop;}
 
   void setSpu(StateOnPlane& state, double spu) const {(state.getAuxInfo())(0) = spu;}
 

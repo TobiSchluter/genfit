@@ -412,38 +412,38 @@ std::cout << "RKTrackRep::extrapolateToSphere()\n";
 }
 
 
-TVector3 RKTrackRep::getPos(const StateOnPlane& stateInput) const {
+TVector3 RKTrackRep::getPos(const StateOnPlane& state) const {
   M1x7 state7;
-  getState7(stateInput, state7);
+  getState7(state, state7);
 
   return TVector3(state7[0], state7[1], state7[2]);
 }
 
 
-TVector3 RKTrackRep::getMom(const StateOnPlane& stateInput) const {
+TVector3 RKTrackRep::getMom(const StateOnPlane& state) const {
   M1x7 state7;
-  getState7(stateInput, state7);
+  getState7(state, state7);
 
   TVector3 mom(state7[3], state7[4], state7[5]);
-  mom.SetMag(getCharge(stateInput)/state7[6]);
+  mom.SetMag(getCharge(state)/state7[6]);
   return mom;
 }
 
 
-void RKTrackRep::getPosMom(const StateOnPlane& stateInput, TVector3& pos, TVector3& mom) const {
+void RKTrackRep::getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const {
   M1x7 state7;
-  getState7(stateInput, state7);
+  getState7(state, state7);
 
   pos.SetXYZ(state7[0], state7[1], state7[2]);
   mom.SetXYZ(state7[3], state7[4], state7[5]);
-  mom.SetMag(getCharge(stateInput)/state7[6]);
+  mom.SetMag(getCharge(state)/state7[6]);
 }
 
 
-void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane& stateInput, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const {
-  getPosMom(stateInput, pos, mom);
+void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const {
+  getPosMom(state, pos, mom);
   cov.ResizeTo(6,6);
-  transformPM6(stateInput, *((M6x6*) cov.GetMatrixArray()));
+  transformPM6(state, *((M6x6*) cov.GetMatrixArray()));
 }
 
 double RKTrackRep::getCharge(const StateOnPlane& state) const
@@ -460,15 +460,15 @@ double RKTrackRep::getCharge(const StateOnPlane& state) const
 }
 
 
-double RKTrackRep::getMomMag(const StateOnPlane& stateInput) {
+double RKTrackRep::getMomMag(const StateOnPlane& state) {
   // p = q / qop
-  double p = getCharge(stateInput)/stateInput.getState()(0);
+  double p = getCharge(state)/state.getState()(0);
   assert (p>=0);
   return p;
 }
 
 
-double RKTrackRep::getMomVar(const MeasuredStateOnPlane& stateInput) {
+double RKTrackRep::getMomVar(const MeasuredStateOnPlane& state) {
   // p(qop) = q/qop
   // dp/d(qop) = - q / (qop^2)
   // (delta p) = (delta qop) * |dp/d(qop)| = delta qop * |q / (qop^2)|
@@ -477,7 +477,7 @@ double RKTrackRep::getMomVar(const MeasuredStateOnPlane& stateInput) {
   // delta means sigma
   // cov(0,0) is sigma^2
 
-  return stateInput.getCov()(0,0) * pow(getCharge(stateInput), 2)  / pow(stateInput.getState()(0), 4);
+  return state.getCov()(0,0) * pow(getCharge(state), 2)  / pow(state.getState()(0), 4);
 }
 
 
@@ -670,12 +670,12 @@ void RKTrackRep::setPosMom(StateOnPlane& state, const TVector3& pos, const TVect
 }
 
 
-void RKTrackRep::setPosMom(StateOnPlane& stateInput, const TVectorD& state6) const {
+void RKTrackRep::setPosMom(StateOnPlane& state, const TVectorD& state6) const {
   if (state6.GetNrows()!=6){
     Exception exc("RKTrackRep::setPosMom ==> state has to be 6d (x, y, z, px, py, pz)",__LINE__,__FILE__);
     throw exc;
   }
-  setPosMom(stateInput, TVector3(state6(0), state6(1), state6(2)), TVector3(state6(3), state6(4), state6(5)));
+  setPosMom(state, TVector3(state6(0), state6(1), state6(2)), TVector3(state6(3), state6(4), state6(5)));
 }
 
 
@@ -762,6 +762,13 @@ void RKTrackRep::setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state
 
   transformM6P(cov6x6_, state7, state);
 
+}
+
+
+void RKTrackRep::setChargeSign(StateOnPlane& state, double charge) const {
+  if (state.getState()(0) * charge < 0) {
+    state.getState()(0) *= -1.;
+  }
 }
 
 
