@@ -262,13 +262,28 @@ void EventDisplay::drawEvent(unsigned int id) {
 
     for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
 
+      TrackPoint* tp = track->getPointWithMeasurement(j);
+      if (! tp->hasRawMeasurements()) {
+        std::cerr<<"trackPoint has no raw measurements"<<std::endl;
+        continue;
+      }
+
+      if (! tp->hasFitterInfo(rep)) {
+        std::cerr<<"trackPoint has no fitterInfo for rep"<<std::endl;
+        continue;
+      }
+
       // get the fitter infos ------------------------------------------------------------------
-      AbsFitterInfo* fitterInfo = track->getPointWithMeasurement(j)->getFitterInfo(rep);
-      const AbsMeasurement* m = track->getPointWithMeasurement(j)->getRawMeasurement();  // FIXME draw all measurements, not only 1st
+      AbsFitterInfo* fitterInfo = tp->getFitterInfo(rep);
+      const AbsMeasurement* m = tp->getRawMeasurement();  // FIXME draw all measurements, not only 1st
 
       fi = dynamic_cast<KalmanFitterInfo*>(fitterInfo);
       if(fi == NULL) {
         std::cerr<<"can only display KalmanFitterInfo"<<std::endl;
+        continue;
+      }
+      if (! fi->hasPredictionsAndUpdates()) {
+        std::cerr<<"KalmanFitterInfo does not have all predictions and updates"<<std::endl;
         continue;
       }
       try {
