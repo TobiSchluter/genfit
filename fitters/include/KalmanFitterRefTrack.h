@@ -28,6 +28,7 @@
 namespace genfit {
 
 class KalmanFitterInfo;
+class TrackPoint;
 
 class KalmanFitterRefTrack : public AbsKalmanFitter {
  public:
@@ -36,9 +37,9 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
   ~KalmanFitterRefTrack() {cleanSOPsToDestruct();}
 
   /**
-   * Needs a prepared track!
+   * Needs a prepared track! Return last TrackPoint that has been processed.
    */
-  void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
+  TrackPoint* fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
   void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits);
   /**
    * Prepare the track: calc all reference states.

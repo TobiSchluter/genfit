@@ -45,7 +45,7 @@ class AbsKalmanFitter : public AbsFitter {
     : maxIterations_(maxIterations), deltaPval_(deltaPval), blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPrediction) {}
   virtual ~AbsKalmanFitter() {;}
 
-  virtual void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction) = 0;
+  //virtual void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction) = 0;
 
   void getChiSquNdf(const Track* tr, const AbsTrackRep* rep, double& bChi2, double& fChi2, double& bNdf,  double& fNdf) const;
   double getChiSqu(const Track* tr, const AbsTrackRep* rep, int direction = -1) const;

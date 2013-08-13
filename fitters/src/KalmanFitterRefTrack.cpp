@@ -44,17 +44,19 @@
 using namespace genfit;
 
 
-void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction)
+TrackPoint* KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction)
 {
 
-  if (!isTrackPrepared(tr, rep)) {
-    Exception exc("KalmanFitterRefTrack::fitTrack ==> track is not properly prepared.",__LINE__,__FILE__);
-    throw exc;
-  }
+  //if (!isTrackPrepared(tr, rep)) {
+  //  Exception exc("KalmanFitterRefTrack::fitTrack ==> track is not properly prepared.",__LINE__,__FILE__);
+  //  throw exc;
+  //}
 
   chi2 = 0;
   ndf = -1. * rep->getDim();
   KalmanFitterInfo* prevFi(NULL);
+
+  TrackPoint* retVal(NULL);
 
 #ifdef DEBUG
   std::cout << tr->getNumPoints() << " TrackPoints with measurements in this track." << std::endl;
@@ -70,11 +72,18 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& c
       else if (direction == -1)
         tp = tr->getPointWithMeasurement(-i-1);
 
+      if (! tp->hasFitterInfo(rep)) {
+        #ifdef DEBUG
+        std::cout << "TrackPoint " << i << " has no fitterInfo -> continue. \n";
+        #endif
+        continue;
+      }
+
       KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep));
 
       if (alreadyFitted && fi->hasUpdate(direction)) {
         #ifdef DEBUG
-        std::cout << "TrackPoint " << i << " is already fitted. \n";
+        std::cout << "TrackPoint " << i << " is already fitted -> continue. \n";
         #endif
         prevFi = fi;
         chi2 += fi->getUpdate(direction)->getChiSquareIncrement();
@@ -88,9 +97,12 @@ void KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, double& c
       std::cout << " process TrackPoint nr. " << i << "\n";
       #endif
       processTrackPoint(fi, prevFi, chi2, ndf, direction);
+      retVal = tp;
 
       prevFi = fi;
   }
+
+  return retVal;
 }
 
 
@@ -165,21 +177,23 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
       #ifdef DEBUG
       std::cout << "KalmanFitterRefTrack::forward fit\n";
       #endif
-      fitTrack(tr, rep, chi2FW, ndfFW, +1);
+      TrackPoint* lastProcessedPoint = fitTrack(tr, rep, chi2FW, ndfFW, +1);
 
       // fit backward
       #ifdef DEBUG
       std::cout << "KalmanFitterRefTrack::backward fit\n";
       #endif
 
-      // backward fit must not necessarily start at last hit, but if it does, set prediction = forward update and blow up cov
-      KalmanFitterInfo* lastInfo = static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(-1)->getFitterInfo(rep));
-      if (! lastInfo->hasBackwardPrediction()) {
-        lastInfo->setBackwardPrediction(new MeasuredStateOnPlane(*(lastInfo->getForwardUpdate())));
-        lastInfo->getBackwardPrediction()->blowUpCov(blowUpFactor_);  // blow up cov
-        #ifdef DEBUG
-        std::cout << "blow up cov for backward fit\n";
-        #endif
+      // backward fit must not necessarily start at last hit, set prediction = forward update and blow up cov
+      if (lastProcessedPoint != NULL) {
+        KalmanFitterInfo* lastInfo = static_cast<KalmanFitterInfo*>(lastProcessedPoint->getFitterInfo(rep));
+        if (! lastInfo->hasBackwardPrediction()) {
+          lastInfo->setBackwardPrediction(new MeasuredStateOnPlane(*(lastInfo->getForwardUpdate())));
+          lastInfo->getBackwardPrediction()->blowUpCov(blowUpFactor_);  // blow up cov
+          #ifdef DEBUG
+          std::cout << "blow up cov for backward fit at TrackPoint " << lastProcessedPoint << "\n";
+          #endif
+        }
       }
 
       fitTrack(tr, rep, chi2BW, ndfBW, -1);
@@ -207,8 +221,18 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
       // after the first iteration will be both very close to zero, so
       // we need to have at least two iterations here.  Convergence
       // doesn't make much sense before running twice anyway.
+      bool converged(false);
       if (nIt > 1 && fabs(oldPvalBW - PvalBW) < deltaPval_)  {
-        // Finished
+        // if pVal ~ 0, check if chi2 has cahnged a lot
+        if (PvalBW < 0.001 &&
+            fabs(oldChi2BW / chi2BW) > 2.) {
+          converged = false;
+        }
+        else
+          converged = true;
+      }
+
+      if (converged) {
         #ifdef DEBUG
         std::cout << "Fit is converged! \n";
         #endif
@@ -491,11 +515,19 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         }
       }
       else {
-        assert (prevReferenceState != NULL);
-        #ifdef DEBUG
-        std::cout << "extrapolate prevReferenceState to plane\n";
-        #endif
-        stateToExtrapolate.reset(new StateOnPlane(*prevReferenceState));
+        if (prevSmoothedState != NULL) {
+          #ifdef DEBUG
+          std::cout << "extrapolate prevSmoothedState to plane \n";
+          #endif
+          stateToExtrapolate.reset(new StateOnPlane(*prevSmoothedState));
+        }
+        else {
+          assert (prevReferenceState != NULL);
+          #ifdef DEBUG
+          std::cout << "extrapolate prevReferenceState to plane \n";
+          #endif
+          stateToExtrapolate.reset(new StateOnPlane(*prevReferenceState));
+        }
       }
 
       // make sure track is consistent if extrapolation fails
@@ -583,12 +615,34 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
     cleanSOPsToDestruct();
     removeForwardBackwardInfo(tr, rep, notChangedUntil, notChangedFrom);
 
+
+    // set sorting parameters of TrackPoints where no reference state could be calculated
+    if (setSortingParams) {
+      for (; i<nPoints; ++i) {
+
+        TrackPoint* trackPoint = tr->getPoint(i);
+
+        // check if we have a measurement
+        if (!trackPoint->hasRawMeasurements()) {
+          #ifdef DEBUG
+          std::cout << "TrackPoint has no rawMeasurements -> continue \n";
+          #endif
+          continue;
+        }
+
+        trackPoint->setSortingParameter(trackLen);
+        trackPoint->deleteFitterInfo(rep);
+      }
+    }
+
     //prevReferenceState->resetForward();
     //referenceState->resetBackward();
 
-    Exception exc("KalmanFitterRefTrack::prepareTrack: got an exception.",__LINE__,__FILE__);
-    exc.setFatal();
-    throw exc;
+    //Exception exc("KalmanFitterRefTrack::prepareTrack: got an exception.",__LINE__,__FILE__);
+    //exc.setFatal();
+    //throw exc;
+
+    return true;
   }
 
 

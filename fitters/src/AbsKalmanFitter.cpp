@@ -47,6 +47,9 @@ void AbsKalmanFitter::getChiSquNdf(const Track* tr, const AbsTrackRep* rep,
 
   const std::vector<TrackPoint*>& pointsWM = tr->getPointsWithMeasurement();
   for (std::vector<TrackPoint*>::const_iterator tpIter = pointsWM.begin(), endIter = pointsWM.end(); tpIter != endIter; ++tpIter) {
+    if (! (*tpIter)->hasFitterInfo(rep))
+      continue;
+
     AbsFitterInfo* afi = (*tpIter)->getFitterInfo(rep);
     KalmanFitterInfo* fi = dynamic_cast<KalmanFitterInfo*>(afi);
     if (!fi) {
