@@ -145,11 +145,14 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
         status->setIsFitConverged();
         status->setHasTrackChanged(false);
         status->setCharge(rep->getCharge(*static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
-        status->setNumIterations(nIt-1);
+        status->setNumIterations(nIt);
         status->setForwardChiSqu(chi2FW);
         status->setBackwardChiSqu(chi2BW);
         status->setForwardNdf(std::max(0., ndfFW));
         status->setBackwardNdf(std::max(0., ndfBW));
+        #ifdef DEBUG
+        status->Print();
+        #endif
         return;
       }
 
@@ -222,21 +225,27 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
       // we need to have at least two iterations here.  Convergence
       // doesn't make much sense before running twice anyway.
       bool converged(false);
+      bool finished(false);
       if (nIt > 1 && fabs(oldPvalBW - PvalBW) < deltaPval_)  {
-        // if pVal ~ 0, check if chi2 has cahnged a lot
+        // if pVal ~ 0, check if chi2 has changed a lot
         if (PvalBW < 0.001 &&
             fabs(oldChi2BW / chi2BW) > 2.) {
-          converged = false;
+          finished = false;
         }
-        else
+        else {
+          finished = true;
           converged = true;
+        }
       }
 
-      if (converged) {
+      if (finished) {
         #ifdef DEBUG
-        std::cout << "Fit is converged! \n";
+        std::cout << "Fit is finished! ";
+        if(converged)
+          std::cout << "Fit is converged! ";
+        std::cout << "\n";
         #endif
-        status->setIsFitConverged();
+        status->setIsFitConverged(converged);
         break;
       }
       else {
@@ -259,6 +268,9 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
       std::cerr << e.what();
       status->setIsFitted(false);
       status->setIsFitConverged(false);
+      #ifdef DEBUG
+      status->Print();
+      #endif
       return;
     }
 
@@ -274,6 +286,9 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
   status->setForwardNdf(ndfFW);
   status->setBackwardNdf(ndfBW);
 
+  #ifdef DEBUG
+  status->Print();
+  #endif
 }
 
 
@@ -459,9 +474,11 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         std::cout << "construct plane with smoothed state of cardinal rep fit \n";
         #endif
         TVector3 pos, mom;
-        tr->getCardinalRep()->getPosMom(static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
+        const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
+        tr->getCardinalRep()->getPosMom(fittedState, pos, mom);
         StateOnPlane cardinalState(rep);
-        rep->setPosMom(cardinalState, pos, mom); // also fills auxInfo
+        rep->setPosMom(cardinalState, pos, mom);
+        rep->setQop(cardinalState, tr->getCardinalRep()->getQop(fittedState));
         plane = trackPoint->getRawMeasurement(0)->constructPlane(cardinalState);
       }
       else {
@@ -502,9 +519,11 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           std::cout << "extrapolate smoothed state of cardinal rep fit to plane\n";
           #endif
           TVector3 pos, mom;
-          tr->getCardinalRep()->getPosMom(static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true), pos, mom);
+          const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
+          tr->getCardinalRep()->getPosMom(fittedState, pos, mom);
           stateToExtrapolate.reset(new StateOnPlane(rep));
           rep->setPosMom(*stateToExtrapolate, pos, mom);
+          rep->setQop(*stateToExtrapolate, tr->getCardinalRep()->getQop(fittedState));
         }
         else {
           #ifdef DEBUG
@@ -615,24 +634,14 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
     cleanSOPsToDestruct();
     removeForwardBackwardInfo(tr, rep, notChangedUntil, notChangedFrom);
 
-
     // set sorting parameters of TrackPoints where no reference state could be calculated
-    if (setSortingParams) {
-      for (; i<nPoints; ++i) {
+    for (; i<nPoints; ++i) {
+      TrackPoint* trackPoint = tr->getPoint(i);
 
-        TrackPoint* trackPoint = tr->getPoint(i);
-
-        // check if we have a measurement
-        if (!trackPoint->hasRawMeasurements()) {
-          #ifdef DEBUG
-          std::cout << "TrackPoint has no rawMeasurements -> continue \n";
-          #endif
-          continue;
-        }
-
+      if (setSortingParams)
         trackPoint->setSortingParameter(trackLen);
-        trackPoint->deleteFitterInfo(rep);
-      }
+
+      trackPoint->deleteFitterInfo(rep);
     }
 
     //prevReferenceState->resetForward();
