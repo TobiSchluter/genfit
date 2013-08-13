@@ -155,16 +155,16 @@ int main() {
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
-  const double outlierProb = -0.1;
+  const double outlierProb = 0.1;
   const double outlierRange = 5;
 
-  const double hitSwitchProb = -0.1; // probability to give hits to fit in wrong order (flip two hits)
+  const double hitSwitchProb = 0.1; // probability to give hits to fit in wrong order (flip two hits)
 
-  const int splitTrack = -4; // for track merging testing:
+  const int splitTrack = 4; // for track merging testing:
 
   //const eFitterType fitterId = SimpleKalman;
-  const eFitterType fitterId = RefKalman;
-  //const eFitterType fitterId = DafRef;
+  //const eFitterType fitterId = RefKalman;
+  const eFitterType fitterId = DafRef;
   const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
@@ -178,6 +178,7 @@ int main() {
   const int pdg = 13;               // particle pdg code
 
   const bool smearPosMom = true;     // init the Reps with smeared pos and mom
+  const double chargeSwitchProb = 0.1; // probability to seed with wrong charge sign
   const double posSmear = 10*resolution;     // cm
   const double momSmear = 5. /180.*TMath::Pi();     // rad
   const double momMagSmear = 0.2;   // relative
@@ -198,7 +199,7 @@ int main() {
   measurementTypes.push_back(genfit::Wire);
   measurementTypes.push_back(genfit::WirePoint);*/
   for (int i = 0; i < 10; ++i)
-    measurementTypes.push_back(genfit::Pixel);
+    measurementTypes.push_back(genfit::Spacepoint);
 
 
 
@@ -316,7 +317,9 @@ int main() {
 
   double maxWeight(0);
   unsigned int nTotalIter(0);
+  unsigned int nTotalIterSecond(0);
   unsigned int nSuccessfullFits(0);
+  unsigned int nSuccessfullFitsSecond(0);
 
   CALLGRIND_START_INSTRUMENTATION;
 
@@ -359,8 +362,14 @@ int main() {
 
 
       // trackrep for creating measurements
-      genfit::AbsTrackRep* rep = new genfit::RKTrackRep(pdg);
-      genfit::AbsTrackRep* secondRep = new genfit::RKTrackRep(-211);
+      double sign(1.);
+      if (chargeSwitchProb > gRandom->Uniform(1.))
+        sign = -1.;
+      genfit::AbsTrackRep* rep = new genfit::RKTrackRep(sign*pdg);
+      sign = 1.;
+      if (chargeSwitchProb > gRandom->Uniform(1.))
+        sign = -1.;
+      genfit::AbsTrackRep* secondRep = new genfit::RKTrackRep(sign*-211);
       genfit::StateOnPlane stateRef(rep);
       rep->setPosMom(stateRef, pos, mom);
 
@@ -501,17 +510,24 @@ int main() {
       display->addEvent(event);
 #endif
 
+
+      nTotalIter += static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getNumIterations();
+      if (fitTrack->getFitStatus(rep)->isFitConverged())
+        nSuccessfullFits += 1;
+
+      if (twoReps) {
+        nTotalIterSecond += static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(secondRep))->getNumIterations();
+        if (fitTrack->getFitStatus(secondRep)->isFitConverged())
+          nSuccessfullFitsSecond += 1;
+      }
+
+
       // check if fit was successful
       //if (!fitter->isTrackFitted(fitTrack, rep)) {
       if (! fitTrack->getFitStatus(rep)->isFitted()) {
         std::cout << "Track could not be fitted successfully! \n";
         continue;
       }
-
-      nTotalIter += static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getNumIterations();
-      nSuccessfullFits += 1;
-
-
 
 
 
@@ -554,11 +570,17 @@ int main() {
       huPu->Fill(   (state[3]-referenceState[3]) / sqrt(cov[3][3]) );
       hvPu->Fill(   (state[4]-referenceState[4]) / sqrt(cov[4][4]) );
 
-      trackLenRes->Fill( (trueLen - fitTrack->getTrackLen(rep)) / trueLen );
+      try {
+        trackLenRes->Fill( (trueLen - fitTrack->getTrackLen(rep)) / trueLen );
 
-      if (debug) {
-        std::cout << "true track length = " << trueLen << "; fitted length = " << fitTrack->getTrackLen(rep) << "\n";
-        std::cout << "fitted tof = " << fitTrack->getTOF(rep) << " ns\n";
+        if (debug) {
+          std::cout << "true track length = " << trueLen << "; fitted length = " << fitTrack->getTrackLen(rep) << "\n";
+          std::cout << "fitted tof = " << fitTrack->getTOF(rep) << " ns\n";
+        }
+      }
+      catch (genfit::Exception& e) {
+        std::cerr << e.what();
+        std::cout << "could not get TraclLen or TOF! \n";
       }
 
       // print covariance
@@ -607,6 +629,9 @@ int main() {
         }
 
         for (unsigned int i=0; i<outlierTrue.size(); ++i){
+          if (! fitTrack->getPointWithMeasurement(i)->hasFitterInfo(rep))
+            continue;
+
           std::vector<double> dafWeights = dynamic_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(i)->getFitterInfo(rep))->getWeights();
 
           if (outlierTrue[i]) { // an outlier
@@ -643,6 +668,10 @@ int main() {
   std::cout<<"maxWeight = " << maxWeight << std::endl;
   std::cout<<"avg nr iterations = " << (double)nTotalIter/nSuccessfullFits << std::endl;
   std::cout<<"fit efficiency = " << (double)nSuccessfullFits/nEvents << std::endl;
+
+  std::cout<<"avg nr iterations (2nd rep) = " << (double)nTotalIterSecond/nSuccessfullFitsSecond << std::endl;
+  std::cout<<"fit efficiency (2nd rep) = " << (double)nSuccessfullFitsSecond/nEvents << std::endl;
+
 
 #ifndef VALGRIND
   /*if (debug) std::cout<<"Write Tree ...";
