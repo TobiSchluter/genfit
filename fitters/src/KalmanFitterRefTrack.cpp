@@ -117,8 +117,8 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
 #ifdef DEBUG
   double oldChi2FW = 1e6;
   double oldPvalFW = 0.;
-  double oldChi2BW = 1e6;
 #endif
+  double oldChi2BW = 1e6;
   double oldPvalBW = 0.;
   double chi2FW(0), ndfFW(0);
   double chi2BW(0), ndfBW(0);
@@ -241,9 +241,9 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
       }
       else {
         oldPvalBW = PvalBW;
+        oldChi2BW = chi2BW;
         #ifdef DEBUG
         oldPvalFW = PvalFW;
-        oldChi2BW = chi2BW;
         oldChi2FW = chi2FW;
         #endif
       }
