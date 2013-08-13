@@ -147,9 +147,29 @@ TrackPoint* Track::getPoint(int id) const {
 
 TrackPoint* Track::getPointWithMeasurement(int id) const {
   if (id < 0)
-    id += trackPoints_.size();
+    id += trackPointsWithMeasurement_.size();
 
   return trackPointsWithMeasurement_.at(id);
+}
+
+
+TrackPoint* Track::getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRep* rep) const {
+  int i(0);
+  for (std::vector<TrackPoint*>::const_iterator it = trackPointsWithMeasurement_.begin(); it != trackPointsWithMeasurement_.end(); ++it) {
+    if ((*it)->hasFitterInfo(rep)) {
+      if (id == i)
+        return (*it);
+      ++i;
+    }
+  }
+
+  if (i == 0)
+    return NULL;
+
+  if (id < 0)
+    id += i;
+
+  return getPointWithMeasurementAndFitterInfo(id, rep);
 }
 
 

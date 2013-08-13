@@ -137,7 +137,7 @@ int main() {
         DafSimple,
         DafRef};
 
-  const unsigned int nEvents = 1000;
+  const unsigned int nEvents = 100000;
   const double BField = 15.;       // kGauss
   const double momentum = 0.4;     // GeV
   const double theta = 120;         // degree
@@ -198,8 +198,8 @@ int main() {
   measurementTypes.push_back(genfit::StripU);
   measurementTypes.push_back(genfit::Wire);
   measurementTypes.push_back(genfit::WirePoint);*/
-  for (int i = 0; i < 10; ++i)
-    measurementTypes.push_back(genfit::Spacepoint);
+  for (int i = 0; i < 20; ++i)
+    measurementTypes.push_back(genfit::eMeasurementType(gRandom->Uniform(7)));
 
 
 
@@ -524,14 +524,18 @@ int main() {
 
       // check if fit was successful
       //if (!fitter->isTrackFitted(fitTrack, rep)) {
-      if (! fitTrack->getFitStatus(rep)->isFitted()) {
+      if (! fitTrack->getFitStatus(rep)->isFitConverged()) {
         std::cout << "Track could not be fitted successfully! \n";
         continue;
       }
 
 
-
-      genfit::KalmanFittedStateOnPlane* kfsop = new genfit::KalmanFittedStateOnPlane(*(static_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
+      genfit::TrackPoint* tp = fitTrack->getPointWithMeasurementAndFitterInfo(0, rep);
+      if (tp == NULL) {
+        std::cout << "Track has no TrackPoint with fitterInfo! \n";
+        continue;
+      }
+      genfit::KalmanFittedStateOnPlane* kfsop = new genfit::KalmanFittedStateOnPlane(*(static_cast<genfit::KalmanFitterInfo*>(tp->getFitterInfo(rep))->getBackwardUpdate()));
       if (debug) {
         std::cout << "state before extrapolating back to reference plane \n";
         kfsop->Print();
@@ -592,6 +596,10 @@ int main() {
       // check l/r resolution and outlier rejection
       if (dynamic_cast<genfit::DAF*>(fitter) != NULL) {
         for (unsigned int i=0; i<leftRightTrue.size(); ++i){
+
+          if (! fitTrack->getPointWithMeasurement(i)->hasFitterInfo(rep))
+            continue;
+
           if (debug) {
             std::vector<double> dafWeights = dynamic_cast<genfit::KalmanFitterInfo*>(fitTrack->getPointWithMeasurement(i)->getFitterInfo(rep))->getWeights();
             std::cout << "hit " << i;

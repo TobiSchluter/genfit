@@ -282,8 +282,9 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
 
   status->setIsFitted();
   status->setHasTrackChanged(false);
-  if (tr->getPointWithMeasurement(0)->hasFitterInfo(rep) &&
-      static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->hasBackwardUpdate())
+  TrackPoint* tp = tr->getPointWithMeasurementAndFitterInfo(0, rep);
+  if (tp != NULL &&
+      static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep))->hasBackwardUpdate())
     status->setCharge(rep->getCharge(*static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
   status->setNumIterations(nIt);
   status->setForwardChiSqu(chi2FW);
@@ -482,6 +483,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         plane = trackPoint->getRawMeasurement(0)->constructPlane(*prevReferenceState);
       }
       else if (rep != tr->getCardinalRep() &&
+                trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
                 dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
                 static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
         #ifdef DEBUG
@@ -527,6 +529,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           stateToExtrapolate.reset(new StateOnPlane(*referenceState));
         }
         else if (rep != tr->getCardinalRep() &&
+                  trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
                   dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
                   static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
           #ifdef DEBUG
@@ -657,10 +660,10 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
   }
   catch (Exception& e) {
-    std::cerr << e.what();
 
     #ifdef DEBUG
     std::cout << "exception at hit " << i << "\n";
+    std::cerr << e.what();
     #endif
 
     // clean up
