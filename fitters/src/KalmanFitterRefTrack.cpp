@@ -236,6 +236,9 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
           finished = true;
           converged = true;
         }
+
+        if (PvalBW == 0)
+          converged = false;
       }
 
       if (finished) {
@@ -387,7 +390,6 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       }
 
 
-      // if fitterInfo already has a reference state, continue
       if (fitterInfo->hasReferenceState()) {
 
         referenceState = fitterInfo->getReferenceState();
@@ -411,7 +413,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         #endif
         StateOnPlane stateToExtrapolate(*prevReferenceState);
 
-		// make sure track is consistent if extrapolation fails
+        // make sure track is consistent if extrapolation fails
         prevReferenceState->resetBackward();
         referenceState->resetForward();
 
@@ -421,8 +423,18 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         #endif
         trackLen += segmentLen;
 
-        rep->getForwardJacobianAndNoise(FTransportMatrix, FNoiseMatrix, forwardDeltaState);
-        rep->getBackwardJacobianAndNoise(BTransportMatrix, BNoiseMatrix, backwardDeltaState);
+        if (segmentLen == 0) {
+          FTransportMatrix.UnitMatrix();
+          FNoiseMatrix.Zero();
+          forwardDeltaState.Zero();
+          BTransportMatrix.UnitMatrix();
+          BNoiseMatrix.Zero();
+          backwardDeltaState.Zero();
+        }
+        else {
+          rep->getForwardJacobianAndNoise(FTransportMatrix, FNoiseMatrix, forwardDeltaState);
+          rep->getBackwardJacobianAndNoise(BTransportMatrix, BNoiseMatrix, backwardDeltaState);
+        }
 
         prevReferenceState->setBackwardSegmentLength(-segmentLen);
         prevReferenceState->setBackwardTransportMatrix(BTransportMatrix);
@@ -532,7 +544,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
           stateToExtrapolate.reset(new StateOnPlane(rep));
           rep->setPosMom(*stateToExtrapolate, tr->getStateSeed());
         }
-      }
+      } // end if (prevFitterInfo == NULL)
       else {
         if (prevSmoothedState != NULL) {
           #ifdef DEBUG
@@ -554,25 +566,44 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         prevReferenceState->resetBackward();
       fitterInfo->deleteReferenceInfo();
 
+      if (prevFitterInfo != NULL) {
+        rep->extrapolateToPlane(*stateToExtrapolate, prevFitterInfo->getPlane());
+        #ifdef DEBUG
+        std::cout << "extrapolated stateToExtrapolate to plane of prevFitterInfo (plane could have changed!) \n";
+        #endif
+      }
+
       double segmentLen = rep->extrapolateToPlane(*stateToExtrapolate, plane, false, true);
       trackLen += segmentLen;
       #ifdef DEBUG
-      std::cout << "extrapolated stateToExtrapolate by " << segmentLen << " cm.\n";
+      std::cout << "extrapolated stateToExtrapolate by " << segmentLen << " cm.\t";
+      std::cout << "charge of stateToExtrapolate: " << rep->getCharge(*stateToExtrapolate) << " \n";
       #endif
+
+
+      // get jacobians and noise matrices
+      if (segmentLen == 0) {
+        FTransportMatrix.UnitMatrix();
+        FNoiseMatrix.Zero();
+        forwardDeltaState.Zero();
+        BTransportMatrix.UnitMatrix();
+        BNoiseMatrix.Zero();
+        backwardDeltaState.Zero();
+      }
+      else {
+        if (i>0)
+          rep->getForwardJacobianAndNoise(FTransportMatrix, FNoiseMatrix, forwardDeltaState);
+        rep->getBackwardJacobianAndNoise(BTransportMatrix, BNoiseMatrix, backwardDeltaState);
+      }
+
 
       if (i==0) {
         // if we are at first measurement and seed state is defined somewhere else
         segmentLen = 0;
         trackLen = 0;
       }
-
       if (setSortingParams)
         trackPoint->setSortingParameter(trackLen);
-
-
-      // get jacobians and noise matrices
-      if (i>0) rep->getForwardJacobianAndNoise(FTransportMatrix, FNoiseMatrix, forwardDeltaState);
-      rep->getBackwardJacobianAndNoise(BTransportMatrix, BNoiseMatrix, backwardDeltaState);
 
 
       // set backward matrices for previous reference state
@@ -940,15 +971,17 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   double ndfInc = m.getState().GetNrows() * m.getWeight();
   ndf += ndfInc;
 
-#ifdef DEBUG
-  std::cout << " chi² inc " << chi2inc << "\n";
-  std::cout << " ndf inc  " << ndfInc << "\n";
-#endif
-
 
   KalmanFittedStateOnPlane* upState = new KalmanFittedStateOnPlane(updated, C, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(), fi->getReferenceState()->getAuxInfo(), chi2inc, ndfInc);
   upState->setAuxInfo(fi->getReferenceState()->getAuxInfo());
   fi->setUpdate(upState, direction);
+
+
+#ifdef DEBUG
+  std::cout << " chi² inc " << chi2inc << "\t";
+  std::cout << " ndf inc  " << ndfInc << "\t";
+  std::cout << " charge of update  " << fi->getRep()->getCharge(*upState) << "\n";
+#endif
 
   // check
   assert(fi->checkConsistency());

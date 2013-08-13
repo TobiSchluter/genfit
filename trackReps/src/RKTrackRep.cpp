@@ -82,6 +82,14 @@ double RKTrackRep::extrapolateToPlane(StateOnPlane& state,
 std::cout << "RKTrackRep::extrapolateToPlane()\n";
 #endif
 
+
+  if (state.getPlane() == plane) {
+    #ifdef DEBUG
+    std::cout << "state is already defined at plane. Do nothing! \n";
+    #endif
+    return 0;
+  }
+
   checkCache(state, &plane);
 
   // to 7D
