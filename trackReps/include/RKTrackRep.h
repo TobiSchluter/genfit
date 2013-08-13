@@ -129,9 +129,7 @@ class RKTrackRep : public AbsTrackRep {
   virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const;
   virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state6, const TMatrixDSym& cov6x6) const;
 
-
-  void setCharge(StateOnPlane& state, double charge) const {(state.getAuxInfo())(0) = charge;}
-  void setSpu(StateOnPlane& state, double spu) const {(state.getAuxInfo())(1) = spu;}
+  void setSpu(StateOnPlane& state, double spu) const {(state.getAuxInfo())(0) = spu;}
 
   //! The actual Runge Kutta propagation
   /** propagate #state7 with step #S. Fills #SA (Start directions derivatives dA/S).

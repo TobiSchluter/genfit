@@ -448,14 +448,15 @@ void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane& stateInput, TVector3& 
 
 double RKTrackRep::getCharge(const StateOnPlane& state) const
 {
-  const TVectorD& auxInfo = state.getAuxInfo();
-  if (auxInfo.GetNrows() == 2)
-    return (state.getAuxInfo())(0);
-  else {
-    TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(pdgCode_);
-    assert(particle != NULL);
-    return particle->Charge()/(3.);
-  }
+  TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(pdgCode_);
+  assert(particle != NULL);
+  double pdgCharge = particle->Charge()/(3.);
+
+  // return pdgCharge with sign of q/p
+  if (state.getState()(0) * pdgCharge < 0)
+    return -pdgCharge;
+  else
+    return pdgCharge;
 }
 
 
@@ -483,8 +484,8 @@ double RKTrackRep::getMomVar(const MeasuredStateOnPlane& stateInput) {
 double RKTrackRep::getSpu(const StateOnPlane& state) const
 {
   const TVectorD& auxInfo = state.getAuxInfo();
-  if (auxInfo.GetNrows() == 2)
-    return state.getAuxInfo()(1);
+  if (auxInfo.GetNrows() == 1)
+    return state.getAuxInfo()(0);
   else
     return 1.;
 }
@@ -622,14 +623,8 @@ void RKTrackRep::setPosMom(StateOnPlane& state, const TVector3& pos, const TVect
 
   // init auxInfo if that has not yet happened
   TVectorD& auxInfo = state.getAuxInfo();
-  if (auxInfo.GetNrows() != 2) {
-    auxInfo.ResizeTo(2);
-    TParticlePDG * part = TDatabasePDG::Instance()->GetParticle(pdgCode_);
-    if(part == 0){
-      Exception exc("RKTrackRep::setPosMom ==> particle id not known to TDatabasePDG",__LINE__,__FILE__);
-      throw exc;
-    }
-    setCharge(state, part->Charge()/(3.));
+  if (auxInfo.GetNrows() != 1) {
+    auxInfo.ResizeTo(1);
     setSpu(state, 1.);
   }
 
