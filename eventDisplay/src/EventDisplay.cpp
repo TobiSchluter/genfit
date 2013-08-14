@@ -46,7 +46,10 @@
 #include <TVectorD.h>
 #include <TSystem.h>
 
+ClassImp(genfit::EventDisplay)
+
 namespace genfit {
+
 
 EventDisplay* EventDisplay::eventDisplay_ = NULL;
 
@@ -874,11 +877,11 @@ void EventDisplay::makeGui() {
 
     b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoBack.gif"));
     hf->AddFrame(b);
-    b->Connect("Clicked()", "EventDisplay", fh, "prev()");
+    b->Connect("Pressed()", "genfit::EventDisplay", fh, "prev(UInt_t)");
 
     b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoForward.gif"));
     hf->AddFrame(b);
-    b->Connect("Clicked()", "EventDisplay", fh, "next()");
+    b->Connect("Clicked()", "genfit::EventDisplay", fh, "next(UInt_t)");
   }
   frmMain->AddFrame(hf);
 
