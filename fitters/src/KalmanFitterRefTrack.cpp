@@ -280,12 +280,20 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
   }
 
 
-  status->setIsFitted();
-  status->setHasTrackChanged(false);
   TrackPoint* tp = tr->getPointWithMeasurementAndFitterInfo(0, rep);
   if (tp != NULL &&
       static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep))->hasBackwardUpdate())
     status->setCharge(rep->getCharge(*static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
+
+  if (tp != NULL) {
+    status->setIsFitted();
+  }
+  else { // none of the trackPoints has a fitterInfo
+    status->setIsFitted(false);
+    status->setIsFitConverged(false);
+  }
+
+  status->setHasTrackChanged(false);
   status->setNumIterations(nIt);
   status->setForwardChiSqu(chi2FW);
   status->setBackwardChiSqu(chi2BW);
@@ -973,7 +981,9 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   chi2 += chi2inc;
 
 
-  double ndfInc = m.getState().GetNrows() * m.getWeight();
+  double ndfInc = m.getState().GetNrows();
+  if (multipleMeasurementHandling_ == weightedAverage)
+    ndfInc *= m.getWeight();
   ndf += ndfInc;
 
 

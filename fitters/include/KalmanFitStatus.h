@@ -71,7 +71,9 @@ class KalmanFitStatus : public FitStatus {
       std::cout << "fChi2 = " << fChi2_ << ", ";
       std::cout << "bChi2 = " << bChi2_ << ", ";
       std::cout << "fNdf = " << fNdf_ << ", ";
-      std::cout << "bNdf = " << bNdf_ << "\n";
+      std::cout << "bNdf = " << bNdf_ << ", ";
+      std::cout << "fPVal = " << getForwardPVal() << ", ";
+      std::cout << "bPVal = " << getBackwardPVal() << "\n";
     }
     std::cout << "\n";
   }
