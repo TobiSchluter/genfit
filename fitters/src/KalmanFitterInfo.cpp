@@ -88,41 +88,49 @@ std::vector< genfit::MeasurementOnPlane* > KalmanFitterInfo::getMeasurementsOnPl
 MeasurementOnPlane KalmanFitterInfo::getAvgWeightedMeasurementOnPlane() const {
 
   MeasurementOnPlane retVal(*(measurementsOnPlane_[0]));
-  retVal.setWeight(1);
 
   if(measurementsOnPlane_.size() == 1) {
     double weight = (measurementsOnPlane_[0])->getWeight();
     if (weight != 1.) {
       retVal.getCov() *= 1. / weight;
     }
+    retVal.setWeight(weight);
+    return retVal;
   }
-  else { // more than one hit
-    retVal.getState().Zero();
-    retVal.getCov().Zero();
 
-    TMatrixDSym covInv;
+  // more than one hit
 
-    for(unsigned int i=0; i<measurementsOnPlane_.size(); ++i) {
+  double sumOfWeights(0), weight(0);
 
-      if (i>0) {
-        // make sure we have compatible measurement types
-        // TODO: replace with Exceptions!
-        assert(measurementsOnPlane_[i]->getPlane() == measurementsOnPlane_[0]->getPlane());
-        assert(measurementsOnPlane_[i]->getHMatrix() == measurementsOnPlane_[0]->getHMatrix());
-      }
+  retVal.getState().Zero();
+  retVal.getCov().Zero();
 
-      tools::invertMatrix(measurementsOnPlane_[i]->getCov(), covInv); // invert cov
-      covInv *= measurementsOnPlane_[i]->getWeight(); // weigh cov
-      retVal.getCov() += covInv; // cov is already inverted and weighted
+  TMatrixDSym covInv;
 
-      retVal.getState() += covInv * measurementsOnPlane_[i]->getState();
+  for(unsigned int i=0; i<measurementsOnPlane_.size(); ++i) {
+
+    if (i>0) {
+      // make sure we have compatible measurement types
+      // TODO: replace with Exceptions!
+      assert(measurementsOnPlane_[i]->getPlane() == measurementsOnPlane_[0]->getPlane());
+      assert(measurementsOnPlane_[i]->getHMatrix() == measurementsOnPlane_[0]->getHMatrix());
     }
 
-    // invert Cov
-    tools::invertMatrix(retVal.getCov());
+    tools::invertMatrix(measurementsOnPlane_[i]->getCov(), covInv); // invert cov
+    weight = measurementsOnPlane_[i]->getWeight();
+    sumOfWeights += weight;
+    covInv *= weight; // weigh cov
+    retVal.getCov() += covInv; // cov is already inverted and weighted
 
-    retVal.getState() *= retVal.getCov();
+    retVal.getState() += covInv * measurementsOnPlane_[i]->getState();
   }
+
+  // invert Cov
+  tools::invertMatrix(retVal.getCov());
+
+  retVal.getState() *= retVal.getCov();
+
+  retVal.setWeight(sumOfWeights);
 
   return retVal;
 }
