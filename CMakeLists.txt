@@ -44,7 +44,7 @@ ELSE()
 ENDIF()
 
 # require proper c++, standard is C++03, flag reads: c++98
-ADD_DEFINITIONS( " -Wall -g3 -ansi -pedantic -Wno-long-long -Wshadow "   )
+ADD_DEFINITIONS( " -Wall -g -O3 -DNDEBUG -march=native -ansi -pedantic -Wno-long-long -Wshadow "   )
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-std=c++03 HAS_STD_FLAG)
 check_cxx_compiler_flag(--std=c++03 HAS_STD_FLAG_ALTERNATIVE)

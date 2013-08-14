@@ -137,7 +137,7 @@ int main() {
         DafSimple,
         DafRef};
 
-  const unsigned int nEvents = 100000;
+  const unsigned int nEvents = 1000;
   const double BField = 15.;       // kGauss
   const double momentum = 0.4;     // GeV
   const double theta = 120;         // degree
@@ -305,6 +305,7 @@ int main() {
 
   TH1D *hqopPu = new TH1D("hqopPu","q/p pull",200,-6.,6.);
   TH1D *pVal = new TH1D("pVal","p-value",100,0.,1.00000001);
+  pVal->SetMinimum(0);
   TH1D *hupPu = new TH1D("hupPu","u' pull",200,-6.,6.);
   TH1D *hvpPu = new TH1D("hvpPu","v' pull",200,-6.,6.);
   TH1D *huPu = new TH1D("huPu","u pull",200,-6.,6.);

@@ -323,76 +323,52 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
     }
     KalmanFitterInfo* kfi = static_cast<KalmanFitterInfo*>(fi);
     unsigned int nMeas = kfi->getNumMeasurements();
-    std::vector<double> weights;
-    weights.reserve(nMeas);
 
-    /*if(kfi->getStatusFlag() != 0) { // failed hit
-      weights.assign(nMeas, 0.5);
-      //std::cout<<"Assumed weight 0.5!!"<<std::endl;
-      ret_val.push_back(weights);
-
-#ifdef DEBUG
-      std::cout<<"(";
-#endif
-      for (unsigned int j=0; j<nMeas; ++j){
-        kfi->getMeasurementOnPlane(j)->setWeight(0.5);
-#ifdef DEBUG
-        std::cout<<"0.5";
-        if (j<nMeas-1)
-          std::cout<<", ";
-#endif
-      }
-#ifdef DEBUG
-      std::cout<<") ";
-#endif
-      continue;
-    }*/
-
-    std::vector<double> phi;
+    std::vector<double> phi(nMeas, 0.);
     double phi_sum = 0;
     double phi_cut = 0;
-    const MeasuredStateOnPlane& smoothedState = kfi->getFittedState(true);
+    const MeasuredStateOnPlane& smoothedState = kfi->getFittedState();
 
+    // This assumes that all measurements on the plane have the same dimensionality.
     TVectorD x_smoo(kfi->getMeasurementOnPlane()->getHMatrix() * smoothedState.getState());
+    int hitDim = x_smoo.GetNrows();
+    double twoPiN = std::pow(2.*M_PI, hitDim);
 
     for(unsigned int j=0; j<nMeas; j++) {
-      double* detV = new double(0);
 
       try{
         const MeasurementOnPlane* mop = kfi->getMeasurementOnPlane(j);
-        int hitDim = mop->getState().GetNoElements();
+	assert(mop->getState()->GetNrows() == hitDim);
         TVectorD resid(mop->getState() - x_smoo);
-        TMatrixDSym Vinv;
-        tools::invertMatrix(mop->getCov(), Vinv, detV); // can throw an Exception
+        TMatrixDSym Vinv(mop->getCov());
+	double detV;
+        tools::invertMatrix(Vinv, &detV); // can throw an Exception
 
         double chi2 = Vinv.Similarity(resid);
-		#ifdef DEBUG
+#ifdef DEBUG
         std::cout<<"chi2 = " << chi2 << "\n";
-		#endif
+#endif
 
-        phi.push_back((1./(std::pow(2.*TMath::Pi(),hitDim/2)*sqrt(*detV)))*exp(-0.5*chi2/beta)); // std::pow(double, int) from <cmath> is faster than pow(double, double) from <math.h> when the exponent actually _is_ an integer.
+	double norm = 1./sqrt(twoPiN * detV);
+
+        phi[j] = norm*exp(-0.5*chi2/beta);
         phi_sum += phi[j];
         //std::cerr << "hitDim " << hitDim << " fchi2Cuts[hitDim] " << fchi2Cuts[hitDim] << std::endl;
         double cutVal = chi2Cuts_[hitDim];
         assert(cutVal>1.E-6);
-        //the follwing assumes that in the compeating hits (real hits in one DAF hit) could have different V otherwise calculation could be simplified
-        phi_cut += (1./(std::pow(2.*TMath::Pi(),hitDim/2)*sqrt(*detV)))*exp(-0.5*cutVal/beta);
+        //the following assumes that in the competing hits (real hits in one DAF hit) could have different V otherwise calculation could be simplified
+        phi_cut += norm*exp(-0.5*cutVal/beta);
       }
       catch(Exception& e) {
-        delete detV;
         std::cerr << e.what();
         e.info();
-        phi.push_back(0); //m and Vorig do not contain sensible values, assign weight 0
-        continue;
       }
-
-      delete detV;
-
     }
 
+    std::vector<double> weights(nMeas, 0.);
     for(unsigned int j=0; j<nMeas; j++) {
       double weight = phi[j]/(phi_sum+phi_cut);
-      weights.push_back(weight);
+      weights[j] = weight;
       kfi->getMeasurementOnPlane(j)->setWeight(weight);
     }
 
@@ -404,7 +380,6 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
 #endif
 
   return ret_val;
-
 }
 
 
