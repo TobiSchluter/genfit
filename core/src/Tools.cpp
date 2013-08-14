@@ -45,9 +45,7 @@ void tools::invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* deter
     if (determinant != NULL) *determinant = mat(0,0);
     inv(0,0) = 1./mat(0,0);
     return;
-  }
-
-  if (mat.GetNrows() == 2){
+  } if (mat.GetNrows() == 2){
     double det = mat(0,0)*mat(1,1) - mat(1,0)*mat(1,0);
     if (determinant != NULL) *determinant = det;
     if(fabs(det) < 1E-50){
@@ -95,9 +93,7 @@ void tools::invertMatrix(TMatrixDSym& mat, double* determinant){
     if (determinant != NULL) *determinant = mat(0,0);
     mat(0,0) = 1./mat(0,0);
     return;
-  }
-  
-  if (mat.GetNrows() == 2){
+  } else if (mat.GetNrows() == 2){
     double *arr = mat.GetMatrixArray();
     double det = arr[0]*arr[3] - arr[1]*arr[1];
     if (determinant != NULL) *determinant = det;
