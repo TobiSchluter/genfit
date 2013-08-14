@@ -59,8 +59,6 @@ class DAF : public AbsKalmanFitter {
    */
   void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits);
 
-  void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction) {;}
-
   /** @brief Set the probability cut for the weight calculation for the hits.
    *
    * By default the cut values for measurements of dimensionality from 1 to 5 are calculated.
