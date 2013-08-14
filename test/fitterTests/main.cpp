@@ -137,7 +137,7 @@ int main() {
         DafSimple,
         DafRef};
 
-  const unsigned int nEvents = 1000;
+  const unsigned int nEvents = 100000;
   const double BField = 15.;       // kGauss
   const double momentum = 0.4;     // GeV
   const double theta = 120;         // degree
