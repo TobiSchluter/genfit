@@ -82,7 +82,7 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
   for(; iBeta != maxIterations_; ++iBeta) { // loop over. If no convergence is reached after 10 iterations just stop.
 
 #ifdef DEBUG
-      std::cout<<"DAF::processTrack, trackRep  " << rep << ", iteration " << iBeta << ", beta = " << betas_[iBeta] << "\n";
+      std::cout<<"DAF::processTrack, trackRep  " << rep << ", iteration " << iBeta << ", beta = " << betas_.at(iBeta) << "\n";
 #endif
 
     kalman_->processTrack(tr, rep, resortHits);
@@ -124,7 +124,7 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
       oldWeights = weights_;
 
     try{
-      weights_ = calcWeights(tr, rep, betas_[iBeta]);
+      weights_ = calcWeights(tr, rep, betas_.at(iBeta));
     } catch(Exception& e) {
       std::cerr<<e.what();
       e.info();
@@ -147,7 +147,7 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
     }
 
     // check if fit is failing utterly
-    /*if (status->getForwardNdf() < 0.) {
+    /*if (status->getForwardNdf() < 0. && betas_.at(iBeta) < 1.) {
       #ifdef DEBUG
       std::cout << "DAF:: NDF < 0; skip track! \n";
       #endif
@@ -242,7 +242,7 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) 
   betas_.resize(maxIterations_,betas_.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
 
   /*for (unsigned int i=0; i<betas_.size(); ++i) {
-    std::cout<< betas_[i] << ", ";
+    std::cout<< betas_.at(i) << ", ";
   }*/
 }
 

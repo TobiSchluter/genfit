@@ -87,6 +87,8 @@ class DAF : public AbsKalmanFitter {
    */
   void setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps);
 
+  void setMaxIterations(unsigned int n) {maxIterations_ = n; betas_.resize(maxIterations_,betas_.back());}
+
   /**
    * If all weights change less than delta between two iterations, the fit is regarded as converged.
    */
