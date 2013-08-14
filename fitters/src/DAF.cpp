@@ -40,19 +40,19 @@
 namespace genfit {
 
 DAF::DAF()
-  : AbsKalmanFitter(c_maxIter), deltaWeight_(0.001)
+  : AbsKalmanFitter(10), deltaWeight_(0.001)
 {
   kalman_.reset(new KalmanFitterRefTrack());
   kalman_->setMultipleMeasurementHandling(weightedAverage);
   kalman_->setMaxIterations(1);
   static_cast<KalmanFitterRefTrack*>(kalman_.get())->setRefitAll();
 
-  setAnnealingScheme(100, 0.1, 5);
+  setAnnealingScheme(100, 0.1, 5); // also sets maxIterations_
   setProbCut(0.01);
 }
 
 DAF::DAF(AbsKalmanFitter* kalman)
-  : AbsKalmanFitter(c_maxIter), deltaWeight_(0.001)
+  : AbsKalmanFitter(10), deltaWeight_(0.001)
 {
   kalman_.reset(kalman);
   kalman_->setMaxIterations(1);
@@ -61,7 +61,7 @@ DAF::DAF(AbsKalmanFitter* kalman)
     static_cast<KalmanFitterRefTrack*>(kalman_.get())->setRefitAll();
   }
 
-  setAnnealingScheme(100, 0.1, 5);
+  setAnnealingScheme(100, 0.1, 5); // also sets maxIterations_
   setProbCut(0.01);
 }
 
@@ -79,7 +79,7 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
   bool oneLastIter = false;
 
   unsigned int iBeta = 0;
-  for(; iBeta != c_maxIter; ++iBeta) { // loop over. If no convergence is reached after 10 iterations just stop.
+  for(; iBeta != maxIterations_; ++iBeta) { // loop over. If no convergence is reached after 10 iterations just stop.
 
 #ifdef DEBUG
       std::cout<<"DAF::processTrack, trackRep  " << rep << ", iteration " << iBeta << ", beta = " << betas_[iBeta] << "\n";
@@ -146,9 +146,23 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
       }
     }
 
+    // check if fit is failing utterly
+    /*if (status->getForwardNdf() < 0.) {
+      #ifdef DEBUG
+      std::cout << "DAF:: NDF < 0; skip track! \n";
+      #endif
+      status->setIsFitConverged(false);
+      break;
+    }*/
+
   } // end loop over betas
 
   status->setNumIterations(iBeta+1);
+
+  if (status->getForwardPVal() == 0. &&
+      status->getBackwardPVal() == 0.) {
+    status->setIsFitConverged(false);
+  }
 
 }
 
@@ -204,7 +218,8 @@ void DAF::setBetas(double b1,double b2,double b3,double b4,double b5,double b6,d
       }
     }
   }
-  betas_.resize(c_maxIter,betas_.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
+  maxIterations_ = betas_.size() + 4;
+  betas_.resize(maxIterations_,betas_.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
 }
 
 
@@ -212,7 +227,8 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) 
   assert(bStart > bFinal);
   assert(bFinal > 1.E-10);
   assert(nSteps > 1);
-  assert(nSteps <= c_maxIter);
+
+  maxIterations_ = nSteps + 4;
 
   betas_.clear();
 
@@ -223,7 +239,7 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) 
     betas_.push_back(bFinal * pow(2., exp));
   }
 
-  betas_.resize(c_maxIter,betas_.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
+  betas_.resize(maxIterations_,betas_.back()); //make sure main loop has a maximum of 10 iterations and also make sure the last beta value is used for if more iterations are needed then the ones set by the user.
 
   /*for (unsigned int i=0; i<betas_.size(); ++i) {
     std::cout<< betas_[i] << ", ";
