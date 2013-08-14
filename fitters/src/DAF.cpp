@@ -338,7 +338,7 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
 
       try{
         const MeasurementOnPlane* mop = kfi->getMeasurementOnPlane(j);
-	assert(mop->getState()->GetNrows() == hitDim);
+	assert(mop->getState().GetNrows() == hitDim);
         TVectorD resid(mop->getState() - x_smoo);
         TMatrixDSym Vinv(mop->getCov());
 	double detV;
