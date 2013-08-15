@@ -131,6 +131,7 @@ int randomSign() {
 
 int main() {
   std::cout<<"main"<<std::endl;
+  gRandom->SetSeed(14);
 
   enum eFitterType { SimpleKalman = 0,
         RefKalman,
@@ -203,7 +204,6 @@ int main() {
 
 
 
-  gRandom->SetSeed(14);
   signal(SIGSEGV, handler);   // install our handler
 
   // init fitter
