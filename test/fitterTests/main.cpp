@@ -119,7 +119,7 @@ int randomSign() {
 //---------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------
 
-//#define VALGRIND
+#define VALGRIND
 
 #ifdef VALGRIND
   #include <valgrind/callgrind.h>
@@ -207,7 +207,7 @@ int main() {
   signal(SIGSEGV, handler);   // install our handler
 
   // init fitter
-  genfit::AbsKalmanFitter* fitter;
+  genfit::AbsKalmanFitter* fitter = 0;
   switch (fitterId) {
     case SimpleKalman:
       fitter = new genfit::KalmanFitter(nIter, dPVal);
@@ -683,6 +683,10 @@ int main() {
 
 
   }// end loop over events
+
+  delete fitTrack;
+  delete secondTrack;
+  delete fitter;
 
   CALLGRIND_STOP_INSTRUMENTATION;
   CALLGRIND_DUMP_STATS;
