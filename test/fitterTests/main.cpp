@@ -138,7 +138,7 @@ int main() {
         DafSimple,
         DafRef};
 
-  const unsigned int nEvents = 100000;
+  const unsigned int nEvents = 10000;
   const double BField = 15.;       // kGauss
   const double momentum = 0.4;     // GeV
   const double theta = 120;         // degree
@@ -157,7 +157,7 @@ int main() {
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
   const double outlierProb = 0.1;
-  const double outlierRange = 5;
+  const double outlierRange = 2;
 
   const double hitSwitchProb = 0.1; // probability to give hits to fit in wrong order (flip two hits)
 
@@ -166,9 +166,9 @@ int main() {
   //const eFitterType fitterId = SimpleKalman;
   //const eFitterType fitterId = RefKalman;
   const eFitterType fitterId = DafRef;
-  const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
+  const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
   const int nIter = 10; // max number of iterations
   const double dPVal = 1.E-3; // convergence criterion
 
@@ -199,7 +199,7 @@ int main() {
   measurementTypes.push_back(genfit::StripU);
   measurementTypes.push_back(genfit::Wire);
   measurementTypes.push_back(genfit::WirePoint);*/
-  for (int i = 0; i < 20; ++i)
+  for (int i = 0; i < 11; ++i)
     measurementTypes.push_back(genfit::eMeasurementType(gRandom->Uniform(7)));
 
 
@@ -237,7 +237,7 @@ int main() {
     //static_cast<genfit::DAF*>(fitter)->setBetas(81, 8, 4, 0.5, 0.1);
     static_cast<genfit::DAF*>(fitter)->setAnnealingScheme(100, 0.1, 5);
     //static_cast<genfit::DAF*>(fitter)->setConvergenceDeltaWeight(0.0001);
-    fitter->setMaxIterations(nIter);
+    //fitter->setMaxIterations(nIter);
   }
 
 
@@ -259,13 +259,6 @@ int main() {
   measurementCreator.setDebug(debug);
 
 
-  // init event display
-#ifndef VALGRIND
-  genfit::EventDisplay* display = genfit::EventDisplay::getInstance();
-  display->reset();
-#endif
-
-
   // init geometry and mag. field
   TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
@@ -275,22 +268,14 @@ int main() {
 
   const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
 
-
-  // prepare output tree for Tracks 
-  // std::unique_ptr<genfit::Track> fitTrack(new genfit::Track());
-  genfit::Track* fitTrack = new genfit::Track();
-  genfit::Track* secondTrack = new genfit::Track();
+  // init event display
 #ifndef VALGRIND
-  // init rootapp (for drawing histograms)
-  TApplication* rootapp = new TApplication("rootapp", 0, 0);
-  /*TString outname = "out_Rep";
-  outname += "_degPlane";
-  outname += ".root";
-  TFile *file = TFile::Open(outname,"RECREATE");
-  TTree *tree = new TTree("t","Tracks");
-  tree->Branch("fitTracks","Track", fitTrack->get());*/
+  genfit::EventDisplay* display = genfit::EventDisplay::getInstance();
+  display->reset();
+#endif
 
 
+#ifndef VALGRIND
   // create histograms
   gROOT->SetStyle("Plain");
   gStyle->SetPalette(1);
@@ -317,17 +302,32 @@ int main() {
 #endif
 
   double maxWeight(0);
-  unsigned int nTotalIter(0);
-  unsigned int nTotalIterSecond(0);
-  unsigned int nSuccessfullFits(0);
-  unsigned int nSuccessfullFitsSecond(0);
+  unsigned int nTotalIterConverged(0);
+  unsigned int nTotalIterNotConverged(0);
+  unsigned int nTotalIterSecondConverged(0);
+  unsigned int nTotalIterSecondNotConverged(0);
+  unsigned int nConvergedFits(0);
+  unsigned int nUNConvergedFits(0);
+  unsigned int nConvergedFitsSecond(0);
+  unsigned int nUNConvergedFitsSecond(0);
+
 
   CALLGRIND_START_INSTRUMENTATION;
+
+  genfit::Track* fitTrack(NULL);
+  genfit::Track* secondTrack(NULL);
 
   // main loop
   for (unsigned int iEvent=0; iEvent<nEvents; ++iEvent){
 
       if (debug || (iEvent+1)%10==0) std::cout << "Event Nr. " << iEvent+1 << std::endl;
+
+
+      // clean up
+      delete fitTrack;
+      fitTrack = NULL;
+      delete secondTrack;
+      secondTrack = NULL;
 
 
       // true start values
@@ -419,10 +419,10 @@ int main() {
 
       // create track
       fitTrack = new genfit::Track(rep, rep->get6DState(stateSmeared)); //initialized with smeared rep
-      secondTrack = new genfit::Track(rep, rep->get6DState(stateSmeared)); //initialized with smeared rep
+      secondTrack = new genfit::Track(rep->clone(), rep->get6DState(stateSmeared)); //initialized with smeared rep
       if (twoReps) {
         fitTrack->addTrackRep(secondRep);
-        secondTrack->addTrackRep(secondRep);
+        secondTrack->addTrackRep(secondRep->clone());
       }
       //if (debug) fitTrack->Print("C");
 
@@ -498,35 +498,49 @@ int main() {
       }
 
 
-      if (debug)
+      if (debug) {
         fitTrack->Print("C");
+        fitTrack->getFitStatus(rep)->Print();
+      }
 
       assert(fitTrack->checkConsistency());
       assert(secondTrack->checkConsistency());
 
 #ifndef VALGRIND
-      // add track to event display
-      std::vector<genfit::Track*> event;
-      event.push_back(fitTrack);
-      display->addEvent(event);
+      if (iEvent < 1000) {
+        // add track to event display
+        std::vector<genfit::Track*> event;
+        event.push_back(fitTrack);
+        display->addEvent(event);
+      }
 #endif
 
 
-      nTotalIter += static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getNumIterations();
-      if (fitTrack->getFitStatus(rep)->isFitConverged())
-        nSuccessfullFits += 1;
+      if (fitTrack->getFitStatus(rep)->isFitConverged()) {
+        nTotalIterConverged += static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getNumIterations();
+        nConvergedFits += 1;
+      }
+      else {
+        nTotalIterNotConverged += static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getNumIterations();
+        nUNConvergedFits += 1;
+      }
 
       if (twoReps) {
-        nTotalIterSecond += static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(secondRep))->getNumIterations();
-        if (fitTrack->getFitStatus(secondRep)->isFitConverged())
-          nSuccessfullFitsSecond += 1;
+        if (fitTrack->getFitStatus(secondRep)->isFitConverged()) {
+          nTotalIterSecondConverged += static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(secondRep))->getNumIterations();
+          nConvergedFitsSecond += 1;
+        }
+        else {
+          nTotalIterSecondNotConverged += static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(secondRep))->getNumIterations();
+          nUNConvergedFitsSecond += 1;
+        }
       }
 
 
       // check if fit was successful
       //if (!fitter->isTrackFitted(fitTrack, rep)) {
       if (! fitTrack->getFitStatus(rep)->isFitConverged()) {
-        std::cout << "Track could not be fitted successfully! \n";
+        std::cout << "Track could not be fitted successfully! Fit is not converged! \n";
         continue;
       }
 
@@ -664,8 +678,6 @@ int main() {
         fitTrack->Print();
       }
 
-     /* if (debug) std::cerr<<"Fill Tree ..." << std::endl;
-      tree->Fill();*/
 #endif
 
 
@@ -675,17 +687,16 @@ int main() {
   CALLGRIND_DUMP_STATS;
 
   std::cout<<"maxWeight = " << maxWeight << std::endl;
-  std::cout<<"avg nr iterations = " << (double)nTotalIter/nSuccessfullFits << std::endl;
-  std::cout<<"fit efficiency = " << (double)nSuccessfullFits/nEvents << std::endl;
+  std::cout<<"avg nr iterations =                     " << (double)(nTotalIterConverged + nTotalIterNotConverged)/(double)(nConvergedFits + nUNConvergedFits) << std::endl;
+  std::cout<<"avg nr iterations of converged fits =   " << (double)(nTotalIterConverged)/(double)(nConvergedFits) << std::endl;
+  std::cout<<"avg nr iterations of UNconverged fits = " << (double)(nTotalIterNotConverged)/(double)(nUNConvergedFits) << std::endl;
+  std::cout<<"fit efficiency =                        " << (double)nConvergedFits/nEvents << std::endl;
 
-  std::cout<<"avg nr iterations (2nd rep) = " << (double)nTotalIterSecond/nSuccessfullFitsSecond << std::endl;
-  std::cout<<"fit efficiency (2nd rep) = " << (double)nSuccessfullFitsSecond/nEvents << std::endl;
+  //std::cout<<"avg nr iterations (2nd rep) = " << (double)nTotalIterSecond/nSuccessfullFitsSecond << std::endl;
+  //std::cout<<"fit efficiency (2nd rep) = " << (double)nConvergedFitsSecond/nEvents << std::endl;
 
 
 #ifndef VALGRIND
-  /*if (debug) std::cout<<"Write Tree ...";
-  tree->Write();
-  if (debug) std::cout<<"... done"<<std::endl;*/
 
   if (debug) std::cout<<"Draw histograms ...";
   // fit and draw histograms
@@ -763,12 +774,9 @@ int main() {
   if (matFX) display->setOptions("ABDEFGHMPT"); // G show geometry
   display->open();
 
-  //rootapp->Run();
 
-  //file->Close();
 #endif
 
-  //if (debug) std::cout<<"... closed file"<<std::endl;
 
 }
 
