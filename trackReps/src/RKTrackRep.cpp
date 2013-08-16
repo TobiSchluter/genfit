@@ -1532,8 +1532,8 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       }
 
       //save old jacobianT
-      double* covAsPtr = *jacobianT;
-      noiseProjection.SetMatrixArray(covAsPtr); // data is copied here
+      double* jacPtr = *jacobianT;
+      noiseProjection.SetMatrixArray(jacPtr); // data is copied here
 
 #ifdef DEBUG
       //std::cout << "  Jacobian^T of extrapolation before Projection:\n";
@@ -1565,7 +1565,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
         std::cout << "  calculate noiseProjection\n";
 #endif
         // TODO: find a more elegant way of calculating noiseProjection
-        TMatrixD projectedJac(7,7, covAsPtr);
+        TMatrixD projectedJac(7,7, jacPtr);
         TDecompLU invertAlgo(noiseProjection);
         bool status = invertAlgo.Invert(noiseProjection);
         if(status == 0){
