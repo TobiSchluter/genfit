@@ -141,10 +141,12 @@ class EventDisplay : public TNamed {
 		 */
 		TEveBox* boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth);
 
+		void makeLines(const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
+                     const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth = 2, int markerPos = 1);
 
 
 		static EventDisplay* eventDisplay_; //!
-		int eventId_; //!
+		unsigned int eventId_; //!
 		double errorScale_; //!
 		std::vector< std::vector<genfit::Track*>* > events_; //!
 
@@ -177,6 +179,11 @@ class EventDisplay : public TNamed {
 	  TGNumberEntry* guiErrorScale_;
 
 	  bool drawSilent_;
+
+    TGCheckButton* guiDrawCardinalRep_;
+    bool drawCardinalRep_;
+    TGNumberEntry* guiRepId_;
+    unsigned int repId_;
 
 	public:
 		ClassDef(EventDisplay,1)

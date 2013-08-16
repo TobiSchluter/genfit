@@ -68,7 +68,9 @@ EventDisplay::EventDisplay() :
   drawBackward_(false),
   drawAutoScale_(true),
   drawScaleMan_(false),
-  drawSilent_(false)
+  drawSilent_(false),
+  drawCardinalRep_(true),
+  repId_(0)
 {
 
   if((!gApplication) || (gApplication && gApplication->TestBit(TApplication::kDefaultApplication))) {
@@ -162,7 +164,7 @@ void EventDisplay::next(unsigned int stp) {
 void EventDisplay::prev(unsigned int stp) {
 
   if(events_.size() == 0) return;
-  if(eventId_ < (int)stp) {
+  if(eventId_ < stp) {
     gotoEvent(0);
   } else {
     gotoEvent(eventId_ - stp);
@@ -255,7 +257,18 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       continue;
     }
 
-    AbsTrackRep* rep(track->getCardinalRep());
+    AbsTrackRep* rep;
+
+    if (drawCardinalRep_) {
+      rep = track->getCardinalRep();
+      std::cout << "Draw cardinal rep" << std::endl;
+    }
+    else {
+      if (repId_ >= track->getNumReps())
+        repId_ = track->getNumReps() - 1;
+       rep = track->getTrackRep(repId_);
+       std::cout << "Draw rep" << repId_ << std::endl;
+    }
 
     //track->Print();
     track->Print("C");
@@ -276,14 +289,19 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         continue;
       }
 
+      const AbsMeasurement* m = tp->getRawMeasurement();  // FIXME draw all measurements, not only 1st
+
+
+
+
+
+      // get the fitter infos ------------------------------------------------------------------
       if (! tp->hasFitterInfo(rep)) {
         std::cerr<<"trackPoint has no fitterInfo for rep"<<std::endl;
         continue;
       }
 
-      // get the fitter infos ------------------------------------------------------------------
       AbsFitterInfo* fitterInfo = tp->getFitterInfo(rep);
-      const AbsMeasurement* m = tp->getRawMeasurement();  // FIXME draw all measurements, not only 1st
 
       fi = dynamic_cast<KalmanFitterInfo*>(fitterInfo);
       if(fi == NULL) {
@@ -327,7 +345,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       double_t hit_v = 0;
       double_t plane_size = 4;
 
-      int hit_coords_dim = hit_coords.GetNrows();
+      int hit_coords_dim = m->getHMatrix(rep).GetNrows();
 
       if(dynamic_cast<const PlanarMeasurement*>(m) != NULL) {
         planar_hit = true;
@@ -374,204 +392,6 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       // finished drawing planes ------------------------------------------------------------
 
       // draw track if corresponding option is set ------------------------------------------
-      struct makeLinesClass {
-      void operator()(const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
-          const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors_, double lineWidth = 2, int markerPos = 1)
-        {
-          TVector3 pos, dir, oldPos, oldDir;
-          rep->getPosDir(*state, pos, dir);
-          rep->getPosDir(*prevState, oldPos, oldDir);
-
-          double distA = (pos-oldPos).Mag();
-          double distB = distA;
-          if ((pos-oldPos)*oldDir < 0)
-            distA *= -1.;
-          if ((pos-oldPos)*dir < 0)
-            distB *= -1.;
-          TVector3 intermediate1 = oldPos + 0.3 * distA * oldDir;
-          TVector3 intermediate2 = pos - 0.3 * distB * dir;
-          TEveStraightLineSet* ls = new TEveStraightLineSet;
-          ls->AddLine(oldPos(0), oldPos(1), oldPos(2), intermediate1(0), intermediate1(1), intermediate1(2));
-          ls->AddLine(intermediate1(0), intermediate1(1), intermediate1(2), intermediate2(0), intermediate2(1), intermediate2(2));
-          ls->AddLine(intermediate2(0), intermediate2(1), intermediate2(2), pos(0), pos(1), pos(2));
-          ls->SetLineColor(color);
-          ls->SetLineStyle(style);
-          ls->SetLineWidth(lineWidth);
-          if (drawMarkers) {
-            if (markerPos == 0)
-              ls->AddMarker(oldPos(0), oldPos(1), oldPos(2));
-            else
-              ls->AddMarker(pos(0), pos(1), pos(2));
-          }
-
-          if (lineWidth > 0)
-            gEve->AddElement(ls);
-
-
-          if (drawErrors_) {
-            const MeasuredStateOnPlane* measuredState;
-            if (markerPos == 0)
-              measuredState = dynamic_cast<const MeasuredStateOnPlane*>(prevState);
-            else
-              measuredState = dynamic_cast<const MeasuredStateOnPlane*>(state);
-
-            if (measuredState != NULL) {
-
-              // step for evaluate at a distance from the original plane
-              TVector3 eval;
-              if (markerPos == 0)
-                eval = 0.2 * distA * oldDir;
-              else
-                eval = -0.2 * distB * dir;
-
-
-              // get cov at first plane
-              TMatrixDSym cov;
-              TVector3 position, direction;
-              rep->getPosMomCov(*measuredState, position, direction, cov);
-
-              // get eigenvalues & -vectors
-              TMatrixDEigen eigen_values(cov.GetSub(0,2, 0,2));
-              TMatrixT<double> ev = eigen_values.GetEigenValues();
-              TMatrixT<double> eVec = eigen_values.GetEigenVectors();
-              TVector3 eVec1, eVec2;
-              // limit
-              static const double maxErr = 1000.;
-              double ev0 = std::min(ev(0,0), maxErr);
-              double ev1 = std::min(ev(1,1), maxErr);
-              double ev2 = std::min(ev(2,2), maxErr);
-
-              // get two largest eigenvalues/-vectors
-              if (ev0 < ev1 && ev0 < ev2) {
-                eVec1.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
-                eVec1 *= sqrt(ev1);
-                eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
-                eVec2 *= sqrt(ev2);
-              }
-              else if (ev1 < ev0 && ev1 < ev2) {
-                eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
-                eVec1 *= sqrt(ev0);
-                eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
-                eVec2 *= sqrt(ev2);
-              }
-              else {
-                eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
-                eVec1 *= sqrt(ev0);
-                eVec2.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
-                eVec2 *= sqrt(ev1);
-              }
-
-              if (eVec1.Cross(eVec2)*eval < 0)
-                eVec2 *= -1;
-              //assert(eVec1.Cross(eVec2)*eval > 0);
-
-              const TVector3 oldEVec1(eVec1);
-              const TVector3 oldEVec2(eVec2);
-
-              const int nEdges = 24;
-              std::vector<TVector3> vertices;
-
-              vertices.push_back(position);
-
-              // vertices at plane
-              for (int i=0; i<nEdges; ++i) {
-                const double angle = 2*TMath::Pi()/nEdges * i;
-                vertices.push_back(position + cos(angle)*eVec1 + sin(angle)*eVec2);
-              }
-
-
-
-              DetPlane* newPlane = new DetPlane(*(measuredState->getPlane()));
-              newPlane->setO(position + eval);
-
-              MeasuredStateOnPlane stateCopy(*measuredState);
-              try{
-                rep->extrapolateToPlane(stateCopy, SharedPlanePtr(newPlane));
-              }
-              catch(Exception& e){
-                std::cerr<<e.what();
-                return;
-              }
-
-              // get cov at 2nd plane
-              rep->getPosMomCov(stateCopy, position, direction, cov);
-
-              // get eigenvalues & -vectors
-              TMatrixDEigen eigen_values2(cov.GetSub(0,2, 0,2));
-              ev = eigen_values2.GetEigenValues();
-              eVec = eigen_values2.GetEigenVectors();
-              // limit
-              ev0 = std::min(ev(0,0), maxErr);
-              ev1 = std::min(ev(1,1), maxErr);
-              ev2 = std::min(ev(2,2), maxErr);
-
-              // get two largest eigenvalues/-vectors
-              if (ev0 < ev1 && ev0 < ev2) {
-                eVec1.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
-                eVec1 *= sqrt(ev1);
-                eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
-                eVec2 *= sqrt(ev2);
-              }
-              else if (ev1 < ev0 && ev1 < ev2) {
-                eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
-                eVec1 *= sqrt(ev0);
-                eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
-                eVec2 *= sqrt(ev2);
-              }
-              else {
-                eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
-                eVec1 *= sqrt(ev0);
-                eVec2.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
-                eVec2 *= sqrt(ev1);
-              }
-
-              if (eVec1.Cross(eVec2)*eval < 0)
-                eVec2 *= -1;
-              //assert(eVec1.Cross(eVec2)*eval > 0);
-
-              if (oldEVec1*eVec1 < 0) {
-                eVec1 *= -1;
-                eVec2 *= -1;
-              }
-
-              // vertices at 2nd plane
-              double angle0 = eVec1.Angle(oldEVec1);
-              if (eVec1*(eval.Cross(oldEVec1)) < 0)
-                angle0 *= -1;
-              for (int i=0; i<nEdges; ++i) {
-                const double angle = 2*TMath::Pi()/nEdges * i - angle0;
-                vertices.push_back(position + cos(angle)*eVec1 + sin(angle)*eVec2);
-              }
-
-              vertices.push_back(position);
-
-
-              TEveTriangleSet* error_shape = new TEveTriangleSet(vertices.size(), nEdges*2);
-              for(unsigned int k = 0; k < vertices.size(); ++k) {
-                error_shape->SetVertex(k, vertices[k].X(), vertices[k].Y(), vertices[k].Z());
-              }
-
-              assert(vertices.size() == 2*nEdges+2);
-
-              int iTri(0);
-              for (int i=0; i<nEdges; ++i) {
-                //error_shape->SetTriangle(iTri++,  0,             i+1,        (i+1)%nEdges+1);
-                error_shape->SetTriangle(iTri++,  i+1,           i+1+nEdges, (i+1)%nEdges+1);
-                error_shape->SetTriangle(iTri++, (i+1)%nEdges+1, i+1+nEdges, (i+1)%nEdges+1+nEdges);
-                //error_shape->SetTriangle(iTri++,  2*nEdges+1,    i+1+nEdges, (i+1)%nEdges+1+nEdges);
-              }
-
-              //assert(iTri == nEdges*4);
-
-              error_shape->SetMainColor(color);
-              error_shape->SetMainTransparency(25);
-              gEve->AddElement(error_shape);
-            }
-          }
-
-        }
-      } makeLines;
-
       if (j > 0) {
         if(drawTrack_) {
           makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers_, drawErrors_, 3);
@@ -865,6 +685,203 @@ TEveBox* EventDisplay::boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, 
 
 }
 
+
+void EventDisplay::makeLines(const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
+    const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth, int markerPos)
+{
+  TVector3 pos, dir, oldPos, oldDir;
+  rep->getPosDir(*state, pos, dir);
+  rep->getPosDir(*prevState, oldPos, oldDir);
+
+  double distA = (pos-oldPos).Mag();
+  double distB = distA;
+  if ((pos-oldPos)*oldDir < 0)
+    distA *= -1.;
+  if ((pos-oldPos)*dir < 0)
+    distB *= -1.;
+  TVector3 intermediate1 = oldPos + 0.3 * distA * oldDir;
+  TVector3 intermediate2 = pos - 0.3 * distB * dir;
+  TEveStraightLineSet* ls = new TEveStraightLineSet;
+  ls->AddLine(oldPos(0), oldPos(1), oldPos(2), intermediate1(0), intermediate1(1), intermediate1(2));
+  ls->AddLine(intermediate1(0), intermediate1(1), intermediate1(2), intermediate2(0), intermediate2(1), intermediate2(2));
+  ls->AddLine(intermediate2(0), intermediate2(1), intermediate2(2), pos(0), pos(1), pos(2));
+  ls->SetLineColor(color);
+  ls->SetLineStyle(style);
+  ls->SetLineWidth(lineWidth);
+  if (drawMarkers) {
+    if (markerPos == 0)
+      ls->AddMarker(oldPos(0), oldPos(1), oldPos(2));
+    else
+      ls->AddMarker(pos(0), pos(1), pos(2));
+  }
+
+  if (lineWidth > 0)
+    gEve->AddElement(ls);
+
+
+  if (drawErrors) {
+    const MeasuredStateOnPlane* measuredState;
+    if (markerPos == 0)
+      measuredState = dynamic_cast<const MeasuredStateOnPlane*>(prevState);
+    else
+      measuredState = dynamic_cast<const MeasuredStateOnPlane*>(state);
+
+    if (measuredState != NULL) {
+
+      // step for evaluate at a distance from the original plane
+      TVector3 eval;
+      if (markerPos == 0)
+        eval = 0.2 * distA * oldDir;
+      else
+        eval = -0.2 * distB * dir;
+
+
+      // get cov at first plane
+      TMatrixDSym cov;
+      TVector3 position, direction;
+      rep->getPosMomCov(*measuredState, position, direction, cov);
+
+      // get eigenvalues & -vectors
+      TMatrixDEigen eigen_values(cov.GetSub(0,2, 0,2));
+      TMatrixT<double> ev = eigen_values.GetEigenValues();
+      TMatrixT<double> eVec = eigen_values.GetEigenVectors();
+      TVector3 eVec1, eVec2;
+      // limit
+      static const double maxErr = 1000.;
+      double ev0 = std::min(ev(0,0), maxErr);
+      double ev1 = std::min(ev(1,1), maxErr);
+      double ev2 = std::min(ev(2,2), maxErr);
+
+      // get two largest eigenvalues/-vectors
+      if (ev0 < ev1 && ev0 < ev2) {
+        eVec1.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
+        eVec1 *= sqrt(ev1);
+        eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
+        eVec2 *= sqrt(ev2);
+      }
+      else if (ev1 < ev0 && ev1 < ev2) {
+        eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
+        eVec1 *= sqrt(ev0);
+        eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
+        eVec2 *= sqrt(ev2);
+      }
+      else {
+        eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
+        eVec1 *= sqrt(ev0);
+        eVec2.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
+        eVec2 *= sqrt(ev1);
+      }
+
+      if (eVec1.Cross(eVec2)*eval < 0)
+        eVec2 *= -1;
+      //assert(eVec1.Cross(eVec2)*eval > 0);
+
+      const TVector3 oldEVec1(eVec1);
+      const TVector3 oldEVec2(eVec2);
+
+      const int nEdges = 24;
+      std::vector<TVector3> vertices;
+
+      vertices.push_back(position);
+
+      // vertices at plane
+      for (int i=0; i<nEdges; ++i) {
+        const double angle = 2*TMath::Pi()/nEdges * i;
+        vertices.push_back(position + cos(angle)*eVec1 + sin(angle)*eVec2);
+      }
+
+
+
+      DetPlane* newPlane = new DetPlane(*(measuredState->getPlane()));
+      newPlane->setO(position + eval);
+
+      MeasuredStateOnPlane stateCopy(*measuredState);
+      try{
+        rep->extrapolateToPlane(stateCopy, SharedPlanePtr(newPlane));
+      }
+      catch(Exception& e){
+        std::cerr<<e.what();
+        return;
+      }
+
+      // get cov at 2nd plane
+      rep->getPosMomCov(stateCopy, position, direction, cov);
+
+      // get eigenvalues & -vectors
+      TMatrixDEigen eigen_values2(cov.GetSub(0,2, 0,2));
+      ev = eigen_values2.GetEigenValues();
+      eVec = eigen_values2.GetEigenVectors();
+      // limit
+      ev0 = std::min(ev(0,0), maxErr);
+      ev1 = std::min(ev(1,1), maxErr);
+      ev2 = std::min(ev(2,2), maxErr);
+
+      // get two largest eigenvalues/-vectors
+      if (ev0 < ev1 && ev0 < ev2) {
+        eVec1.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
+        eVec1 *= sqrt(ev1);
+        eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
+        eVec2 *= sqrt(ev2);
+      }
+      else if (ev1 < ev0 && ev1 < ev2) {
+        eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
+        eVec1 *= sqrt(ev0);
+        eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
+        eVec2 *= sqrt(ev2);
+      }
+      else {
+        eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
+        eVec1 *= sqrt(ev0);
+        eVec2.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
+        eVec2 *= sqrt(ev1);
+      }
+
+      if (eVec1.Cross(eVec2)*eval < 0)
+        eVec2 *= -1;
+      //assert(eVec1.Cross(eVec2)*eval > 0);
+
+      if (oldEVec1*eVec1 < 0) {
+        eVec1 *= -1;
+        eVec2 *= -1;
+      }
+
+      // vertices at 2nd plane
+      double angle0 = eVec1.Angle(oldEVec1);
+      if (eVec1*(eval.Cross(oldEVec1)) < 0)
+        angle0 *= -1;
+      for (int i=0; i<nEdges; ++i) {
+        const double angle = 2*TMath::Pi()/nEdges * i - angle0;
+        vertices.push_back(position + cos(angle)*eVec1 + sin(angle)*eVec2);
+      }
+
+      vertices.push_back(position);
+
+
+      TEveTriangleSet* error_shape = new TEveTriangleSet(vertices.size(), nEdges*2);
+      for(unsigned int k = 0; k < vertices.size(); ++k) {
+        error_shape->SetVertex(k, vertices[k].X(), vertices[k].Y(), vertices[k].Z());
+      }
+
+      assert(vertices.size() == 2*nEdges+2);
+
+      int iTri(0);
+      for (int i=0; i<nEdges; ++i) {
+        //error_shape->SetTriangle(iTri++,  0,             i+1,        (i+1)%nEdges+1);
+        error_shape->SetTriangle(iTri++,  i+1,           i+1+nEdges, (i+1)%nEdges+1);
+        error_shape->SetTriangle(iTri++, (i+1)%nEdges+1, i+1+nEdges, (i+1)%nEdges+1+nEdges);
+        //error_shape->SetTriangle(iTri++,  2*nEdges+1,    i+1+nEdges, (i+1)%nEdges+1+nEdges);
+      }
+
+      //assert(iTri == nEdges*4);
+
+      error_shape->SetMainColor(color);
+      error_shape->SetMainTransparency(25);
+      gEve->AddElement(error_shape);
+    }
+  }
+}
+
+
 void EventDisplay::makeGui() {
 
   TEveBrowser* browser = gEve->GetBrowser();
@@ -1004,6 +1021,34 @@ void EventDisplay::makeGui() {
   frmMain->AddFrame(hf);
 
 
+
+  hf = new TGHorizontalFrame(frmMain); {
+    lbl = new TGLabel(hf, "\n TrackRep options");
+    hf->AddFrame(lbl);
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDrawCardinalRep_ =  new TGCheckButton(hf, "Draw cardinal rep");
+    if(drawCardinalRep_) guiDrawCardinalRep_->Toggle();
+    hf->AddFrame(guiDrawCardinalRep_);
+    guiDrawCardinalRep_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiRepId_ = new TGNumberEntry(hf, repId_, 6,999, TGNumberFormat::kNESInteger,
+                          TGNumberFormat::kNEANonNegative,
+                          TGNumberFormat::kNELLimitMinMax,
+                          0, 99);
+    hf->AddFrame(guiRepId_);
+    guiRepId_->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+    lbl = new TGLabel(hf, "Else draw rep with id");
+    hf->AddFrame(lbl);
+  }
+  frmMain->AddFrame(hf);
+
+
   frmMain->MapSubwindows();
   frmMain->Resize();
   frmMain->MapWindow();
@@ -1030,6 +1075,9 @@ void EventDisplay::guiSetDrawParams(){
   drawScaleMan_ = guiDrawScaleMan_->IsOn();
 
   errorScale_ = guiErrorScale_->GetNumberEntry()->GetNumber();
+
+  drawCardinalRep_ = guiDrawCardinalRep_->IsOn();
+  repId_ = guiRepId_->GetNumberEntry()->GetNumber();
 
   gotoEvent(eventId_);
 }
