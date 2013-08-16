@@ -45,6 +45,12 @@ ENDIF()
 
 # require proper c++, standard is C++03, flag reads: c++98
 ADD_DEFINITIONS( " -Wall -g3 -ansi -pedantic -Wno-long-long -Wshadow "   )
+
+# uncomment for coverage analysis.
+#ADD_DEFINITIONS( "--coverage")
+#SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+#SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
+
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-std=c++03 HAS_STD_FLAG)
 check_cxx_compiler_flag(--std=c++03 HAS_STD_FLAG_ALTERNATIVE)
