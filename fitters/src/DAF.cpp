@@ -327,22 +327,23 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
     std::vector<double> phi(nMeas, 0.);
     double phi_sum = 0;
     double phi_cut = 0;
-    const MeasuredStateOnPlane& smoothedState = kfi->getFittedState();
-
-    // This assumes that all measurements on the plane have the same dimensionality.
-    TVectorD x_smoo(kfi->getMeasurementOnPlane()->getHMatrix() * smoothedState.getState());
-    int hitDim = x_smoo.GetNrows();
-    double twoPiN = std::pow(2.*M_PI, hitDim);
-
     for(unsigned int j=0; j<nMeas; j++) {
 
       try{
-        const MeasurementOnPlane* mop = kfi->getMeasurementOnPlane(j);
-	assert(mop->getState().GetNrows() == hitDim);
-        TVectorD resid(mop->getState() - x_smoo);
-        TMatrixDSym Vinv(mop->getCov());
+        const MeasurementOnPlane& residual = kfi->getResidual(j, true, true);
+        const TVectorD& resid(residual.getState());
+        TMatrixDSym Vinv(residual.getCov());
 	double detV;
         tools::invertMatrix(Vinv, &detV); // can throw an Exception
+	int hitDim = resid.GetNrows();
+	// Needed for normalization, special cases for the two common cases,
+	// shouldn't matter, but the original code made some efforts to make
+	// this calculation faster, and it's not complex ...
+	double twoPiN = 2.*M_PI;
+	if (hitDim == 2)
+	  twoPiN *= twoPiN;
+	else if (hitDim > 2)
+	  twoPiN = pow(twoPiN, hitDim);
 
         double chi2 = Vinv.Similarity(resid);
 #ifdef DEBUG

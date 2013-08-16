@@ -72,7 +72,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   /** Get unbiased or biased (default) smoothed state */
   const MeasuredStateOnPlane& getFittedState(bool biased = true) const;
   /** Get unbiased (default) or biased residual from ith measurement */
-  MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const; // also calculates covariance of the residual
+  MeasurementOnPlane getResidual(unsigned int iMeasurement = 0, bool biased = false, bool onlyMeasurementErrors = true) const; // calculate residual, track and measurement errors are added if onlyMeasurementErrors is false
 
   bool hasMeasurements() const {return getNumMeasurements() > 0;}
   bool hasReferenceState() const {return (referenceState_.get() != NULL);}

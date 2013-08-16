@@ -73,7 +73,7 @@ class AbsFitterInfo : public TObject {
 
   SharedPlanePtr getPlane() const {return sharedPlane_;}
   virtual const MeasuredStateOnPlane& getFittedState(bool biased = true) const = 0;
-  virtual MeasurementOnPlane getResidual(bool biased = false, unsigned int iMeasurement = 0) const = 0;
+  virtual MeasurementOnPlane getResidual(unsigned int iMeasurement = 0, bool biased = true, bool onlyMeasurementErrors = false) const = 0;
 
   void setPlane(SharedPlanePtr plane) {sharedPlane_ = plane;}
 

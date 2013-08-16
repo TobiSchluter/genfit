@@ -230,7 +230,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
 }
 
 
-MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeasurement) const {
+  MeasurementOnPlane KalmanFitterInfo::getResidual(unsigned int iMeasurement, bool biased, bool onlyMeasurementErrors) const {
   // TODO: Test
 
   const MeasuredStateOnPlane& smoothedState = getFittedState(biased);
@@ -251,6 +251,10 @@ MeasurementOnPlane KalmanFitterInfo::getResidual(bool biased, unsigned int iMeas
 
   TVectorD res = measurement->getState() - (H * smoothedState.getState());
 
+  if (onlyMeasurementErrors) {
+    return MeasurementOnPlane(res, measurement->getCov(), plane, smoothedState.getRep(), H, measurement->getWeight());
+  }
+    
   TMatrixDSym cov(smoothedState.getCov());
   cov.Similarity(H);
   cov += measurement->getCov();
