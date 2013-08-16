@@ -30,6 +30,10 @@
 #include <string>
 #include <vector>
 
+#include <TGButton.h>
+#include <TGNumberEntry.h>
+
+
 namespace genfit {
 
 
@@ -123,13 +127,14 @@ class EventDisplay : public TNamed {
 		/** @brief Open the event display.*/
 		void open();
 	
+		void guiSetDrawParams();
 
 	private:
 		/** @brief Build the buttons for event navigation.*/
 		void makeGui();
 
 		/** @brief Draw an event.*/
-		void drawEvent(unsigned int id);
+		void drawEvent(unsigned int id, bool resetCam = true);
 
 		/** @brief Create a box around o, oriented along u and v with widths ud, vd and depth and
 		 *  return a pointer to the box object.
@@ -137,12 +142,41 @@ class EventDisplay : public TNamed {
 		TEveBox* boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth);
 
 
+
 		static EventDisplay* eventDisplay_; //!
 		int eventId_; //!
 		double errorScale_; //!
-		std::string option_; //!
 		std::vector< std::vector<genfit::Track*>* > events_; //!
 
+
+	  TGCheckButton* guiDrawGeometry_;
+	  bool drawGeometry_;
+	  TGCheckButton* guiDrawDetectors_;
+	  bool drawDetectors_;
+	  TGCheckButton* guiDrawHits_;
+	  bool drawHits_;
+	  TGCheckButton* guiDrawErrors_;
+	  bool drawErrors_;
+
+	  TGCheckButton* guiDrawPlanes_;
+	  bool drawPlanes_;
+	  TGCheckButton* guiDrawTrackMarkers_;
+	  bool drawTrackMarkers_;
+
+	  TGCheckButton* guiDrawTrack_;
+	  bool drawTrack_;
+	  TGCheckButton* guiDrawForward_;
+	  bool drawForward_;
+	  TGCheckButton* guiDrawBackward_;
+	  bool drawBackward_;
+
+	  TGCheckButton* guiDrawAutoScale_;
+	  bool drawAutoScale_;
+	  TGCheckButton* guiDrawScaleMan_;
+	  bool drawScaleMan_;
+	  TGNumberEntry* guiErrorScale_;
+
+	  bool drawSilent_;
 
 	public:
 		ClassDef(EventDisplay,1)

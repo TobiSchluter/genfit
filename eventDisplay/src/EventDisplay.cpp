@@ -31,6 +31,8 @@
 #include <TEveTriangleSet.h>
 #include <TDecompSVD.h>
 #include <TGButton.h>
+#include <TGLabel.h>
+#include <TGNumberEntry.h>
 #include <TGeoEltu.h>
 #include <TGeoManager.h>
 #include <TGeoMatrix.h>
@@ -53,7 +55,21 @@ namespace genfit {
 
 EventDisplay* EventDisplay::eventDisplay_ = NULL;
 
-EventDisplay::EventDisplay() {
+EventDisplay::EventDisplay() :
+  errorScale_(1.),
+  drawGeometry_(false),
+  drawDetectors_(true),
+  drawHits_(true),
+  drawErrors_(false),
+  drawPlanes_(false),
+  drawTrackMarkers_(false),
+  drawTrack_(true),
+  drawForward_(false),
+  drawBackward_(false),
+  drawAutoScale_(true),
+  drawScaleMan_(false),
+  drawSilent_(false)
+{
 
   if((!gApplication) || (gApplication && gApplication->TestBit(TApplication::kDefaultApplication))) {
     std::cout << "In EventDisplay ctor: gApplication not found, creating..." << std::flush;
@@ -67,12 +83,31 @@ EventDisplay::EventDisplay() {
   }
 
   eventId_ = 0;
-  setOptions();
-  setErrScale();
 
 }
 
-void EventDisplay::setOptions(std::string opts) { option_ = opts; }
+void EventDisplay::setOptions(std::string opts) {
+
+  // parse the option string ------------------------------------------------------------------------
+  if(opts != "") {
+    for(size_t i = 0; i < opts.length(); ++i) {
+      if(opts[i] == 'A') drawAutoScale_ = true;
+      if(opts[i] == 'B') drawBackward_ = true;
+      if(opts[i] == 'D') drawDetectors_ = true;
+      if(opts[i] == 'E') drawErrors_ = true;
+      if(opts[i] == 'F') drawForward_ = true;
+      if(opts[i] == 'H') drawHits_ = true;
+      if(opts[i] == 'M') drawTrackMarkers_ = true;
+      if(opts[i] == 'P') drawPlanes_ = true;
+      if(opts[i] == 'S') drawScaleMan_ = true;
+      if(opts[i] == 'T') drawTrack_ = true;
+      if(opts[i] == 'X') drawSilent_ = true;
+      if(opts[i] == 'G') drawGeometry_ = true;
+    }
+  }
+  // finished parsing the option string -------------------------------------------------------------
+
+}
 
 void EventDisplay::setErrScale(double errScale) { errorScale_ = errScale; }
 
@@ -137,9 +172,15 @@ void EventDisplay::prev(unsigned int stp) {
 
 int EventDisplay::getNEvents() { return events_.size(); }
 
+
 void EventDisplay::gotoEvent(unsigned int id) {
 
   if(id >= events_.size()) id = events_.size() - 1;
+
+  bool resetCam = true;
+
+  if (id == eventId_)
+    resetCam = false;
 
   eventId_ = id;
 
@@ -148,12 +189,12 @@ void EventDisplay::gotoEvent(unsigned int id) {
     gEve->GetCurrentEvent()->DestroyElements();
   }
   double old_error_scale = errorScale_;
-  drawEvent(eventId_);
+  drawEvent(eventId_, resetCam);
   if(old_error_scale != errorScale_) {
     if (gEve->GetCurrentEvent()) {
       gEve->GetCurrentEvent()->DestroyElements();
     }
-    drawEvent(eventId_); // if autoscaling changed the error, draw again.
+    drawEvent(eventId_, resetCam); // if autoscaling changed the error, draw again.
   }
   errorScale_ = old_error_scale;
 
@@ -163,17 +204,9 @@ void EventDisplay::open() {
 
   std::cout << "EventDisplay::open(); " << events_.size() << " events loaded" << std::endl;
 
-  bool drawSilent = false;
-  bool drawGeometry = false;
-
-  // parse the global options
-  for(size_t i = 0; i < option_.length(); i++) {
-    if(option_[i] == 'X') drawSilent = true;
-    if(option_[i] == 'G') drawGeometry = true;
-  }
 
   // draw the geometry, does not really work yet. If it's fixed, the docu in the header file should be changed.
-  if(drawGeometry) {
+  if(drawGeometry_) {
     TGeoNode* top_node = gGeoManager->GetTopNode();
     assert(top_node != NULL);
 
@@ -199,7 +232,7 @@ void EventDisplay::open() {
   }
 
 
-  if(!drawSilent) {
+  if(!drawSilent_) {
     makeGui();
     gApplication->Run(kTRUE);
   }
@@ -208,38 +241,10 @@ void EventDisplay::open() {
 
 }
 
-void EventDisplay::drawEvent(unsigned int id) {
+
+void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
   std::cout << "EventDisplay::drawEvent(" << id << ")" << std::endl;
-
-  // parse the option string ------------------------------------------------------------------------
-  bool drawAutoScale = false;
-  bool drawBackward = false;
-  bool drawDetectors = false;
-  bool drawErrors = false;
-  bool drawForward = false;
-  bool drawHits = false;
-  bool drawScaleMan = false;
-  bool drawTrackMarkers = false;
-  bool drawPlanes = false;
-  bool drawTrack = false;
-
-  if(option_ != "") {
-    for(size_t i = 0; i < option_.length(); i++) {
-      if(option_[i] == 'A') drawAutoScale = true;
-      if(option_[i] == 'B') drawBackward = true;
-      if(option_[i] == 'D') drawDetectors = true;
-      if(option_[i] == 'E') drawErrors = true;
-      if(option_[i] == 'F') drawForward = true;
-      if(option_[i] == 'H') drawHits = true;
-      if(option_[i] == 'M') drawTrackMarkers = true;
-      if(option_[i] == 'P') drawPlanes = true;
-      if(option_[i] == 'S') drawScaleMan = true;
-      if(option_[i] == 'T') drawTrack = true;
-    }
-  }
-  // finished parsing the option string -------------------------------------------------------------
-
 
 
   for(unsigned int i = 0; i < events_[id]->size(); i++) { // loop over all tracks in an event
@@ -354,11 +359,11 @@ void EventDisplay::drawEvent(unsigned int id) {
       // finished setting variables ---------------------------------------------------------
 
       // draw planes if corresponding option is set -----------------------------------------
-      if(drawPlanes || (drawDetectors && planar_hit)) {
+      if(drawPlanes_ || (drawDetectors_ && planar_hit)) {
         TVector3 move(0,0,0);
         if (wire_hit) move = v*(v*(track_pos-o)); // move the plane along the wire until the track goes through it
         TEveBox* box = boxCreator(o + move, u, v, plane_size, plane_size, 0.01);
-        if (drawDetectors && planar_hit) {
+        if (drawDetectors_ && planar_hit) {
           box->SetMainColor(kCyan);
         } else {
           box->SetMainColor(kGray);
@@ -371,7 +376,7 @@ void EventDisplay::drawEvent(unsigned int id) {
       // draw track if corresponding option is set ------------------------------------------
       struct makeLinesClass {
       void operator()(const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
-          const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth = 2, int markerPos = 1)
+          const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors_, double lineWidth = 2, int markerPos = 1)
         {
           TVector3 pos, dir, oldPos, oldDir;
           rep->getPosDir(*state, pos, dir);
@@ -403,7 +408,7 @@ void EventDisplay::drawEvent(unsigned int id) {
             gEve->AddElement(ls);
 
 
-          if (drawErrors) {
+          if (drawErrors_) {
             const MeasuredStateOnPlane* measuredState;
             if (markerPos == 0)
               measuredState = dynamic_cast<const MeasuredStateOnPlane*>(prevState);
@@ -568,23 +573,23 @@ void EventDisplay::drawEvent(unsigned int id) {
       } makeLines;
 
       if (j > 0) {
-        if(drawTrack) {
-          makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers, drawErrors, 3);
-          if (drawErrors) { // make sure to draw errors in both directions
-            makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, false, drawErrors, 0, 0);
+        if(drawTrack_) {
+          makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers_, drawErrors_, 3);
+          if (drawErrors_) { // make sure to draw errors in both directions
+            makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, false, drawErrors_, 0, 0);
           }
         }
-        if (drawForward)
-          makeLines(prevFi->getForwardUpdate(), fi->getForwardPrediction(), rep, charge > 0 ? kMagenta : kCyan, 1, drawTrackMarkers, drawErrors, 1, 0);
-        if (drawBackward)
-          makeLines(prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, charge > 0 ? kYellow : kMagenta, 1, drawTrackMarkers, drawErrors, 1);
+        if (drawForward_)
+          makeLines(prevFi->getForwardUpdate(), fi->getForwardPrediction(), rep, charge > 0 ? kMagenta : kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
+        if (drawBackward_)
+          makeLines(prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, charge > 0 ? kYellow : kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
         // draw reference track if corresponding option is set ------------------------------------------
-        if(drawTrack && fi->hasReferenceState() && prevFi->hasReferenceState())
-          makeLines(prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers, false, 3);
+        if(drawTrack_ && fi->hasReferenceState() && prevFi->hasReferenceState())
+          makeLines(prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers_, false, 3);
       }
 
       // draw detectors if option is set, only important for wire hits ----------------------
-      if(drawDetectors) {
+      if(drawDetectors_) {
 
         if(wire_hit) {
           TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
@@ -603,7 +608,7 @@ void EventDisplay::drawEvent(unsigned int id) {
           det_shape->SetTransMatrix(det_trans);
           det_shape->SetMainColor(kCyan);
           det_shape->SetMainTransparency(25);
-          if((drawHits && (hit_u+0.0105/2 > 0)) || !drawHits) {
+          if((drawHits_ && (hit_u+0.0105/2 > 0)) || !drawHits_) {
             gEve->AddElement(det_shape);
           }
         }
@@ -611,7 +616,7 @@ void EventDisplay::drawEvent(unsigned int id) {
       }
       // finished drawing detectors ---------------------------------------------------------
 
-      if(drawHits) {
+      if(drawHits_) {
 
         // draw planar hits, with distinction between strip and pixel hits ----------------
         if(planar_hit) {
@@ -633,7 +638,7 @@ void EventDisplay::drawEvent(unsigned int id) {
             // finished calcluating, got the values -----------------------------------
 
             // do autoscaling if necessary --------------------------------------------
-            if(drawAutoScale) {
+            if(drawAutoScale_) {
               double min_cov = std::min(pseudo_res_0,pseudo_res_1);
               if(min_cov < 1e-5) {
                 std::cout << "Track " << i << ", Hit " << j << ": Invalid covariance matrix (Eigenvalue < 1e-5), autoscaling not possible!" << std::endl;
@@ -698,7 +703,7 @@ void EventDisplay::drawEvent(unsigned int id) {
           double pseudo_res_0 = errorScale_*std::sqrt(ev(0,0));
           double pseudo_res_1 = errorScale_*std::sqrt(ev(1,1));
           double pseudo_res_2 = errorScale_*std::sqrt(ev(2,2));
-          if(drawScaleMan) { // override again if necessary
+          if(drawScaleMan_) { // override again if necessary
             pseudo_res_0 = errorScale_*0.5;
             pseudo_res_1 = errorScale_*0.5;
             pseudo_res_2 = errorScale_*0.5;
@@ -706,7 +711,7 @@ void EventDisplay::drawEvent(unsigned int id) {
           // finished scaling -----------------------------------------------------------
 
           // autoscale if necessary -----------------------------------------------------
-          if(drawAutoScale) {
+          if(drawAutoScale_) {
             double min_cov = std::min(pseudo_res_0,std::min(pseudo_res_1,pseudo_res_2));
             if(min_cov < 1e-5) {
               std::cout << "Track " << i << ", Hit " << j << ": Invalid covariance matrix (Eigenvalue < 1e-5), autoscaling not possible!" << std::endl;
@@ -749,7 +754,7 @@ void EventDisplay::drawEvent(unsigned int id) {
           if (wirepoint_hit) pseudo_res_1 = errorScale_*std::sqrt(hit_cov(1,1));
 
           // autoscale if necessary -----------------------------------------------------
-          if(drawAutoScale) {
+          if(drawAutoScale_) {
             if(pseudo_res_0 < 1e-5) {
               std::cout << "Track " << i << ", Hit " << j << ": Invalid wire resolution (< 1e-5), autoscaling not possible!" << std::endl;
             } else {
@@ -804,7 +809,7 @@ void EventDisplay::drawEvent(unsigned int id) {
 
   }
 
-  gEve->Redraw3D(kTRUE);
+  gEve->Redraw3D(resetCam);
 
 }
 
@@ -869,11 +874,13 @@ void EventDisplay::makeGui() {
   frmMain->SetWindowName("XX GUI");
   frmMain->SetCleanup(kDeepCleanup);
 
+  TGLabel* lbl = 0;
+  EventDisplay*  fh = EventDisplay::getInstance();
+
   TGHorizontalFrame* hf = new TGHorizontalFrame(frmMain);
   {
     TString icondir( Form("%s/icons/", gSystem->Getenv("ROOTSYS")) );
     TGPictureButton* b = 0;
-    EventDisplay*  fh = EventDisplay::getInstance();
 
     b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoBack.gif"));
     hf->AddFrame(b);
@@ -885,6 +892,118 @@ void EventDisplay::makeGui() {
   }
   frmMain->AddFrame(hf);
 
+  // draw options
+  hf = new TGHorizontalFrame(frmMain); {
+    lbl = new TGLabel(hf, "\n Draw Options");
+    hf->AddFrame(lbl);
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDrawGeometry_ =  new TGCheckButton(hf, "Draw geometry");
+    if(drawGeometry_) guiDrawGeometry_->Toggle();
+    hf->AddFrame(guiDrawGeometry_);
+    guiDrawGeometry_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDrawDetectors_ =  new TGCheckButton(hf, "Draw detectors");
+    if(drawDetectors_) guiDrawDetectors_->Toggle();
+    hf->AddFrame(guiDrawDetectors_);
+    guiDrawDetectors_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDrawHits_ =  new TGCheckButton(hf, "Draw hits");
+    if(drawHits_) guiDrawHits_->Toggle();
+    hf->AddFrame(guiDrawHits_);
+    guiDrawHits_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDrawPlanes_ =  new TGCheckButton(hf, "Draw planes");
+    if(drawPlanes_) guiDrawPlanes_->Toggle();
+    hf->AddFrame(guiDrawPlanes_);
+    guiDrawPlanes_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDrawTrackMarkers_ =  new TGCheckButton(hf, "Draw track markers");
+    if(drawTrackMarkers_) guiDrawTrackMarkers_->Toggle();
+    hf->AddFrame(guiDrawTrackMarkers_);
+    guiDrawTrackMarkers_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDrawTrack_ =  new TGCheckButton(hf, "Draw track");
+    if(drawTrack_) guiDrawTrack_->Toggle();
+    hf->AddFrame(guiDrawTrack_);
+    guiDrawTrack_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDrawErrors_ =  new TGCheckButton(hf, "Draw track errors");
+    if(drawErrors_) guiDrawErrors_->Toggle();
+    hf->AddFrame(guiDrawErrors_);
+    guiDrawErrors_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDrawForward_ =  new TGCheckButton(hf, "Draw forward fit");
+    if(drawForward_) guiDrawForward_->Toggle();
+    hf->AddFrame(guiDrawForward_);
+    guiDrawForward_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDrawBackward_ =  new TGCheckButton(hf, "Draw backward fit");
+    if(drawBackward_) guiDrawBackward_->Toggle();
+    hf->AddFrame(guiDrawBackward_);
+    guiDrawBackward_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDrawAutoScale_ =  new TGCheckButton(hf, "Auto-scale errors");
+    if(drawAutoScale_) guiDrawAutoScale_->Toggle();
+    hf->AddFrame(guiDrawAutoScale_);
+    guiDrawAutoScale_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDrawScaleMan_ =  new TGCheckButton(hf, "Manually scale errors");
+    if(drawScaleMan_) guiDrawScaleMan_->Toggle();
+    hf->AddFrame(guiDrawScaleMan_);
+    guiDrawScaleMan_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiErrorScale_ = new TGNumberEntry(hf, errorScale_, 6,999, TGNumberFormat::kNESReal,
+                          TGNumberFormat::kNEANonNegative,
+                          TGNumberFormat::kNELLimitMinMax,
+                          1.E-4, 1.E5);
+    hf->AddFrame(guiErrorScale_);
+    guiErrorScale_->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+    lbl = new TGLabel(hf, "Error scale");
+    hf->AddFrame(lbl);
+  }
+  frmMain->AddFrame(hf);
+
+
   frmMain->MapSubwindows();
   frmMain->Resize();
   frmMain->MapWindow();
@@ -892,5 +1011,28 @@ void EventDisplay::makeGui() {
   browser->StopEmbedding();
   browser->SetTabTitle("Event Control", 0);
 }
+
+
+void EventDisplay::guiSetDrawParams(){
+
+  drawGeometry_ = guiDrawGeometry_->IsOn();
+  drawDetectors_ = guiDrawDetectors_->IsOn();
+  drawHits_ = guiDrawHits_->IsOn();
+  drawErrors_ = guiDrawErrors_->IsOn();
+
+  drawPlanes_ = guiDrawPlanes_->IsOn();
+  drawTrackMarkers_ = guiDrawTrackMarkers_->IsOn();
+  drawTrack_ = guiDrawTrack_->IsOn();
+  drawForward_ = guiDrawForward_->IsOn();
+  drawBackward_ = guiDrawBackward_->IsOn();
+
+  drawAutoScale_ = guiDrawAutoScale_->IsOn();
+  drawScaleMan_ = guiDrawScaleMan_->IsOn();
+
+  errorScale_ = guiErrorScale_->GetNumberEntry()->GetNumber();
+
+  gotoEvent(eventId_);
+}
+
 
 }
