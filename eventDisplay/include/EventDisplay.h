@@ -25,6 +25,8 @@
 #define Display_H
 
 #include <Track.h>
+#include <AbsKalmanFitter.h>
+
 #include <TEveBox.h>
 #include <TVector3.h>
 #include <string>
@@ -32,10 +34,17 @@
 
 #include <TGButton.h>
 #include <TGNumberEntry.h>
+#include <TGButtonGroup.h>
 
 
 namespace genfit {
 
+enum eFitterType {
+  SimpleKalman,
+  RefKalman,
+  DafSimple,
+  DafRef
+};
 
 /** @brief Event display designed to run with Genfit.
  *
@@ -128,62 +137,80 @@ class EventDisplay : public TNamed {
 		void open();
 	
 		void guiSetDrawParams();
+		void guiSelectFitterId(int val);
+		void guiSelectMmHandling(int val);
 
 	private:
-		/** @brief Build the buttons for event navigation.*/
-		void makeGui();
+    /** @brief Build the buttons for event navigation.*/
+    void makeGui();
 
-		/** @brief Draw an event.*/
-		void drawEvent(unsigned int id, bool resetCam = true);
+    /** @brief Draw an event.*/
+    void drawEvent(unsigned int id, bool resetCam = true);
 
-		/** @brief Create a box around o, oriented along u and v with widths ud, vd and depth and
-		 *  return a pointer to the box object.
-		 */
-		TEveBox* boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth);
+    /** @brief Create a box around o, oriented along u and v with widths ud, vd and depth and
+     *  return a pointer to the box object.
+     */
+    TEveBox* boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth);
 
-		void makeLines(const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
+    void makeLines(const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
                      const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth = 2, int markerPos = 1);
 
 
-		static EventDisplay* eventDisplay_; //!
-		unsigned int eventId_; //!
-		double errorScale_; //!
-		std::vector< std::vector<genfit::Track*>* > events_; //!
+    static EventDisplay* eventDisplay_; //!
+    unsigned int eventId_; //!
+    double errorScale_; //!
+    std::vector< std::vector<genfit::Track*>* > events_; //!
 
 
-	  TGCheckButton* guiDrawGeometry_;
-	  bool drawGeometry_;
-	  TGCheckButton* guiDrawDetectors_;
-	  bool drawDetectors_;
-	  TGCheckButton* guiDrawHits_;
-	  bool drawHits_;
-	  TGCheckButton* guiDrawErrors_;
-	  bool drawErrors_;
+    TGCheckButton* guiDrawGeometry_;
+    bool drawGeometry_;
+    TGCheckButton* guiDrawDetectors_;
+    bool drawDetectors_;
+    TGCheckButton* guiDrawHits_;
+    bool drawHits_;
+    TGCheckButton* guiDrawErrors_;
+    bool drawErrors_;
 
-	  TGCheckButton* guiDrawPlanes_;
-	  bool drawPlanes_;
-	  TGCheckButton* guiDrawTrackMarkers_;
-	  bool drawTrackMarkers_;
+    TGCheckButton* guiDrawPlanes_;
+    bool drawPlanes_;
+    TGCheckButton* guiDrawTrackMarkers_;
+    bool drawTrackMarkers_;
 
-	  TGCheckButton* guiDrawTrack_;
-	  bool drawTrack_;
-	  TGCheckButton* guiDrawForward_;
-	  bool drawForward_;
-	  TGCheckButton* guiDrawBackward_;
-	  bool drawBackward_;
+    TGCheckButton* guiDrawTrack_;
+    bool drawTrack_;
+    TGCheckButton* guiDrawRefTrack_;
+    bool drawRefTrack_;
+    TGCheckButton* guiDrawForward_;
+    bool drawForward_;
+    TGCheckButton* guiDrawBackward_;
+    bool drawBackward_;
 
-	  TGCheckButton* guiDrawAutoScale_;
-	  bool drawAutoScale_;
-	  TGCheckButton* guiDrawScaleMan_;
-	  bool drawScaleMan_;
-	  TGNumberEntry* guiErrorScale_;
+    TGCheckButton* guiDrawAutoScale_;
+    bool drawAutoScale_;
+    TGCheckButton* guiDrawScaleMan_;
+    bool drawScaleMan_;
+    TGNumberEntry* guiErrorScale_;
 
-	  bool drawSilent_;
+    bool drawSilent_;
 
     TGCheckButton* guiDrawCardinalRep_;
     bool drawCardinalRep_;
     TGNumberEntry* guiRepId_;
     unsigned int repId_;
+
+    TGCheckButton* guiRefit_;
+    bool refit_;
+    TGButtonGroup* guiFitterId_;
+    eFitterType fitterId_;
+    TGButtonGroup* guiMmHandling_;
+    eMultipleMeasurementHandling mmHandling_;
+    TGNumberEntry* guiDPVal_;
+    double dPVal_;
+    TGNumberEntry* guiNMaxIter_;
+    unsigned int nMaxIter_;
+    TGCheckButton* guiResort_;
+    bool resort_;
+
 
 	public:
 		ClassDef(EventDisplay,1)

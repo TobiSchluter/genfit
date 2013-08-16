@@ -21,6 +21,10 @@
 #include <Tools.h>
 #include <KalmanFitterInfo.h>
 
+#include <KalmanFitter.h>
+#include <DAF.h>
+#include <KalmanFitterRefTrack.h>
+
 #include <TApplication.h>
 #include <TEveBrowser.h>
 #include <TEveManager.h>
@@ -48,6 +52,9 @@
 #include <TVectorD.h>
 #include <TSystem.h>
 
+#include "boost/scoped_ptr.hpp"
+
+
 ClassImp(genfit::EventDisplay)
 
 namespace genfit {
@@ -64,13 +71,20 @@ EventDisplay::EventDisplay() :
   drawPlanes_(false),
   drawTrackMarkers_(false),
   drawTrack_(true),
+  drawRefTrack_(true),
   drawForward_(false),
   drawBackward_(false),
   drawAutoScale_(true),
   drawScaleMan_(false),
   drawSilent_(false),
   drawCardinalRep_(true),
-  repId_(0)
+  repId_(0),
+  refit_(false),
+  fitterId_(RefKalman),
+  mmHandling_(unweightedClosestToPrediction),
+  dPVal_(1.E-3),
+  nMaxIter_(4),
+  resort_(true)
 {
 
   if((!gApplication) || (gApplication && gApplication->TestBit(TApplication::kDefaultApplication))) {
@@ -249,13 +263,60 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
   std::cout << "EventDisplay::drawEvent(" << id << ")" << std::endl;
 
 
-  for(unsigned int i = 0; i < events_[id]->size(); i++) { // loop over all tracks in an event
+  for(unsigned int i = 0; i < events_.at(id)->size(); i++) { // loop over all tracks in an event
 
     Track* track = events_[id]->at(i);
     if (! track->checkConsistency()){
       std::cerr<<"track is not consistent"<<std::endl;
       continue;
     }
+
+
+    boost::scoped_ptr<Track> refittedTrack(NULL);
+    if (refit_) {
+
+      boost::scoped_ptr<AbsKalmanFitter> fitter;
+      switch (fitterId_) {
+        case SimpleKalman:
+          fitter.reset(new KalmanFitter(nMaxIter_, dPVal_));
+          fitter->setMultipleMeasurementHandling(mmHandling_);
+          break;
+
+        case RefKalman:
+          fitter.reset(new KalmanFitterRefTrack(nMaxIter_, dPVal_));
+          fitter->setMultipleMeasurementHandling(mmHandling_);
+          break;
+
+        case DafSimple:
+          {
+            genfit::AbsKalmanFitter* DafsKalman = new genfit::KalmanFitter();
+            fitter.reset(new DAF(DafsKalman));
+          }
+          break;
+        case DafRef:
+          fitter.reset(new DAF());
+          break;
+
+      }
+      fitter->setMaxIterations(nMaxIter_);
+
+
+      refittedTrack.reset(new Track(*track));
+      refittedTrack->deleteFitterInfo();
+
+      try{
+        fitter->processTrack(refittedTrack.get(), resort_);
+      }
+      catch(genfit::Exception& e){
+        std::cerr << e.what();
+        std::cerr << "Exception, could not refit track" << std::endl;
+        continue;
+      }
+
+      track = refittedTrack.get();
+    }
+
+
 
     AbsTrackRep* rep;
 
@@ -404,7 +465,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         if (drawBackward_)
           makeLines(prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, charge > 0 ? kYellow : kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
         // draw reference track if corresponding option is set ------------------------------------------
-        if(drawTrack_ && fi->hasReferenceState() && prevFi->hasReferenceState())
+        if(drawRefTrack_ && fi->hasReferenceState() && prevFi->hasReferenceState())
           makeLines(prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers_, false, 3);
       }
 
@@ -968,6 +1029,14 @@ void EventDisplay::makeGui() {
   frmMain->AddFrame(hf);
 
   hf = new TGHorizontalFrame(frmMain); {
+    guiDrawRefTrack_ =  new TGCheckButton(hf, "Draw reference track");
+    if(drawRefTrack_) guiDrawRefTrack_->Toggle();
+    hf->AddFrame(guiDrawRefTrack_);
+    guiDrawRefTrack_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
     guiDrawErrors_ =  new TGCheckButton(hf, "Draw track errors");
     if(drawErrors_) guiDrawErrors_->Toggle();
     hf->AddFrame(guiDrawErrors_);
@@ -1049,6 +1118,82 @@ void EventDisplay::makeGui() {
   frmMain->AddFrame(hf);
 
 
+
+  hf = new TGHorizontalFrame(frmMain); {
+    lbl = new TGLabel(hf, "\n Fitting options");
+    hf->AddFrame(lbl);
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiRefit_ =  new TGCheckButton(hf, "Refit");
+    if(refit_) guiRefit_->Toggle();
+    hf->AddFrame(guiRefit_);
+    guiRefit_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiFitterId_ = new TGButtonGroup(hf,"Fitter type:");
+    guiFitterId_->Connect("Clicked(Int_t)","genfit::EventDisplay", fh, "guiSelectFitterId(int)");
+    hf->AddFrame(guiFitterId_, new TGLayoutHints(kLHintsTop));
+      TGRadioButton* fitterId_button = new TGRadioButton(guiFitterId_, "Simple Kalman");
+      new TGRadioButton(guiFitterId_, "Reference Kalman");
+      new TGRadioButton(guiFitterId_, "DAF w/ simple Kalman");
+      new TGRadioButton(guiFitterId_, "DAF w/ reference Kalman");
+      fitterId_button->SetDown(true, true);
+      guiFitterId_->Show();
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiMmHandling_ = new TGButtonGroup(hf,"Multiple measurement handling in Kalman:");
+    guiMmHandling_->Connect("Clicked(Int_t)","genfit::EventDisplay", fh, "guiSelectMmHandling(int)");
+    hf->AddFrame(guiMmHandling_, new TGLayoutHints(kLHintsTop));
+      TGRadioButton* mmHandling_button = new TGRadioButton(guiMmHandling_, "weighted average");
+      new TGRadioButton(guiMmHandling_, "unweighted, closest to reference");
+      new TGRadioButton(guiMmHandling_, "unweighted, closest to prediction");
+      mmHandling_button->SetDown(true, true);
+      guiMmHandling_->Show();
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDPVal_ = new TGNumberEntry(hf, dPVal_, 6,999, TGNumberFormat::kNESReal,
+                          TGNumberFormat::kNEANonNegative,
+                          TGNumberFormat::kNELLimitMinMax,
+                          0, 999);
+    hf->AddFrame(guiDPVal_);
+    guiDPVal_->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+    lbl = new TGLabel(hf, "delta pVal (convergence criterium)");
+    hf->AddFrame(lbl);
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiNMaxIter_ = new TGNumberEntry(hf, nMaxIter_, 6,999, TGNumberFormat::kNESInteger,
+                          TGNumberFormat::kNEANonNegative,
+                          TGNumberFormat::kNELLimitMinMax,
+                          1, 100);
+    hf->AddFrame(guiNMaxIter_);
+    guiNMaxIter_->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+    lbl = new TGLabel(hf, "Maximum nr of iterations");
+    hf->AddFrame(lbl);
+  }
+  frmMain->AddFrame(hf);
+
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiResort_ =  new TGCheckButton(hf, "Resort track");
+    if(resort_) guiResort_->Toggle();
+    hf->AddFrame(guiResort_);
+    guiResort_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+
+
+
   frmMain->MapSubwindows();
   frmMain->Resize();
   frmMain->MapWindow();
@@ -1068,6 +1213,7 @@ void EventDisplay::guiSetDrawParams(){
   drawPlanes_ = guiDrawPlanes_->IsOn();
   drawTrackMarkers_ = guiDrawTrackMarkers_->IsOn();
   drawTrack_ = guiDrawTrack_->IsOn();
+  drawRefTrack_ = guiDrawRefTrack_->IsOn();
   drawForward_ = guiDrawForward_->IsOn();
   drawBackward_ = guiDrawBackward_->IsOn();
 
@@ -1079,8 +1225,25 @@ void EventDisplay::guiSetDrawParams(){
   drawCardinalRep_ = guiDrawCardinalRep_->IsOn();
   repId_ = guiRepId_->GetNumberEntry()->GetNumber();
 
+
+  refit_ = guiRefit_->IsOn();
+  dPVal_ = guiDPVal_->GetNumberEntry()->GetNumber();
+  nMaxIter_ = guiNMaxIter_->GetNumberEntry()->GetNumber();
+  resort_ = guiResort_->IsOn();
+
   gotoEvent(eventId_);
 }
 
 
+void EventDisplay::guiSelectFitterId(int val){
+  fitterId_ = eFitterType(val-1);
+  gotoEvent(eventId_);
 }
+
+void EventDisplay::guiSelectMmHandling(int val){
+  mmHandling_ = eMultipleMeasurementHandling(val-1);
+  gotoEvent(eventId_);
+}
+
+
+} // end of namespace genfit
