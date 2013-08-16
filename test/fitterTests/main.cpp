@@ -550,28 +550,28 @@ int main() {
         std::cout << "Track has no TrackPoint with fitterInfo! \n";
         continue;
       }
-      genfit::KalmanFittedStateOnPlane* kfsop = new genfit::KalmanFittedStateOnPlane(*(static_cast<genfit::KalmanFitterInfo*>(tp->getFitterInfo(rep))->getBackwardUpdate()));
+      genfit::KalmanFittedStateOnPlane kfsop(*(static_cast<genfit::KalmanFitterInfo*>(tp->getFitterInfo(rep))->getBackwardUpdate()));
       if (debug) {
         std::cout << "state before extrapolating back to reference plane \n";
-        kfsop->Print();
+        kfsop.Print();
       }
 
       // extrapolate back to reference plane.
       try{
-        rep->extrapolateToPlane(*kfsop, stateRefOrig.getPlane());;
+        rep->extrapolateToPlane(kfsop, stateRefOrig.getPlane());;
       }
       catch(genfit::Exception& e){
         std::cerr<<"Exception, next track"<<std::endl;
         std::cerr << e.what();
-        continue; // here is a memleak!
+        continue;
       }
 
 #ifndef VALGRIND
       // calculate pulls
       const TVectorD& referenceState = stateRefOrig.getState();
 
-      const TVectorD& state = kfsop->getState();
-      const TMatrixDSym& cov = kfsop->getCov();
+      const TVectorD& state = kfsop.getState();
+      const TMatrixDSym& cov = kfsop.getCov();
 
       double pval = fitter->getPVal(fitTrack, rep);
       assert( fabs(pval - static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getBackwardPVal()) < 1E-10 );
@@ -588,6 +588,7 @@ int main() {
       hvpPu->Fill(  (state[2]-referenceState[2]) / sqrt(cov[2][2]) );
       huPu->Fill(   (state[3]-referenceState[3]) / sqrt(cov[3][3]) );
       hvPu->Fill(   (state[4]-referenceState[4]) / sqrt(cov[4][4]) );
+
 
       try {
         trackLenRes->Fill( (trueLen - fitTrack->getTrackLen(rep)) / trueLen );
