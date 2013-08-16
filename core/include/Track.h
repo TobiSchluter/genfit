@@ -107,10 +107,11 @@ class Track : public TObject {
    */
   bool sort();
 
-  void deleteForwardInfo(int startId, int endId, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
-  void deleteBackwardInfo(int startId, int endId, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
-  void deleteReferenceInfo(int startId, int endId, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
-  void deleteMeasurementInfo(int startId, int endId, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
+  void deleteForwardInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
+  void deleteBackwardInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
+  void deleteReferenceInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
+  void deleteMeasurementInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
+  void deleteFitterInfo(int startId = 0, int endId = -1, const AbsTrackRep* rep = NULL); // delete in range [startId, endId]. If rep == NULL, delete for ALL reps, otherwise only for rep.
 
   //! get TrackLength between to trackPoints
   double getTrackLen(AbsTrackRep* rep, int startId = 0, int endId = -1) const;

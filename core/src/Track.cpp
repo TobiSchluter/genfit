@@ -604,6 +604,36 @@ void Track::deleteMeasurementInfo(int startId, int endId, const AbsTrackRep* rep
   }
 }
 
+void Track::deleteFitterInfo(int startId, int endId, const AbsTrackRep* rep) {
+
+  #ifdef DEBUG
+  std::cout << "Track::deleteFitterInfo from position " << startId  << " to " << endId << "\n";
+  #endif
+
+  trackHasChanged();
+
+  if (startId < 0)
+    startId += trackPoints_.size();
+  if (endId < 0)
+    endId += trackPoints_.size();
+  endId += 1;
+
+  assert (endId >= startId);
+
+  for (std::vector<TrackPoint*>::const_iterator pointIt = trackPoints_.begin() + startId; pointIt != trackPoints_.begin() + endId; ++pointIt) {
+    if (rep != NULL) {
+      if ((*pointIt)->hasFitterInfo(rep))
+        (*pointIt)->deleteFitterInfo(rep);
+    }
+    else {
+      for (std::vector<AbsTrackRep*>::const_iterator repIt = trackReps_.begin(); repIt != trackReps_.end(); ++repIt) {
+        if ((*pointIt)->hasFitterInfo(*repIt))
+          (*pointIt)->deleteFitterInfo(*repIt);
+      }
+    }
+  }
+}
+
 
 double Track::getTrackLen(AbsTrackRep* rep, int startId, int endId) const {
 
