@@ -55,6 +55,7 @@ DAF::DAF(AbsKalmanFitter* kalman)
   : AbsKalmanFitter(10), deltaWeight_(0.001)
 {
   kalman_.reset(kalman);
+  kalman_->setMultipleMeasurementHandling(weightedAverage); // DAF makes no sense otherwise
   kalman_->setMaxIterations(1);
 
   if (dynamic_cast<KalmanFitterRefTrack*>(kalman_.get()) != NULL) {
