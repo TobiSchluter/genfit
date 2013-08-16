@@ -98,6 +98,7 @@ class FieldManager {
  private:
 
   FieldManager() {}
+  ~FieldManager() { delete cache_; }
   static FieldManager* instance_;
   static AbsBField* field_;
 

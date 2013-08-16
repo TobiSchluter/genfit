@@ -50,16 +50,16 @@ void FieldManager::getFieldVal(const double& posX, const double& posY, const dou
 
     do {
       if (fabs(cache_[i].posX - posX) < epsilon &&
-          fabs(cache_[i].posY - posY) < epsilon &&
-          fabs(cache_[i].posZ - posZ) < epsilon) {
-        Bx = cache_[i].Bx;
-        By = cache_[i].By;
-        Bz = cache_[i].Bz;
+	  fabs(cache_[i].posY - posY) < epsilon &&
+	  fabs(cache_[i].posZ - posZ) < epsilon) {
+	Bx = cache_[i].Bx;
+	By = cache_[i].By;
+	Bz = cache_[i].Bz;
         #ifdef DEBUG
-        ++used;
-        std::cout<<"used the cache! " << double(used)/(used + notUsed) << "\n";
+	++used;
+	std::cout<<"used the cache! " << double(used)/(used + notUsed) << "\n";
         #endif
-        return;
+	return;
       }
       i = (i + 1) % n_buckets_;
     } while (i != last_read_i);
@@ -94,6 +94,11 @@ void FieldManager::useCache(bool opt, unsigned int nBuckets) {
 
   if (useCache_) {
     cache_ = new fieldCache[n_buckets_];
+    for (size_t i = 0; i < n_buckets_; ++i) {
+      // Should be safe to initialize with values in Andromeda
+      cache_[i].posX = cache_[i].posY = cache_[i].posZ = 2.4e24 / sqrt(3);
+      cache_[i].Bx = cache_[i].By = cache_[i].Bz = 1e30;      
+    }      
   }
 }
 
