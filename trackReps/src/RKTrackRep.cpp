@@ -1548,9 +1548,9 @@ bool RKTrackRep::RKutta(const M1x4& SU,
         i = 42;
 
       for(; i<49; i+=7) {
-        norm = ((*jacobianT)[i]*SU[0] + (*jacobianT)[i+1]*SU[1] + (*jacobianT)[i+2]*SU[2]) * An;  // dR_normal / A_normal
-        (*jacobianT)[i]   -= norm*A [0];   (*jacobianT)[i+1] -= norm*A [1];   (*jacobianT)[i+2] -= norm*A [2];
-        (*jacobianT)[i+3] -= norm*SA[0];   (*jacobianT)[i+4] -= norm*SA[1];   (*jacobianT)[i+5] -= norm*SA[2];
+        norm = (jacPtr[i]*SU[0] + jacPtr[i+1]*SU[1] + jacPtr[i+2]*SU[2]) * An;  // dR_normal / A_normal
+        jacPtr[i]   -= norm*A [0];   jacPtr[i+1] -= norm*A [1];   jacPtr[i+2] -= norm*A [2];
+        jacPtr[i+3] -= norm*SA[0];   jacPtr[i+4] -= norm*SA[1];   jacPtr[i+5] -= norm*SA[2];
       }
       checkJacProj = true;
 
