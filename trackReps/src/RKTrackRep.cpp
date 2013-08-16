@@ -1,5 +1,5 @@
-/* Copyright 2008-2010, Technische Universitaet Muenchen,
-   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
+/* Copyright 2008-2013, Technische Universitaet Muenchen, Ludwig-Maximilians-Universität München
+   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch & Tobias Schlüter
 
    This file is part of GENFIT.
 
@@ -1531,10 +1531,6 @@ bool RKTrackRep::RKutta(const M1x4& SU,
         throw exc;
       }
 
-      //save old jacobianT
-      double* jacPtr = *jacobianT;
-      noiseProjection.SetMatrixArray(jacPtr); // data is copied here
-
 #ifdef DEBUG
       //std::cout << "  Jacobian^T of extrapolation before Projection:\n";
       //RKTools::printDim(*jacobianT, 7,7);
@@ -1548,6 +1544,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
         i = 42;
 
       for(; i<49; i+=7) {
+	double* jacPtr = *jacobianT;
         norm = (jacPtr[i]*SU[0] + jacPtr[i+1]*SU[1] + jacPtr[i+2]*SU[2]) * An;  // dR_normal / A_normal
         jacPtr[i]   -= norm*A [0];   jacPtr[i+1] -= norm*A [1];   jacPtr[i+2] -= norm*A [2];
         jacPtr[i+3] -= norm*SA[0];   jacPtr[i+4] -= norm*SA[1];   jacPtr[i+5] -= norm*SA[2];
@@ -1561,19 +1558,19 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 #endif
 
       if (!calcOnlyLastRowOfJ) {
-#ifdef DEBUG
-        std::cout << "  calculate noiseProjection\n";
-#endif
-        // TODO: find a more elegant way of calculating noiseProjection
-        TMatrixD projectedJac(7,7, jacPtr);
-        TDecompLU invertAlgo(noiseProjection);
-        bool status = invertAlgo.Invert(noiseProjection);
-        if(status == 0){
-          Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
-          e.setFatal();
-          throw e;
-        }
-        noiseProjection = projectedJac * noiseProjection;
+	for (int iRow = 0; iRow < 7; ++iRow) {
+	  for (int iCol = 0; iCol < 7; ++iCol) {
+	    double val = (iRow == iCol);
+	    if (iRow < 3) {
+	      if (iCol < 3) {
+		val -= An * SU[iRow] * A[iCol];
+	      } else if (iCol < 6) {
+		val -= An * SU[iRow] * SA[iCol-3];
+	      }
+	    }
+	    noiseProjection.GetMatrixArray()[iRow*7 + iCol] = val;
+	  }
+	}
       }
 
     }
