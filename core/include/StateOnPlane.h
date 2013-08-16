@@ -43,8 +43,8 @@ class StateOnPlane : public TObject {
  public:
 
   StateOnPlane(const AbsTrackRep* rep = NULL);
-  StateOnPlane(const TVectorD& state, SharedPlanePtr plane, const AbsTrackRep* rep);
-  StateOnPlane(const TVectorD& state, SharedPlanePtr plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
+  StateOnPlane(const TVectorD& state, SharedPlanePtr& plane, const AbsTrackRep* rep);
+  StateOnPlane(const TVectorD& state, SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
 
   StateOnPlane& operator= (const StateOnPlane& other);
 
@@ -54,12 +54,12 @@ class StateOnPlane : public TObject {
   TVectorD& getState() {return state_;}
   const TVectorD& getAuxInfo() const {return auxInfo_;}
   TVectorD& getAuxInfo() {return auxInfo_;}
-  SharedPlanePtr getPlane() const {return sharedPlane_;}
+  const SharedPlanePtr& getPlane() const {return sharedPlane_;}
   const AbsTrackRep* getRep() const {return rep_;}
 
   void setState(const TVectorD& state) {if(state_.GetNrows() == 0) state_.ResizeTo(state); state_ = state;}
-  void setPlane(SharedPlanePtr plane) {sharedPlane_ = plane;}
-  void setStatePlane(const TVectorD& state, SharedPlanePtr plane) {state_ = state; sharedPlane_ = plane;}
+  void setPlane(const SharedPlanePtr& plane) {sharedPlane_ = plane;}
+  void setStatePlane(const TVectorD& state, const SharedPlanePtr& plane) {state_ = state; sharedPlane_ = plane;}
   void setAuxInfo(const TVectorD& auxInfo) {if(auxInfo_.GetNrows() == 0) auxInfo_.ResizeTo(auxInfo); auxInfo_ = auxInfo;}
   void setRep(const AbsTrackRep* rep) {rep_ = rep;}
 
@@ -91,14 +91,14 @@ inline StateOnPlane::StateOnPlane(const AbsTrackRep* rep) :
   }
 }
 
-inline StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr plane, const AbsTrackRep* rep) :
+inline StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr& plane, const AbsTrackRep* rep) :
   state_(state), auxInfo_(0), sharedPlane_(plane), rep_(rep)
 {
   assert(rep != NULL);
   //assert(state_.GetNrows() == (signed)rep->getDim());
 }
 
-inline StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr plane, const AbsTrackRep* rep, const TVectorD& auxInfo) :
+inline StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo) :
   state_(state), auxInfo_(auxInfo), sharedPlane_(plane), rep_(rep)
 {
 assert(rep != NULL);
