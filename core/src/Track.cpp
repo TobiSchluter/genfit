@@ -344,14 +344,14 @@ void Track::mergeTrack(const Track* other, int id) {
   if (other->getNumPoints() == 0)
     return;
 
-  std::map<const AbsTrackRep*, AbsTrackRep*> thisRepOtherRep;
+  std::map<const AbsTrackRep*, AbsTrackRep*> otherRepThisRep;
   std::vector<const AbsTrackRep*> otherRepsToRemove;
 
   for (std::vector<AbsTrackRep*>::const_iterator otherRep=other->trackReps_.begin(); otherRep!=other->trackReps_.end(); ++otherRep) {
     bool found(false);
     for (std::vector<AbsTrackRep*>::const_iterator thisRep=trackReps_.begin(); thisRep!=trackReps_.end(); ++thisRep) {
       if ((*thisRep)->isSame(*otherRep)) {
-        thisRepOtherRep[(*thisRep)] = *otherRep;
+        otherRepThisRep[*otherRep] = *thisRep;
         #ifdef DEBUG
         std::cout << " map other rep " << *otherRep << " to " << (*thisRep) << "\n";
         #endif
@@ -377,7 +377,7 @@ void Track::mergeTrack(const Track* other, int id) {
   points.reserve(other->getNumPoints());
 
   for (std::vector<TrackPoint*>::const_iterator otherTp=other->trackPoints_.begin(); otherTp!=other->trackPoints_.end(); ++otherTp) {
-    points.push_back(new TrackPoint(**otherTp, thisRepOtherRep, &otherRepsToRemove));
+    points.push_back(new TrackPoint(**otherTp, otherRepThisRep, &otherRepsToRemove));
   }
 
   insertPoints(points, id);
