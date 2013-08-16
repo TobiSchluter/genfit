@@ -141,7 +141,7 @@ SET(EVENTDISPLAY_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include/EventDisplay.h
 )
 ROOT_GENERATE_DICTIONARY("${EVENTDISPLAY_DICTIONARY_SOURCES}"
-                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/fitters/include;${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/src/eventDisplayLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/eventDisplayRootDict.cpp")
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/eventDisplayRootDict.cpp" "${library_sources}")
