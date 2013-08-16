@@ -1463,9 +1463,9 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
     // check if we went back and forth multiple times -> we don't come closer to the plane!
     if (counter > 3){
-      if (S                            *RKSteps_[counter-1].stepSize_ < 0 &&
-          RKSteps_[counter-1].stepSize_*RKSteps_[counter-2].stepSize_ < 0 &&
-          RKSteps_[counter-2].stepSize_*RKSteps_[counter-3].stepSize_ < 0){
+      if (S                            *RKSteps_.at(counter-1).stepSize_ < 0 &&
+          RKSteps_.at(counter-1).stepSize_*RKSteps_.at(counter-2).stepSize_ < 0 &&
+          RKSteps_.at(counter-2).stepSize_*RKSteps_.at(counter-3).stepSize_ < 0){
         Exception exc("RKTrackRep::RKutta ==> Do not get closer to plane!",__LINE__,__FILE__);
         exc.setFatal();
         throw exc;
@@ -1592,23 +1592,23 @@ double RKTrackRep::estimateStep(const M1x7& state7,
                                 StepLimits& limits) const {
 
   if (useCache_) {
-    if (cachePos_ > RKSteps_.size()) {
+    if (cachePos_ >= RKSteps_.size()) {
       useCache_ = false;
     }
     else {
-      if (RKSteps_[cachePos_].limits_.getLowestLimit().first == stp_plane) {
+      if (RKSteps_.at(cachePos_).limits_.getLowestLimit().first == stp_plane) {
         // we need to step exactly to the plane, so don't use the cache!
         useCache_ = false;
         RKSteps_.erase(RKSteps_.begin() + cachePos_, RKSteps_.end());
       }
       else {
         #ifdef DEBUG
-        std::cout << " RKTrackRep::estimateStep: use stepSize " << cachePos_ << " from cache: " << RKSteps_[cachePos_].stepSize_ << "\n";
+        std::cout << " RKTrackRep::estimateStep: use stepSize " << cachePos_ << " from cache: " << RKSteps_.at(cachePos_).stepSize_ << "\n";
         #endif
         //for(int n = 0; n < 1*7; ++n) RKSteps_[cachePos_].state7_[n] = state7[n];
         ++RKStepsFXStop_;
-        limits = RKSteps_[cachePos_].limits_;
-        return RKSteps_[cachePos_++].stepSize_;
+        limits = RKSteps_.at(cachePos_).limits_;
+        return RKSteps_.at(cachePos_++).stepSize_;
       }
     }
   }
@@ -2065,12 +2065,12 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
     double firstStep(0);
     for (unsigned int i=0; i<RKSteps_.size(); ++i) {
       if (i == 0) {
-        firstStep = RKSteps_[0].stepSize_;
+        firstStep = RKSteps_.at(0).stepSize_;
         continue;
       }
-      if (RKSteps_[i].stepSize_ * firstStep < 0) {
-        if (RKSteps_[i-1].materialProperties_ == RKSteps_[i].materialProperties_) {
-          RKSteps_[i-1].stepSize_ += RKSteps_[i].stepSize_;
+      if (RKSteps_.at(i).stepSize_ * firstStep < 0) {
+        if (RKSteps_.at(i-1).materialProperties_ == RKSteps_.at(i).materialProperties_) {
+          RKSteps_.at(i-1).stepSize_ += RKSteps_.at(i).stepSize_;
         }
         RKSteps_.erase(RKSteps_.begin()+i, RKSteps_.end());
       }
