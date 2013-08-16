@@ -237,7 +237,7 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
           converged = true;
         }
 
-        if (PvalBW == 0)
+        if (PvalBW == 0.)
           converged = false;
       }
 
@@ -974,16 +974,23 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
       couldInvert = false;
     }
 
-    if (couldInvert)
+    if (couldInvert) {
+      #ifdef DEBUGMATH
+      std::cout << " Rinv "; Rinv.Print();
+      #endif
       chi2inc = Rinv.Similarity(resNew);
+    }
   }
 
   chi2 += chi2inc;
 
 
   double ndfInc = m.getState().GetNrows();
-  if (multipleMeasurementHandling_ == weightedAverage)
+  if (multipleMeasurementHandling_ == weightedAverage) {
     ndfInc *= m.getWeight();
+    //std::cout << "weight = " << m.getWeight() << "\n";
+  }
+
   ndf += ndfInc;
 
 
