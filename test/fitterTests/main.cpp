@@ -133,12 +133,8 @@ int main() {
   std::cout<<"main"<<std::endl;
   gRandom->SetSeed(14);
 
-  enum eFitterType { SimpleKalman = 0,
-        RefKalman,
-        DafSimple,
-        DafRef};
 
-  const unsigned int nEvents = 10000;
+  const unsigned int nEvents = 10;
   const double BField = 15.;       // kGauss
   const double momentum = 0.4;     // GeV
   const double theta = 120;         // degree
@@ -163,9 +159,9 @@ int main() {
 
   const int splitTrack = 4; // for track merging testing:
 
-  //const eFitterType fitterId = SimpleKalman;
-  //const eFitterType fitterId = RefKalman;
-  const eFitterType fitterId = DafRef;
+  //const genfit::eFitterType fitterId = genfit::SimpleKalman;
+  //const genfit::eFitterType fitterId = genfit::RefKalman;
+  const genfit::eFitterType fitterId = genfit::DafRef;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
   const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
@@ -209,24 +205,24 @@ int main() {
   // init fitter
   genfit::AbsKalmanFitter* fitter = 0;
   switch (fitterId) {
-    case SimpleKalman:
+    case genfit::SimpleKalman:
       fitter = new genfit::KalmanFitter(nIter, dPVal);
       fitter->setMultipleMeasurementHandling(mmHandling);
       break;
 
-    case RefKalman:
+    case genfit::RefKalman:
       fitter = new genfit::KalmanFitterRefTrack(nIter, dPVal);
       fitter->setMultipleMeasurementHandling(mmHandling);
       break;
 
-    case DafSimple:
+    case genfit::DafSimple:
       {
         genfit::AbsKalmanFitter* DafsKalman = new genfit::KalmanFitter();
         DafsKalman->setMultipleMeasurementHandling(mmHandling);
         fitter = new genfit::DAF(DafsKalman);
       }
       break;
-    case DafRef:
+    case genfit::DafRef:
       fitter = new genfit::DAF();
       break;
 
