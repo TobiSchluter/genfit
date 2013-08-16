@@ -75,7 +75,7 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
   weights_.clear();
   std::vector<std::vector<double> > oldWeights;
 
-  KalmanFitStatus* status;
+  KalmanFitStatus* status = 0;
   bool oneLastIter = false;
 
   unsigned int iBeta = 0;
