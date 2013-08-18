@@ -1861,7 +1861,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       // calc J_Mp for later calculation of 5D Jacobian
       if (numIt == 1) { // first iteration
         M1x3 pTilde = {state7[3], state7[4], state7[5]};
-        TVector3 normal = startPlane.getNormal();
+        const TVector3& normal = startPlane.getNormal();
         double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
         double spu = 1;
         if (pTildeW < 0) {
