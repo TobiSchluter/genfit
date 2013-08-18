@@ -331,7 +331,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
   // declare stuff
   KalmanFitterInfo* prevFitterInfo(NULL);
-  MeasuredStateOnPlane* firstBackwarUpdate(NULL);
+  MeasuredStateOnPlane* firstBackwardUpdate(NULL);
 
   ReferenceStateOnPlane* referenceState(NULL);
   ReferenceStateOnPlane* prevReferenceState(NULL);
@@ -385,8 +385,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
         if (prevFitterInfo == NULL) {
           if (fitterInfo->hasBackwardUpdate()) {
-            firstBackwarUpdate = new MeasuredStateOnPlane(*(fitterInfo->getBackwardUpdate()));
-            SOPsToDestruct_.push_back(firstBackwarUpdate);
+            firstBackwardUpdate = new MeasuredStateOnPlane(*(fitterInfo->getBackwardUpdate()));
+            SOPsToDestruct_.push_back(firstBackwardUpdate);
           }
 
         }
@@ -703,18 +703,18 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
   removeForwardBackwardInfo(tr, rep, notChangedUntil, notChangedFrom);
 
-  if (firstBackwarUpdate != NULL) {
+  if (firstBackwardUpdate != NULL) {
     KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep));
     if (! fi->hasForwardPrediction()) {
       #ifdef DEBUG
       std::cout << "set backwards update of first point as forward prediction (with blown up cov) \n";
       #endif
-      if (fi->getPlane() != firstBackwarUpdate->getPlane()) {
-        rep->extrapolateToPlane(*firstBackwarUpdate, fi->getPlane());
+      if (fi->getPlane() != firstBackwardUpdate->getPlane()) {
+        rep->extrapolateToPlane(*firstBackwardUpdate, fi->getPlane());
       }
-      firstBackwarUpdate->blowUpCov(blowUpFactor_);
-      fi->setForwardPrediction(firstBackwarUpdate);
-      SOPsToDestruct_.erase( std::find(SOPsToDestruct_.begin(), SOPsToDestruct_.end(), firstBackwarUpdate) );
+      firstBackwardUpdate->blowUpCov(blowUpFactor_);
+      fi->setForwardPrediction(firstBackwardUpdate);
+      SOPsToDestruct_.erase( std::find(SOPsToDestruct_.begin(), SOPsToDestruct_.end(), firstBackwardUpdate) );
     }
   }
 
