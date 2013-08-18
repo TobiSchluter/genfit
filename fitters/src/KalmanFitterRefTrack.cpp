@@ -19,8 +19,6 @@
 
 /* This implements the Kalman fitter with reference track.  */
 
-#include <TDecompChol.h>
-
 #include "Tools.h"
 #include "Track.h"
 #include "TrackPoint.h"
@@ -895,6 +893,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
       std::cout << "  Use reference state and unit cov as start \n";
       #endif
       p = fi->getReferenceState()->getState();
+      // FIXME: Starting value for the covariance matrix.
       C.UnitMatrix();
       fi->setPrediction(new MeasuredStateOnPlane(p, C, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(), fi->getReferenceState()->getAuxInfo()), direction);
     }
