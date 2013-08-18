@@ -17,9 +17,7 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* This implements the simple Kalman fitter with no reference track
-   that uses the stateSeed only until it forgets about it after the
-   first few hits.  */
+/* This implements the Kalman fitter with reference track.  */
 
 #include <TDecompChol.h>
 
