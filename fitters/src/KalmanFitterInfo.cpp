@@ -235,7 +235,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
 
   const MeasuredStateOnPlane& smoothedState = getFittedState(biased);
   const MeasurementOnPlane* measurement = measurementsOnPlane_.at(iMeasurement);
-  SharedPlanePtr plane = measurement->getPlane();
+  const SharedPlanePtr& plane = measurement->getPlane();
 
   // check equality of planes and reps
   if(*(smoothedState.getPlane()) != *plane) {
@@ -249,7 +249,10 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
 
   const TMatrixD& H = measurement->getHMatrix();
 
-  TVectorD res = measurement->getState() - (H * smoothedState.getState());
+  TVectorD res = smoothedState.getState();
+  res *= H;
+  res -= measurement->getState();
+  res *= -1;
 
   if (onlyMeasurementErrors) {
     return MeasurementOnPlane(res, measurement->getCov(), plane, smoothedState.getRep(), H, measurement->getWeight());
@@ -373,7 +376,6 @@ MeasuredStateOnPlane KalmanFitterInfo::calcAverageState(const MeasuredStateOnPla
   }
 
   TMatrixDSym fCovInv, bCovInv, smoothed_cov;
-
   tools::invertMatrix(forwardState->getCov(), fCovInv);
   tools::invertMatrix(backwardState->getCov(), bCovInv);
 
