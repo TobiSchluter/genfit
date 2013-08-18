@@ -19,6 +19,8 @@
 
 #include "MeasuredStateOnPlane.h"
 #include "AbsTrackRep.h"
+#include "Exception.h"
+#include "Tools.h"
 
 #include <cassert>
 #include <iostream>
@@ -58,5 +60,26 @@ void MeasuredStateOnPlane::blowUpCov(double blowUpFac, bool resetOffDiagonals) {
     cov_ *= blowUpFac;
 
 }
+
+MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, const MeasuredStateOnPlane& backwardState) {
+  // check if both states are defined in the same plane
+  if (forwardState.getPlane() != backwardState.getPlane()) {
+    Exception e("KalmanFitterInfo::calcAverageState: forwardState and backwardState are not defined in the same plane.", __LINE__,__FILE__);
+    throw e;
+  }
+
+  TMatrixDSym fCovInv, bCovInv, smoothed_cov;
+  tools::invertMatrix(forwardState.getCov(), fCovInv);
+  tools::invertMatrix(backwardState.getCov(), bCovInv);
+
+  tools::invertMatrix(fCovInv + bCovInv, smoothed_cov);
+
+  MeasuredStateOnPlane retVal(forwardState); // copies auxInfo
+  retVal.setState(smoothed_cov * (fCovInv*forwardState.getState() + bCovInv*backwardState.getState()));
+  retVal.setCov(smoothed_cov);
+
+  return retVal;
+}
+
 
 } /* End of namespace genfit */

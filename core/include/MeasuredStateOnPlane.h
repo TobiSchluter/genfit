@@ -69,6 +69,8 @@ class MeasuredStateOnPlane : public StateOnPlane {
 
 };
 
+MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, const MeasuredStateOnPlane& backwardState);
+
 
 inline MeasuredStateOnPlane::MeasuredStateOnPlane(const AbsTrackRep* rep) :
   StateOnPlane(rep), cov_(0,0)

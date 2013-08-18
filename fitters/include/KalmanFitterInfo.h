@@ -107,7 +107,6 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
  private:
 
-  MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const;
 
 #ifndef __CINT__
   boost::scoped_ptr<ReferenceStateOnPlane> referenceState_; // Ownership

@@ -196,7 +196,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
     #ifdef DEBUG
     std::cout << "KalmanFitterInfo::getFittedState - biased = mean(forwardUpdate_, backwardPrediction_) \n";
     #endif
-    fittedStateBiased_.reset(new MeasuredStateOnPlane(calcAverageState(forwardUpdate_.get(), backwardPrediction_.get())));
+    fittedStateBiased_.reset(new MeasuredStateOnPlane(calcAverageState(*forwardUpdate_, *backwardPrediction_)));
     return *fittedStateBiased_;
   }
   else { // unbiased
@@ -223,7 +223,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
     #ifdef DEBUG
     std::cout << "KalmanFitterInfo::getFittedState - unbiased = mean(forwardPrediction_, backwardPrediction_) \n";
     #endif
-    fittedStateUnbiased_.reset(new MeasuredStateOnPlane(calcAverageState(forwardPrediction_.get(), backwardPrediction_.get())));
+    fittedStateUnbiased_.reset(new MeasuredStateOnPlane(calcAverageState(*forwardPrediction_, *backwardPrediction_)));
     return *fittedStateUnbiased_;
   }
 
@@ -361,31 +361,6 @@ void KalmanFitterInfo::setWeights(const std::vector<double>& weights) {
   for (unsigned int i=0; i<getNumMeasurements(); ++i) {
     getMeasurementOnPlane(i)->setWeight(weights[i]);
   }
-}
-
-
-MeasuredStateOnPlane KalmanFitterInfo::calcAverageState(const MeasuredStateOnPlane* forwardState, const MeasuredStateOnPlane* backwardState) const {
-  if (forwardState == NULL || backwardState == NULL) {
-    Exception e("KalmanFitterInfo::calcAverageState: forwardState or backwardState is NULL.", __LINE__,__FILE__);
-    throw e;
-  }
-  // check if both states are defined in the same plane
-  if (forwardState->getPlane() != backwardState->getPlane()) {
-    Exception e("KalmanFitterInfo::calcAverageState: forwardState and backwardState are not defined in the same plane.", __LINE__,__FILE__);
-    throw e;
-  }
-
-  TMatrixDSym fCovInv, bCovInv, smoothed_cov;
-  tools::invertMatrix(forwardState->getCov(), fCovInv);
-  tools::invertMatrix(backwardState->getCov(), bCovInv);
-
-  tools::invertMatrix(fCovInv + bCovInv, smoothed_cov);
-
-  MeasuredStateOnPlane retVal(*forwardState); // copies auxInfo
-  retVal.setState(smoothed_cov * (fCovInv*forwardState->getState() + bCovInv*backwardState->getState()));
-  retVal.setCov(smoothed_cov);
-
-  return retVal;
 }
 
 
