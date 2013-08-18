@@ -52,11 +52,11 @@ class PlanarMeasurement : public AbsMeasurement {
 
   virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;
 
-  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr) const;
+  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const;
 
   virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const;
 
-  virtual void setPlane(SharedPlanePtr physicalPlane, int planeId = -1) {physicalPlane_ = physicalPlane; planeId_ = planeId;}
+  virtual void setPlane(const SharedPlanePtr& physicalPlane, int planeId = -1) {physicalPlane_ = physicalPlane; planeId_ = planeId;}
 
  protected:
   SharedPlanePtr physicalPlane_;

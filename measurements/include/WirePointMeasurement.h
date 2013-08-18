@@ -56,7 +56,7 @@ class WirePointMeasurement : public WireMeasurement {
 
   virtual AbsMeasurement* clone() const {return new WirePointMeasurement(*this);}
 
-  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr) const;
+  virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const;
 
   virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const;
 

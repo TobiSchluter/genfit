@@ -56,7 +56,7 @@ SharedPlanePtr SpacepointMeasurement::constructPlane(const StateOnPlane& state) 
 }
 
 
-std::vector<MeasurementOnPlane*> SpacepointMeasurement::constructMeasurementsOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const
+std::vector<MeasurementOnPlane*> SpacepointMeasurement::constructMeasurementsOnPlane(const AbsTrackRep* rep, const SharedPlanePtr& plane) const
 {
   MeasurementOnPlane* mop = new MeasurementOnPlane(TVectorD(2),
        TMatrixDSym(3), // will be resized to 2x2 by Similarity later

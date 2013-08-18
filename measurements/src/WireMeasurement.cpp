@@ -85,7 +85,7 @@ SharedPlanePtr WireMeasurement::constructPlane(const StateOnPlane& state) const 
 }
 
 
-std::vector<MeasurementOnPlane*> WireMeasurement::constructMeasurementsOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const
+std::vector<MeasurementOnPlane*> WireMeasurement::constructMeasurementsOnPlane(const AbsTrackRep* rep, const SharedPlanePtr& plane) const
 {
   double mR = rawHitCoords_(6);
   double mL = -mR;

@@ -74,7 +74,7 @@ RKTrackRep::~RKTrackRep() {
 
 
 double RKTrackRep::extrapolateToPlane(StateOnPlane& state,
-    SharedPlanePtr plane,
+    const SharedPlanePtr& plane,
     bool stopAtBoundary,
     bool calcJacobianNoise) const {
 

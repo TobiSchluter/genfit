@@ -49,7 +49,7 @@ SharedPlanePtr PlanarMeasurement::constructPlane(const StateOnPlane& state) cons
 }
 
 
-std::vector<MeasurementOnPlane*> PlanarMeasurement::constructMeasurementsOnPlane(const AbsTrackRep* rep, const SharedPlanePtr plane) const {
+std::vector<MeasurementOnPlane*> PlanarMeasurement::constructMeasurementsOnPlane(const AbsTrackRep* rep, const SharedPlanePtr& plane) const {
 
   MeasurementOnPlane* mop = new MeasurementOnPlane(rawHitCoords_,
        rawHitCov_,

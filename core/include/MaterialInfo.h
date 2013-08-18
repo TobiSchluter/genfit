@@ -36,9 +36,9 @@ class MaterialInfo : public TObject {
  public:
 
   MaterialInfo();
-  MaterialInfo(SharedPlanePtr sharedPlane,
-               SharedMaterialPropertiesPtr materialBefore,
-               SharedMaterialPropertiesPtr materialAfter);
+  MaterialInfo(const SharedPlanePtr& sharedPlane,
+               const SharedMaterialPropertiesPtr& materialBefore,
+               const SharedMaterialPropertiesPtr& materialAfter);
 
   SharedPlanePtr getPlane() const {return sharedPlane_;}
   SharedMaterialPropertiesPtr getMaterialBefore() const {return materialBefore_;}

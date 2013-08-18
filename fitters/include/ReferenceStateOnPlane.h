@@ -39,10 +39,10 @@ class ReferenceStateOnPlane : public StateOnPlane {
 
   ReferenceStateOnPlane();
   ReferenceStateOnPlane(const TVectorD& state,
-      SharedPlanePtr plane,
+      const SharedPlanePtr& plane,
       const AbsTrackRep* rep);
   ReferenceStateOnPlane(const TVectorD& state,
-      SharedPlanePtr plane,
+      const SharedPlanePtr& plane,
       const AbsTrackRep* rep,
       const TVectorD& auxInfo);
   ReferenceStateOnPlane(const StateOnPlane& state);

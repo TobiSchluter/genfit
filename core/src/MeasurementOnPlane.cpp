@@ -23,18 +23,6 @@
 
 namespace genfit {
 
-MeasurementOnPlane::MeasurementOnPlane(const AbsTrackRep* rep) :
-  MeasuredStateOnPlane(rep), hMatrix_(0,0), weight_(0)
-{
-  ;
-}
-
-MeasurementOnPlane::MeasurementOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, const TMatrixD& hMatrix, double weight) :
-  MeasuredStateOnPlane(state, cov, plane, rep), hMatrix_(hMatrix), weight_(weight)
-{
-  ;
-}
-
 void MeasurementOnPlane::Print(Option_t* option) const
 {
   std::cout << "genfit::MeasurementOnPlane, weight = " << weight_ << "\n";

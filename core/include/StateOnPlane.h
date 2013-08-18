@@ -43,8 +43,8 @@ class StateOnPlane : public TObject {
  public:
 
   StateOnPlane(const AbsTrackRep* rep = NULL);
-  StateOnPlane(const TVectorD& state, SharedPlanePtr& plane, const AbsTrackRep* rep);
-  StateOnPlane(const TVectorD& state, SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
+  StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep);
+  StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
 
   StateOnPlane& operator= (const StateOnPlane& other);
 
@@ -91,14 +91,14 @@ inline StateOnPlane::StateOnPlane(const AbsTrackRep* rep) :
   }
 }
 
-inline StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr& plane, const AbsTrackRep* rep) :
+inline StateOnPlane::StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep) :
   state_(state), auxInfo_(0), sharedPlane_(plane), rep_(rep)
 {
   assert(rep != NULL);
   //assert(state_.GetNrows() == (signed)rep->getDim());
 }
 
-inline StateOnPlane::StateOnPlane(const TVectorD& state, SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo) :
+inline StateOnPlane::StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo) :
   state_(state), auxInfo_(auxInfo), sharedPlane_(plane), rep_(rep)
 {
 assert(rep != NULL);

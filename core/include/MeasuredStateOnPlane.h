@@ -41,8 +41,8 @@ class MeasuredStateOnPlane : public StateOnPlane {
  public:
 
   MeasuredStateOnPlane(const AbsTrackRep* rep = NULL);
-  MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep);
-  MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
+  MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep);
+  MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
   MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov);
 
   MeasuredStateOnPlane& operator= (const MeasuredStateOnPlane& other);
@@ -55,7 +55,7 @@ class MeasuredStateOnPlane : public StateOnPlane {
   void blowUpCov(double blowUpFac, bool resetOffDiagonals = true);
 
   void setStateCov(const TVectorD& state, const TMatrixDSym& cov) {setState(state); setCov(cov);}
-  void setStateCovPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane) {setStatePlane(state, plane); setCov(cov);}
+  void setStateCovPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane) {setStatePlane(state, plane); setCov(cov);}
   void setCov(const TMatrixDSym& cov) {if(cov_.GetNrows() == 0) cov_.ResizeTo(cov); cov_ = cov;}
 
   virtual void Print(Option_t* option = "") const;
@@ -78,14 +78,14 @@ inline MeasuredStateOnPlane::MeasuredStateOnPlane(const AbsTrackRep* rep) :
   }
 }
 
-inline MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep) :
+inline MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep) :
   StateOnPlane(state, plane, rep), cov_(cov)
 {
   assert(rep != NULL);
   //assert(cov_.GetNcols() == (signed)rep->getDim());
 }
 
-inline MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, const TVectorD& auxInfo) :
+inline MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo) :
   StateOnPlane(state, plane, rep, auxInfo), cov_(cov)
 {
   assert(rep != NULL);

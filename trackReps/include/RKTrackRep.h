@@ -70,7 +70,7 @@ class RKTrackRep : public AbsTrackRep {
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    */
   virtual double extrapolateToPlane(StateOnPlane& state,
-      SharedPlanePtr plane,
+      const SharedPlanePtr& plane,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const;
 

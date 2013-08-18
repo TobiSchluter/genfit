@@ -36,7 +36,7 @@ class AbsTrackRep : public TObject {
    * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
    */
   virtual double extrapolateToPlane(StateOnPlane& state,
-      SharedPlanePtr plane,
+      const SharedPlanePtr& plane,
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const = 0;
 

@@ -68,7 +68,7 @@ class AbsMeasurement : public TObject {
    * Construct measurement on given plane wrt. given TrackRep. The raw measurement has to be projected onto the plane. It's possible to make corrections to the coordinates here.
    * Usually the vector will contain only one element. But in the case of e.g. WireMeasurements, it will be 2 (left and right).
    */
-  virtual std::vector<genfit::MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr) const = 0;
+  virtual std::vector<genfit::MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const = 0;
 
   virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const = 0;
 
