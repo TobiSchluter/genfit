@@ -991,7 +991,7 @@ void RKTrackRep::getState7(const StateOnPlane& state, M1x7& state7) const {
   const TVector3& U(state.getPlane()->getU());
   const TVector3& V(state.getPlane()->getV());
   const TVector3& O(state.getPlane()->getO());
-  TVector3 W(state.getPlane()->getNormal());
+  const TVector3& W(state.getPlane()->getNormal());
 
   const TVectorD& state5(state.getState());
 
@@ -1022,7 +1022,7 @@ void RKTrackRep::getState5(StateOnPlane& state, const M1x7& state7) const {
   const TVector3& O(state.getPlane()->getO());
   const TVector3& U(state.getPlane()->getU());
   const TVector3& V(state.getPlane()->getV());
-  TVector3 W(state.getPlane()->getNormal());
+  const TVector3& W(state.getPlane()->getNormal());
 
   TVector3 posShift(state7[0], state7[1], state7[2]);
   posShift -= state.getPlane()->getO();
@@ -1059,7 +1059,7 @@ void RKTrackRep::transformPM7(const MeasuredStateOnPlane& state,
   // get vectors and aux variables
   const TVector3& U(state.getPlane()->getU());
   const TVector3& V(state.getPlane()->getV());
-  TVector3 W(state.getPlane()->getNormal());
+  const TVector3& W(state.getPlane()->getNormal());
 
   const TVectorD& state5(state.getState());
   double spu(getSpu(state));
@@ -1129,7 +1129,7 @@ void RKTrackRep::transformPM6(const MeasuredStateOnPlane& state,
   // get vectors and aux variables
   const TVector3& U(state.getPlane()->getU());
   const TVector3& V(state.getPlane()->getV());
-  TVector3 W(state.getPlane()->getNormal());
+  const TVector3& W(state.getPlane()->getNormal());
 
   const TVectorD& state5(state.getState());
   double spu(getSpu(state));
@@ -1189,7 +1189,7 @@ void RKTrackRep::transformM7P(const M7x7& in7x7,
   // get vectors and aux variables
   const TVector3& U(state.getPlane()->getU());
   const TVector3& V(state.getPlane()->getV());
-  TVector3 W(state.getPlane()->getNormal());
+  const TVector3& W(state.getPlane()->getNormal());
 
   M1x3& A = *((M1x3*) &state7[3]);
 
@@ -1254,7 +1254,7 @@ void RKTrackRep::transformM6P(const M6x6& in6x6,
   // get vectors and aux variables
   const TVector3& U(state.getPlane()->getU());
   const TVector3& V(state.getPlane()->getV());
-  TVector3 W(state.getPlane()->getNormal());
+  const TVector3& W(state.getPlane()->getNormal());
 
   const double AtU = state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z();
   const double AtV = state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z();
