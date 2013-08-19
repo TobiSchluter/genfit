@@ -28,7 +28,7 @@
 
 namespace genfit {
 
-class MaterialProperties : public TObject {
+  class MaterialProperties {
 
  public:
 
@@ -74,6 +74,32 @@ class MaterialProperties : public TObject {
   double mEE_; // mean excitation energy [eV]
 
 };
+
+
+inline MaterialProperties::MaterialProperties() :
+  density_(0),
+  Z_(0),
+  A_(0),
+  radiationLength_(0),
+  mEE_(0)
+{
+  ;
+}
+
+inline MaterialProperties::MaterialProperties(const double& density,
+                   const double& Z,
+                   const double& A,
+                   const double& radiationLength,
+                   const double& mEE,
+                   const double& segmentLength) :
+  density_(density),
+  Z_(Z),
+  A_(A),
+  radiationLength_(radiationLength),
+  mEE_(mEE)
+{
+  ;
+}
 
 } /* End of namespace genfit */
 /** @} */
