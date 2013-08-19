@@ -119,7 +119,7 @@ int randomSign() {
 //---------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------
 
-#define VALGRIND
+//#define VALGRIND
 
 #ifdef VALGRIND
   #include <valgrind/callgrind.h>
@@ -134,7 +134,7 @@ int main() {
   gRandom->SetSeed(14);
 
 
-  const unsigned int nEvents = 10;
+  const unsigned int nEvents = 1000;
   const double BField = 15.;       // kGauss
   const double momentum = 0.4;     // GeV
   const double theta = 120;         // degree
