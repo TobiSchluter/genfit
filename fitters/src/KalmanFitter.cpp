@@ -92,12 +92,10 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHi
   }
 
   currentState_.reset(new MeasuredStateOnPlane(rep));
-  TVectorD seed(tr->getStateSeed());
-  TMatrixDSym cov(6);
-  rep->setPosMomCov(*currentState_, seed, cov);
-
-  currentState_->getCov().UnitMatrix();
-  //currentState_->getCov() *= blowUpFactor_; // FIXME find good start values
+  rep->setPosMomCov(*currentState_, tr->getStateSeed(), tr->getCovSeed());
+  // Only after we have linearly propagated the error into the TrackRep can we
+  // blow up the error in good faith.
+  currentState_->blowUpCov(blowUpFactor_);
 
 #ifdef DEBUG
   double oldChi2FW = 1e6;
