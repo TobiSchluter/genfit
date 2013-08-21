@@ -830,11 +830,20 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
     }
     else {
       if (debug)
-	std::cout << "  Use reference state and unit cov as start \n";
+	std::cout << "  Use reference state and seed cov as start \n";
+      const AbsTrackRep *rep = fi->getReferenceState()->getRep();
       p = fi->getReferenceState()->getState();
-      // FIXME: Starting value for the covariance matrix.
-      C.UnitMatrix();
-      fi->setPrediction(new MeasuredStateOnPlane(p, C, fi->getReferenceState()->getPlane(), fi->getReferenceState()->getRep(), fi->getReferenceState()->getAuxInfo()), direction);
+
+      // Convert from 6D covariance of the seed to whatever the trackRep wants.
+      TMatrixDSym dummy(p.GetNrows());
+      MeasuredStateOnPlane mop(p, dummy, fi->getReferenceState()->getPlane(), rep, fi->getReferenceState()->getAuxInfo());
+      TVector3 pos, mom;
+      rep->getPosMom(mop, pos, mom);
+      rep->setPosMomCov(mop, pos, mom, fi->getTrackPoint()->getTrack()->getCovSeed());
+      // Blow up, set.
+      mop.blowUpCov(blowUpFactor_);
+      fi->setPrediction(new MeasuredStateOnPlane(mop), direction);
+      C = mop.getCov();
     }
     if (debugMath) {
       std::cout << "\033[31m";

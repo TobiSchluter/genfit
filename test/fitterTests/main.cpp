@@ -160,8 +160,8 @@ int main() {
 
   const int splitTrack = 4; // for track merging testing:
 
-  const genfit::eFitterType fitterId = genfit::SimpleKalman;
-  //const genfit::eFitterType fitterId = genfit::RefKalman;
+  //const genfit::eFitterType fitterId = genfit::SimpleKalman;
+  const genfit::eFitterType fitterId = genfit::RefKalman;
   //const genfit::eFitterType fitterId = genfit::DafRef;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
