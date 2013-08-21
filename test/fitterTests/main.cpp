@@ -135,6 +135,7 @@ int main() {
 
 
   const unsigned int nEvents = 1000;
+  const unsigned int nMeasurements = 11;
   const double BField = 15.;       // kGauss
   const double momentum = 0.4;     // GeV
   const double theta = 120;         // degree
@@ -152,16 +153,16 @@ int main() {
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
-  const double outlierProb = 0.1;
+  const double outlierProb = 0;//0.1;
   const double outlierRange = 2;
 
-  const double hitSwitchProb = 0.1; // probability to give hits to fit in wrong order (flip two hits)
+  const double hitSwitchProb = 0;//0.1; // probability to give hits to fit in wrong order (flip two hits)
 
   const int splitTrack = 4; // for track merging testing:
 
-  //const genfit::eFitterType fitterId = genfit::SimpleKalman;
+  const genfit::eFitterType fitterId = genfit::SimpleKalman;
   //const genfit::eFitterType fitterId = genfit::RefKalman;
-  const genfit::eFitterType fitterId = genfit::DafRef;
+  //const genfit::eFitterType fitterId = genfit::DafRef;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
   const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
@@ -195,7 +196,7 @@ int main() {
   measurementTypes.push_back(genfit::StripU);
   measurementTypes.push_back(genfit::Wire);
   measurementTypes.push_back(genfit::WirePoint);*/
-  for (int i = 0; i < 11; ++i)
+  for (int i = 0; i < nMeasurements; ++i)
     measurementTypes.push_back(genfit::eMeasurementType(gRandom->Uniform(7)));
 
 
@@ -277,10 +278,9 @@ int main() {
   gStyle->SetPalette(1);
   gStyle->SetOptFit(1111);
 
-  double s = measurementTypes.size();
-  TH1D *hmomRes = new TH1D("hmomRes","mom res",500,-2*resolution*momentum/s,2*resolution*momentum/s);
-  TH1D *hupRes = new TH1D("hupRes","u' res",500,-5*resolution/s, 5*resolution/s);
-  TH1D *hvpRes = new TH1D("hvpRes","v' res",500,-5*resolution/s, 5*resolution/s);
+  TH1D *hmomRes = new TH1D("hmomRes","mom res",500,-10*resolution*momentum/nMeasurements,10*resolution*momentum/nMeasurements);
+  TH1D *hupRes = new TH1D("hupRes","u' res",500,-5*resolution/nMeasurements, 5*resolution/nMeasurements);
+  TH1D *hvpRes = new TH1D("hvpRes","v' res",500,-5*resolution/nMeasurements, 5*resolution/nMeasurements);
   TH1D *huRes = new TH1D("huRes","u res",500,-5*resolution, 5*resolution);
   TH1D *hvRes = new TH1D("hvRes","v res",500,-5*resolution, 5*resolution);
 
@@ -333,6 +333,11 @@ int main() {
       //mom.SetTheta(gRandom->Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
       mom.SetTheta(theta*TMath::Pi()/180);
       mom.SetMag(momentum);
+      TMatrixDSym covM(6);
+      for (int i = 0; i < 3; ++i)
+	covM(i,i) = resolution*resolution;
+      for (int i = 3; i < 6; ++i)
+	covM(i,i) = pow(resolution / nMeasurements / sqrt(3), 2);
 
       if (debug) {
         std::cout << "start values \n";
@@ -367,12 +372,12 @@ int main() {
       if (chargeSwitchProb > gRandom->Uniform(1.))
         sign = -1.;
       genfit::AbsTrackRep* secondRep = new genfit::RKTrackRep(sign*-211);
-      genfit::StateOnPlane stateRef(rep);
-      rep->setPosMom(stateRef, pos, mom);
+      genfit::MeasuredStateOnPlane stateRef(rep);
+      rep->setPosMomCov(stateRef, pos, mom, covM);
 
       // smeared start state
-      genfit::StateOnPlane stateSmeared(rep);
-      rep->setPosMom(stateSmeared, posM, momM);
+      genfit::MeasuredStateOnPlane stateSmeared(rep);
+      rep->setPosMomCov(stateSmeared, posM, momM, covM);
 
       //rep->setPropDir(1);
 
@@ -414,8 +419,11 @@ int main() {
 
 
       // create track
-      fitTrack = new genfit::Track(rep, rep->get6DState(stateSmeared)); //initialized with smeared rep
-      secondTrack = new genfit::Track(rep->clone(), rep->get6DState(stateSmeared)); //initialized with smeared rep
+      TVectorD seedState(6);
+      TMatrixDSym seedCov(6);
+      rep->get6DStateCov(stateSmeared, seedState, seedCov);
+      fitTrack = new genfit::Track(rep, seedState, seedCov); //initialized with smeared rep
+      secondTrack = new genfit::Track(rep->clone(), seedState, seedCov); //initialized with smeared rep
       if (twoReps) {
         fitTrack->addTrackRep(secondRep);
         secondTrack->addTrackRep(secondRep->clone());
