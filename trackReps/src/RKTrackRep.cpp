@@ -36,6 +36,10 @@
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
 //#define DEBUG
 
+namespace {
+  // Use fast inversion instead of LU decomposition?
+  const bool useInvertFast = false;
+}
 
 namespace genfit {
 
@@ -567,13 +571,22 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 
   jacobian.ResizeTo(5,5);
   jacobian.SetMatrixArray(ExtrapSteps_.front().jac_);
-
-  TDecompLU invertAlgo(jacobian);
-  bool status = invertAlgo.Invert(jacobian);
-  if(status == 0){
-    Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
-    e.setFatal();
-    throw e;
+  if (!useInvertFast) {
+    TDecompLU invertAlgo(jacobian);
+    bool status = invertAlgo.Invert(jacobian);
+    if(status == 0){
+      Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
+      e.setFatal();
+      throw e;
+    }
+  } else {
+    double det;
+    jacobian.InvertFast(&det);
+    if(det < 1e-80){
+      Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
+      e.setFatal();
+      throw e;
+    }
   }
 
   noise.ResizeTo(5,5);
@@ -586,12 +599,22 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 #endif*/
   for (unsigned int i=1; i!=ExtrapSteps_.size(); ++i) {
     TMatrixD nextJac(5,5, ExtrapSteps_[i].jac_);
-    TDecompLU invertAlgo2(nextJac);
-    status = invertAlgo2.Invert(nextJac);
-    if(status == 0){
-      Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
-      e.setFatal();
-      throw e;
+    if (!useInvertFast) {
+      TDecompLU invertAlgo2(nextJac);
+      bool status = invertAlgo2.Invert(nextJac);
+      if(status == 0){
+        Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
+	e.setFatal();
+	throw e;
+      }
+    } else {
+      double det;
+      nextJac.InvertFast(&det);
+      if(det < 1e-80){
+        Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
+        e.setFatal();
+	throw e;
+      }
     }
 
 /*#ifdef DEBUG
@@ -1748,8 +1771,9 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
   // call stepper and reduce stepsize if step not too small
   RKSteps_.push_back( RKStep() );
+  std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
   //!invalid:  RKSteps_.back().state7_ = { state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] };
-  for(int n = 0; n < 1*7; ++n) RKSteps_.back().state7_[n] = state7[n];
+  for(int n = 0; n < 1*7; ++n) lastStep->state7_[n] = state7[n];
   ++RKStepsFXStop_;
   if (/*!fNoMaterial*/ true){
 
@@ -1761,13 +1785,13 @@ double RKTrackRep::estimateStep(const M1x7& state7,
                                               charge/state7[6], // |p|
                                               relMomLoss,
                                               pdgCode_,
-                                              RKSteps_.back().materialProperties_,
+                                              lastStep->materialProperties_,
                                               limits,
                                               true);
     }
     else { //assume material has not changed
       if  (RKSteps_.size()>1) {
-        RKSteps_.back().materialProperties_ = (RKSteps_.end()-2)->materialProperties_;
+        lastStep->materialProperties_ = (lastStep - 1)->materialProperties_;
       }
     }
   }
@@ -1779,8 +1803,8 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
   double finalStep = limits.getLowestLimitSignedVal();
 
-  RKSteps_.back().stepSize_ = finalStep;
-  RKSteps_.back().limits_ = limits;
+  lastStep->stepSize_ = finalStep;
+  lastStep->limits_ = limits;
 
   #ifdef DEBUG
     std::cout << "  --> Step to be used: " << finalStep << "\n";
