@@ -34,7 +34,7 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
  public:
   KalmanFitterRefTrack(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
     : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), refitAll_(false), deltaChi2Ref_(1) {}
-  ~KalmanFitterRefTrack() {cleanSOPsToDestruct();}
+  ~KalmanFitterRefTrack() {}
 
   /**
    * Needs a prepared track! Return last TrackPoint that has been processed.
@@ -73,12 +73,8 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
    */
   void removeForwardBackwardInfo(Track* tr, const AbsTrackRep* rep, int notChangedUntil, int notChangedFrom) const;
 
-  void cleanSOPsToDestruct();
-
   bool refitAll_; // always refit all points or only if reference states have changed
   double deltaChi2Ref_; // reference track update cut
-
-  std::vector<const StateOnPlane*> SOPsToDestruct_; //! ownership, "garbage collector" helper
 
  public:
   ClassDef(KalmanFitterRefTrack, 1)
