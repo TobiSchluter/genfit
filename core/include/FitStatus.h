@@ -24,12 +24,12 @@
 #ifndef genfit_FitStatus_h
 #define genfit_FitStatus_h
 
-#include <TObject.h>
 #include <iostream>
+#include <Rtypes.h>
 
 namespace genfit {
 
-class FitStatus : public TObject {
+class FitStatus {
 
  public:
 
