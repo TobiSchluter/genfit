@@ -38,6 +38,7 @@ class Track : public TObject {
   Track();
   Track(const TrackCand& trackCand);
   Track(AbsTrackRep* trackRep, const TVectorD& stateSeed);
+  Track(AbsTrackRep* trackRep, const TVectorD& stateSeed, const TMatrixDSym& covSeed);
 
   Track(const Track&); // copy constructor
 
@@ -75,6 +76,9 @@ class Track : public TObject {
 
   const TVectorD& getStateSeed() const {return stateSeed_;}
   void setStateSeed(const TVectorD& s) {stateSeed_.ResizeTo(s); stateSeed_ = s;}
+
+  const TMatrixDSym& getCovSeed() const {return covSeed_;}
+  void setCovSeed(const TMatrixDSym& c) {covSeed_.ResizeTo(c); covSeed_ = c;}
 
   /** Insert TrackPoint BEFORE TrackPoint with position id, if id >= 0.
    * Id -1 means after last TrackPoint. Id -2 means before last TrackPoint. ...
@@ -141,6 +145,7 @@ class Track : public TObject {
   std::map< const AbsTrackRep*, FitStatus* > fitStatuses_; // Ownership over FitStatus*
 
   TVectorD stateSeed_; // 6D: position, momentum
+  TMatrixDSym covSeed_; // 6D
 
   ClassDef(Track,1)
 

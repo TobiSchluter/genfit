@@ -37,7 +37,7 @@
 namespace genfit {
 
 Track::Track() :
-  cardinalRep_(0), fitStatuses_(), stateSeed_(6)
+  cardinalRep_(0), fitStatuses_(), stateSeed_(6), covSeed_(6)
 {
   ;
 }
@@ -51,14 +51,21 @@ Track::Track(const TrackCand& trackCand) :
 }
 
 Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
-  cardinalRep_(0), fitStatuses_(), stateSeed_(stateSeed)
+  cardinalRep_(0), fitStatuses_(), stateSeed_(stateSeed),
+  covSeed_(TMatrixDSym::kUnit, TMatrixDSym(6))
+{
+  addTrackRep(trackRep);
+}
+
+Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed, const TMatrixDSym& covSeed) :
+  cardinalRep_(0), fitStatuses_(), stateSeed_(stateSeed), covSeed_(covSeed)
 {
   addTrackRep(trackRep);
 }
 
 
 Track::Track(const Track& rhs)
-  : cardinalRep_(rhs.cardinalRep_), stateSeed_(rhs.stateSeed_)
+  : cardinalRep_(rhs.cardinalRep_), stateSeed_(rhs.stateSeed_), covSeed_(rhs.covSeed_)
 {
   assert(rhs.checkConsistency());
 
@@ -134,6 +141,9 @@ void Track::Clear(Option_t*)
 
   for (size_t i = 0; i < trackReps_.size(); ++i)
     delete trackReps_[i];
+
+  stateSeed_ *= 0;
+  covSeed_ *= 0;
 }
 
 
@@ -968,6 +978,11 @@ bool Track::checkConsistency() const {
     return false;
   }
 
+  if (covSeed_.GetNrows() != 6) {
+    std::cerr << "Track::checkConsistency(): covSeed_ dimension != 6" << std::endl;
+    return false;
+  }
+
   // check if cardinalRep_ is in range of trackReps_
   if (trackReps_.size() && cardinalRep_ >= trackReps_.size()) {
     std::cerr << "Track::checkConsistency(): cardinalRep id " << cardinalRep_ << " out of bounds" << std::endl;
@@ -1190,6 +1205,7 @@ void Track::Streamer(TBuffer &R__b)
         }
       }
       stateSeed_.Streamer(R__b);
+      covSeed_.Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
 
       fillPointsWithMeasurement();
@@ -1244,6 +1260,7 @@ void Track::Streamer(TBuffer &R__b)
         }
       }
       stateSeed_.Streamer(R__b);
+      covSeed_.Streamer(R__b);
       R__b.SetByteCount(R__c, kTRUE);
    }
 }
