@@ -29,6 +29,7 @@
 #ifndef genfit_AbsFinitePlane_h
 #define genfit_AbsFinitePlane_h
 
+#include <Rtypes.h> // for Option_t
 
 namespace genfit {
 
