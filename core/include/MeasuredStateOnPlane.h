@@ -43,6 +43,7 @@ class MeasuredStateOnPlane : public StateOnPlane {
   MeasuredStateOnPlane(const AbsTrackRep* rep = NULL);
   MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep);
   MeasuredStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
+  MeasuredStateOnPlane(const MeasuredStateOnPlane& o);
   MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov);
 
   MeasuredStateOnPlane& operator= (const MeasuredStateOnPlane& other);
@@ -94,6 +95,11 @@ inline MeasuredStateOnPlane::MeasuredStateOnPlane(const TVectorD& state, const T
   //assert(cov_.GetNcols() == (signed)rep->getDim());
 }
 
+inline MeasuredStateOnPlane::MeasuredStateOnPlane(const MeasuredStateOnPlane& o) :
+  StateOnPlane(o), cov_(o.cov_)
+{
+}
+
 inline MeasuredStateOnPlane::MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov) :
   StateOnPlane(state), cov_(cov)
 {
@@ -101,6 +107,9 @@ inline MeasuredStateOnPlane::MeasuredStateOnPlane(const StateOnPlane& state, con
 }
 
 inline MeasuredStateOnPlane& MeasuredStateOnPlane::operator= (const MeasuredStateOnPlane& other) {
+  if (this == &other)
+    return *this;
+
   StateOnPlane::operator=(other);
 
   cov_.ResizeTo(other.cov_);
