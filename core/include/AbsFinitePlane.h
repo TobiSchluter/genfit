@@ -30,12 +30,9 @@
 #define genfit_AbsFinitePlane_h
 
 
-#include <TObject.h>
-
-
 namespace genfit {
 
-class AbsFinitePlane : public TObject {
+class AbsFinitePlane {
 
  public:
 
@@ -49,15 +46,14 @@ class AbsFinitePlane : public TObject {
   //! Deep copy ctor for polymorphic class.
   virtual AbsFinitePlane* clone() const = 0;
 
+  virtual void Print(const Option_t* = "") const = 0;
+
 
  protected:
 
   // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
-  AbsFinitePlane(const AbsFinitePlane& o) : TObject(o) {;}
+  AbsFinitePlane(const AbsFinitePlane& o) {;}
   AbsFinitePlane& operator=(const AbsFinitePlane&);
-
-
-  ClassDef(AbsFinitePlane,1)
 };
 
 } /* End of namespace genfit */
