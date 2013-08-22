@@ -34,7 +34,7 @@ class FitStatus {
  public:
 
   FitStatus() :
-    isFitted_(false), isFitConverged_(false), trackHasChanged_(false), trackIsPruned_(false), charge_(0), chi2_(1e99), ndf_(-1e99)
+    isFitted_(false), isFitConverged_(false), trackHasChanged_(false), trackIsPruned_(false), charge_(0), chi2_(-1e99), ndf_(-1e99)
   {;}
 
   virtual ~FitStatus() {};
