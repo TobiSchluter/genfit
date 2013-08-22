@@ -52,21 +52,7 @@ class FitStatus {
   void setIsTrackPruned(bool pruned = true) {trackIsPruned_ = pruned;}
   void setCharge(double charge) {charge_ = charge;}
 
-  void Print(const Option_t* = "") const {
-    std::cout << "fitStatus \n";
-    if (isFitted_) {
-      std::cout << " track has been fitted,";
-      if (isFitConverged_)
-        std::cout << " fit has converged,";
-      else
-        std::cout << " fit has NOT converged,";
-      if (trackHasChanged_) std::cout << " track has changed since the fit,";
-      if (trackIsPruned_) std::cout << " track is pruned,";
-      std::cout << " fitted charge = " << charge_ << " \n";
-    }
-    else
-      std::cout << " track has NOT been fitted,";
-  }
+  void Print(const Option_t* = "") const;
 
  protected:
 
