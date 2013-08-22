@@ -35,7 +35,7 @@ class KalmanFitStatus : public FitStatus {
 
   KalmanFitStatus() :
     FitStatus(), numIterations_(0), fittedWithDaf_(false), fittedWithReferenceTrack_(false),
-    trackLen_(0), fChi2_(0), bChi2_(0), fNdf_(0), bNdf_(0) {;}
+    trackLen_(0), fChi2_(-1e99), fNdf_(-1e99) {;}
 
   virtual ~KalmanFitStatus() {};
 
@@ -45,21 +45,22 @@ class KalmanFitStatus : public FitStatus {
   bool isFittedWithDaf() const {return fittedWithDaf_;}
   bool isFittedWithReferenceTrack() const {return fittedWithReferenceTrack_;}
   double getTrackLen() const {return trackLen_;}
-  double getForwardChiSqu() const {return fChi2_;}
-  double getBackwardChiSqu() const {return bChi2_;}
+  double getForwardChi2() const {return fChi2_;}
+  double getBackwardChi2() const {return FitStatus::getChi2();}
   double getForwardNdf() const {return fNdf_;}
-  double getBackwardNdf() const {return bNdf_;}
-  double getForwardPVal() const {return ROOT::Math::chisquared_cdf_c(fChi2_, fNdf_);}
-  double getBackwardPVal() const {return ROOT::Math::chisquared_cdf_c(bChi2_, bNdf_);}
+  double getBackwardNdf() const {return FitStatus::getNdf();}
+  // virtual double getPVal() : not overridden, as it does the right thing.
+  double getForwardPVal() const {return ROOT::Math::chisquared_cdf_c(FitStatus::getChi2(), FitStatus::getNdf());}
+  double getBackwardPVal() const {return FitStatus::getPVal(); }
 
   void setNumIterations(unsigned int numIterations) {numIterations_ = numIterations;}
   void setIsFittedWithDaf(bool fittedWithDaf = true) {fittedWithDaf_ = fittedWithDaf;}
   void setIsFittedWithReferenceTrack(bool fittedWithReferenceTrack = true) {fittedWithReferenceTrack_ = fittedWithReferenceTrack;}
   void setTrackLen(double trackLen) {trackLen_ = trackLen;}
-  void setForwardChiSqu(double fChi2) {fChi2_ = fChi2;}
-  void setBackwardChiSqu(double bChi2) {bChi2_ = bChi2;}
+  void setForwardChi2(double fChi2) {fChi2_ = fChi2;}
+  void setBackwardChi2(double bChi2) {FitStatus::setChi2(bChi2);}
   void setForwardNdf(double fNdf) {fNdf_ = fNdf;}
-  void setBackwardNdf(double bNdf) {bNdf_ = bNdf;}
+  void setBackwardNdf(double bNdf) {FitStatus::setNdf(bNdf);}
 
   void Print(const Option_t* = "") const {
     FitStatus::Print();
@@ -69,9 +70,9 @@ class KalmanFitStatus : public FitStatus {
       std::cout << " numIterations = " << numIterations_ << ", ";
       std::cout << "track length = " << trackLen_ << ", ";
       std::cout << "fChi2 = " << fChi2_ << ", ";
-      std::cout << "bChi2 = " << bChi2_ << ", ";
+      std::cout << "bChi2 = " << FitStatus::getChi2() << ", ";
       std::cout << "fNdf = " << fNdf_ << ", ";
-      std::cout << "bNdf = " << bNdf_ << ", ";
+      std::cout << "bNdf = " << FitStatus::getNdf() << ", ";
       std::cout << "fPVal = " << getForwardPVal() << ", ";
       std::cout << "bPVal = " << getBackwardPVal() << "\n";
     }
@@ -87,11 +88,8 @@ class KalmanFitStatus : public FitStatus {
   double trackLen_;
 
   double fChi2_; // chi^2 of the forward fit
-  double bChi2_; // chi^2 of the backward fit
   double fNdf_; // degrees of freedom of the forward fit
-  double bNdf_; // degrees of freedom of the backward fit
-
-  ClassDef(KalmanFitStatus, 1)
+  double fPval_; // p-value of the forward fit, set whenever either of chi2 or ndf changes
 };
 
 } /* End of namespace genfit */

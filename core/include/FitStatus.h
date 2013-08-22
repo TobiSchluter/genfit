@@ -24,8 +24,8 @@
 #ifndef genfit_FitStatus_h
 #define genfit_FitStatus_h
 
-#include <iostream>
 #include <Rtypes.h>
+#include <Math/ProbFuncMathCore.h>
 
 namespace genfit {
 
@@ -34,7 +34,8 @@ class FitStatus {
  public:
 
   FitStatus() :
-    isFitted_(false), isFitConverged_(false), trackHasChanged_(false), trackIsPruned_(false), charge_(0) {;}
+    isFitted_(false), isFitConverged_(false), trackHasChanged_(false), trackIsPruned_(false), charge_(0), chi2_(1e99), ndf_(-1e99)
+  {;}
 
   virtual ~FitStatus() {};
 
@@ -46,11 +47,19 @@ class FitStatus {
   bool isTrackPruned() const {return trackIsPruned_;}
   double getCharge() const {return charge_;}
 
+  double getChi2() const {return chi2_;}
+  double getNdf() const {return ndf_;}
+  // Virtual, because the fitter may use a different probability distribution.
+  virtual double getPVal() const {return ROOT::Math::chisquared_cdf_c(chi2_, ndf_);}
+
   void setIsFitted(bool fitted = true) {isFitted_ = fitted;}
   void setIsFitConverged(bool fitConverged = true) {isFitConverged_ = fitConverged;}
   void setHasTrackChanged(bool trackChanged = true) {trackHasChanged_ = trackChanged;}
   void setIsTrackPruned(bool pruned = true) {trackIsPruned_ = pruned;}
   void setCharge(double charge) {charge_ = charge;}
+
+  void setChi2(const double& chi2) {chi2_ = chi2;}
+  void setNdf(const double& ndf) {ndf_ = ndf;}
 
   void Print(const Option_t* = "") const;
 
@@ -62,8 +71,10 @@ class FitStatus {
   bool trackIsPruned_; // Information has been stripped off, no refitting possible!
   double charge_; // fitted charge
 
-  ClassDef(FitStatus,1);
-
+  // These are provided for the sake of the fitter, and their interpretation may vary.
+  // For the Kalman-derived fitters in particular, this corresponds to the backwards fit.
+  double chi2_;
+  double ndf_;
 };
 
 } /* End of namespace genfit */

@@ -135,8 +135,8 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
         status->setHasTrackChanged(false);
         status->setCharge(rep->getCharge(*static_cast<KalmanFitterInfo*>(tr->getPointWithMeasurement(0)->getFitterInfo(rep))->getBackwardUpdate()));
         status->setNumIterations(nIt);
-        status->setForwardChiSqu(chi2FW);
-        status->setBackwardChiSqu(chi2BW);
+        status->setForwardChi2(chi2FW);
+        status->setBackwardChi2(chi2BW);
         status->setForwardNdf(std::max(0., ndfFW));
         status->setBackwardNdf(std::max(0., ndfBW));
 	if (debug)
@@ -277,8 +277,8 @@ void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool 
 
   status->setHasTrackChanged(false);
   status->setNumIterations(nIt);
-  status->setForwardChiSqu(chi2FW);
-  status->setBackwardChiSqu(chi2BW);
+  status->setForwardChi2(chi2FW);
+  status->setBackwardChi2(chi2BW);
   status->setForwardNdf(ndfFW);
   status->setBackwardNdf(ndfBW);
 

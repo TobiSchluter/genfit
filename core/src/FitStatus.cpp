@@ -1,5 +1,5 @@
-/* Copyright 2008-2010, Technische Universitaet Muenchen,
-   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
+/* Copyright 2013, Technische Universitaet Muenchen, Ludwig-Maximilians-Universität München
+   Authors: Johannes Rauch & Tobias Schlüter
 
    This file is part of GENFIT.
 
@@ -19,6 +19,8 @@
 
 
 #include "FitStatus.h"
+
+#include <iostream>
 
 namespace genfit {
 
