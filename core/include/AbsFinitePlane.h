@@ -53,7 +53,7 @@ class AbsFinitePlane {
  protected:
 
   // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
-  AbsFinitePlane(const AbsFinitePlane& o) {;}
+  AbsFinitePlane(const AbsFinitePlane&) {;}
   AbsFinitePlane& operator=(const AbsFinitePlane&);
 };
 
