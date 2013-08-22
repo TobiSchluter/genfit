@@ -45,6 +45,28 @@ class AbsTrackRep : public TObject {
       const TVector3& lineDirection,
       bool stopAtBoundary = false) const = 0;
 
+  // This interface to extrapolateToLine is intended to resemble the
+  // interface of GFAbsTrackRep in old versions of genfit and is
+  // implemented by default via the preceding function.
+  virtual double extrapolateToLine(StateOnPlane& state,
+      const TVector3& point1,
+      const TVector3& point2,
+      TVector3& poca,
+      TVector3& dirInPoca,
+      TVector3& poca_onwire,
+      bool stopAtBoundary = false) const {
+    TVector3 wireDir(point2 - point1);
+    wireDir.Unit();
+    double retval = this->extrapolateToLine(state, point1, wireDir, stopAtBoundary);
+    poca = this->getPos(state);
+    dirInPoca = this->getMom(state);
+    dirInPoca.Unit();
+
+    poca_onwire = point1 + wireDir*((poca - point1)*wireDir);
+    
+    return retval;
+  }
+
   virtual double extrapolateToPoint(StateOnPlane& state,
       const TVector3& point,
       bool stopAtBoundary = false) const = 0;
