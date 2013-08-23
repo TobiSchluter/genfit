@@ -80,10 +80,10 @@ MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, 
   tools::invertMatrix(forwardState.getCov(), fCovInv);
   tools::invertMatrix(backwardState.getCov(), bCovInv);
 
-  tools::invertMatrix(fCovInv + bCovInv, smoothed_cov);
+  tools::invertMatrix(fCovInv + bCovInv, smoothed_cov);  // one temporary TMatrixDSym
 
   MeasuredStateOnPlane retVal(forwardState);
-  retVal.setState(smoothed_cov*(fCovInv*forwardState.getState() + bCovInv*backwardState.getState()));
+  retVal.setState(smoothed_cov*(fCovInv*forwardState.getState() + bCovInv*backwardState.getState())); // four temporary TVectorD's
   retVal.setCov(smoothed_cov);
   return retVal;
 #endif
@@ -105,7 +105,7 @@ MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, 
   sop.getState() *= fCovInv;
   fCovInv += bCovInv;
   tools::invertMatrix(fCovInv);  // This is now the covariance of the average.
-  sop.getState() += bCovInv*backwardState.getState();  // temporary TVectorD
+  sop.getState() += bCovInv*backwardState.getState();  // one temporary TVectorD
   sop.getState() *= fCovInv;
 
   return MeasuredStateOnPlane(sop, fCovInv);
