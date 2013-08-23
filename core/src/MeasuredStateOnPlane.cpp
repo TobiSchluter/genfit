@@ -61,6 +61,7 @@ void MeasuredStateOnPlane::blowUpCov(double blowUpFac, bool resetOffDiagonals) {
 
 }
 
+
 MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, const MeasuredStateOnPlane& backwardState) {
   // check if both states are defined in the same plane
   if (forwardState.getPlane() != backwardState.getPlane()) {
@@ -68,17 +69,46 @@ MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, 
     throw e;
   }
 
+  // This code is called a lot, so some effort has gone into reducing
+  // the number of temporary objects being constructed.
+
+#if 0
+  // For ease of understanding, here's a version of the code that is a
+  // few percent slower, depending on the exact use-case, but which
+  // makes the math more explicit:
   TMatrixDSym fCovInv, bCovInv, smoothed_cov;
   tools::invertMatrix(forwardState.getCov(), fCovInv);
   tools::invertMatrix(backwardState.getCov(), bCovInv);
 
   tools::invertMatrix(fCovInv + bCovInv, smoothed_cov);
 
-  MeasuredStateOnPlane retVal(forwardState); // copies auxInfo
-  retVal.setState(smoothed_cov * (fCovInv*forwardState.getState() + bCovInv*backwardState.getState()));
+  MeasuredStateOnPlane retVal(fCovInv);
+  retVal.setState(smoothed_cov*(fCovInv*forwardState + bCovInv*backwardState.getState()));
   retVal.setCov(smoothed_cov);
-
   return retVal;
+#endif
+
+  static TMatrixDSym fCovInv, bCovInv;  // Static to avoid re-constructing for every call
+  tools::invertMatrix(forwardState.getCov(), fCovInv);
+  tools::invertMatrix(backwardState.getCov(), bCovInv);
+
+  // Using a StateOnPlane here turned out at least as fast as
+  // constructing a MeasuredStateOnPlane here, and then resetting its
+  // covariance matrix below, even though it means another copy in the
+  // return statement.
+  StateOnPlane sop(forwardState); // copies auxInfo, plane, rep in the process
+                                  // Using 'static' + subsequent assignment is measurably slower.
+                                  // Surprisingly, using only TVectorD
+                                  // sop(forwardState.getState()) with according
+                                  // changes below measured slower.
+
+  sop.getState() *= fCovInv;
+  fCovInv += bCovInv;
+  tools::invertMatrix(fCovInv);  // This is now the covariance of the average.
+  sop.getState() += bCovInv*backwardState.getState();  // temporary TVectorD
+  sop.getState() *= fCovInv;
+
+  return MeasuredStateOnPlane(sop, fCovInv);
 }
 
 
