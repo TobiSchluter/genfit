@@ -82,8 +82,8 @@ MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, 
 
   tools::invertMatrix(fCovInv + bCovInv, smoothed_cov);
 
-  MeasuredStateOnPlane retVal(fCovInv);
-  retVal.setState(smoothed_cov*(fCovInv*forwardState + bCovInv*backwardState.getState()));
+  MeasuredStateOnPlane retVal(forwardState);
+  retVal.setState(smoothed_cov*(fCovInv*forwardState.getState() + bCovInv*backwardState.getState()));
   retVal.setCov(smoothed_cov);
   return retVal;
 #endif
