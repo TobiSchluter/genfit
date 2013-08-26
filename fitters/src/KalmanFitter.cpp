@@ -258,7 +258,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   tools::invertMatrix(covSumInv);
 
   TMatrixD CHt(cov, TMatrixD::kMultTranspose, H);
-  TVectorD update = TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res;
+  TVectorD update(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
 
 #ifdef DEBUG
   //std::cout << "STATUS:" << std::endl;
