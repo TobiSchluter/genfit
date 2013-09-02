@@ -250,11 +250,10 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   // If hit, do Kalman algebra.
 
   // calculate kalman gain ------------------------------
-  // calculate covsum (V + HCH^T)
-  TMatrixDSym HcovHt(cov);
-  HcovHt.Similarity(H);
-
-  TMatrixDSym covSumInv(V + HcovHt);
+  // calculate covsum (V + HCH^T) and invert
+  TMatrixDSym covSumInv(cov);
+  covSumInv.Similarity(H);
+  covSumInv += V;
   tools::invertMatrix(covSumInv);
 
   TMatrixD CHt(cov, TMatrixD::kMultTranspose, H);
