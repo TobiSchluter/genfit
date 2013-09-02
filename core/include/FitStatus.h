@@ -61,7 +61,7 @@ class FitStatus {
   void setChi2(const double& chi2) {chi2_ = chi2;}
   void setNdf(const double& ndf) {ndf_ = ndf;}
 
-  void Print(const Option_t* = "") const;
+  virtual void Print(const Option_t* = "") const;
 
  protected:
 

@@ -62,7 +62,7 @@ class KalmanFitStatus : public FitStatus {
   void setForwardNdf(double fNdf) {fNdf_ = fNdf;}
   void setBackwardNdf(double bNdf) {FitStatus::setNdf(bNdf);}
 
-  void Print(const Option_t* = "") const ;
+  virtual void Print(const Option_t* = "") const;
 
  protected:
 
