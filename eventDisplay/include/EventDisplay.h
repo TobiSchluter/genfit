@@ -200,6 +200,8 @@ class EventDisplay : public TNamed {
 
     TGCheckButton* guiRefit_;
     bool refit_;
+    TGNumberEntry* guiDebugLvl_;
+    unsigned int debugLvl_;
     TGButtonGroup* guiFitterId_;
     eFitterType fitterId_;
     TGButtonGroup* guiMmHandling_;

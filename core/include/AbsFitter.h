@@ -30,7 +30,7 @@ class AbsTrackRep;
 
 class AbsFitter {
  public:
-  AbsFitter() {}
+  AbsFitter() : debugLvl_(0) {}
   virtual ~AbsFitter() {}
 
   /**
@@ -42,6 +42,14 @@ class AbsFitter {
    * Process all reps. Start with the cardinalRep and resort the hits if necessary (and supported by the fitter)
    */
   virtual void processTrack(Track*, bool resortHits = true);
+
+  void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
+
+
+ protected:
+
+  unsigned int debugLvl_;
+
 };
 
 }  /* End of namespace genfit */

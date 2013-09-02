@@ -92,6 +92,7 @@ class DAF : public AbsKalmanFitter {
    */
   void setConvergenceDeltaWeight(double delta) {deltaWeight_ = delta;}
 
+  AbsKalmanFitter* getKalman() const {return kalman_.get();}
 
  private:
 
@@ -115,7 +116,7 @@ class DAF : public AbsKalmanFitter {
 #ifndef __CINT__
   boost::scoped_ptr<AbsKalmanFitter> kalman_;
 #else
-  AbsKalmanFitter *kalman_;
+  AbsKalmanFitter* kalman_;
 #endif
 
   ClassDef(DAF,1)

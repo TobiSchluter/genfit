@@ -80,6 +80,7 @@ EventDisplay::EventDisplay() :
   drawCardinalRep_(true),
   repId_(0),
   refit_(false),
+  debugLvl_(0),
   fitterId_(RefKalman),
   mmHandling_(unweightedClosestToPrediction),
   dPVal_(1.E-3),
@@ -275,26 +276,34 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
     boost::scoped_ptr<Track> refittedTrack(NULL);
     if (refit_) {
 
+      std::cout << "Refit track:" << std::endl;
+
       boost::scoped_ptr<AbsKalmanFitter> fitter;
       switch (fitterId_) {
         case SimpleKalman:
           fitter.reset(new KalmanFitter(nMaxIter_, dPVal_));
           fitter->setMultipleMeasurementHandling(mmHandling_);
+          fitter->setDebugLvl(debugLvl_);
           break;
 
         case RefKalman:
           fitter.reset(new KalmanFitterRefTrack(nMaxIter_, dPVal_));
           fitter->setMultipleMeasurementHandling(mmHandling_);
+          fitter->setDebugLvl(debugLvl_);
           break;
 
         case DafSimple:
           {
             genfit::AbsKalmanFitter* DafsKalman = new genfit::KalmanFitter();
+            DafsKalman->setDebugLvl(std::min(0, (int)debugLvl_-1));
             fitter.reset(new DAF(DafsKalman));
+            fitter->setDebugLvl(debugLvl_);
           }
           break;
         case DafRef:
           fitter.reset(new DAF());
+          (static_cast<DAF*>(fitter.get()))->getKalman()->setDebugLvl(std::min(0, (int)debugLvl_-1));
+          fitter->setDebugLvl(debugLvl_);
           break;
 
       }
@@ -762,22 +771,22 @@ void EventDisplay::makeLines(const StateOnPlane* prevState, const StateOnPlane* 
     distB *= -1.;
   TVector3 intermediate1 = oldPos + 0.3 * distA * oldDir;
   TVector3 intermediate2 = pos - 0.3 * distB * dir;
-  TEveStraightLineSet* ls = new TEveStraightLineSet;
-  ls->AddLine(oldPos(0), oldPos(1), oldPos(2), intermediate1(0), intermediate1(1), intermediate1(2));
-  ls->AddLine(intermediate1(0), intermediate1(1), intermediate1(2), intermediate2(0), intermediate2(1), intermediate2(2));
-  ls->AddLine(intermediate2(0), intermediate2(1), intermediate2(2), pos(0), pos(1), pos(2));
-  ls->SetLineColor(color);
-  ls->SetLineStyle(style);
-  ls->SetLineWidth(lineWidth);
+  TEveStraightLineSet* lineSet = new TEveStraightLineSet;
+  lineSet->AddLine(oldPos(0), oldPos(1), oldPos(2), intermediate1(0), intermediate1(1), intermediate1(2));
+  lineSet->AddLine(intermediate1(0), intermediate1(1), intermediate1(2), intermediate2(0), intermediate2(1), intermediate2(2));
+  lineSet->AddLine(intermediate2(0), intermediate2(1), intermediate2(2), pos(0), pos(1), pos(2));
+  lineSet->SetLineColor(color);
+  lineSet->SetLineStyle(style);
+  lineSet->SetLineWidth(lineWidth);
   if (drawMarkers) {
     if (markerPos == 0)
-      ls->AddMarker(oldPos(0), oldPos(1), oldPos(2));
+      lineSet->AddMarker(oldPos(0), oldPos(1), oldPos(2));
     else
-      ls->AddMarker(pos(0), pos(1), pos(2));
+      lineSet->AddMarker(pos(0), pos(1), pos(2));
   }
 
   if (lineWidth > 0)
-    gEve->AddElement(ls);
+    gEve->AddElement(lineSet);
 
 
   if (drawErrors) {
@@ -1134,6 +1143,18 @@ void EventDisplay::makeGui() {
   frmMain->AddFrame(hf);
 
   hf = new TGHorizontalFrame(frmMain); {
+    guiDebugLvl_ = new TGNumberEntry(hf, debugLvl_, 6,999, TGNumberFormat::kNESInteger,
+                          TGNumberFormat::kNEANonNegative,
+                          TGNumberFormat::kNELLimitMinMax,
+                          0, 999);
+    hf->AddFrame(guiDebugLvl_);
+    guiDebugLvl_->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+    lbl = new TGLabel(hf, "debug level");
+    hf->AddFrame(lbl);
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
     guiFitterId_ = new TGButtonGroup(hf,"Fitter type:");
     guiFitterId_->Connect("Clicked(Int_t)","genfit::EventDisplay", fh, "guiSelectFitterId(int)");
     hf->AddFrame(guiFitterId_, new TGLayoutHints(kLHintsTop));
@@ -1227,6 +1248,7 @@ void EventDisplay::guiSetDrawParams(){
 
 
   refit_ = guiRefit_->IsOn();
+  debugLvl_ = guiDebugLvl_->GetNumberEntry()->GetNumber();
   dPVal_ = guiDPVal_->GetNumberEntry()->GetNumber();
   nMaxIter_ = guiNMaxIter_->GetNumberEntry()->GetNumber();
   resort_ = guiResort_->IsOn();

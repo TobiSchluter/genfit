@@ -34,8 +34,6 @@
 #include <Math/QuantFuncMathCore.h>
 
 
-//#define DEBUG
-
 
 namespace genfit {
 
@@ -69,9 +67,9 @@ DAF::DAF(AbsKalmanFitter* kalman)
 
 void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
 
-#ifdef DEBUG
-  std::cout<<"DAF::processTrack //////////////////////////////////////////////////////////////// \n";
-#endif
+  if (debugLvl_ > 0) {
+    std::cout<<"DAF::processTrack //////////////////////////////////////////////////////////////// \n";
+  }
 
   weights_.clear();
   std::vector<std::vector<double> > oldWeights;
@@ -82,9 +80,9 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
   unsigned int iBeta = 0;
   for(; iBeta != maxIterations_; ++iBeta) { // loop over. If no convergence is reached after 10 iterations just stop.
 
-#ifdef DEBUG
+    if (debugLvl_ > 0) {
       std::cout<<"DAF::processTrack, trackRep  " << rep << ", iteration " << iBeta << ", beta = " << betas_.at(iBeta) << "\n";
-#endif
+    }
 
     kalman_->processTrack(tr, rep, resortHits);
 
@@ -95,26 +93,26 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
     // check break conditions
 
     if (! status->isFitted()){
-      #ifdef DEBUG
+      if (debugLvl_ > 0) {
       std::cout << "DAF::Kalman could not fit!\n";
-      #endif
+      }
       status->setIsFitted(false);
       break;
     }
 
     if( oneLastIter == true){
-      #ifdef DEBUG
+      if (debugLvl_ > 0) {
       std::cout << "DAF::break after one last iteration\n";
-      #endif
+      }
       status->setIsFitConverged();
       break;
     }
 
     if(iBeta == maxIterations_-1 ){
       status->setIsFitConverged(false);
-      #ifdef DEBUG
+      if (debugLvl_ > 0) {
       std::cout << "DAF::number of max iterations reached!\n";
-      #endif
+      }
       break;
     }
 
@@ -139,9 +137,9 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
     // check if converged
     if (iBeta > 0) {
       if ( isConvergent(oldWeights, rep) ){
-        #ifdef DEBUG
+        if (debugLvl_ > 0) {
         std::cout << "DAF::convergence reached in iteration " << iBeta << " -> Do one last iteration with updated weights.\n";
-        #endif
+        }
         oneLastIter = true;
         status->setIsFitConverged();
       }
@@ -149,9 +147,9 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
 
     // check if fit is failing utterly
     /*if (status->getForwardNdf() < 0. && betas_.at(iBeta) < 1.) {
-      #ifdef DEBUG
+      if (debugLvl_ > 0) {
       std::cout << "DAF:: NDF < 0; skip track! \n";
-      #endif
+      }
       status->setIsFitConverged(false);
       break;
     }*/
@@ -271,9 +269,9 @@ bool DAF::isConvergent(const std::vector<std::vector<double> >& oldWeights, cons
 
 void DAF::getWeights(const Track* tr, const AbsTrackRep* rep) {
 
-#ifdef DEBUG
+if (debugLvl_ > 0) {
   std::cout<<"DAF::getWeights \n";
-#endif
+}
 
   weights_.clear();
 
@@ -297,18 +295,18 @@ void DAF::getWeights(const Track* tr, const AbsTrackRep* rep) {
     weights_.push_back(weights);
   }
 
-#ifdef DEBUG
+if (debugLvl_ > 0) {
   printWeights(weights_);
-#endif
+}
 
 }
 
 
 std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
 
-#ifdef DEBUG
+if (debugLvl_ > 0) {
       std::cout<<"DAF::calcWeights \n";
-#endif
+}
 
   std::vector<std::vector<double> > ret_val;
 
@@ -334,24 +332,24 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
         const MeasurementOnPlane& residual = kfi->getResidual(j, true, true);
         const TVectorD& resid(residual.getState());
         TMatrixDSym Vinv(residual.getCov());
-	double detV;
+        double detV;
         tools::invertMatrix(Vinv, &detV); // can throw an Exception
-	int hitDim = resid.GetNrows();
-	// Needed for normalization, special cases for the two common cases,
-	// shouldn't matter, but the original code made some efforts to make
-	// this calculation faster, and it's not complex ...
-	double twoPiN = 2.*M_PI;
-	if (hitDim == 2)
-	  twoPiN *= twoPiN;
-	else if (hitDim > 2)
-	  twoPiN = pow(twoPiN, hitDim);
+        int hitDim = resid.GetNrows();
+        // Needed for normalization, special cases for the two common cases,
+        // shouldn't matter, but the original code made some efforts to make
+        // this calculation faster, and it's not complex ...
+        double twoPiN = 2.*M_PI;
+        if (hitDim == 2)
+          twoPiN *= twoPiN;
+        else if (hitDim > 2)
+          twoPiN = pow(twoPiN, hitDim);
 
         double chi2 = Vinv.Similarity(resid);
-#ifdef DEBUG
-        std::cout<<"chi2 = " << chi2 << "\n";
-#endif
+        if (debugLvl_ > 0) {
+          std::cout<<"chi2 = " << chi2 << "\n";
+        }
 
-	double norm = 1./sqrt(twoPiN * detV);
+        double norm = 1./sqrt(twoPiN * detV);
 
         phi[j] = norm*exp(-0.5*chi2/beta);
         phi_sum += phi[j];
@@ -377,9 +375,9 @@ std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep*
     ret_val.push_back(weights);
   }
 
-#ifdef DEBUG
-  printWeights(ret_val);
-#endif
+  if (debugLvl_ > 0) {
+    printWeights(ret_val);
+  }
 
   return ret_val;
 }
