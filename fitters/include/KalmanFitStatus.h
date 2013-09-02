@@ -62,22 +62,7 @@ class KalmanFitStatus : public FitStatus {
   void setForwardNdf(double fNdf) {fNdf_ = fNdf;}
   void setBackwardNdf(double bNdf) {FitStatus::setNdf(bNdf);}
 
-  void Print(const Option_t* = "") const {
-    FitStatus::Print();
-    if (fittedWithDaf_) std::cout << " track has been fitted with DAF,";
-    if (fittedWithReferenceTrack_) std::cout << " track has been fitted with reference track,";
-    if (isFitted_) {
-      std::cout << " numIterations = " << numIterations_ << ", ";
-      std::cout << "track length = " << trackLen_ << ", ";
-      std::cout << "fChi2 = " << fChi2_ << ", ";
-      std::cout << "bChi2 = " << FitStatus::getChi2() << ", ";
-      std::cout << "fNdf = " << fNdf_ << ", ";
-      std::cout << "bNdf = " << FitStatus::getNdf() << ", ";
-      std::cout << "fPVal = " << getForwardPVal() << ", ";
-      std::cout << "bPVal = " << getBackwardPVal() << "\n";
-    }
-    std::cout << "\n";
-  }
+  void Print(const Option_t* = "") const ;
 
  protected:
 
