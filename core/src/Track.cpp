@@ -750,19 +750,28 @@ double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
 }
 
 
-void Track::prune(const Option_t*) {
+void Track::prune(const Option_t* option) {
 
-  // Todo: make options
+  // TODO: test options
+
+  TString opt = option;
+  opt.ToUpper();
 
   for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it=fitStatuses_.begin(); it!=fitStatuses_.end(); ++it) {
     it->second->setIsTrackPruned();
   }
 
   // prune trackPoints
-  TrackPoint* firstPoint = getPointWithMeasurement(0);
-  TrackPoint* lastPoint = getPointWithMeasurement(-1);
-  for (unsigned int i = 0; i<trackPoints_.size(); ++i) {
-    if (trackPoints_[i] != firstPoint && trackPoints_[i] != lastPoint) {
+  if (opt.Contains("F") && opt.Contains("L")) {
+    TrackPoint* firstPoint = getPointWithMeasurement(0);
+    TrackPoint* lastPoint = getPointWithMeasurement(-1);
+    for (unsigned int i = 0; i<trackPoints_.size(); ++i) {
+      if (trackPoints_[i] == firstPoint && opt.Contains("F"))
+        continue;
+
+      if (trackPoints_[i] == lastPoint && opt.Contains("L"))
+        continue;
+
       delete trackPoints_[i];
       trackPoints_.erase(trackPoints_.begin()+i);
       --i;
@@ -770,10 +779,12 @@ void Track::prune(const Option_t*) {
   }
 
   // prune TrackReps
-  for (unsigned int i = 0; i < trackReps_.size(); ++i) {
-    if (i != cardinalRep_) {
-      deleteTrackRep(i);
-      --i;
+  if (opt.Contains("C")) {
+    for (unsigned int i = 0; i < trackReps_.size(); ++i) {
+      if (i != cardinalRep_) {
+        deleteTrackRep(i);
+        --i;
+      }
     }
   }
 
@@ -784,12 +795,15 @@ void Track::prune(const Option_t*) {
 
     std::vector< genfit::AbsFitterInfo* > fis =  trackPoints_[i]->getFitterInfos();
     for (unsigned int j = 0; j<fis.size(); ++j) {
-      if (i != 0)
+      if (i != 0 && opt.Contains("U") && opt.Contains("F"))
         fis[j]->deleteBackwardInfo();
-      if (i != fis.size())
+      if (i != fis.size() && opt.Contains("U") && opt.Contains("L"))
         fis[j]->deleteForwardInfo();
-      fis[j]->deleteReferenceInfo();
-      fis[j]->deleteMeasurementInfo();
+
+      if (opt.Contains("R"))
+        fis[j]->deleteReferenceInfo();
+      if (opt.Contains("M"))
+        fis[j]->deleteMeasurementInfo();
     }
   }
 

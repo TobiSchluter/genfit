@@ -122,7 +122,16 @@ class Track : public TObject {
   //! get time of flight in ns between to trackPoints
   double getTOF(AbsTrackRep* rep, int startId = 0, int endId = -1) const;
 
-  void prune(const Option_t* = "");
+  /**
+   * C:  prune all reps except cardinalRep
+   * F:  prune all points except first point
+   * L:  prune all points except last point
+   * FL: prune all points except first and last point
+   * R:  prune referenceInfo from fitterInfos
+   * M:  prune measurementInfo from fitterInfos
+   * U:  if F, L, or FL is set, prune forward (backward) info of first (last) point
+   */
+  void prune(const Option_t* = "CFLRMU");
 
   void Print(const Option_t* = "") const;
 
