@@ -766,7 +766,8 @@ bool checkExtrapolateToCylinder() {
   TVector3 radiusVec = rep->getPos(state) - pocaOnLine;
 
   // compare
-  if (fabs(lineDirection*radiusVec) > epsilonLen ||
+  if (fabs(state.getPlane()->getNormal()*radiusVec.Unit())-1 > epsilonLen ||
+      fabs(lineDirection*radiusVec) > epsilonLen ||
       fabs(radiusVec.Mag()-radius) > epsilonLen) {
 
       origState.Print();
@@ -784,6 +785,68 @@ bool checkExtrapolateToCylinder() {
 
 }
 
+
+bool checkExtrapolateToSphere() {
+
+  double epsilonLen = 1.E-4; // 1 mu
+  //double epsilonMom = 1.E-5; // 10 keV
+
+  int pdg = randomPdg();
+  genfit::AbsTrackRep* rep;
+  rep = new genfit::RKTrackRep(pdg);
+
+  //TVector3 pos(0,0,0);
+  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,0.);
+  mom *= randomSign();
+
+
+  genfit::StateOnPlane state(rep);
+  rep->setPosMom(state, pos, mom);
+
+  genfit::SharedPlanePtr origPlane = state.getPlane();
+  genfit::StateOnPlane origState(state);
+
+  const TVector3 centerPoint(gRandom->Gaus(0,10), gRandom->Gaus(0,10), gRandom->Gaus(0,10));
+  const double radius = gRandom->Uniform(10);
+
+  // forth
+  try {
+    rep->extrapolateToSphere(state, radius, centerPoint, false);
+  }
+  catch (genfit::Exception& e) {
+    std::cerr << e.what();
+
+    delete rep;
+
+    static const char* bla = "cannot solve";
+    const char* what = e.what();
+    if (strstr(what, bla))
+      return true;
+    return false;
+  }
+
+
+  TVector3 radiusVec = rep->getPos(state) - centerPoint;
+
+  // compare
+  if (fabs(state.getPlane()->getNormal()*radiusVec.Unit())-1 > epsilonLen ||
+      fabs(radiusVec.Mag()-radius) > epsilonLen) {
+
+      origState.Print();
+      state.Print();
+
+      std::cout << "state.getPlane()->getNormal()*radiusVec = " << state.getPlane()->getNormal()*radiusVec << "\n";
+      std::cout << "radiusVec.Mag()-radius = " << radiusVec.Mag()-radius << "\n";
+
+      delete rep;
+      return false;
+    }
+
+    delete rep;
+    return true;
+
+}
 //=====================================================================================================================
 //=====================================================================================================================
 //=====================================================================================================================
@@ -860,6 +923,11 @@ int main() {
 
     if (!checkExtrapolateToCylinder()) {
       std::cout << "failed checkExtrapolateToCylinder nr" << i << "\n";
+      ++nFailed;
+    }
+
+    if (!checkExtrapolateToSphere()) {
+      std::cout << "failed checkExtrapolateToSphere nr" << i << "\n";
       ++nFailed;
     }
 

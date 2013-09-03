@@ -317,7 +317,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
 
   double tracklength(0.), maxStep(1.E99);
 
-  TVector3 dest, pos, mom;
+  TVector3 dest, pos, dir;
 
   bool isAtBoundary(false);
 
@@ -333,12 +333,12 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     }
 
     pos.SetXYZ(state7[0], state7[1], state7[2]);
-    mom.SetXYZ(state7[3], state7[4], state7[5]);
+    dir.SetXYZ(state7[3], state7[4], state7[5]);
 
     // solve quadratic equation
     TVector3 AO = (pos - linePoint);
     TVector3 AOxAB = (AO.Cross(lineDirection));
-    TVector3 VxAB  = (mom.Cross(lineDirection));
+    TVector3 VxAB  = (dir.Cross(lineDirection));
     float ab2    = (lineDirection * lineDirection);
     float a      = (VxAB * VxAB);
     float b      = 2 * (VxAB * AOxAB);
@@ -369,7 +369,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     std::cout << "RKTrackRep::extrapolateToCylinder(); k = " << k << "\n";
 #endif
 
-    dest = pos + k * mom;
+    dest = pos + k * dir;
 
     plane->setO(dest);
     plane->setUV((dest-linePoint).Cross(lineDirection), lineDirection);
@@ -379,8 +379,9 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
       pos.SetXYZ(state7[0], state7[1], state7[2]);
-      mom.SetXYZ(state7[3], state7[4], state7[5]);
-      plane->setON(pos, mom);
+      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      plane->setO(pos);
+      plane->setUV((pos-linePoint).Cross(lineDirection), lineDirection);
       break;
     }
 
@@ -406,21 +407,95 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
 
 double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
     double radius,
-    const TVector3& point,
+    const TVector3& point, // center
     bool stopAtBoundary) const {
 
-#ifdef DEBUG
-std::cout << "RKTrackRep::extrapolateToSphere()\n";
-#endif
+  #ifdef DEBUG
+  std::cout << "RKTrackRep::extrapolateToSphere()\n";
+  #endif
 
   checkCache(state, NULL);
 
-  // TODO: implement
+  static const unsigned int maxIt(1000);
 
+  // to 7D
+  M1x7 state7;
+  getState7(state, state7);
+
+  double tracklength(0.), maxStep(1.E99);
+
+  TVector3 dest, pos, dir;
+
+  bool isAtBoundary(false);
+
+  DetPlane startPlane(*(state.getPlane()));
+  boost::shared_ptr<genfit::DetPlane> plane(new DetPlane());
+  unsigned int iterations(0);
+
+  while(true){
+    if(++iterations == maxIt) {
+      Exception exc("RKTrackRep::extrapolateToSphere ==> maximum number of iterations reached",__LINE__,__FILE__);
+      exc.setFatal();
+      throw exc;
+    }
+
+    pos.SetXYZ(state7[0], state7[1], state7[2]);
+    dir.SetXYZ(state7[3], state7[4], state7[5]);
+
+    // solve quadratic equation
+    TVector3 AO = (pos - point);
+    double dirAO = dir * AO;
+    double arg = dirAO*dirAO - AO*AO + radius*radius;
+    if(arg < 0) {
+      Exception exc("RKTrackRep::extrapolateToSphere ==> cannot solve",__LINE__,__FILE__);
+      exc.setFatal();
+      throw exc;
+    }
+    double term = sqrt(arg);
+    double k1, k2;
+    k1 = -dirAO + term;
+    k2 = -dirAO - term;
+
+    // select smallest absolute solution -> closest cylinder surface
+    double k = k1;
+    if (fabs(k2)<fabs(k))
+    k = k2;
+
+  #ifdef DEBUG
+    std::cout << "RKTrackRep::extrapolateToSphere(); k = " << k << "\n";
+  #endif
+
+    dest = pos + k * dir;
+
+    plane->setON(dest, dest-point);
+
+    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, true, stopAtBoundary, maxStep);
+
+    // check break conditions
+    if (stopAtBoundary && isAtBoundary) {
+      pos.SetXYZ(state7[0], state7[1], state7[2]);
+      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      plane->setON(pos, pos-point);
+      break;
+    }
+
+    if(fabs(k)<MINSTEP) break;
+
+    startPlane = *plane;
+
+  }
+
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
+    tracklength = extrapolateToPlane(state, plane);
+  }
+  else {
+    state.setPlane(plane);
+    getState5(state, state7);
+  }
 
   lastEndState_ = state;
 
-  return 0;
+  return tracklength;
 }
 
 
