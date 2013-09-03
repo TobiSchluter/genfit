@@ -98,6 +98,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
   void deleteForwardInfo() {setForwardPrediction(NULL); setForwardUpdate(NULL);}
   void deleteBackwardInfo() {setBackwardPrediction(NULL); setBackwardUpdate(NULL);}
+  void deletePredictions() {setForwardPrediction(NULL); setBackwardPrediction(NULL);}
   void deleteReferenceInfo() {setReferenceState(NULL);}
   void deleteMeasurementInfo() {measurementsOnPlane_.clear();}
 

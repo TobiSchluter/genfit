@@ -752,8 +752,6 @@ double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
 
 void Track::prune(const Option_t* option) {
 
-  // TODO: test options
-
   TString opt = option;
   opt.ToUpper();
 
@@ -762,7 +760,7 @@ void Track::prune(const Option_t* option) {
   }
 
   // prune trackPoints
-  if (opt.Contains("F") && opt.Contains("L")) {
+  if (opt.Contains("F") || opt.Contains("L")) {
     TrackPoint* firstPoint = getPointWithMeasurement(0);
     TrackPoint* lastPoint = getPointWithMeasurement(-1);
     for (unsigned int i = 0; i<trackPoints_.size(); ++i) {
@@ -791,14 +789,24 @@ void Track::prune(const Option_t* option) {
 
   // from remaining trackPoints: prune measurementsOnPlane, unneeded fitterInfoStuff
   for (unsigned int i = 0; i<trackPoints_.size(); ++i) {
-    trackPoints_[i]->deleteRawMeasurements();
+    if (opt.Contains("W"))
+      trackPoints_[i]->deleteRawMeasurements();
 
     std::vector< genfit::AbsFitterInfo* > fis =  trackPoints_[i]->getFitterInfos();
     for (unsigned int j = 0; j<fis.size(); ++j) {
-      if (i != 0 && opt.Contains("U") && opt.Contains("F"))
-        fis[j]->deleteBackwardInfo();
-      if (i != fis.size() && opt.Contains("U") && opt.Contains("L"))
+
+      if (i == 0 && opt.Contains("I") && opt.Contains("F") && opt.Contains("L"))
         fis[j]->deleteForwardInfo();
+      else if (i == trackPoints_.size()-1 && opt.Contains("I") && opt.Contains("F") && opt.Contains("L"))
+        fis[j]->deleteBackwardInfo();
+      else if (opt.Contains("I") && opt.Contains("F"))
+        fis[j]->deleteForwardInfo();
+      else if (opt.Contains("I") && opt.Contains("L"))
+        fis[j]->deleteBackwardInfo();
+
+      if (opt.Contains("U") && dynamic_cast<KalmanFitterInfo*>(fis[j]) != NULL) {
+        static_cast<KalmanFitterInfo*>(fis[j])->deletePredictions();
+      }
 
       if (opt.Contains("R"))
         fis[j]->deleteReferenceInfo();

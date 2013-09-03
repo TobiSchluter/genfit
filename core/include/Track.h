@@ -127,11 +127,13 @@ class Track : public TObject {
    * F:  prune all points except first point
    * L:  prune all points except last point
    * FL: prune all points except first and last point
+   * W:  prune rawMeasurements from TrackPoints
    * R:  prune referenceInfo from fitterInfos
    * M:  prune measurementInfo from fitterInfos
-   * U:  if F, L, or FL is set, prune forward (backward) info of first (last) point
+   * I:  if F, L, or FL is set, prune forward (backward) info of first (last) point
+   * U:  if fitterInfo is a KalmanFitterInfo, prune predictions and keep updates
    */
-  void prune(const Option_t* = "CFLRMU");
+  void prune(const Option_t* = "CFLWRMIU");
 
   void Print(const Option_t* = "") const;
 
