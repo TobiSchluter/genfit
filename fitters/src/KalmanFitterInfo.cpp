@@ -231,7 +231,6 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
 
 
   MeasurementOnPlane KalmanFitterInfo::getResidual(unsigned int iMeasurement, bool biased, bool onlyMeasurementErrors) const {
-  // TODO: Test
 
   const MeasuredStateOnPlane& smoothedState = getFittedState(biased);
   const MeasurementOnPlane* measurement = measurementsOnPlane_.at(iMeasurement);

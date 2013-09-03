@@ -317,7 +317,6 @@ void Track::deletePoint(int id) {
   std::cout << "Track::deletePoint at position " << id  << "\n";
   #endif
 
-  // TODO: test
   trackHasChanged();
 
   if (id < 0)
@@ -401,7 +400,6 @@ void Track::addTrackRep(AbsTrackRep* trackRep) {
 
 
 void Track::deleteTrackRep(int id) {
-  // TODO: test
   if (id < 0)
     id += trackReps_.size();
 
@@ -429,7 +427,7 @@ void Track::deleteTrackRep(int id) {
 
 
 void Track::setCardinalRep(int id) {
-  // TODO: Test
+
   if (id < 0)
     id += trackReps_.size();
 
@@ -521,7 +519,6 @@ void Track::deleteForwardInfo(int startId, int endId, const AbsTrackRep* rep) {
 }
 
 void Track::deleteBackwardInfo(int startId, int endId, const AbsTrackRep* rep) {
-  // TODO: test
 
   #ifdef DEBUG
   std::cout << "Track::deleteBackwardInfo from position " << startId  << " to " << endId << "\n";
@@ -553,7 +550,6 @@ void Track::deleteBackwardInfo(int startId, int endId, const AbsTrackRep* rep) {
 }
 
 void Track::deleteReferenceInfo(int startId, int endId, const AbsTrackRep* rep) {
-  // TODO: test
 
   #ifdef DEBUG
   std::cout << "Track::deleteReferenceInfo from position " << startId  << " to " << endId << "\n";
@@ -585,7 +581,6 @@ void Track::deleteReferenceInfo(int startId, int endId, const AbsTrackRep* rep) 
 
 void Track::deleteMeasurementInfo(int startId, int endId, const AbsTrackRep* rep) {
 
-  // TODO: test. Do we also have to delete forward- and backward info if measurements are removed?
   #ifdef DEBUG
   std::cout << "Track::deleteMeasurementInfo from position " << startId  << " to " << endId << "\n";
   #endif
