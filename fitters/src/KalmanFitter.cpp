@@ -191,8 +191,8 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   MeasuredStateOnPlane* state = new MeasuredStateOnPlane(*currentState_);
   //state.Print();
 
-  // construct measurementsOnPlane if it has not yet been done
-  if (fi->getNumMeasurements() == 0) {
+  // construct measurementsOnPlane if forward fit
+  if (direction == 1) {
     std::vector< genfit::AbsMeasurement* > rawMeasurements =  tp->getRawMeasurements();
     // construct plane with first measurement
     SharedPlanePtr plane = rawMeasurements[0]->constructPlane(*currentState_);
