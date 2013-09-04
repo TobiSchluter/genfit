@@ -67,13 +67,13 @@ EventDisplay::EventDisplay() :
   drawGeometry_(false),
   drawDetectors_(true),
   drawHits_(true),
-  drawErrors_(false),
-  drawPlanes_(false),
-  drawTrackMarkers_(false),
+  drawErrors_(true),
+  drawPlanes_(true),
+  drawTrackMarkers_(true),
   drawTrack_(true),
   drawRefTrack_(true),
-  drawForward_(false),
-  drawBackward_(false),
+  drawForward_(true),
+  drawBackward_(true),
   drawAutoScale_(true),
   drawScaleMan_(false),
   drawSilent_(false),
@@ -85,7 +85,7 @@ EventDisplay::EventDisplay() :
   mmHandling_(unweightedClosestToPrediction),
   dPVal_(1.E-3),
   nMaxIter_(4),
-  resort_(true)
+  resort_(false)
 {
 
   if((!gApplication) || (gApplication && gApplication->TestBit(TApplication::kDefaultApplication))) {
@@ -105,7 +105,6 @@ EventDisplay::EventDisplay() :
 
 void EventDisplay::setOptions(std::string opts) {
 
-  // parse the option string ------------------------------------------------------------------------
   if(opts != "") {
     for(size_t i = 0; i < opts.length(); ++i) {
       if(opts[i] == 'A') drawAutoScale_ = true;
@@ -122,7 +121,6 @@ void EventDisplay::setOptions(std::string opts) {
       if(opts[i] == 'G') drawGeometry_ = true;
     }
   }
-  // finished parsing the option string -------------------------------------------------------------
 
 }
 
@@ -156,16 +154,24 @@ void EventDisplay::reset() {
   events_.clear();
 }
 
-void EventDisplay::addEvent(std::vector<Track*>& evts) {
+void EventDisplay::addEvent(std::vector<Track*>& tracks) {
 
   std::vector<Track*>* vec = new std::vector<Track*>;
 
-  for(unsigned int i = 0; i < evts.size(); i++) {
+  for(unsigned int i = 0; i < tracks.size(); i++) {
 
-    vec->push_back(new Track(*(evts[i])));
+    vec->push_back(new Track(*(tracks[i])));
 
   }
 
+  events_.push_back(vec);
+
+}
+
+void EventDisplay::addEvent(Track* tr) {
+
+  std::vector<Track*>* vec = new std::vector<Track*>;
+  vec->push_back(new Track(*tr));
   events_.push_back(vec);
 
 }

@@ -75,7 +75,14 @@ class EventDisplay : public TNamed {
 		 * the same time.
 		 *
 		 */
-		void addEvent(std::vector<genfit::Track*>& tr);
+		void addEvent(std::vector<genfit::Track*>& tracks);
+
+    /** @brief Add new event
+     *
+     * Add a new event consisting of one track.
+     *
+     */
+    void addEvent(Track* tr);
 
 		/** @brief Go to the next event or step a certain number of events ahead.*/
 		void next(unsigned int stp = 1);
@@ -125,7 +132,7 @@ class EventDisplay : public TNamed {
 		 * 'X': Draw silent. Does not run the TApplication.
 		 *
 		 */
-		void setOptions(std::string opts = "ADHT");
+		void setOptions(std::string opts);
 
 		/** @brief Set the scaling factor for the visualization of the errors.*/
 		void setErrScale(double errScale = 1.);

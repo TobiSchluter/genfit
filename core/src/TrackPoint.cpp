@@ -50,6 +50,12 @@ TrackPoint::TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurem
   }
 }
 
+TrackPoint::TrackPoint(AbsMeasurement* rawMeasurement, Track* track) :
+  sortingParameter_(0), track_(track)//, material_(nullptr)
+{
+  addRawMeasurement(rawMeasurement);
+}
+
 
 TrackPoint::TrackPoint(const TrackPoint& rhs) :
   sortingParameter_(rhs.sortingParameter_), track_(rhs.track_)

@@ -51,6 +51,12 @@ class TrackPoint : public TObject {
    */
   TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurements, Track* track);
 
+  /**
+   * Contructor taking one measurement. The #setTrackPoint() of the measurement will be called.
+   * TrackPoint takes ownership over the rawMeasurement.
+   */
+  TrackPoint(AbsMeasurement* rawMeasurement, Track* track);
+
   TrackPoint(const TrackPoint&); // copy constructor
   TrackPoint& operator=(const TrackPoint&); // assignment operator
 

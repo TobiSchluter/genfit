@@ -93,6 +93,11 @@ class MeasurementCreator : public TObject {
 
 
   AbsMeasurement* create(eMeasurementType, double tracklength, bool& outlier, int& lr);
+  AbsMeasurement* create(eMeasurementType type, double tracklength) {
+    bool dummy1;
+    int dummy2;
+    return create(type, tracklength, dummy1, dummy2);
+  }
 
   void reset();
 
