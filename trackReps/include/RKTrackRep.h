@@ -53,7 +53,8 @@ struct ExtrapStep {
 class RKTrackRep : public AbsTrackRep {
 
   /**
-   * state5: (q/p, u', v'. u. v)
+   * 5D track parameterization in plane coordinates: (q/p, u', v', u, v)
+   *
    */
 
  public:
@@ -65,10 +66,6 @@ class RKTrackRep : public AbsTrackRep {
 
   virtual AbsTrackRep* clone() const {return new RKTrackRep(*this);}
 
-  /** Extrapolates the state to plane, and returns the extrapolation length
-   * and, via reference, the extrapolated statePrediction.
-   * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
-   */
   virtual double extrapolateToPlane(StateOnPlane& state,
       const SharedPlanePtr& plane,
       bool stopAtBoundary = false,
@@ -94,10 +91,6 @@ class RKTrackRep : public AbsTrackRep {
       const TVector3& point = TVector3(0.,0.,0.),
       bool stopAtBoundary = false) const;
 
-  /**
-   * Use the Material information stored in the #TrackPoints
-   */
-  //virtual double extrapolateToTrackPoint() const;
 
 
   unsigned int getDim() const {return 5;}
@@ -108,22 +101,17 @@ class RKTrackRep : public AbsTrackRep {
   virtual void getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const;
 
   virtual double getMomMag(const StateOnPlane& state);
-  /** get the variance of the absolute value of the momentum  */
   virtual double getMomVar(const MeasuredStateOnPlane& state);
 
-  /** Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance */
   virtual void getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const;
   virtual double getCharge(const StateOnPlane& state) const;
   virtual double getQop(const StateOnPlane& state) const {return state.getState()(0);}
   double getSpu(const StateOnPlane& state) const;
 
-  /** Get the jacobian and noise matrix of the last extrapolation  */
   virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const;
 
-  /** Get the jacobian and noise matrix of the last extrapolation if it would have been done in opposite direction  */
   virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const;
 
-  /** Get the radiation length of the material crossed in the last extrapolation.  */
   virtual double getRadiationLenght() const;
 
 
@@ -133,7 +121,6 @@ class RKTrackRep : public AbsTrackRep {
   virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) const;
   virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state6, const TMatrixDSym& cov6x6) const;
 
-  //! Set the sign of the charge according to charge
   virtual void setChargeSign(StateOnPlane& state, double charge) const;
   virtual void setQop(StateOnPlane& state, double qop) const {state.getState()(0) = qop;}
 
@@ -141,8 +128,8 @@ class RKTrackRep : public AbsTrackRep {
 
   //! The actual Runge Kutta propagation
   /** propagate #state7 with step #S. Fills #SA (Start directions derivatives dA/S).
-   *  If #cov is NULL, only the state is propagated,
-   *  otherwise also the 7x7 jacobian (#cov) is calculated.
+   *  If #jacobian is NULL, only the state is propagated,
+   *  otherwise also the 7x7 #jacobian is calculated.
    *  If #varField is false, the magnetic field will only be evaluated at the starting position.
    *  The return value is an estimation on how good the extrapolation is, and it is usually fine if it is > 1.
    *  It gives a suggestion how you must scale #S so that the quality will be sufficient.
@@ -186,10 +173,11 @@ class RKTrackRep : public AbsTrackRep {
 
   //! Propagates the particle through the magnetic field.
   /** If the propagation is successful and the plane is reached, the function returns true.
-    * Propagated state and the jacobian of the extrapolation are written to #state7 and #jacobian.
-    * The jacobian is only calculated if #jacobian != NULL.
+    * Propagated state and the jacobian of the extrapolation are written to #state7 and #jacobianT.
+    * The jacobian is only calculated if #jacobianT != NULL.
     * In the main loop of the Runge Kutta algorithm, the #estimateStep() is called
-    * and may reduce the estimated stepsize so that a maximum momentum loss will not be exceeded.
+    * and may reduce the estimated stepsize so that a maximum momentum loss will not be exceeded,
+    * and stop at material boundaries.
     * If this is the case, #RKutta() will only propagate the reduced distance and then return. This is to ensure that
     * material effects, which are calculated after the propagation, are taken into account properly.
     */
@@ -217,14 +205,13 @@ class RKTrackRep : public AbsTrackRep {
                      const TVector3& point) const;
 
   //! Handles propagation and material effects
-  /** #extrapolate(), #extrapolateToPoint() and #extrapolateToLine() call this function.
+  /** #extrapolateToPlane(), #extrapolateToPoint() and #extrapolateToLine() etc. call this function.
     * #Extrap() needs a plane as an argument, hence #extrapolateToPoint() and #extrapolateToLine() create virtual detector planes.
     * In this function, #RKutta() is called and the resulting points and point paths are filtered
     * so that the direction doesn't change and tiny steps are filtered out.
     * After the propagation the material effects are called via the #MaterialEffects singleton.
     * #Extrap() will loop until the plane is reached, unless the propagation fails or the maximum number of
     * iterations is exceeded.
-    * #fXX0 is also updated here.
     */
   double Extrap(const DetPlane& startPlane, // plane where Extrap starts
                 const DetPlane& destPlane, // plane where Extrap has to extrapolate to
