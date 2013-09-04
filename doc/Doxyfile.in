@@ -651,6 +651,20 @@ WARN_LOGFILE =
 
 INPUT = @CMAKE_CURRENT_SOURCE_DIR@/core/src
 INPUT += @CMAKE_CURRENT_SOURCE_DIR@/core/include
+INPUT += @CMAKE_CURRENT_SOURCE_DIR@/trackReps/include
+INPUT += @CMAKE_CURRENT_SOURCE_DIR@/trackReps/src
+INPUT += @CMAKE_CURRENT_SOURCE_DIR@/fitters/src
+INPUT += @CMAKE_CURRENT_SOURCE_DIR@/fitters/include
+INPUT += @CMAKE_CURRENT_SOURCE_DIR@/finitePlanes/src
+INPUT += @CMAKE_CURRENT_SOURCE_DIR@/finitePlanes/include
+INPUT += @CMAKE_CURRENT_SOURCE_DIR@/measurements/src
+INPUT += @CMAKE_CURRENT_SOURCE_DIR@/measurements/include
+INPUT += @CMAKE_CURRENT_SOURCE_DIR@/utilities/src
+INPUT += @CMAKE_CURRENT_SOURCE_DIR@/utilities/include
+INPUT += @CMAKE_CURRENT_SOURCE_DIR@/fields/src
+INPUT += @CMAKE_CURRENT_SOURCE_DIR@/fields/include
+#INPUT += @CMAKE_CURRENT_SOURCE_DIR@//src
+#INPUT += @CMAKE_CURRENT_SOURCE_DIR@//include
 
 
 # This tag can be used to specify the character encoding of the source files
@@ -1600,7 +1614,7 @@ HIDE_UNDOC_RELATIONS = YES
 # toolkit from AT&T and Lucent Bell Labs. The other options in this section
 # have no effect if this option is set to NO (the default)
 
-HAVE_DOT = NO
+HAVE_DOT = YES
 
 # The DOT_NUM_THREADS specifies the number of dot invocations doxygen is
 # allowed to run in parallel. When set to 0 (the default) doxygen will
@@ -1653,7 +1667,7 @@ GROUP_GRAPHS = YES
 # collaboration diagrams in a style similar to the OMG's Unified Modeling
 # Language.
 
-UML_LOOK = NO
+UML_LOOK = YES
 
 # If set to YES, the inheritance and collaboration graphs will show the
 # relations between templates and their instances.
