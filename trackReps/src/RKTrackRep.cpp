@@ -719,6 +719,24 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 }
 
 
+double RKTrackRep::getRadiationLenght() const {
+
+  // Todo: test
+
+  if (RKSteps_.size() == 0) {
+    Exception exc("RKTrackRep::getRadiationLenght ==> cache is empty.",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  double radLen(0);
+
+  for (unsigned int i = 0; i<RKSteps_.size(); ++i) {
+    radLen += RKSteps_.at(i).materialProperties_.getRadLen();
+  }
+
+  return radLen;
+}
+
 
 void RKTrackRep::setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const {
 

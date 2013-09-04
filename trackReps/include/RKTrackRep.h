@@ -123,6 +123,9 @@ class RKTrackRep : public AbsTrackRep {
   /** Get the jacobian and noise matrix of the last extrapolation if it would have been done in opposite direction  */
   virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const;
 
+  /** Get the radiation length of the material crossed in the last extrapolation.  */
+  virtual double getRadiationLenght() const;
+
 
   virtual void setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const;
   virtual void setPosMom(StateOnPlane& state, const TVectorD& state6) const;
