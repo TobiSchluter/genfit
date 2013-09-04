@@ -32,26 +32,6 @@ int main() {
 
   gRandom->SetSeed(14);
 
-  const unsigned int nEvents = 100;
-  const unsigned int nMeasurements = 11;
-  const double BField = 15.;       // kGauss
-  const double momentum = 0.4;     // GeV
-
-  const int pdg = 13;               // particle pdg code
-
-  const bool smearPosMom = true;     // init the Reps with smeared pos and mom
-  const double posSmear = 0.01;     // cm
-  const double momSmear = 5. /180.*TMath::Pi();     // rad
-  const double momMagSmear = 0.2;   // relative
-  const double zSmearFac = 2;
-
-
-
-  // init fitter
-  genfit::AbsKalmanFitter* fitter = new genfit::KalmanFitterRefTrack();
-
-
-
   // init MeasurementCreator
   genfit::MeasurementCreator measurementCreator;
 
@@ -59,7 +39,7 @@ int main() {
   // init geometry and mag. field
   TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
-  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,BField));
+  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0., 15.)); // 15 kGauss
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
 
@@ -67,29 +47,42 @@ int main() {
   genfit::EventDisplay* display = genfit::EventDisplay::getInstance();
 
 
+  // init fitter
+  genfit::AbsKalmanFitter* fitter = new genfit::KalmanFitterRefTrack();
+
   // main loop
-  for (unsigned int iEvent=0; iEvent<nEvents; ++iEvent){
+  for (unsigned int iEvent=0; iEvent<100; ++iEvent){
 
     // true start values
     TVector3 pos(0, 0, 0);
     TVector3 mom(1.,0,0);
     mom.SetPhi(gRandom->Uniform(0.,2*TMath::Pi()));
     mom.SetTheta(gRandom->Uniform(0.4*TMath::Pi(),0.6*TMath::Pi()));
-    mom.SetMag(momentum);
+    mom.SetMag(gRandom->Uniform(0.2, 1.));
 
 
     // helix track model
+    const int pdg = 13;               // particle pdg code
     const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
     genfit::HelixTrackModel* helix = new genfit::HelixTrackModel(pos, mom, charge);
     measurementCreator.setTrackModel(helix);
 
+
+    unsigned int nMeasurements = gRandom->Uniform(5, 15);
+
+
     // smeared start values
+    const bool smearPosMom = true;     // init the Reps with smeared pos and mom
+    const double posSmear = 0.1;     // cm
+    const double momSmear = 3. /180.*TMath::Pi();     // rad
+    const double momMagSmear = 0.1;   // relative
+
     TVector3 posM(pos);
     TVector3 momM(mom);
     if (smearPosMom) {
       posM.SetX(gRandom->Gaus(posM.X(),posSmear));
       posM.SetY(gRandom->Gaus(posM.Y(),posSmear));
-      posM.SetZ(gRandom->Gaus(posM.Z(),zSmearFac*posSmear));
+      posM.SetZ(gRandom->Gaus(posM.Z(),posSmear));
 
       momM.SetPhi(gRandom->Gaus(mom.Phi(),momSmear));
       momM.SetTheta(gRandom->Gaus(mom.Theta(),momSmear));
