@@ -123,7 +123,9 @@ SET(CORE_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/finitePlanes/include/RectangularFinitePlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsTrackRep.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/StateOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementFactory.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementProducer.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasuredStateOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsFitterInfo.h

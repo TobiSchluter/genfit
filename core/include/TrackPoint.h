@@ -55,7 +55,7 @@ class TrackPoint : public TObject {
    * Contructor taking one measurement. The #setTrackPoint() of the measurement will be called.
    * TrackPoint takes ownership over the rawMeasurement.
    */
-  TrackPoint(AbsMeasurement* rawMeasurement, Track* track);
+  TrackPoint(genfit::AbsMeasurement* rawMeasurement, Track* track);
 
   TrackPoint(const TrackPoint&); // copy constructor
   TrackPoint& operator=(const TrackPoint&); // assignment operator
@@ -87,7 +87,7 @@ class TrackPoint : public TObject {
 
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
   //! Takes ownership and sets this as measurement's trackPoint
-  void addRawMeasurement(AbsMeasurement* rawMeasurement) {assert(rawMeasurement!=NULL); rawMeasurement->setTrackPoint(this); rawMeasurements_.push_back(rawMeasurement);}
+  void addRawMeasurement(genfit::AbsMeasurement* rawMeasurement) {assert(rawMeasurement!=NULL); rawMeasurement->setTrackPoint(this); rawMeasurements_.push_back(rawMeasurement);}
   void deleteRawMeasurements();
   //! Takes Ownership
   void setFitterInfo(genfit::AbsFitterInfo* fitterInfo) {

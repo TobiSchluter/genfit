@@ -74,11 +74,14 @@ class AbsMeasurement : public TObject {
 
   virtual void Print(const Option_t* = "") const;
 
- protected:
 
-  // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
- AbsMeasurement(const AbsMeasurement&);
-  AbsMeasurement& operator=(const AbsMeasurement&); // default cannot work because TVector and TMatrix = operators don't do resizing
+ private:
+  // protect from calling assignment operator from outside the class. Use #clone() if you want a copy!
+  virtual AbsMeasurement& operator=(const AbsMeasurement&); // default cannot work because TVector and TMatrix = operators don't do resizing
+
+ protected:
+  // protect from calling copy c'tor from outside the class. Use #clone() if you want a copy!
+  AbsMeasurement(const AbsMeasurement&);
 
   TVectorD rawHitCoords_;
   TMatrixDSym rawHitCov_;

@@ -50,6 +50,13 @@ AbsMeasurement::~AbsMeasurement()
 }
 
 
+AbsMeasurement& AbsMeasurement::operator=(const AbsMeasurement&) {
+  fputs ("must not call AbsMeasurement::operator=\n",stderr);
+  abort();
+  return *this;
+}
+
+
 void AbsMeasurement::Print(const Option_t*) const {
   std::cout << "genfit::AbsMeasurement, detId = " << detId_ << ". hitId = " << hitId_ << "\n";
   std::cout << "Raw hit coordinates: "; rawHitCoords_.Print();
