@@ -106,6 +106,8 @@ int main() {
       currentPos.SetZ(gRandom->Gaus(currentPos.Z(), resolution));
 
       // Fill the TClonesArray and the TrackCand
+      // In a real experiment, you detector code would deliver mySpacepointDetectorHits and fill the TClonesArray.
+      // The patternRecognition would create the TrackCand.
       new(myDetectorHitArray[i]) genfit::mySpacepointDetectorHit(currentPos, cov, myDetId, i);
       myCand.addHit(myDetId, i);
     }
@@ -153,6 +155,7 @@ int main() {
     genfit::Track fitTrack(rep, seedState, seedCov);
 
 
+    // now the measurements can be created using the factory.
     std::vector <genfit::AbsMeasurement*> factoryHits = factory.createMany(myCand);
     for (unsigned int i=0; i<factoryHits.size(); ++i){
       fitTrack.insertPoint(new genfit::TrackPoint(factoryHits[i], &fitTrack));
