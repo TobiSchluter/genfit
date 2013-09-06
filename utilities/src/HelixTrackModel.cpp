@@ -54,6 +54,21 @@ HelixTrackModel::HelixTrackModel(const TVector3& pos, const TVector3& mom, doubl
 
 }
 
+
+TVector3 HelixTrackModel::getPos(double tracklength) const {
+
+  TVector3 pos;
+
+  double angle = alpha0_ - sgn_ * tracklength / R_ * sin(theta_);
+
+  TVector3 radius(R_,0,0);
+  radius.SetPhi(angle);
+  pos = center_ + radius;
+  pos.SetZ(center_.Z() - sgn_ * ((alpha0_-angle)*R_ * tan(theta_-M_PI/2.)) );
+
+  return pos;
+}
+
 void HelixTrackModel::getPosMom(double tracklength, TVector3& pos, TVector3& mom) const {
 
   double angle = alpha0_ - sgn_ * tracklength / R_ * sin(theta_);

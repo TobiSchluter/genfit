@@ -35,7 +35,7 @@ namespace genfit {
  *  @author Johannes Rauch  (Technische Universit&auml;t M&uuml;nchen, original author)
  *
  * For a space point the detector plane has to be defined with respect to
- * a track representation. GFAbsSpacepointHit implements a scheme where the
+ * a track representation. SpacepointMeasurement implements a scheme where the
  * detectorplane is chosen perpendicular to the track.
  * In a track fit, only two of the three coordinates of a space point are
  * independent (the track is a one-dimensional object). Therefore the 3D
