@@ -134,7 +134,7 @@ int main() {
   gRandom->SetSeed(14);
 
 
-  const unsigned int nEvents = 1000;
+  const unsigned int nEvents = 100;
   const unsigned int nMeasurements = 11;
   const double BField = 15.;       // kGauss
   const double momentum = 0.4;     // GeV
@@ -156,9 +156,9 @@ int main() {
   const double outlierProb = 0;//0.1;
   const double outlierRange = 2;
 
-  const double hitSwitchProb = 0;//0.1; // probability to give hits to fit in wrong order (flip two hits)
+  const double hitSwitchProb = 0.; // probability to give hits to fit in wrong order (flip two hits)
 
-  const int splitTrack = 4; // for track merging testing:
+  const int splitTrack = 0; // for track merging testing:
 
   //const genfit::eFitterType fitterId = genfit::SimpleKalman;
   const genfit::eFitterType fitterId = genfit::RefKalman;
@@ -176,7 +176,7 @@ int main() {
   const int pdg = 13;               // particle pdg code
 
   const bool smearPosMom = true;     // init the Reps with smeared pos and mom
-  const double chargeSwitchProb = 0.1; // probability to seed with wrong charge sign
+  const double chargeSwitchProb = 0.; // probability to seed with wrong charge sign
   const double posSmear = 10*resolution;     // cm
   const double momSmear = 5. /180.*TMath::Pi();     // rad
   const double momMagSmear = 0.2;   // relative

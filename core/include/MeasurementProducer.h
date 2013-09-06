@@ -72,8 +72,8 @@ public:
  */
 
 
-template <class hit_T, class measurement_T, class absMeasurement_T>
-class MeasurementProducer : public AbsMeasurementProducer<absMeasurement_T> {
+template <class hit_T, class measurement_T>
+class MeasurementProducer : public AbsMeasurementProducer<genfit::AbsMeasurement> {
  private:
   /** @brief pointer to array with cluster data */
   TClonesArray* hitArrayTClones_;
@@ -86,24 +86,24 @@ class MeasurementProducer : public AbsMeasurementProducer<absMeasurement_T> {
   /** @brief Create a Measurement from the cluster at position index
    * in TClonesArray
    */
-  virtual absMeasurement_T* produce(int index);
+  virtual AbsMeasurement* produce(int index);
 };
 /** @} */
 
 
-template <class hit_T, class measurement_T, class absMeasurement_T>
-  MeasurementProducer<hit_T,measurement_T, absMeasurement_T>::MeasurementProducer(TClonesArray* theArr) {
+template <class hit_T, class measurement_T>
+  MeasurementProducer<hit_T, measurement_T>::MeasurementProducer(TClonesArray* theArr) {
   hitArrayTClones_ = theArr;
   //std::cout << "hit array with " << hitArrayTClones_->GetEntries() << " entries." << std::endl;
 }
 
-template <class hit_T, class measurement_T, class absMeasurement_T>
-MeasurementProducer<hit_T, measurement_T, absMeasurement_T>::~MeasurementProducer() {
+template <class hit_T, class measurement_T>
+MeasurementProducer<hit_T, measurement_T>::~MeasurementProducer() {
   // we don't assume ownership over the hit arrays
 }
 
-template <class hit_T, class measurement_T, class absMeasurement_T>
-absMeasurement_T* MeasurementProducer<hit_T, measurement_T, absMeasurement_T>::produce(int index) {
+template <class hit_T, class measurement_T>
+AbsMeasurement* MeasurementProducer<hit_T, measurement_T>::produce(int index) {
   assert(hitArrayTClones_ != NULL);
   //std::cout << "hit array with " << hitArrayTClones_->GetEntries() << " entries, looking for entry " << index << "." << std::endl;
   if(hitArrayTClones_->At(index) == 0) {

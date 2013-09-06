@@ -1,0 +1,58 @@
+cmake_minimum_required(VERSION 2.6)
+
+IF(NOT DEFINED ENV{ROOTSYS})
+   MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
+ENDIF(NOT DEFINED ENV{ROOTSYS})
+
+IF(NOT DEFINED ENV{GENFIT})
+   MESSAGE(FATAL_ERROR "You did not set the environment variable GENFIT.") 
+ENDIF(NOT DEFINED ENV{GENFIT})
+
+FIND_PROGRAM(ROOT_CONFIG root-config $ENV{ROOTSYS}/bin)
+
+IF(ROOT_CONFIG MATCHES "ROOT_CONFIG-NOTFOUND")
+  MESSAGE(FATAL_ERROR "Could not find root-config executable.")
+ENDIF(ROOT_CONFIG MATCHES "ROOT_CONFIG-NOTFOUND")
+
+Execute_process(COMMAND ${ROOT_CONFIG} --cflags
+	OUTPUT_VARIABLE ROOT_CFLAGS
+    	OUTPUT_STRIP_TRAILING_WHITESPACE)
+    	
+Execute_process(COMMAND ${ROOT_CONFIG} --incdir
+	OUTPUT_VARIABLE ROOT_INCDIR
+    	OUTPUT_STRIP_TRAILING_WHITESPACE)
+    	
+SET(CMAKE_CXX_FLAGS "-Wall -g3 -ansi -pedantic -Wno-long-long -Wshadow  -std=c++03 ${ROOT_CFLAGS}")
+#SET(CMAKE_VERBOSE_MAKEFILE ON)
+
+Execute_process(COMMAND ${ROOT_CONFIG} --glibs --ldflags --evelibs
+	OUTPUT_VARIABLE ROOT_LIBS
+    	OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# FIXME
+#FIND_PACKAGE(Boost)
+#IF (Boost_FOUND)
+#    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+#    MESSAGE("-- Boost is found at: ${Boost_INCLUDE_DIR}")
+#ELSE()  
+	INCLUDE_DIRECTORIES($ENV{GENFIT}/extern)
+#ENDIF()
+
+INCLUDE_DIRECTORIES( 
+	BEFORE 
+	${ROOT_INCDIR}
+	$ENV{GENFIT}/include/genfit
+	${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+
+ADD_EXECUTABLE(main 
+	main.cpp
+)
+
+TARGET_LINK_LIBRARIES(main 
+	${ROOT_LIBS} 
+	-L$ENV{GENFIT}/lib
+	-lgenfit2 
+)
+

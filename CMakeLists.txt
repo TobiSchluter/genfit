@@ -190,9 +190,11 @@ SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/trackRepsRootDict.cpp" "${libra
 SET(UTILITIES_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/HelixTrackModel.h
   ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/MeasurementCreator.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/mySpacepointDetectorHit.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/utilities/include/mySpacepointMeasurement.h
 )
 ROOT_GENERATE_DICTIONARY("${UTILITIES_DICTIONARY_SOURCES}"
-                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/utilities/include"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/utilities/include;${CMAKE_CURRENT_SOURCE_DIR}/measurements/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/utilities/src/utilitiesLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cpp")
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cpp" "${library_sources}")
@@ -214,8 +216,8 @@ MACRO( ADD_GENFIT_TEST _testname )
    #INSTALL( TARGETS ${_testname} DESTINATION ${EXECUTABLE_INSTALL_DIR})
 ENDMACRO( ADD_GENFIT_TEST )
 
-ADD_GENFIT_TEST( fitterTests test/fitterTests/main.cpp eventDisplay/src/EventDisplay.cpp)
-ADD_GENFIT_TEST( streamerTest test/streamerTest/main.cpp )
+#ADD_GENFIT_TEST( fitterTests test/fitterTests/main.cpp eventDisplay/src/EventDisplay.cpp)
+#ADD_GENFIT_TEST( streamerTest test/streamerTest/main.cpp )
 
 
 # generate and install following configuration files

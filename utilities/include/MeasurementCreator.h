@@ -75,6 +75,7 @@ class MeasurementCreator : public TObject {
 
   ~MeasurementCreator() {delete trackModel_;}
 
+  //! Takes ownership!
   void setTrackModel(const HelixTrackModel* model) {delete trackModel_; trackModel_ = model;}
   void setResolution(double resolution) {resolution_ = resolution;}
   void setResolutionWire(double resolutionWire) {resolutionWire_ = resolutionWire;}
