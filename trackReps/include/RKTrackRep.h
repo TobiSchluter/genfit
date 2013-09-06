@@ -26,11 +26,6 @@
 
 #include "AbsTrackRep.h"
 #include "StateOnPlane.h"
-#ifndef __CINT__
-#include "MaterialInfo.h"
-#else
-class MaterialProperties;
-#endif
 
 #include "RKTools.h"
 #include "StepLimits.h"
@@ -39,9 +34,8 @@ class MaterialProperties;
 namespace genfit {
 
 struct RKStep {
-  MaterialProperties materialProperties_;
+  MatStep matStep_; // material properties and stepsize
   M1x7 state7_; // 7D state vector
-  double stepSize_;
   StepLimits limits_;
 };
 
@@ -111,6 +105,8 @@ class RKTrackRep : public AbsTrackRep {
   virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const;
 
   virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const;
+
+  std::vector<genfit::MatStep> getSteps() const;
 
   virtual double getRadiationLenght() const;
 

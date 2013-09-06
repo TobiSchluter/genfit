@@ -719,6 +719,26 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 }
 
 
+std::vector<genfit::MatStep> RKTrackRep::getSteps() const {
+
+  // Todo: test
+
+  if (RKSteps_.size() == 0) {
+    Exception exc("RKTrackRep::getRadiationLenght ==> cache is empty.",__LINE__,__FILE__);
+    throw exc;
+  }
+
+  std::vector<MatStep> retVal;
+  retVal.reserve(RKSteps_.size());
+
+  for (unsigned int i = 0; i<RKSteps_.size(); ++i) {
+    retVal.push_back(RKSteps_[i].matStep_);
+  }
+
+  return retVal;
+}
+
+
 double RKTrackRep::getRadiationLenght() const {
 
   // Todo: test
@@ -731,7 +751,7 @@ double RKTrackRep::getRadiationLenght() const {
   double radLen(0);
 
   for (unsigned int i = 0; i<RKSteps_.size(); ++i) {
-    radLen += RKSteps_.at(i).materialProperties_.getRadLen();
+    radLen += RKSteps_.at(i).matStep_.materialProperties_.getRadLen();
   }
 
   return radLen;
@@ -1579,9 +1599,9 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
     // check if we went back and forth multiple times -> we don't come closer to the plane!
     if (counter > 3){
-      if (S                            *RKSteps_.at(counter-1).stepSize_ < 0 &&
-          RKSteps_.at(counter-1).stepSize_*RKSteps_.at(counter-2).stepSize_ < 0 &&
-          RKSteps_.at(counter-2).stepSize_*RKSteps_.at(counter-3).stepSize_ < 0){
+      if (S                            *RKSteps_.at(counter-1).matStep_.stepSize_ < 0 &&
+          RKSteps_.at(counter-1).matStep_.stepSize_*RKSteps_.at(counter-2).matStep_.stepSize_ < 0 &&
+          RKSteps_.at(counter-2).matStep_.stepSize_*RKSteps_.at(counter-3).matStep_.stepSize_ < 0){
         Exception exc("RKTrackRep::RKutta ==> Do not get closer to plane!",__LINE__,__FILE__);
         exc.setFatal();
         throw exc;
@@ -1721,7 +1741,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
         //for(int n = 0; n < 1*7; ++n) RKSteps_[cachePos_].state7_[n] = state7[n];
         ++RKStepsFXStop_;
         limits = RKSteps_.at(cachePos_).limits_;
-        return RKSteps_.at(cachePos_++).stepSize_;
+        return RKSteps_.at(cachePos_++).matStep_.stepSize_;
       }
     }
   }
@@ -1878,13 +1898,13 @@ double RKTrackRep::estimateStep(const M1x7& state7,
                                               charge/state7[6], // |p|
                                               relMomLoss,
                                               pdgCode_,
-                                              lastStep->materialProperties_,
+                                              lastStep->matStep_.materialProperties_,
                                               limits,
                                               true);
     }
     else { //assume material has not changed
       if  (RKSteps_.size()>1) {
-        lastStep->materialProperties_ = (lastStep - 1)->materialProperties_;
+        lastStep->matStep_.materialProperties_ = (lastStep - 1)->matStep_.materialProperties_;
       }
     }
   }
@@ -1896,7 +1916,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
   double finalStep = limits.getLowestLimitSignedVal();
 
-  lastStep->stepSize_ = finalStep;
+  lastStep->matStep_.stepSize_ = finalStep;
   lastStep->limits_ = limits;
 
   #ifdef DEBUG
@@ -2179,12 +2199,12 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
     double firstStep(0);
     for (unsigned int i=0; i<RKSteps_.size(); ++i) {
       if (i == 0) {
-        firstStep = RKSteps_.at(0).stepSize_;
+        firstStep = RKSteps_.at(0).matStep_.stepSize_;
         continue;
       }
-      if (RKSteps_.at(i).stepSize_ * firstStep < 0) {
-        if (RKSteps_.at(i-1).materialProperties_ == RKSteps_.at(i).materialProperties_) {
-          RKSteps_.at(i-1).stepSize_ += RKSteps_.at(i).stepSize_;
+      if (RKSteps_.at(i).matStep_.stepSize_ * firstStep < 0) {
+        if (RKSteps_.at(i-1).matStep_.materialProperties_ == RKSteps_.at(i).matStep_.materialProperties_) {
+          RKSteps_.at(i-1).matStep_.stepSize_ += RKSteps_.at(i).matStep_.stepSize_;
         }
         RKSteps_.erase(RKSteps_.begin()+i, RKSteps_.end());
       }

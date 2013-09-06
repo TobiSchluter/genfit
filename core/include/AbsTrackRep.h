@@ -9,8 +9,14 @@
 
 #include "SharedPlanePtr.h"
 //#include "MaterialInfo.h"
+#include "MaterialProperties.h"
 
 namespace genfit {
+
+struct MatStep {
+  MaterialProperties materialProperties_;
+  double stepSize_;
+};
 
 class StateOnPlane;
 class MeasuredStateOnPlane;
@@ -160,6 +166,9 @@ class AbsTrackRep : public TObject {
 
   /** Get the jacobian and noise matrix of the last extrapolation if it would have been done in opposite direction  */
   virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const = 0;
+
+  //! Get stepsizes and material properties of crossed materials of the last extrapolation.
+  virtual std::vector<genfit::MatStep> getSteps() const = 0;
 
   /** Get the radiation length of the material crossed in the last extrapolation.  */
   virtual double getRadiationLenght() const = 0;
