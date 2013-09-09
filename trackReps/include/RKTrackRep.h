@@ -94,8 +94,8 @@ class RKTrackRep : public AbsTrackRep {
   virtual TVector3 getMom(const StateOnPlane& state) const;
   virtual void getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const;
 
-  virtual double getMomMag(const StateOnPlane& state);
-  virtual double getMomVar(const MeasuredStateOnPlane& state);
+  virtual double getMomMag(const StateOnPlane& state) const;
+  virtual double getMomVar(const MeasuredStateOnPlane& state) const;
 
   virtual void getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const;
   virtual double getCharge(const StateOnPlane& state) const;

@@ -59,6 +59,16 @@ class MeasuredStateOnPlane : public StateOnPlane {
   void setStateCovPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane) {setStatePlane(state, plane); setCov(cov);}
   void setCov(const TMatrixDSym& cov) {if(cov_.GetNrows() == 0) cov_.ResizeTo(cov); cov_ = cov;}
 
+  // Shortcuts to TrackRep functions
+  void getPosMomCov(TVector3& pos, TVector3& mom, TMatrixDSym& cov) const {getRep()->getPosMomCov(*this, pos, mom, cov);}
+  void get6DStateCov(TVectorD& stateVec, TMatrixDSym& cov) const {getRep()->get6DStateCov(*this, stateVec, cov);}
+  double getMomVar() const {return getRep()->getMomVar(*this);}
+
+  void setPosMomErr(const TVector3& pos, const TVector3& mom, const TVector3& posErr, const TVector3& momErr) {getRep()->setPosMomErr(*this, pos, mom, posErr, momErr);}
+  void setPosMomCov(const TVector3& pos, const TVector3& mom, const TMatrixDSym& cov6x6) {getRep()->setPosMomCov(*this, pos, mom, cov6x6);}
+  void setPosMomCov(const TVectorD& state6, const TMatrixDSym& cov6x6) {getRep()->setPosMomCov(*this, state6, cov6x6);}
+
+
   virtual void Print(Option_t* option = "") const;
 
  protected:

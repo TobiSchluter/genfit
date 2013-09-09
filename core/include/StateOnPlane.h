@@ -69,6 +69,17 @@ class StateOnPlane : public TObject {
   TVector3 getDir() const {return rep_->getDir(*this);}
   void getPosMom(TVector3& pos, TVector3& mom) const {rep_->getPosMom(*this, pos, mom);}
   void getPosDir(TVector3& pos, TVector3& dir) const {rep_->getPosDir(*this, pos, dir);}
+  TVectorD get6DState() const {return rep_->get6DState(*this);}
+  double getMomMag() const {return rep_->getMomMag(*this);}
+  int getPDG() const {return rep_->getPDG();}
+  double getCharge() const {return rep_->getCharge(*this);}
+  double getQop() const {return rep_->getQop(*this);}
+  double getMass() const {return rep_->getMass(*this);}
+
+  void setPosMom(const TVector3& pos, const TVector3& mom) {rep_->setPosMom(*this, pos, mom);}
+  void setPosMom(const TVectorD& state6) {rep_->setPosMom(*this, state6);}
+  void setChargeSign(double charge) {rep_->setChargeSign(*this, charge);}
+  void setQop(double qop) {rep_->setQop(*this, qop);}
 
 
   virtual void Print(Option_t* option = "") const;

@@ -145,9 +145,9 @@ class AbsTrackRep : public TObject {
   virtual void get6DStateCov(const MeasuredStateOnPlane& state, TVectorD& stateVec, TMatrixDSym& cov) const;
 
   //! get the magnitude of the momentum in GeV
-  virtual double getMomMag(const StateOnPlane& state) = 0;
+  virtual double getMomMag(const StateOnPlane& state) const = 0;
   /** get the variance of the absolute value of the momentum  */
-  virtual double getMomVar(const MeasuredStateOnPlane& state) = 0;
+  virtual double getMomVar(const MeasuredStateOnPlane& state) const = 0;
 
   //! Get the pdg code.
   int getPDG() const {return pdgCode_;}

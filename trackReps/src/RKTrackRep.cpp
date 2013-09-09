@@ -547,7 +547,7 @@ double RKTrackRep::getCharge(const StateOnPlane& state) const
 }
 
 
-double RKTrackRep::getMomMag(const StateOnPlane& state) {
+double RKTrackRep::getMomMag(const StateOnPlane& state) const {
   // p = q / qop
   double p = getCharge(state)/state.getState()(0);
   assert (p>=0);
@@ -555,7 +555,7 @@ double RKTrackRep::getMomMag(const StateOnPlane& state) {
 }
 
 
-double RKTrackRep::getMomVar(const MeasuredStateOnPlane& state) {
+double RKTrackRep::getMomVar(const MeasuredStateOnPlane& state) const {
   // p(qop) = q/qop
   // dp/d(qop) = - q / (qop^2)
   // (delta p) = (delta qop) * |dp/d(qop)| = delta qop * |q / (qop^2)|
