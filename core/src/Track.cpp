@@ -207,6 +207,17 @@ int Track::getIdForRep(const AbsTrackRep* rep) const
 }
 
 
+bool Track::hasFitStatus(const AbsTrackRep* rep) const {
+  if (rep == NULL)
+    rep = getCardinalRep();
+
+  if (fitStatuses_.find(rep) == fitStatuses_.end())
+    return false;
+
+  return (fitStatuses_.at(rep) != NULL);
+}
+
+
 void Track::setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep) {
   if (fitStatuses_.find(rep) != fitStatuses_.end())
     delete fitStatuses_.at(rep);

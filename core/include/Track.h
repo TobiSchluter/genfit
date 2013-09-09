@@ -99,8 +99,10 @@ class Track : public TObject {
   AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_);}
   unsigned int getCardinalRepId() const {return cardinalRep_;}
 
-  bool hasFitStatus(const AbsTrackRep* rep) const {if (fitStatuses_.find(rep) == fitStatuses_.end()) return false; return (fitStatuses_.at(rep) != NULL);}
-  FitStatus* getFitStatus(const AbsTrackRep* rep) const {return fitStatuses_.at(rep);}
+  //! Check if track has a fitStatus for given rep. Per default, check for cardinal rep.
+  bool hasFitStatus(const AbsTrackRep* rep = NULL) const;
+  //! Get fit status for a TrackRep. Per default, return FitStatus for cardinalRep.
+  FitStatus* getFitStatus(const AbsTrackRep* rep = NULL) const {if (rep == NULL) rep = getCardinalRep(); return fitStatuses_.at(rep);}
   void setFitStatus(FitStatus* fitStatus, const AbsTrackRep* rep);
 
   const TVectorD& getStateSeed() const {return stateSeed_;}
