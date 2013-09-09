@@ -38,7 +38,10 @@
 #include "rave/MagneticField.h"
 #include "rave/VertexFactory.h"
 
-#include "GFTrack.h"
+#include "Track.h"
+
+namespace genfit {
+
 
 /**
  * @brief GFRaveVertexFactory
@@ -46,7 +49,6 @@
  *  It takes care of initializing the rave::VertexFactory, building the necessary maps,
  *  convert GENFIT to rave objects and vice versa.
  **/
-
 class GFRaveVertexFactory {
  public:
   // constructors, destructors
@@ -55,8 +57,8 @@ class GFRaveVertexFactory {
 
   // functions
 
-  void findVertices ( std::vector <  GFRaveVertex* > *, const std::vector < GFTrack* > &, bool use_beamspot=false );
-  void findVertices ( std::vector <  GFRaveVertex* > *, const std::vector < GFAbsTrackRep* > &, bool use_beamspot=false );
+  void findVertices ( std::vector <  genfit::GFRaveVertex* > *, const std::vector < genfit::Track* > &, bool use_beamspot=false );
+  void findVertices ( std::vector <  genfit::GFRaveVertex* > *, const std::vector < genfit::MeasuredStateOnPlane* > &, bool use_beamspot=false );
 
   void setBeamspot(const TVector3 & pos, const TMatrixDSym & cov);
 
@@ -71,21 +73,23 @@ class GFRaveVertexFactory {
   void clearMaps();
 
   // data members
-  rave::VertexFactory* fFactory;
-  rave::MagneticField* fMagneticField;
-  rave::Propagator* fPropagator;
+  rave::VertexFactory* factory_;
+  rave::MagneticField* magneticField_;
+  rave::Propagator* propagator_;
 
   /**
-   * bookkeeping of original GFTracks for later assignment to GFVertices
+   * bookkeeping of original genfit::Tracks for later assignment to GFVertices
    */
-  std::map<int, GFTrack*> * fIdGFTrackMap;
+  std::map<int, genfit::Track*> * IdGFTrackMap_;
   /**
    * map of copies of the cardinal reps for the GFRavePropagator; ownership of trackrep clones is HERE!!!
    */
-  std::map<int, GFAbsTrackRep*> * fIdGFTrackRepMap;
+  std::map<int, genfit::MeasuredStateOnPlane*> * IdGFMeasuredStateOnPlaneMap_;
 
 
 };
+
+} /* End of namespace genfit */
 
 #endif
 

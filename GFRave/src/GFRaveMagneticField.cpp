@@ -19,11 +19,12 @@
 
 
 #include "GFRaveMagneticField.h"
-#include "GFFieldManager.h"
+#include <FieldManager.h>
 
 #include <iostream>
 
 
+namespace genfit {
 
 GFRaveMagneticField *
 GFRaveMagneticField::copy() const{
@@ -36,8 +37,11 @@ GFRaveMagneticField::inTesla ( const rave::Point3D & position) const
 {
   TVector3 pos(position.x(), position.y(), position.z());
 
-  TVector3 B = GFFieldManager::getFieldVal(pos); // magnetic field in kGauss
+  TVector3 B = FieldManager::getInstance()->getFieldVal(pos); // magnetic field in kGauss
   B *= 1.E-1;
 
   return rave::Vector3D (B.X(), B.Y(), B.Z());
 }
+
+
+} /* End of namespace genfit */

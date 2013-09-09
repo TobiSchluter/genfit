@@ -26,56 +26,56 @@
 #include "GFRaveMagneticField.h"
 #include "GFRavePropagator.h"
 
-#include "GFException.h"
+#include "Exception.h"
 
 #include "rave/Vertex.h"
 #include "rave/Ellipsoid3D.h"
 
 
+namespace genfit {
 
-GFRaveVertexFactory::GFRaveVertexFactory(int verbosity, bool useVacuumPropagator)
-{
-  fIdGFTrackMap = new std::map<int, GFTrack*>;
-  fIdGFTrackRepMap = new std::map<int, GFAbsTrackRep*>;
+GFRaveVertexFactory::GFRaveVertexFactory(int verbosity, bool useVacuumPropagator) {
+  IdGFTrackMap_ = new std::map<int, genfit::Track*>;
+  IdGFMeasuredStateOnPlaneMap_ = new std::map<int, genfit::MeasuredStateOnPlane*>;
 
   if (useVacuumPropagator) {
-    fPropagator = new rave::VacuumPropagator();
+    propagator_ = new rave::VacuumPropagator();
   }
   else {
-    fPropagator = new GFRavePropagator();
-    (static_cast<GFRavePropagator*>(fPropagator))->setIdGFTrackRepMap(fIdGFTrackRepMap);
+    propagator_ = new GFRavePropagator();
+    (static_cast<GFRavePropagator*>(propagator_))->setIdGFMeasuredStateOnPlaneMap(IdGFMeasuredStateOnPlaneMap_);
   }
 
-  fMagneticField = new GFRaveMagneticField();
+  magneticField_ = new GFRaveMagneticField();
 
   if (verbosity > 0) ++verbosity; // verbosity has to be >1 for rave
 
-  fFactory = new rave::VertexFactory(*fMagneticField, *fPropagator, "kalman-smoothing:1", verbosity); // here copies of fMagneticField and fPropagator are made!
+  factory_ = new rave::VertexFactory(*magneticField_, *propagator_, "kalman-smoothing:1", verbosity); // here copies of magneticField_ and propagator_ are made!
 }
 
 
 GFRaveVertexFactory::~GFRaveVertexFactory(){
   clearMaps();
-  delete fIdGFTrackMap;
-  delete fIdGFTrackRepMap;
+  delete IdGFTrackMap_;
+  delete IdGFMeasuredStateOnPlaneMap_;
 
-  delete fMagneticField;
-  delete fPropagator;
-  delete fFactory;
+  delete magneticField_;
+  delete propagator_;
+  delete factory_;
 }
 
 
 void
-GFRaveVertexFactory::findVertices ( std::vector <  GFRaveVertex* > * GFvertices, const std::vector < GFTrack* > & GFTracks, bool use_beamspot ){
+GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFvertices, const std::vector < genfit::Track* > & GFTracks, bool use_beamspot ){
   clearMaps();
 
   try{
-    GFRave::RaveToGFVertices(GFvertices,
-                             fFactory->create(GFRave::GFTracksToTracks(GFTracks, fIdGFTrackMap, fIdGFTrackRepMap, 0),
+    RaveToGFVertices(GFvertices,
+                             factory_->create(GFTracksToTracks(GFTracks, IdGFTrackMap_, IdGFMeasuredStateOnPlaneMap_, 0),
                                               use_beamspot),
-                             fIdGFTrackMap, fIdGFTrackRepMap);
+                             IdGFTrackMap_, IdGFMeasuredStateOnPlaneMap_);
   }
-  catch(GFException & e){
+  catch(Exception & e){
     std::cerr << e.what();
     return;
   }
@@ -83,16 +83,16 @@ GFRaveVertexFactory::findVertices ( std::vector <  GFRaveVertex* > * GFvertices,
 
 
 void
-GFRaveVertexFactory::findVertices ( std::vector <  GFRaveVertex* > * GFvertices, const std::vector < GFAbsTrackRep* > & GFTrackReps, bool use_beamspot ){
+GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFvertices, const std::vector < genfit::MeasuredStateOnPlane* > & GFMeasuredStateOnPlanes, bool use_beamspot ){
   clearMaps();
 
   try{
-    GFRave::RaveToGFVertices(GFvertices,
-                             fFactory->create(GFRave::GFTrackRepsToTracks(GFTrackReps, fIdGFTrackMap, fIdGFTrackRepMap, 0),
-                                              use_beamspot),
-                             fIdGFTrackMap, fIdGFTrackRepMap);
+    RaveToGFVertices(GFvertices,
+                     factory_->create(MeasuredStateOnPlanesToTracks(GFMeasuredStateOnPlanes, IdGFTrackMap_, IdGFMeasuredStateOnPlaneMap_, 0),
+                                      use_beamspot),
+                     IdGFTrackMap_, IdGFMeasuredStateOnPlaneMap_);
   }
-  catch(GFException & e){
+  catch(Exception & e){
     std::cerr << e.what();
     return;
   }
@@ -101,8 +101,8 @@ GFRaveVertexFactory::findVertices ( std::vector <  GFRaveVertex* > * GFvertices,
 
 void
 GFRaveVertexFactory::setBeamspot(const TVector3 & pos, const TMatrixDSym & cov){
-  fFactory->setBeamSpot(rave::Ellipsoid3D(GFRave::TVector3ToPoint3D(pos),
-                        GFRave::TMatrixDSymToCovariance3D(cov)));
+  factory_->setBeamSpot(rave::Ellipsoid3D(TVector3ToPoint3D(pos),
+                        TMatrixDSymToCovariance3D(cov)));
 }
 
 
@@ -112,18 +112,21 @@ GFRaveVertexFactory::setMethod(const std::string & method){
   if (found==std::string::npos){
     std::cerr << "GFRaveVertexFactory::setMethod(" << method << ") ==> smoothing not turned on! GFRaveTrackParameters will be unsmoothed!" << std::endl;
   }
-  fFactory->setDefaultMethod(method);
-  std::cout << "GFRaveVertexFactory::setMethod ==> set method to " << fFactory->method() << std::endl;
+  factory_->setDefaultMethod(method);
+  std::cout << "GFRaveVertexFactory::setMethod ==> set method to " << factory_->method() << std::endl;
 }
 
 
 void
 GFRaveVertexFactory::clearMaps(){
-  fIdGFTrackMap->clear();
+  IdGFTrackMap_->clear();
 
-  for (unsigned int i=0; i<fIdGFTrackRepMap->size(); ++i){
+  for (unsigned int i=0; i<IdGFMeasuredStateOnPlaneMap_->size(); ++i){
     // in here are copies or trackreps -> we have ownership
-    delete (*fIdGFTrackRepMap)[i];
+    delete (*IdGFMeasuredStateOnPlaneMap_)[i];
   }
-  fIdGFTrackRepMap->clear();
+  IdGFMeasuredStateOnPlaneMap_->clear();
 }
+
+
+} /* End of namespace genfit */

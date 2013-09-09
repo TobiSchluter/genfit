@@ -34,19 +34,19 @@
 #include "rave/Plane.h"
 #include "rave/Cylinder.h"
 
-#include "GFAbsTrackRep.h"
+#include "AbsTrackRep.h"
 
 #include <map>
 
 
-
+namespace genfit {
 
 /**
  * @brief GFRavePropagator class
  * Inherits from rave::Propagator. A map has to be provided,
  * containing pointers to clones of the Cardinal Reps of the GFtracks.
  * The GFRavePropagator uses the information of the rave track to set
- * the state and covariance of the corresponding GFAbsTrackRep,
+ * the state and covariance of the corresponding AbsTrackRep,
  * extrapolates and then returns a new rave track with the
  * extrapolated state and covariance.
  *
@@ -66,19 +66,20 @@ class GFRavePropagator : public rave::Propagator
 
     virtual ~GFRavePropagator();
 
-    void setIdGFTrackRepMap(std::map < int, GFAbsTrackRep* > * map);
+    void setIdGFMeasuredStateOnPlaneMap(std::map < int, MeasuredStateOnPlane* > * map);
 
   private:
 
 
-    // check if everything is ok, otherwise throw GFException;
-    // get trackrep from IdGFTrackRepMap and set track Rep state and cov from track
-    GFAbsTrackRep* getTrackRep(const rave::Track & track) const;
+    // check if everything is ok, otherwise throw Exception;
+    // get MeasuredStateOnPlane from IdGFMeasuredStateOnPlaneMap_ and set MeasuredStateOnPlane state and cov from track
+    MeasuredStateOnPlane* getMeasuredStateOnPlane(const rave::Track & track) const;
 
     // data members
-    std::map < int, GFAbsTrackRep* > * IdGFTrackRepMap; // pointers to GFAbsTracksReps via rave track ID
+    std::map < int, MeasuredStateOnPlane* > * IdGFMeasuredStateOnPlaneMap_; // pointers to GFAbsTracksReps via rave track ID
 };
 
 
+} /* End of namespace genfit */
 
 #endif

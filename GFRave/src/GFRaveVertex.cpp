@@ -20,11 +20,11 @@
 
 #include "GFRaveVertex.h"
 #include "GFRaveConverters.h"
-#include <GFException.h>
+#include <Exception.h>
 
 #include <iostream>
 
-using namespace std;
+namespace genfit {
 
 //#define COUNT
 
@@ -55,7 +55,7 @@ GFRaveVertex::GFRaveVertex(const TVector3 & pos, const TMatrixDSym& cov,
   fSmoothedTracks(smoothedTracks)
 {
   if (fCov.GetNrows()!=3 || fCov.GetNcols()!=3) {
-    GFException exc("GFRaveVertex ==> Covariance is not 3x3!",__LINE__,__FILE__);
+    Exception exc("GFRaveVertex ==> Covariance is not 3x3!",__LINE__,__FILE__);
     throw exc;
   }
 
@@ -128,4 +128,6 @@ GFRaveVertex::Print(const Option_t*) const {
     std::cout << " track " << i << ":\n"; getParameters(i)->Print();
   }
 }
+
+} /* End of namespace genfit */
 

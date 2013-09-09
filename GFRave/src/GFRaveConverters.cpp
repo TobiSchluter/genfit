@@ -20,9 +20,7 @@
 
 #include "GFRaveConverters.h"
 
-#include "GFTrack.h"
-#include "GFAbsTrackRep.h"
-#include "GFException.h"
+#include "Exception.h"
 
 #include "rave/Plane.h"
 
@@ -31,11 +29,13 @@
 #include <iostream>
 
 
+namespace genfit {
+
 
 std::vector < rave::Track >
-GFRave::GFTracksToTracks(const std::vector < GFTrack* >  & GFTracks,
-                         std::map<int, GFTrack*> * IdGFTrackMap,
-                         std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap,
+GFTracksToTracks(const std::vector < genfit::Track* >  & GFTracks,
+                         std::map<int, genfit::Track*> * IdGFTrackMap,
+                         std::map<int, genfit::MeasuredStateOnPlane*> * IdGFMeasuredStateOnPlaneMap,
                          int startID){
 
   unsigned int ntracks(GFTracks.size());
@@ -46,49 +46,49 @@ GFRave::GFTracksToTracks(const std::vector < GFTrack* >  & GFTracks,
   for (unsigned int i=0; i<ntracks; ++i){
 
     // only convert successfully fitted tracks!
-    if (GFTracks[i]->getCardinalRep()->getStatusFlag()!=0) continue;
+    if (!GFTracks[i]->getFitStatus(GFTracks[i]->getCardinalRep())->isFitConverged()) continue;
 
     ravetracks.push_back(GFTrackToTrack(GFTracks[i], startID) );
 
     if (IdGFTrackMap != NULL){
       if (IdGFTrackMap->count(startID) > 0){
-        GFException exc("GFTracksToTracks ==> IdGFTrackMap has already an entry for this id",__LINE__,__FILE__);
+        Exception exc("GFTracksToTracks ==> IdGFTrackMap has already an entry for this id",__LINE__,__FILE__);
         throw exc;
       }
       (*IdGFTrackMap)[startID] = GFTracks[i];
     }
     else {
-      GFException exc("GFTracksToTracks ==> IdGFTrackMap is NULL",__LINE__,__FILE__);
+      Exception exc("GFTracksToTracks ==> IdGFTrackMap is NULL",__LINE__,__FILE__);
       throw exc;
     }
 
-    if (IdGFTrackRepMap != NULL){
-      if (IdGFTrackRepMap->count(startID) > 0){
-        GFException exc("GFTracksToTracks ==> IdGFTrackRepMap has already an entry for this id",__LINE__,__FILE__);
+    if (IdGFMeasuredStateOnPlaneMap != NULL){
+      if (IdGFMeasuredStateOnPlaneMap->count(startID) > 0){
+        Exception exc("GFTracksToTracks ==> IdGFMeasuredStateOnPlaneMap has already an entry for this id",__LINE__,__FILE__);
         throw exc;
       }
-      (*IdGFTrackRepMap)[startID] = GFTracks[i]->getCardinalRep()->clone(); // here clones are made so that the state of the original GFTracks and their TrackReps will not be altered by the vertexing process
+      (*IdGFMeasuredStateOnPlaneMap)[startID] = new MeasuredStateOnPlane(GFTracks[i]->getFittedState()); // here clones are made so that the state of the original GFTracks and their TrackReps will not be altered by the vertexing process
     }
     else {
-      GFException exc("GFTracksToTracks ==> IdGFTrackRepMap is NULL",__LINE__,__FILE__);
+      Exception exc("GFTracksToTracks ==> IdGFMeasuredStateOnPlaneMap is NULL",__LINE__,__FILE__);
       throw exc;
     }
 
     ++startID;
   }
 
-  //std::cout << "IdGFTrackMap size " << IdGFTrackMap->size() <<"     IdGFTrackRepMap size " << IdGFTrackRepMap->size() << std::endl;
+  //std::cout << "IdGFTrackMap size " << IdGFTrackMap->size() <<"     IdGFMeasuredStateOnPlaneMap size " << IdGFMeasuredStateOnPlaneMap->size() << std::endl;
   return ravetracks;
 }
 
 
 std::vector < rave::Track >
-GFRave::GFTrackRepsToTracks(const std::vector < GFAbsTrackRep* >  & GFTrackReps,
-                            std::map<int, GFTrack*> * IdGFTrackMap,
-                            std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap,
-                            int startID){
+MeasuredStateOnPlanesToTracks(const std::vector<genfit::MeasuredStateOnPlane*>& measuredStateOnPlanes,
+    std::map<int, genfit::Track*> * IdGFTrackMap,
+    std::map<int, genfit::MeasuredStateOnPlane*> * IdGFMeasuredStateOnPlaneMap,
+    int startID){
 
-  unsigned int ntracks(GFTrackReps.size());
+  unsigned int ntracks(measuredStateOnPlanes.size());
 
   std::vector < rave::Track > ravetracks;
   ravetracks.reserve(ntracks);
@@ -96,67 +96,66 @@ GFRave::GFTrackRepsToTracks(const std::vector < GFAbsTrackRep* >  & GFTrackReps,
   for (unsigned int i=0; i<ntracks; ++i){
 
     // only convert successfully fitted tracks!
-    if (GFTrackReps[i]->getStatusFlag()!=0) continue;
+    //if (measuredStateOnPlanes[i]->getStatusFlag()!=0) continue; // not possible anymore
 
-    ravetracks.push_back(RepToTrack(GFTrackReps[i], startID) );
+    ravetracks.push_back(MeasuredStateOnPlaneToTrack(measuredStateOnPlanes[i], startID) );
 
     if (IdGFTrackMap != NULL){
       if (IdGFTrackMap->count(startID) > 0){
-        GFException exc("GFTrackRepsToTracks ==> IdGFTrackMap has already an entry for this id",__LINE__,__FILE__);
+        Exception exc("MeasuredStateOnPlanesToTracks ==> IdGFTrackMap has already an entry for this id",__LINE__,__FILE__);
         throw exc;
       }
-      (*IdGFTrackMap)[startID] = NULL; // fill with NULL pointers since we only have track reps and no GFTracks
+      (*IdGFTrackMap)[startID] = NULL; // fill with NULL pointers since we only have measuredStateOnPlanes and no genfit::Tracks
     }
     else {
-      GFException exc("GFTrackRepsToTracks ==> IdGFTrackMap is NULL",__LINE__,__FILE__);
+      Exception exc("MeasuredStateOnPlanesToTracks ==> IdGFTrackMap is NULL",__LINE__,__FILE__);
       throw exc;
     }
 
-    if (IdGFTrackRepMap != NULL){
-      if (IdGFTrackRepMap->count(startID) > 0){
-        GFException exc("GFTrackRepsToTracks ==> IdGFTrackRepMap has already an entry for this id",__LINE__,__FILE__);
+    if (IdGFMeasuredStateOnPlaneMap != NULL){
+      if (IdGFMeasuredStateOnPlaneMap->count(startID) > 0){
+        Exception exc("MeasuredStateOnPlanesToTracks ==> IdGFMeasuredStateOnPlaneMap has already an entry for this id",__LINE__,__FILE__);
         throw exc;
       }
-      (*IdGFTrackRepMap)[startID] = GFTrackReps[i]->clone(); // here clones are made so that the state of the original TrackReps will not be altered by the vertexing process
+      (*IdGFMeasuredStateOnPlaneMap)[startID] = new MeasuredStateOnPlane(*measuredStateOnPlanes[i]); // here clones are made so that the state of the original TrackReps will not be altered by the vertexing process
     }
     else {
-      GFException exc("GFTracksToTracks ==> IdGFTrackRepMap is NULL",__LINE__,__FILE__);
+      Exception exc("MeasuredStateOnPlanesToTracks ==> IdGFMeasuredStateOnPlaneMap is NULL",__LINE__,__FILE__);
       throw exc;
     }
 
     ++startID;
   }
 
-  //std::cout << "IdGFTrackMap size " << IdGFTrackMap->size() <<"     IdGFTrackRepMap size " << IdGFTrackRepMap->size() << std::endl;
+  //std::cout << "IdGFTrackMap size " << IdGFTrackMap->size() <<"     IdGFMeasuredStateOnPlaneMap size " << IdGFMeasuredStateOnPlaneMap->size() << std::endl;
   return ravetracks;
 }
 
 
 rave::Track
-GFRave::GFTrackToTrack(GFTrack* orig, int id, std::string tag){
-  return GFRave::RepToTrack(orig->getCardinalRep(), id, orig, tag);
+GFTrackToTrack(const Track* orig, int id, std::string tag){
+  return MeasuredStateOnPlaneToTrack(&(orig->getFittedState()), id, orig, tag);
 }
 
 
 rave::Track
-GFRave::RepToTrack(GFAbsTrackRep* rep, const rave::Track & orig) {
-  return GFRave::RepToTrack(rep, orig.id(), orig.originalObject(), orig.tag());
+MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, const rave::Track& orig) {
+  return MeasuredStateOnPlaneToTrack(state, orig.id(), static_cast<Track*>(orig.originalObject()), orig.tag());
 }
 
 
 rave::Track
-GFRave::RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::string tag){
+MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, int id, Track* originaltrack, std::string tag){
 
-  if (rep->getStatusFlag()!=0) {
-    GFException exc("RepToTrack ==> GFTrack has status flag != 0!",__LINE__,__FILE__);
+  if (! originaltrack->getFitStatus(originaltrack->getCardinalRep())->isFitConverged()) {
+    Exception exc("MeasuredStateOnPlaneToTrack ==> Trackfit is not converged",__LINE__,__FILE__);
     throw exc;
   }
 
-  const GFDetPlane& refPlane(rep->getReferencePlane());
   TVector3 pos, mom;
   TMatrixDSym cov;
 
-  rep->getPosMomCov(refPlane, pos, mom, cov);
+  originaltrack->getCardinalRep()->getPosMomCov(originaltrack->getFittedState(), pos, mom, cov);
 
   // state
   rave::Vector6D ravestate(pos.X(), pos.Y(), pos.Z(),
@@ -172,32 +171,36 @@ GFRave::RepToTrack(GFAbsTrackRep* rep, int id, void * originaltrack, std::string
                              cov(4,4), cov(5,4), cov(5,5));
 
   //std::cerr<<"create rave track with id " << id << std::endl;
-  //std::cerr<<"  pos: "; GFRave::Point3DToTVector3(ravestate.position()).Print();
-  //std::cerr<<"  mom: "; GFRave::Vector3DToTVector3(ravestate.momentum()).Print();
+  //std::cerr<<"  pos: "; Point3DToTVector3(ravestate.position()).Print();
+  //std::cerr<<"  mom: "; Vector3DToTVector3(ravestate.momentum()).Print();
 
   rave::Track ret(id, ravestate, ravecov,
-                  rep->getCharge(), rep->getChiSqu(), rep->getNDF(),
-                  originaltrack, tag);
+                  originaltrack->getFitStatus()->getCharge(),
+                  originaltrack->getFitStatus()->getChi2(),
+                  originaltrack->getFitStatus()->getNdf(),
+                  static_cast<void*>(originaltrack), tag);
 
   return ret;
 }
 
 
 void
-GFRave::setTrackRepData(const rave::Track & orig, GFAbsTrackRep* rep){
+setData(const rave::Track& orig, MeasuredStateOnPlane* state){
 
-  rep->setPosMomCov(TVector3(orig.state().x(), orig.state().y(), orig.state().z()),
-                    TVector3(orig.state().px(), orig.state().py(), orig.state().pz()),
-                    Covariance6DToTMatrixDSym(orig.error()));
+  state->setPosMomCov(TVector3(orig.state().x(), orig.state().y(), orig.state().z()),
+                      TVector3(orig.state().px(), orig.state().py(), orig.state().pz()),
+                      Covariance6DToTMatrixDSym(orig.error()));
 
 }
 
 
 GFRaveVertex*
-GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTrack*> * IdGFTrackMap,  const std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap){
+RaveToGFVertex(const rave::Vertex & raveVertex,
+    const std::map<int, genfit::Track*> * IdGFTrackMap,
+    const std::map<int, genfit::MeasuredStateOnPlane*> * IdGFMeasuredStateOnPlaneMap){
 
   if (!(raveVertex.isValid())) {
-    GFException exc("RaveToGFVertex ==> rave Vertex is not valid!",__LINE__,__FILE__);
+    Exception exc("RaveToGFVertex ==> rave Vertex is not valid!",__LINE__,__FILE__);
     throw exc;
   }
 
@@ -215,7 +218,7 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
 
   // check numbers of tracks and smoothed tracks
   if (smoothing && nTrks != raveSmoothedTracks.size()){
-    GFException exc("RaveToGFVertex ==> number of smoothed tracks != number of tracks",__LINE__,__FILE__);
+    Exception exc("RaveToGFVertex ==> number of smoothed tracks != number of tracks",__LINE__,__FILE__);
     throw exc;
   }
 
@@ -228,12 +231,12 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
     id = raveWeightedTracks[i].second.id();
 
     if (IdGFTrackMap->count(id) == 0){
-      GFException exc("RaveToGFVertex ==> rave track id is not present in IdGFTrackMap",__LINE__,__FILE__);
+      Exception exc("RaveToGFVertex ==> rave track id is not present in IdGFTrackMap",__LINE__,__FILE__);
       throw exc;
     }
 
-    if (IdGFTrackRepMap->count(id) == 0){
-      GFException exc("RaveToGFVertex ==> rave track id is not present in IdGFTrackRepMap",__LINE__,__FILE__);
+    if (IdGFMeasuredStateOnPlaneMap->count(id) == 0){
+      Exception exc("RaveToGFVertex ==> rave track id is not present in IdGFMeasuredStateOnPlaneMap",__LINE__,__FILE__);
       throw exc;
     }
 
@@ -242,63 +245,66 @@ GFRave::RaveToGFVertex(const rave::Vertex & raveVertex, const std::map<int, GFTr
     if(smoothing) {
       // convert smoothed track parameters
       trackparams = new GFRaveTrackParameters(IdGFTrackMap->at(id), //track
-                                              IdGFTrackRepMap->at(id), //rep
+                                              IdGFMeasuredStateOnPlaneMap->at(id), //rep
                                               raveWeightedTracks[i].first, //weight
-                                              GFRave::Vector6DToTVectorD(raveSmoothedTracks[i].second.state()), //smoothed state
-                                              GFRave::Covariance6DToTMatrixDSym(raveSmoothedTracks[i].second.error()), //smoothed cov
+                                              Vector6DToTVectorD(raveSmoothedTracks[i].second.state()), //smoothed state
+                                              Covariance6DToTMatrixDSym(raveSmoothedTracks[i].second.error()), //smoothed cov
                                               true);
     }
     else {
       // convert track parameters, no smoothed tracks available
       trackparams = new GFRaveTrackParameters(IdGFTrackMap->at(id), //track
-                                              IdGFTrackRepMap->at(id), //rep
+                                              IdGFMeasuredStateOnPlaneMap->at(id), //rep
                                               raveWeightedTracks[i].first, //weight
-                                              GFRave::Vector6DToTVectorD(raveWeightedTracks[i].second.state()), //state
-                                              GFRave::Covariance6DToTMatrixDSym(raveWeightedTracks[i].second.error()), //cov
+                                              Vector6DToTVectorD(raveWeightedTracks[i].second.state()), //state
+                                              Covariance6DToTMatrixDSym(raveWeightedTracks[i].second.error()), //cov
                                               false);
     }
     trackParameters.push_back(trackparams);
   }
 
-  return new GFRaveVertex(GFRave::Point3DToTVector3(raveVertex.position()),
-                          GFRave::Covariance3DToTMatrixDSym(raveVertex.error()),
+  return new GFRaveVertex(Point3DToTVector3(raveVertex.position()),
+                          Covariance3DToTMatrixDSym(raveVertex.error()),
                           trackParameters,
                           raveVertex.ndf(), raveVertex.chiSquared(), raveVertex.id());
 }
 
 void
-GFRave::RaveToGFVertices(std::vector<GFRaveVertex*> * GFVertices, const std::vector<rave::Vertex> & raveVertices, const std::map<int, GFTrack*> * IdGFTrackMap,  const std::map<int, GFAbsTrackRep*> * IdGFTrackRepMap){
+RaveToGFVertices(std::vector<GFRaveVertex*> * GFVertices,
+    const std::vector<rave::Vertex> & raveVertices,
+    const std::map<int, Track*> * IdGFTrackMap,
+    const std::map<int, genfit::MeasuredStateOnPlane*> * IdGFMeasuredStateOnPlaneMap){
 
   unsigned int nVert(raveVertices.size());
 
   GFVertices->reserve(nVert);
 
   for (unsigned int i=0; i<nVert; ++i){
-    GFVertices->push_back(RaveToGFVertex(raveVertices[i], IdGFTrackMap, IdGFTrackRepMap));
+    GFVertices->push_back(RaveToGFVertex(raveVertices[i], IdGFTrackMap, IdGFMeasuredStateOnPlaneMap));
   }
 }
 
 
-GFDetPlane
-GFRave::PlaneToGFDetPlane(const ravesurf::Plane & rplane) {
-  return GFDetPlane(GFRave::Point3DToTVector3(rplane.position()),
-                    GFRave::Vector3DToTVector3(rplane.normalVector()) );
+SharedPlanePtr
+PlaneToGFDetPlane(const ravesurf::Plane& rplane) {
+  return SharedPlanePtr(new DetPlane(Point3DToTVector3(rplane.position()),
+                    Vector3DToTVector3(rplane.normalVector()) ));
 }
 
 
 TVector3
-GFRave::Point3DToTVector3(const rave::Point3D & v) {
+Point3DToTVector3(const rave::Point3D& v) {
   return TVector3(v.x(), v.y(), v.z());
 }
 
 TVector3
-GFRave::Vector3DToTVector3(const rave::Vector3D & v) {
+Vector3DToTVector3(const rave::Vector3D& v) {
   return TVector3(v.x(), v.y(), v.z());
 }
 
 
 TMatrixDSym
-GFRave::Covariance3DToTMatrixDSym(const rave::Covariance3D & ravecov){
+Covariance3DToTMatrixDSym(const rave::Covariance3D& ravecov){
   TMatrixDSym cov(3);
 
   cov(0,0) = ravecov.dxx();
@@ -318,7 +324,7 @@ GFRave::Covariance3DToTMatrixDSym(const rave::Covariance3D & ravecov){
 
 
 TVectorD
-GFRave::Vector6DToTVectorD(const rave::Vector6D & ravevec){
+Vector6DToTVectorD(const rave::Vector6D& ravevec){
   TVectorD vec(6);
 
   vec[0] = ravevec.x();
@@ -334,7 +340,7 @@ GFRave::Vector6DToTVectorD(const rave::Vector6D & ravevec){
 
 
 TMatrixDSym
-GFRave::Covariance6DToTMatrixDSym(const rave::Covariance6D & ravecov){
+Covariance6DToTMatrixDSym(const rave::Covariance6D& ravecov){
   TMatrixDSym cov(6);
 
   cov(0,0) = ravecov.dxx();
@@ -384,15 +390,15 @@ GFRave::Covariance6DToTMatrixDSym(const rave::Covariance6D & ravecov){
 
 
 rave::Point3D
-GFRave::TVector3ToPoint3D(const TVector3 & vec){
+TVector3ToPoint3D(const TVector3 & vec){
   return rave::Point3D(vec.X(), vec.Y(), vec.Z());
 }
 
 
 rave::Covariance3D
-GFRave::TMatrixDSymToCovariance3D(const TMatrixDSym & matrix){
+TMatrixDSymToCovariance3D(const TMatrixDSym & matrix){
   if (matrix.GetNrows()!=3) {
-    GFException exc("TMatrixDSymToCovariance3D ==> TMatrixDSym is not 3x3!",__LINE__,__FILE__);
+    Exception exc("TMatrixDSymToCovariance3D ==> TMatrixDSym is not 3x3!",__LINE__,__FILE__);
     throw exc;
   }
 
@@ -401,4 +407,6 @@ GFRave::TMatrixDSymToCovariance3D(const TMatrixDSym & matrix){
 
 }
 
+
+} // end of namespace genfit
 

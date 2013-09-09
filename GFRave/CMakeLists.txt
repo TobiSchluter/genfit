@@ -14,6 +14,7 @@ IF(NOT DEFINED ENV{ROOTSYS})
    MESSAGE(FATAL_ERROR "You did not set the environment variable ROOTSYS. Please check your ROOT configuration.") 
 ENDIF(NOT DEFINED ENV{ROOTSYS})
 
+SET(GENFIT $ENV{GENFIT})
 
 # get compiler flags from rave
 INCLUDE(FindPkgConfig)
@@ -30,19 +31,19 @@ SET (CMAKE_CXX_FLAGS ${RAVE_CFLAGS_STR})
 
 INCLUDE_DIRECTORIES(
   $ENV{ROOTSYS}/include  
-  ${GENFIT}/include
+  ${GENFIT}/include/genfit
   ${GENFIT}/GFRave/include
   ${CLHEP_INCLUDE_DIR}
   ${RAVE_INCLUDE_DIRS_STR}
 )
 
 set(GFRAVE_SRCS 
-	src/GFRaveConverters.cpp
-	src/GFRaveMagneticField.cpp
-	src/GFRavePropagator.cpp
-	src/GFRaveTrackParameters.cpp
-	src/GFRaveVertex.cpp
-	src/GFRaveVertexFactory.cpp
+	${GENFIT}/GFRave/src/GFRaveConverters.cpp
+	${GENFIT}/GFRave/src/GFRaveMagneticField.cpp
+	${GENFIT}/GFRave/src/GFRavePropagator.cpp
+	${GENFIT}/GFRave/src/GFRaveTrackParameters.cpp
+	${GENFIT}/GFRave/src/GFRaveVertex.cpp
+	${GENFIT}/GFRave/src/GFRaveVertexFactory.cpp
 )
 
 set(GFRAVEDICT_HEADERS 

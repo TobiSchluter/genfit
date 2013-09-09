@@ -20,15 +20,15 @@
 
 #include "GFRavePropagator.h"
 #include "GFRaveConverters.h"
-#include "GFException.h"
+#include "Exception.h"
 
 #include <iostream>
 
-using namespace std;
 
+namespace genfit {
 
 GFRavePropagator::GFRavePropagator() :
-    IdGFTrackRepMap(NULL)
+    IdGFMeasuredStateOnPlaneMap_(NULL)
 {}
   
 GFRavePropagator*
@@ -49,7 +49,7 @@ GFRavePropagator::to ( const rave::Track & orig,
                        const ravesurf::Cylinder & rcyl ) const
 {
   // todo to be implemented!!
-  GFException exc("GFRavePropagator::to (cylinder) ==> not yet implemented!",__LINE__,__FILE__);
+  Exception exc("GFRavePropagator::to (cylinder) ==> not yet implemented!",__LINE__,__FILE__);
   throw exc;
 }
 
@@ -58,15 +58,12 @@ std::pair < rave::Track, double >
 GFRavePropagator::to ( const rave::Track & orig,
                        const ravesurf::Plane & rplane ) const
 {
-  GFAbsTrackRep* rep = getTrackRep(orig);
-  double path = rep->extrapolate(GFRave::PlaneToGFDetPlane(rplane));
+  MeasuredStateOnPlane* state = getMeasuredStateOnPlane(orig);
 
-  if (rep->getStatusFlag() != 0){
-    GFException exc("GFRavePropagator::to ==> Extrapolation failed!",__LINE__,__FILE__);
-    throw exc;
-  }
-  
-  std::pair < rave::Track, double > ret(GFRave::RepToTrack(rep, orig), path);
+  // will throw Exception if extrapolation does not work
+  double path = state->extrapolateToPlane(PlaneToGFDetPlane(rplane));
+
+  std::pair < rave::Track, double > ret(MeasuredStateOnPlaneToTrack(state, orig), path);
   return ret;
 }
 
@@ -77,73 +74,57 @@ GFRavePropagator::closestTo ( const rave::Track & orig,
 {
 
   if (transverse){
-    GFException exc("GFRavePropagator::closestTo ==> transverse is true, not implemented!",__LINE__,__FILE__);
+    Exception exc("GFRavePropagator::closestTo ==> transverse is true, not implemented!",__LINE__,__FILE__);
     throw exc;
   }
 
-  GFAbsTrackRep* rep = getTrackRep(orig);
+  MeasuredStateOnPlane* state = getMeasuredStateOnPlane(orig);
 
-  TVector3 poca, normvec;
-  TVector3 point(GFRave::Point3DToTVector3(pt));
-  rep->extrapolateToPoint(point, poca, normvec);
+  TVector3 point(Point3DToTVector3(pt));
+  state->extrapolateToPoint(point);
 
-  if (rep->getStatusFlag() != 0){
-    GFException exc("GFRavePropagator::to ==> Extrapolation failed!",__LINE__,__FILE__);
-    throw exc;
-  }
-
-  return GFRave::RepToTrack(rep, orig);
+  return MeasuredStateOnPlaneToTrack(state, orig);
 }
 
 
-GFAbsTrackRep*
-GFRavePropagator::getTrackRep(const rave::Track & track) const{
+MeasuredStateOnPlane*
+GFRavePropagator::getMeasuredStateOnPlane(const rave::Track & track) const {
 
-  if (IdGFTrackRepMap==NULL) {
-    GFException exc("GFRavePropagator::getTrackRep ==> IdGFTrackRepMap is NULL, cannot access GFTracks!",__LINE__,__FILE__);
+  if (IdGFMeasuredStateOnPlaneMap_==NULL) {
+    Exception exc("GFRavePropagator::getTrackRep ==> IdGFMeasuredStateOnPlaneMap_ is NULL, cannot access genfit::Tracks!",__LINE__,__FILE__);
     throw exc;
   }
 
   if (!(track.isValid())) {
-    GFException exc("GFRavePropagator::getTrackRep ==> Track is not valid!",__LINE__,__FILE__);
+    Exception exc("GFRavePropagator::getTrackRep ==> rave::Track is not valid!",__LINE__,__FILE__);
     throw exc;
   }
 
   //std::cerr<<"GFRavePropagator::getTrackRep track id: "<<track.id()<<std::endl;
-  //std::cerr<<"  pos: "; GFRave::Point3DToTVector3(track.state().position()).Print();
-  //std::cerr<<"  mom: "; GFRave::Vector3DToTVector3(track.state().momentum()).Print();
+  //std::cerr<<"  pos: "; Point3DToTVector3(track.state().position()).Print();
+  //std::cerr<<"  mom: "; Vector3DToTVector3(track.state().momentum()).Print();
 
-  if (IdGFTrackRepMap->count(track.id()) == 0) {
-    GFException exc("GFRavePropagator::getTrackRep ==> no entry in IdGFTrackRepMap corresponding to track id, cannot access corresponding track representation!",__LINE__,__FILE__);
+  if (IdGFMeasuredStateOnPlaneMap_->count(track.id()) == 0) {
+    Exception exc("GFRavePropagator::getTrackRep ==> no entry in IdGFMeasuredStateOnPlaneMap_ corresponding to track id, cannot access corresponding state!",__LINE__,__FILE__);
     throw exc;
   }
 
-  GFAbsTrackRep* rep = IdGFTrackRepMap->at(track.id());
+  MeasuredStateOnPlane* state = IdGFMeasuredStateOnPlaneMap_->at(track.id());
 
-  if (rep->getStatusFlag() != 0){
-    GFException exc("GFRavePropagator::getTrackRep ==> Status flag != 0, cannot extrapolate!",__LINE__,__FILE__);
-    throw exc;
-  }
+  setData(track, state); // set state and cov
 
-  GFRave::setTrackRepData(track, rep); // set trackrep state and cov
-
-  rep->setStatusFlag(0);
-
-  return rep;
+  return state;
 }
 
 
 void
-GFRavePropagator::setIdGFTrackRepMap(std::map < int, GFAbsTrackRep* > * map){
+GFRavePropagator::setIdGFMeasuredStateOnPlaneMap(std::map < int, MeasuredStateOnPlane* > * map){
   if (map==NULL) {
-    GFException exc("GFRavePropagator::setIdGFTrackRepMap ==> map is NULL!",__LINE__,__FILE__);
+    Exception exc("GFRavePropagator::setIdGFMeasuredStateOnPlaneMap ==> map is NULL!",__LINE__,__FILE__);
     throw exc;
   }
-  IdGFTrackRepMap = map;
-  if (IdGFTrackRepMap==NULL) {
-    GFException exc("GFRavePropagator::setIdGFTrackRepMap ==> IdGFTrackMap is NULL!",__LINE__,__FILE__);
-    throw exc;
-  }
-  //std::cout<<"IdGFTrackRepMap: " << (int)IdGFTrackRepMap << std::endl;
+  IdGFMeasuredStateOnPlaneMap_ = map;
+  //std::cout<<"IdGFMeasuredStateOnPlaneMap_: " << (int)IdGFMeasuredStateOnPlaneMap_ << std::endl;
 }
 
+} /* End of namespace genfit */

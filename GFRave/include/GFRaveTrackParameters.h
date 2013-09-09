@@ -33,12 +33,14 @@
 #include "TVector3.h"
 #include "TVectorD.h"
 #include "TMatrixDSym.h"
+#include "TRef.h"
 
-#include "GFTrack.h"
-#include "GFAbsTrackRep.h"
+#include "Track.h"
+#include "AbsTrackRep.h"
 
 #include <iostream>
 
+namespace genfit {
 
 /**
  * @brief GFRaveTrackParameters class
@@ -51,23 +53,23 @@ class GFRaveTrackParameters : public TObject
   public:
     // constructors, destructors
     GFRaveTrackParameters();
-    GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight, const TVectorD & state6, const TMatrixDSym & cov6x6, bool isSmoothed);
-    GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight);
+    GFRaveTrackParameters(Track* track, MeasuredStateOnPlane* originalState, double weight, const TVectorD & state6, const TMatrixDSym & cov6x6, bool isSmoothed);
+    GFRaveTrackParameters(Track* track, MeasuredStateOnPlane* originalState, double weight);
 
     // Accessors
-    double getWeight() const {return fWeight;}
+    double getWeight() const {return weight_;}
 
-    bool hasTrack() const {return fOriginalTrack!=NULL;}
-    GFTrack* getTrack() const {return  fOriginalTrack;}
+    bool hasTrack() const {return originalTrack_!=NULL;}
+    Track* getTrack() const {return  static_cast<Track*>(originalTrack_.GetObject());}
 
-    bool hasRep() const {return fOriginalRep!=NULL;}
-    GFAbsTrackRep* getRep() const {return  fOriginalRep;}
+    bool hasOriginalState() const {return originalState_!=NULL;}
+    MeasuredStateOnPlane* getOriginalState() const {return originalState_;}
 
-    bool hasSmoothedData() const {return fHasSmoothedData;}
-    TVectorD getState() const {return fState;}
+    bool hasSmoothedData() const {return hasSmoothedData_;}
+    TVectorD getState() const {return state_;}
     TVector3 getPos() const;
     TVector3 getMom() const;
-    const TMatrixDSym & getCov() const {return fCov;}
+    const TMatrixDSym & getCov() const {return cov_;}
 
     double getCharge() const;
     double getPdg() const;
@@ -76,21 +78,19 @@ class GFRaveTrackParameters : public TObject
 
   private:
 
-    GFTrack* fOriginalTrack; // NO ownership
-    GFAbsTrackRep* fOriginalRep; // NO ownership
-    double fWeight;
-    TVectorD fState; // x, y, z, px, py, pz
-    TMatrixDSym fCov; // 6x6 covariance matrix
-    bool fHasSmoothedData;
+    TRef originalTrack_; // NO ownership
+    MeasuredStateOnPlane* originalState_; //-> Ownership
+    double weight_; // weight of the track in the vertex
+    TVectorD state_; // x, y, z, px, py, pz
+    TMatrixDSym cov_; // 6x6 covariance matrix
+    bool hasSmoothedData_;
 
   private:
     ClassDef(GFRaveTrackParameters, 4)
 };
 
 
-/** @} */
-
-
+} /* End of namespace genfit */
 
 
 #endif

@@ -29,24 +29,24 @@
 #ifndef GFRAVEVERTEX_H
 #define GFRAVEVERTEX_H
 
-#include "GFAbsTrackRep.h"
-#include "GFTrack.h"
+#include "AbsTrackRep.h"
+#include "Track.h"
 #include "GFRaveTrackParameters.h"
 
 #include <iostream>
 
+namespace genfit {
 
+class GFRaveVertex : public TObject {
 /**
  * @brief GFRaveVertex class
  * A Vertex contains information about its position and covariance.
  * The tracks the vertex is consisting of are stored in fSmoothedTracks.
  * These GFRaveTrackParameters contain the weight of the corresponding track
  * in the vertex, smoothed track parameters and a pointer to the original
- * unaltered GFTrack.
+ * unaltered genfit::Track.
  */
 
-class GFRaveVertex : public TObject
-{
   public:
     // constructors, destructors
     GFRaveVertex();
@@ -102,6 +102,8 @@ class GFRaveVertex : public TObject
   private:
     ClassDef(GFRaveVertex,1)
 };
+
+} /* End of namespace genfit */
 
 #endif
 

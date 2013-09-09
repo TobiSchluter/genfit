@@ -20,51 +20,52 @@
 
 #include "GFRaveTrackParameters.h"
 #include "GFRaveConverters.h"
-#include "GFException.h"
+#include "Exception.h"
 
 #include <iostream>
 
-using namespace std;
+
+namespace genfit {
 
 
 GFRaveTrackParameters::GFRaveTrackParameters() :
-  fOriginalTrack(NULL),
-  fOriginalRep(NULL),
-  fWeight(0),
-  fState(1,6),
-  fCov(6,6),
-  fHasSmoothedData(false)
+  originalTrack_(NULL),
+  originalState_(NULL),
+  weight_(0),
+  state_(1,6),
+  cov_(6,6),
+  hasSmoothedData_(false)
 {
   ;
 }
 
 
-GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight, const TVectorD & state6, const TMatrixDSym & cov6x6, bool isSmoothed) :
-  fOriginalTrack(track),
-  fOriginalRep(rep),
-  fWeight(weight),
-  fState(state6),
-  fCov(cov6x6),
-  fHasSmoothedData(isSmoothed)
+GFRaveTrackParameters::GFRaveTrackParameters(Track* track, MeasuredStateOnPlane* originalState, double weight, const TVectorD & state6, const TMatrixDSym & cov6x6, bool isSmoothed) :
+  originalTrack_(track),
+  originalState_(originalState),
+  weight_(weight),
+  state_(state6),
+  cov_(cov6x6),
+  hasSmoothedData_(isSmoothed)
 {
-  if (fState.GetNrows() != 6) {
-    GFException exc("GFRaveTrackParameters ==> State is not 6D!",__LINE__,__FILE__);
+  if (state_.GetNrows() != 6) {
+    Exception exc("GFRaveTrackParameters ==> State is not 6D!",__LINE__,__FILE__);
     throw exc;
   }
-  if (fCov.GetNrows()!=6) {
-    GFException exc("GFRaveTrackParameters ==> Covariance is not 6D!",__LINE__,__FILE__);
+  if (cov_.GetNrows()!=6) {
+    Exception exc("GFRaveTrackParameters ==> Covariance is not 6D!",__LINE__,__FILE__);
     throw exc;
   }
 }
 
 
-GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep, double weight) :
-  fOriginalTrack(track),
-  fOriginalRep(rep),
-  fWeight(weight),
-  fState(1,6),
-  fCov(6,6),
-  fHasSmoothedData(false)
+GFRaveTrackParameters::GFRaveTrackParameters(Track* track, MeasuredStateOnPlane* originalState, double weight) :
+  originalTrack_(track),
+  originalState_(originalState),
+  weight_(weight),
+  state_(1,6),
+  cov_(6,6),
+  hasSmoothedData_(false)
 {
   ;
 }
@@ -72,19 +73,19 @@ GFRaveTrackParameters::GFRaveTrackParameters(GFTrack* track, GFAbsTrackRep* rep,
 
 TVector3
 GFRaveTrackParameters::getPos() const {
-  return TVector3(fState[0], fState[1], fState[2]);
+  return TVector3(state_[0], state_[1], state_[2]);
 }
 
 
 TVector3
 GFRaveTrackParameters::getMom() const {
-  return TVector3(fState[3], fState[4], fState[5]);
+  return TVector3(state_[3], state_[4], state_[5]);
 }
 
 
 double
 GFRaveTrackParameters::getCharge() const {
-  return getTrack()->getCardinalRep()->getCharge();
+  return getTrack()->getFitStatus()->getCharge();
 }
 
 
@@ -97,11 +98,13 @@ GFRaveTrackParameters::getPdg() const{
 void
 GFRaveTrackParameters::Print(const Option_t*) const {
   std::cout << "weight: " << getWeight() << "\n";
-  if (!fHasSmoothedData) std::cout << "state and cov are NOT smoothed! \n";
+  if (!hasSmoothedData_) std::cout << "state and cov are NOT smoothed! \n";
   std::cout << "state: "; getState().Print();
   std::cout << "cov: "; getCov().Print();
-  if (hasTrack()) {std::cout << "GFTrack: "; getTrack()->Print();}
-  else std::cout << "NO GFTrack pointer \n";
-  if (hasRep()) {std::cout << "GFAbsTrackRep: "; getRep()->Print();}
-  else std::cout << "NO GFAbsTrackRep pointer \n";
+  if (hasTrack()) {std::cout << "genfit::Track: "; getTrack()->Print();}
+  else std::cout << "NO genfit::Track pointer \n";
+  if (hasOriginalState()) {std::cout << "MeasuredStateOnPlane: "; getOriginalState()->Print();}
+  else std::cout << "NO MeasuredStateOnPlane pointer \n";
 }
+
+} /* End of namespace genfit */
