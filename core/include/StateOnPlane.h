@@ -64,6 +64,22 @@ class StateOnPlane : public TObject {
   void setRep(const AbsTrackRep* rep) {rep_ = rep;}
 
   // Shortcuts to TrackRep functions
+  double extrapolateToPlane(const SharedPlanePtr& plane,
+        bool stopAtBoundary = false,
+        bool calcJacobianNoise = false) {return rep_->extrapolateToPlane(*this, plane, stopAtBoundary, calcJacobianNoise);}
+  double extrapolateToLine(const TVector3& linePoint,
+        const TVector3& lineDirection,
+        bool stopAtBoundary = false) {return rep_->extrapolateToLine(*this, linePoint, lineDirection, stopAtBoundary);}
+  double extrapolateToPoint(const TVector3& point,
+        bool stopAtBoundary = false) {return rep_->extrapolateToPoint(*this, point, stopAtBoundary);}
+  double extrapolateToCylinder(double radius,
+        const TVector3& linePoint = TVector3(0.,0.,0.),
+        const TVector3& lineDirection = TVector3(0.,0.,1.),
+        bool stopAtBoundary = false) {return rep_->extrapolateToCylinder(*this, radius, linePoint, lineDirection, stopAtBoundary);}
+  double extrapolateToSphere(double radius,
+        const TVector3& point = TVector3(0.,0.,0.),
+        bool stopAtBoundary = false) {return rep_->extrapolateToSphere(*this, radius, point, stopAtBoundary);}
+
   TVector3 getPos() const {return rep_->getPos(*this);}
   TVector3 getMom() const {return rep_->getMom(*this);}
   TVector3 getDir() const {return rep_->getDir(*this);}
@@ -120,8 +136,8 @@ inline StateOnPlane::StateOnPlane(const TVectorD& state, const SharedPlanePtr& p
 inline StateOnPlane::StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo) :
   state_(state), auxInfo_(auxInfo), sharedPlane_(plane), rep_(rep)
 {
-assert(rep != NULL);
-//assert(state_.GetNrows() == (signed)rep->getDim());
+  assert(rep != NULL);
+  //assert(state_.GetNrows() == (signed)rep->getDim());
 }
 
 inline StateOnPlane& StateOnPlane::operator= (const StateOnPlane& other) {
