@@ -63,6 +63,14 @@ class StateOnPlane : public TObject {
   void setAuxInfo(const TVectorD& auxInfo) {if(auxInfo_.GetNrows() == 0) auxInfo_.ResizeTo(auxInfo); auxInfo_ = auxInfo;}
   void setRep(const AbsTrackRep* rep) {rep_ = rep;}
 
+  // Shortcuts to TrackRep functions
+  TVector3 getPos() const {return rep_->getPos(*this);}
+  TVector3 getMom() const {return rep_->getMom(*this);}
+  TVector3 getDir() const {return rep_->getDir(*this);}
+  void getPosMom(TVector3& pos, TVector3& mom) const {rep_->getPosMom(*this, pos, mom);}
+  void getPosDir(TVector3& pos, TVector3& dir) const {rep_->getPosDir(*this, pos, dir);}
+
+
   virtual void Print(Option_t* option = "") const;
 
  protected:

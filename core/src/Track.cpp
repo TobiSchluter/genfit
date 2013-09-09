@@ -183,6 +183,20 @@ TrackPoint* Track::getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRe
 }
 
 
+const MeasuredStateOnPlane& Track::getFittedState(int id, const AbsTrackRep* rep, bool biased) const {
+  if (rep == NULL)
+    rep = getCardinalRep();
+
+  TrackPoint* point = getPointWithMeasurementAndFitterInfo(id, rep);
+  if (point == NULL) {
+    Exception exc("Track::getFittedState ==> no trackPoint with fitterInfo for rep",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+  return point->getFitterInfo(rep)->getFittedState(biased);
+}
+
+
 int Track::getIdForRep(const AbsTrackRep* rep) const
 {
   for (size_t i = 0; i < trackReps_.size(); ++i)

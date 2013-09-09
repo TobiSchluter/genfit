@@ -78,6 +78,12 @@ class Track : public TObject {
 
   TrackPoint* getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRep* rep) const;
 
+  /** Shortcut to get FittedStates. Uses getPointWithMeasurementAndFitterInfo(id, rep).
+   * Per default, the fitted state of the fitterInfo of the first TrackPoint with measurements(s) and fitterInfo(s)
+   * is returned. If no trackRep is specified, the fitter info of the cardinal rep will be used.
+   */
+  const MeasuredStateOnPlane& getFittedState(int id = 0, const AbsTrackRep* rep = NULL, bool biased = true) const;
+
   AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id);}
   unsigned int getNumReps() const {return trackReps_.size();}
 
@@ -91,7 +97,7 @@ class Track : public TObject {
    * smallest chi2 could be chosen. By default the first in the list is returned.
    */
   AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_);}
-  unsigned int getCardinalRepID() const {return cardinalRep_;}
+  unsigned int getCardinalRepId() const {return cardinalRep_;}
 
   bool hasFitStatus(const AbsTrackRep* rep) const {if (fitStatuses_.find(rep) == fitStatuses_.end()) return false; return (fitStatuses_.at(rep) != NULL);}
   FitStatus* getFitStatus(const AbsTrackRep* rep) const {return fitStatuses_.at(rep);}
