@@ -135,7 +135,10 @@ class Track : public TObject {
   /** Delete a #TrackRep and all corresponding #FitterInfos in the #TrackPoints
    */
   void deleteTrackRep(int id);
+
   void setCardinalRep(int id);
+  //! See with which rep the track was fitted best (converged fit w/ smallest chi2) and set the cardinal rep accordingly.
+  void determineCardinalRep();
 
   /** Sort #TrackPoints and according to their sorting parameters.
    * Returns if the order of the trackPoints has actually changed.

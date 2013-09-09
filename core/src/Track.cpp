@@ -465,6 +465,31 @@ void Track::setCardinalRep(int id) {
 }
 
 
+void Track::determineCardinalRep() {
+
+  // Todo: test
+
+  if (trackReps_.size() <= 1)
+    return;
+
+  double minChi2(9.E99);
+  const AbsTrackRep* bestRep(NULL);
+
+  for (std::map< const AbsTrackRep*, FitStatus* >::const_iterator it = fitStatuses_.begin(); it != fitStatuses_.end(); ++it) {
+    if (it->second->isFitConverged()) {
+      if (it->second->getChi2() < minChi2) {
+        minChi2 = it->second->getChi2();
+        bestRep = it->first;
+      }
+    }
+  }
+
+  if (bestRep != NULL) {
+    setCardinalRep(getIdForRep(bestRep));
+  }
+}
+
+
 bool Track::sort() {
   #ifdef DEBUG
   std::cout << "Track::sort \n";
