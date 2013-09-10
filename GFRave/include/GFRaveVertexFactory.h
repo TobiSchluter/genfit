@@ -34,11 +34,13 @@
 
 #include "GFRaveVertex.h"
 
-#include "rave/Propagator.h"
-#include "rave/MagneticField.h"
-#include "rave/VertexFactory.h"
-
 #include "Track.h"
+
+namespace rave {
+  class VertexFactory;
+  class MagneticField;
+  class Propagator;
+}
 
 namespace genfit {
 

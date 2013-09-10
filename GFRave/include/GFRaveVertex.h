@@ -51,7 +51,7 @@ class GFRaveVertex : public TObject {
     // constructors, destructors
     GFRaveVertex();
     GFRaveVertex(const TVector3 & pos, const TMatrixDSym & cov,
-                 const std::vector < GFRaveTrackParameters* > & smoothedTracks,
+                 const std::vector < genfit::GFRaveTrackParameters* > & smoothedTracks,
                  double ndf, double chi2, int id = -1);
 
     GFRaveVertex(const GFRaveVertex &);
@@ -97,10 +97,11 @@ class GFRaveVertex : public TObject {
     double fChi2;
     int fId; // id of the rave::vertex the GFVertex is created from
 
-    std::vector < GFRaveTrackParameters* > fSmoothedTracks; //-> track parameters of smoothed (with the vertex information) tracks, weights and original tracks; Vertex has ownership!
+    std::vector < genfit::GFRaveTrackParameters* > fSmoothedTracks; //-> track parameters of smoothed (with the vertex information) tracks, weights and original tracks; Vertex has ownership!
 
-  private:
+  public:
     ClassDef(GFRaveVertex,1)
+
 };
 
 } /* End of namespace genfit */

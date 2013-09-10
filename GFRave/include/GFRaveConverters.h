@@ -68,9 +68,9 @@ namespace genfit {
                                                   std::map<int, genfit::MeasuredStateOnPlane*> * IdGFMeasuredStateOnPlaneMap,
                                                   int startID);
 
-  rave::Track GFTrackToTrack(const Track* orig, int id = -1, std::string tag="");
+  rave::Track GFTrackToTrack(Track* orig, int id = -1, std::string tag="");
   rave::Track MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, const rave::Track& orig);
-  rave::Track MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, int id = -1, const Track* originaltrack = NULL, std::string tag="");
+  rave::Track MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, int id = -1, Track* originaltrack = NULL, std::string tag="");
 
   // RAVE to GENFIT
   /** set state and cov of a MeasuredStateOnPlane according to rave track

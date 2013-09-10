@@ -30,7 +30,8 @@ namespace genfit {
 
 GFRaveTrackParameters::GFRaveTrackParameters() :
   originalTrack_(NULL),
-  originalState_(NULL),
+  originalRep_(NULL),
+  stateOnPlane_(NULL),
   weight_(0),
   state_(1,6),
   cov_(6,6),
@@ -42,7 +43,8 @@ GFRaveTrackParameters::GFRaveTrackParameters() :
 
 GFRaveTrackParameters::GFRaveTrackParameters(Track* track, MeasuredStateOnPlane* originalState, double weight, const TVectorD & state6, const TMatrixDSym & cov6x6, bool isSmoothed) :
   originalTrack_(track),
-  originalState_(originalState),
+  originalRep_(const_cast<AbsTrackRep*>(stateOnPlane_->getRep())),
+  stateOnPlane_(originalState),
   weight_(weight),
   state_(state6),
   cov_(cov6x6),
@@ -56,12 +58,13 @@ GFRaveTrackParameters::GFRaveTrackParameters(Track* track, MeasuredStateOnPlane*
     Exception exc("GFRaveTrackParameters ==> Covariance is not 6D!",__LINE__,__FILE__);
     throw exc;
   }
+
 }
 
 
 GFRaveTrackParameters::GFRaveTrackParameters(Track* track, MeasuredStateOnPlane* originalState, double weight) :
   originalTrack_(track),
-  originalState_(originalState),
+  stateOnPlane_(originalState),
   weight_(weight),
   state_(1,6),
   cov_(6,6),
@@ -105,6 +108,15 @@ GFRaveTrackParameters::Print(const Option_t*) const {
   else std::cout << "NO genfit::Track pointer \n";
   if (hasOriginalState()) {std::cout << "MeasuredStateOnPlane: "; getOriginalState()->Print();}
   else std::cout << "NO MeasuredStateOnPlane pointer \n";
+}
+
+
+void
+GFRaveTrackParameters::Streamer(TBuffer &R__b)
+{
+   if (R__b.IsReading()) {
+     stateOnPlane_->setRep(static_cast<AbsTrackRep*>(originalRep_.GetObject()));
+   }
 }
 
 } /* End of namespace genfit */

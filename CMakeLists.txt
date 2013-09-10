@@ -17,6 +17,33 @@ INCLUDE(macros)
 
 FIND_PACKAGE(ROOT REQUIRED COMPONENTS Geom)
 
+
+IF(NOT DEFINED ENV{RAVEPATH})
+   	MESSAGE("You did not define the environment variable RAVEPATH which is needed to find rave. GFRave will not be built.") 
+ELSE()
+	MESSAGE("Environment variable RAVEPATH is set. Try to build GFRave.") 
+	# get compiler flags from rave
+	INCLUDE(FindPkgConfig)
+	SET(ENV{PKG_CONFIG_PATH} $ENV{RAVEPATH})
+	pkg_search_module(RAVE rave REQUIRED)
+	
+	# turn comma separated lists into space separated strings
+	string (REPLACE ";" " " RAVE_LDFLAGS_STR "${RAVE_LDFLAGS}")
+	string (REPLACE ";" " " RAVE_INCLUDE_DIRS_STR "${RAVE_INCLUDE_DIRS}")
+	string (REPLACE ";" " " RAVE_CFLAGS_STR "${RAVE_CFLAGS}")
+	
+	SET (CMAKE_CXX_FLAGS ${RAVE_CFLAGS_STR})
+	
+	SET(GF_INC_DIRS
+		./GFRave/include/
+	)
+	
+	AUX_SOURCE_DIRECTORY( ./GFRave/src  library_sources )
+ENDIF()
+
+
+
+# Set GENFIT include directories
 SET(GF_INC_DIRS
 	./core/include/ 
 	./eventDisplay/include/
@@ -26,7 +53,9 @@ SET(GF_INC_DIRS
 	./measurements/include/ 
 	./trackReps/include/
 	./utilities/include/
+    ${GF_INC_DIRS}
 )
+
 
 #search for boost, provide some information to user
 FIND_PACKAGE(Boost)
@@ -42,6 +71,7 @@ ELSE()
     INCLUDE_DIRECTORIES(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/extern/ )
     INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/extern/ ${GF_INC_DIRS}  DESTINATION ./include/genfit PATTERN ".svn" EXCLUDE )
 ENDIF()
+
 
 # require proper c++, standard is C++03, flag reads: c++98
 ADD_DEFINITIONS( " -Wall -g3 -ansi -pedantic -Wno-long-long -Wshadow "   )
@@ -62,14 +92,13 @@ else()
   message("Neither --std=c++03 nor -std=c++03 seem to work.  Moving on.")
 endif()
 
+
 # include directories 
 INCLUDE_DIRECTORIES( 
 	BEFORE 
 	${GF_INC_DIRS}
 	${ROOT_INCLUDE_DIRS})
-# and this is the rest:
-#INCLUDE_DIRECTORIES( BEFORE  ./eventDisplay/include)
-#INSTALL( DIRECTORY ./eventDisplay/include  DESTINATION . PATTERN ".svn" EXCLUDE )
+
 
 # add a target to generate API documentation with Doxygen
 FIND_PACKAGE(Doxygen)
@@ -89,6 +118,7 @@ ENDIF(DOXYGEN_FOUND)
 # declare the ROOT library path
 LINK_DIRECTORIES(${ROOT_LIBRARY_DIR})
 
+
 # add the list of source code files -- careful, when a new file is added!
 AUX_SOURCE_DIRECTORY( ./core/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./eventDisplay/src  library_sources )
@@ -98,6 +128,7 @@ AUX_SOURCE_DIRECTORY( ./fitters/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./measurements/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./trackReps/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./utilities/src  library_sources )
+
 
 # Dictionary generation.  For the time being, we list classes one-by-one.
 MACRO (ROOT_GENERATE_DICTIONARY INFILES INCLUDE_DIRS_IN LINKDEF_FILE OUTFILE)
@@ -199,22 +230,46 @@ ROOT_GENERATE_DICTIONARY("${UTILITIES_DICTIONARY_SOURCES}"
 			 "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cpp")
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/utilitiesRootDict.cpp" "${library_sources}")
 
+if(DEFINED ENV{RAVEPATH})
+	SET(GFRAVE_DICTIONARY_SOURCES
+	  ${CMAKE_CURRENT_SOURCE_DIR}/GFRave/include/GFRaveTrackParameters.h
+	  ${CMAKE_CURRENT_SOURCE_DIR}/GFRave/include/GFRaveVertex.h
+	)
+	ROOT_GENERATE_DICTIONARY("${GFRAVE_DICTIONARY_SOURCES}"
+	                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/GFRave/include"
+				 "${CMAKE_CURRENT_SOURCE_DIR}/GFRave/src/GFRaveLinkDef.h"
+				 "${CMAKE_CURRENT_BINARY_DIR}/GFRaveRootDict.cpp")
+	SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/GFRaveRootDict.cpp" "${library_sources}")
+endif()
 
+
+# install
 ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources})
 INSTALL( TARGETS ${PROJECT_NAME} DESTINATION lib )
+
 
 # link ROOT libraries
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ROOT_LIBS})
 
-# the examples, build with "make tests"
-ADD_CUSTOM_TARGET( tests )
-MACRO( ADD_GENFIT_TEST _testname )
-   ADD_EXECUTABLE( ${_testname} ${ARGN} )
-   ADD_DEPENDENCIES( tests  ${_testname} )
-   TARGET_LINK_LIBRARIES( ${_testname} ${PROJECT_NAME}  ${ROOT_LIBS} -lGeom )
-   #INSTALL( TARGETS ${_testname} DESTINATION ${EXECUTABLE_INSTALL_DIR})
-ENDMACRO( ADD_GENFIT_TEST )
+if(DEFINED ENV{RAVEPATH})
+	TARGET_LINK_LIBRARIES(
+		${PROJECT_NAME}
+		${ROOT_LIBS}  
+  		${RAVE_LDFLAGS_STR}
+  		-I${RAVE_INCLUDE_DIRS_I}
+  	)
+endif()
 
+
+## the examples, build with "make tests"
+#ADD_CUSTOM_TARGET( tests )
+#MACRO( ADD_GENFIT_TEST _testname )
+#   ADD_EXECUTABLE( ${_testname} ${ARGN} )
+#   ADD_DEPENDENCIES( tests  ${_testname} )
+#   TARGET_LINK_LIBRARIES( ${_testname} ${PROJECT_NAME}  ${ROOT_LIBS} -lGeom )
+#   #INSTALL( TARGETS ${_testname} DESTINATION ${EXECUTABLE_INSTALL_DIR})
+#ENDMACRO( ADD_GENFIT_TEST )
+#
 #ADD_GENFIT_TEST( fitterTests test/fitterTests/main.cpp )
 #ADD_GENFIT_TEST( streamerTest test/streamerTest/main.cpp )
 

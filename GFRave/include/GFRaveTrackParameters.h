@@ -62,8 +62,8 @@ class GFRaveTrackParameters : public TObject
     bool hasTrack() const {return originalTrack_!=NULL;}
     Track* getTrack() const {return  static_cast<Track*>(originalTrack_.GetObject());}
 
-    bool hasOriginalState() const {return originalState_!=NULL;}
-    MeasuredStateOnPlane* getOriginalState() const {return originalState_;}
+    bool hasOriginalState() const {return stateOnPlane_!=NULL;}
+    MeasuredStateOnPlane* getOriginalState() const {return stateOnPlane_;}
 
     bool hasSmoothedData() const {return hasSmoothedData_;}
     TVectorD getState() const {return state_;}
@@ -78,8 +78,10 @@ class GFRaveTrackParameters : public TObject
 
   private:
 
-    TRef originalTrack_; // NO ownership
-    MeasuredStateOnPlane* originalState_; //-> Ownership
+    const TRef originalTrack_; // NO ownership. We use TRef, since the Tracks could be stored in another file or tree.
+    const TRef originalRep_; // NO ownership. Store the TrackRep of stateOnPlane_ here.
+    MeasuredStateOnPlane* stateOnPlane_; //-> Ownership
+
     double weight_; // weight of the track in the vertex
     TVectorD state_; // x, y, z, px, py, pz
     TMatrixDSym cov_; // 6x6 covariance matrix

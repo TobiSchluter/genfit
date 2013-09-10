@@ -28,6 +28,9 @@
 
 #include "Exception.h"
 
+#include "rave/Propagator.h"
+#include "rave/MagneticField.h"
+#include "rave/VertexFactory.h"
 #include "rave/Vertex.h"
 #include "rave/Ellipsoid3D.h"
 

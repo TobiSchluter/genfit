@@ -133,7 +133,7 @@ MeasuredStateOnPlanesToTracks(const std::vector<genfit::MeasuredStateOnPlane*>& 
 
 
 rave::Track
-GFTrackToTrack(const Track* orig, int id, std::string tag){
+GFTrackToTrack(Track* orig, int id, std::string tag){
   return MeasuredStateOnPlaneToTrack(&(orig->getFittedState()), id, orig, tag);
 }
 
@@ -145,7 +145,7 @@ MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, const rave::Track
 
 
 rave::Track
-MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, int id, Track* originaltrack, std::string tag){
+MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, int id, Track* originaltrack, std::string tag) {
 
   if (! originaltrack->getFitStatus(originaltrack->getCardinalRep())->isFitConverged()) {
     Exception exc("MeasuredStateOnPlaneToTrack ==> Trackfit is not converged",__LINE__,__FILE__);
@@ -245,7 +245,7 @@ RaveToGFVertex(const rave::Vertex & raveVertex,
     if(smoothing) {
       // convert smoothed track parameters
       trackparams = new GFRaveTrackParameters(IdGFTrackMap->at(id), //track
-                                              IdGFMeasuredStateOnPlaneMap->at(id), //rep
+                                              IdGFMeasuredStateOnPlaneMap->at(id), //state
                                               raveWeightedTracks[i].first, //weight
                                               Vector6DToTVectorD(raveSmoothedTracks[i].second.state()), //smoothed state
                                               Covariance6DToTMatrixDSym(raveSmoothedTracks[i].second.error()), //smoothed cov
@@ -254,7 +254,7 @@ RaveToGFVertex(const rave::Vertex & raveVertex,
     else {
       // convert track parameters, no smoothed tracks available
       trackparams = new GFRaveTrackParameters(IdGFTrackMap->at(id), //track
-                                              IdGFMeasuredStateOnPlaneMap->at(id), //rep
+                                              IdGFMeasuredStateOnPlaneMap->at(id), //state
                                               raveWeightedTracks[i].first, //weight
                                               Vector6DToTVectorD(raveWeightedTracks[i].second.state()), //state
                                               Covariance6DToTMatrixDSym(raveWeightedTracks[i].second.error()), //cov
