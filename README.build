@@ -15,4 +15,9 @@ To install the libraries and copy all header files into the directories lib/ and
 include/ in the root directory of the project, invoke
  make install
 
-Generation of examples is still under construction.
+ 
+To build the doxygen:
+ make doc
+  
+To build the examples/tests (also see README in test/):
+ make tests
