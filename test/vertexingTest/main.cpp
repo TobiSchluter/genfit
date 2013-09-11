@@ -174,7 +174,9 @@ int main() {
     vertexFactory.findVertices(&vertices, tracks);
 
 
-
+    for (unsigned int i=0; i<vertices.size(); ++i) {
+      delete vertices[i];
+    }
 
 
     if (iEvent < 1000) {

@@ -33,10 +33,10 @@ static int instCount(0);
 #endif
 
 GFRaveVertex::GFRaveVertex() :
-  fCov(3,3),
-  fNdf(0),
-  fChi2(0),
-  fId(-1)
+  cov_(3,3),
+  ndf_(0),
+  chi2_(0),
+  id_(-1)
 {
 #ifdef COUNT
   std::cerr << "GFRaveVertex::GFRaveVertex() - Number of objects: " << ++instCount << std::endl;
@@ -47,14 +47,14 @@ GFRaveVertex::GFRaveVertex() :
 GFRaveVertex::GFRaveVertex(const TVector3 & pos, const TMatrixDSym& cov,
                            const std::vector < GFRaveTrackParameters* > & smoothedTracks,
                            double ndf, double chi2, int id) :
-  fPos(pos),
-  fCov(cov),
-  fNdf(ndf),
-  fChi2(chi2),
-  fId(id),
-  fSmoothedTracks(smoothedTracks)
+  pos_(pos),
+  cov_(cov),
+  ndf_(ndf),
+  chi2_(chi2),
+  id_(id),
+  smoothedTracks_(smoothedTracks)
 {
-  if (fCov.GetNrows()!=3 || fCov.GetNcols()!=3) {
+  if (cov_.GetNrows()!=3 || cov_.GetNcols()!=3) {
     Exception exc("GFRaveVertex ==> Covariance is not 3x3!",__LINE__,__FILE__);
     throw exc;
   }
@@ -66,16 +66,16 @@ GFRaveVertex::GFRaveVertex(const TVector3 & pos, const TMatrixDSym& cov,
 
 
 GFRaveVertex::GFRaveVertex(const GFRaveVertex & vertex) :
-  fPos(vertex.fPos),
-  fCov(vertex.fCov),
-  fNdf(vertex.fNdf),
-  fChi2(vertex.fChi2),
-  fId(vertex.fId)
+  pos_(vertex.pos_),
+  cov_(vertex.cov_),
+  ndf_(vertex.ndf_),
+  chi2_(vertex.chi2_),
+  id_(vertex.id_)
 {
-  unsigned int nPar =  vertex.fSmoothedTracks.size();
-  fSmoothedTracks.reserve(nPar);
+  unsigned int nPar =  vertex.smoothedTracks_.size();
+  smoothedTracks_.reserve(nPar);
   for (unsigned int i=0; i<nPar; ++i) {
-    fSmoothedTracks.push_back(new GFRaveTrackParameters(*(vertex.fSmoothedTracks[i])));
+    smoothedTracks_.push_back(new GFRaveTrackParameters(*(vertex.smoothedTracks_[i])));
   }
 
 #ifdef COUNT
@@ -85,20 +85,20 @@ GFRaveVertex::GFRaveVertex(const GFRaveVertex & vertex) :
 
 
 GFRaveVertex& GFRaveVertex::operator=(const GFRaveVertex & vertex) {
-  fPos = vertex.fPos;
-  fCov = vertex.fCov;
-  fNdf = vertex.fNdf;
-  fChi2 = vertex.fChi2;
-  fId = vertex.fId;
+  pos_ = vertex.pos_;
+  cov_ = vertex.cov_;
+  ndf_ = vertex.ndf_;
+  chi2_ = vertex.chi2_;
+  id_ = vertex.id_;
 
-  unsigned int nPar =  fSmoothedTracks.size();
+  unsigned int nPar =  smoothedTracks_.size();
   for (unsigned int i=0; i<nPar; ++i) {
-    delete fSmoothedTracks[i];
+    delete smoothedTracks_[i];
   }
-  nPar =  vertex.fSmoothedTracks.size();
-  fSmoothedTracks.reserve(nPar);
+  nPar =  vertex.smoothedTracks_.size();
+  smoothedTracks_.reserve(nPar);
   for (unsigned int i=0; i<nPar; ++i) {
-    fSmoothedTracks.push_back(new GFRaveTrackParameters(*(vertex.fSmoothedTracks[i])));
+    smoothedTracks_.push_back(new GFRaveTrackParameters(*(vertex.smoothedTracks_[i])));
   }
 
   return *this;
@@ -106,9 +106,9 @@ GFRaveVertex& GFRaveVertex::operator=(const GFRaveVertex & vertex) {
 
 
 GFRaveVertex::~GFRaveVertex(){
-  unsigned int nPar =  fSmoothedTracks.size();
+  unsigned int nPar =  smoothedTracks_.size();
   for (unsigned int i=0; i<nPar; ++i) {
-    delete fSmoothedTracks[i];
+    delete smoothedTracks_[i];
   }
 
 #ifdef COUNT

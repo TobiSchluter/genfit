@@ -8,11 +8,15 @@ else
   echo "else" >> $ENVFILE
     echo "export GENFIT=$GENFIT" >> $ENVFILE
     echo "if [ \`root-config --arch\` = macosx ]; then" >>$ENVFILE
-      echo "export DYLD_LIBRARY_PATH=\$DYLD_LIBRARY_PATH:\$VMC/lib/tgt_macosx:\$GENFIT/lib" >>$ENVFILE
-      echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$VMC/lib/tgt_macosx:\$GENFIT/lib" >>$ENVFILE
+      echo "export DYLD_LIBRARY_PATH=\$DYLD_LIBRARY_PATH:\$GENFIT/lib" >>$ENVFILE
+      echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$GENFIT/lib" >>$ENVFILE
     echo "else" >>$ENVFILE
-      echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$VMC/lib/tgt_linux:\$GENFIT/lib" >>$ENVFILE
+      echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$GENFIT/lib" >>$ENVFILE
     echo "fi" >>$ENVFILE
   echo "fi" >> $ENVFILE
+  
+  if [ $RAVEPATH ]; then
+    echo "export RAVEPATH=$RAVEPATH" >> $ENVFILE
+  fi
 fi
 
