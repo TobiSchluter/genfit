@@ -550,9 +550,9 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
     }
 
     if (fabs(tracklength-step) < MINSTEP) {
-      //#ifdef DEBUG
+      #ifdef DEBUG
       std::cout << "RKTrackRep::extrapolateBy(): reached after " << iterations << " iterations. \n";
-      //#endif
+      #endif
       break;
     }
 
