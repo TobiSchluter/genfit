@@ -539,7 +539,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
 
     plane->setON(dest, dir);
 
-    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, false, stopAtBoundary, (step-tracklength));
+    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, true, stopAtBoundary, (step-tracklength));
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -1579,8 +1579,6 @@ bool RKTrackRep::RKutta(const M1x4& SU,
     exc.setFatal();
     throw exc;
   }
-
-
 
   unsigned int counter(0);
 
