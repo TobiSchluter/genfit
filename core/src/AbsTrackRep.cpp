@@ -96,8 +96,11 @@ void AbsTrackRep::calcJacobianNumerically(const genfit::StateOnPlane& origState,
   jacobian.ResizeTo(getDim(), getDim());
 
   // no science behind these values, I verified that forward and
-  // backward propagation yield inverse matrices to good approximation.
-  const double stepX = 1.E-5;
+  // backward propagation yield inverse matrices to good
+  // approximation.  In order to avoid bad roundoff errors, the actual
+  // step taken is determined below, separately for each direction.
+  const double defaultStepX = 1.E-5;
+  double stepX;
 
   // Calculate derivative for all three dimensions successively.
   // The algorithm follows the one in TF1::Derivative() :
@@ -110,7 +113,22 @@ void AbsTrackRep::calcJacobianNumerically(const genfit::StateOnPlane& origState,
   for (size_t i = 0; i < getDim(); ++i) {
     {
       genfit::StateOnPlane stateCopy(origState);
-      (stateCopy.getState())(i) += stepX / 2;
+      double temp = stateCopy.getState()(i) + defaultStepX / 2;
+      // Find the actual size of the step, which will differ from
+      // defaultStepX due to roundoff.  This is the step-size we will
+      // use for this direction.  Idea taken from Numerical Recipes,
+      // 3rd ed., section 5.7.
+      //
+      // Note that if a number is exactly representable, it's double
+      // will also be exact.  Outside denormals, this also holds for
+      // halving.  Unless the exponent changes (which it only will in
+      // the vicinity of zero) adding or subtracing doesn't make a
+      // difference.
+      //
+      // We determine the roundoff error for the half-step.  If this
+      // is exactly representable, the full step will also be.
+      stepX = 2 * (temp - stateCopy.getState()(i));
+      (stateCopy.getState())(i) = temp;
       extrapolateToPlane(stateCopy, destPlane);
       rightShort = stateCopy.getState();
     }
