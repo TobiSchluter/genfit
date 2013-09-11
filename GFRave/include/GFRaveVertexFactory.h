@@ -44,6 +44,11 @@ namespace rave {
 
 namespace genfit {
 
+struct trackAndState {
+  const Track* track_; // pointer to original track
+  MeasuredStateOnPlane* state_; // pointer to copy of fitted state; can be altered (extrapolated) during vertexing
+};
+
 
 /**
  * @brief GFRaveVertexFactory
@@ -60,7 +65,6 @@ class GFRaveVertexFactory {
   // functions
 
   void findVertices ( std::vector <  genfit::GFRaveVertex* > *, const std::vector < genfit::Track* > &, bool use_beamspot=false );
-  void findVertices ( std::vector <  genfit::GFRaveVertex* > *, const std::vector < genfit::MeasuredStateOnPlane* > &, bool use_beamspot=false );
 
   void setBeamspot(const TVector3 & pos, const TMatrixDSym & cov);
 
@@ -72,22 +76,13 @@ class GFRaveVertexFactory {
 
  private:
 
-  void clearMaps();
+  void clearMap();
 
   // data members
+  std::map<int, genfit::trackAndState> IdGFTrackStateMap_; // map of copies of the cardinal MeasuredStateOnPlanes for the GFRavePropagator; ownership of MeasuredStateOnPlanes is HERE!!!
   rave::VertexFactory* factory_;
   rave::MagneticField* magneticField_;
   rave::Propagator* propagator_;
-
-  /**
-   * bookkeeping of original genfit::Tracks for later assignment to GFVertices
-   */
-  std::map<int, genfit::Track*> * IdGFTrackMap_;
-  /**
-   * map of copies of the cardinal reps for the GFRavePropagator; ownership of trackrep clones is HERE!!!
-   */
-  std::map<int, genfit::MeasuredStateOnPlane*> * IdGFMeasuredStateOnPlaneMap_;
-
 
 };
 

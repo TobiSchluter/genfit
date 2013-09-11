@@ -28,19 +28,22 @@
 namespace genfit {
 
 GFRavePropagator::GFRavePropagator() :
-    IdGFMeasuredStateOnPlaneMap_(NULL)
-{}
+    IdGFTrackStateMap_(NULL)
+{
+  std::cout << "GFRavePropagator::GFRavePropagator() \n";
+}
   
 GFRavePropagator*
 GFRavePropagator::copy() const
 {
+  std::cout << "GFRavePropagator::copy() \n";
   return new GFRavePropagator(*this);
 }
 
 
 GFRavePropagator::~GFRavePropagator()
 {
-
+  std::cout << "GFRavePropagator::~GFRavePropagator() \n";
 }
     
     
@@ -58,12 +61,10 @@ std::pair < rave::Track, double >
 GFRavePropagator::to ( const rave::Track & orig,
                        const ravesurf::Plane & rplane ) const
 {
-  MeasuredStateOnPlane* state = getMeasuredStateOnPlane(orig);
-
   // will throw Exception if extrapolation does not work
-  double path = state->extrapolateToPlane(PlaneToGFDetPlane(rplane));
+  double path = IdGFTrackStateMap_->at(orig.id()).state_->extrapolateToPlane(PlaneToGFDetPlane(rplane));
 
-  std::pair < rave::Track, double > ret(MeasuredStateOnPlaneToTrack(state, orig), path);
+  std::pair < rave::Track, double > ret(GFTrackToTrack(IdGFTrackStateMap_->at(orig.id()), orig.id(), orig.tag()), path);
   return ret;
 }
 
@@ -78,53 +79,24 @@ GFRavePropagator::closestTo ( const rave::Track & orig,
     throw exc;
   }
 
-  MeasuredStateOnPlane* state = getMeasuredStateOnPlane(orig);
-
   TVector3 point(Point3DToTVector3(pt));
-  state->extrapolateToPoint(point);
+  IdGFTrackStateMap_->at(orig.id()).state_->extrapolateToPoint(point);
 
-  return MeasuredStateOnPlaneToTrack(state, orig);
-}
-
-
-MeasuredStateOnPlane*
-GFRavePropagator::getMeasuredStateOnPlane(const rave::Track & track) const {
-
-  if (IdGFMeasuredStateOnPlaneMap_==NULL) {
-    Exception exc("GFRavePropagator::getTrackRep ==> IdGFMeasuredStateOnPlaneMap_ is NULL, cannot access genfit::Tracks!",__LINE__,__FILE__);
-    throw exc;
-  }
-
-  if (!(track.isValid())) {
-    Exception exc("GFRavePropagator::getTrackRep ==> rave::Track is not valid!",__LINE__,__FILE__);
-    throw exc;
-  }
-
-  //std::cerr<<"GFRavePropagator::getTrackRep track id: "<<track.id()<<std::endl;
-  //std::cerr<<"  pos: "; Point3DToTVector3(track.state().position()).Print();
-  //std::cerr<<"  mom: "; Vector3DToTVector3(track.state().momentum()).Print();
-
-  if (IdGFMeasuredStateOnPlaneMap_->count(track.id()) == 0) {
-    Exception exc("GFRavePropagator::getTrackRep ==> no entry in IdGFMeasuredStateOnPlaneMap_ corresponding to track id, cannot access corresponding state!",__LINE__,__FILE__);
-    throw exc;
-  }
-
-  MeasuredStateOnPlane* state = IdGFMeasuredStateOnPlaneMap_->at(track.id());
-
-  setData(track, state); // set state and cov
-
-  return state;
+  return GFTrackToTrack(IdGFTrackStateMap_->at(orig.id()), orig.id(), orig.tag());
 }
 
 
 void
-GFRavePropagator::setIdGFMeasuredStateOnPlaneMap(std::map < int, MeasuredStateOnPlane* > * map){
-  if (map==NULL) {
+GFRavePropagator::setIdGFTrackStateMap(std::map < int, genfit::trackAndState > * map){
+  std::cout << "GFRavePropagator::setIdGFMeasuredStateOnPlaneMap() \n";
+
+  IdGFTrackStateMap_ = map;
+
+  if (IdGFTrackStateMap_==NULL) {
     Exception exc("GFRavePropagator::setIdGFMeasuredStateOnPlaneMap ==> map is NULL!",__LINE__,__FILE__);
     throw exc;
   }
-  IdGFMeasuredStateOnPlaneMap_ = map;
-  //std::cout<<"IdGFMeasuredStateOnPlaneMap_: " << (int)IdGFMeasuredStateOnPlaneMap_ << std::endl;
+  //std::cout<<"IdGFTrackStateMap_: " << (int)IdGFTrackStateMap_ << std::endl;
 }
 
 } /* End of namespace genfit */

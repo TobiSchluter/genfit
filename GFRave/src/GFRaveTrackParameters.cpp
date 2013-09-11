@@ -41,9 +41,9 @@ GFRaveTrackParameters::GFRaveTrackParameters() :
 }
 
 
-GFRaveTrackParameters::GFRaveTrackParameters(Track* track, MeasuredStateOnPlane* originalState, double weight, const TVectorD & state6, const TMatrixDSym & cov6x6, bool isSmoothed) :
-  originalTrack_(track),
-  originalRep_(const_cast<AbsTrackRep*>(stateOnPlane_->getRep())),
+GFRaveTrackParameters::GFRaveTrackParameters(const Track* track, MeasuredStateOnPlane* originalState, double weight, const TVectorD & state6, const TMatrixDSym & cov6x6, bool isSmoothed) :
+  originalTrack_(const_cast<Track*>(track)),
+  originalRep_(const_cast<AbsTrackRep*>(originalState->getRep())),
   stateOnPlane_(originalState),
   weight_(weight),
   state_(state6),
@@ -62,8 +62,9 @@ GFRaveTrackParameters::GFRaveTrackParameters(Track* track, MeasuredStateOnPlane*
 }
 
 
-GFRaveTrackParameters::GFRaveTrackParameters(Track* track, MeasuredStateOnPlane* originalState, double weight) :
-  originalTrack_(track),
+GFRaveTrackParameters::GFRaveTrackParameters(const Track* track, MeasuredStateOnPlane* originalState, double weight) :
+  originalTrack_(const_cast<Track*>(track)),
+  originalRep_(const_cast<AbsTrackRep*>(originalState->getRep())),
   stateOnPlane_(originalState),
   weight_(weight),
   state_(1,6),

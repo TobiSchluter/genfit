@@ -38,15 +38,13 @@
 namespace genfit {
 
 GFRaveVertexFactory::GFRaveVertexFactory(int verbosity, bool useVacuumPropagator) {
-  IdGFTrackMap_ = new std::map<int, genfit::Track*>;
-  IdGFMeasuredStateOnPlaneMap_ = new std::map<int, genfit::MeasuredStateOnPlane*>;
 
   if (useVacuumPropagator) {
     propagator_ = new rave::VacuumPropagator();
   }
   else {
     propagator_ = new GFRavePropagator();
-    (static_cast<GFRavePropagator*>(propagator_))->setIdGFMeasuredStateOnPlaneMap(IdGFMeasuredStateOnPlaneMap_);
+    (static_cast<GFRavePropagator*>(propagator_))->setIdGFTrackStateMap(&IdGFTrackStateMap_);
   }
 
   magneticField_ = new GFRaveMagneticField();
@@ -58,10 +56,6 @@ GFRaveVertexFactory::GFRaveVertexFactory(int verbosity, bool useVacuumPropagator
 
 
 GFRaveVertexFactory::~GFRaveVertexFactory(){
-  clearMaps();
-  delete IdGFTrackMap_;
-  delete IdGFMeasuredStateOnPlaneMap_;
-
   delete magneticField_;
   delete propagator_;
   delete factory_;
@@ -70,35 +64,19 @@ GFRaveVertexFactory::~GFRaveVertexFactory(){
 
 void
 GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFvertices, const std::vector < genfit::Track* > & GFTracks, bool use_beamspot ){
-  clearMaps();
+
+  clearMap();
 
   try{
     RaveToGFVertices(GFvertices,
-                             factory_->create(GFTracksToTracks(GFTracks, IdGFTrackMap_, IdGFMeasuredStateOnPlaneMap_, 0),
-                                              use_beamspot),
-                             IdGFTrackMap_, IdGFMeasuredStateOnPlaneMap_);
-  }
-  catch(Exception & e){
-    std::cerr << e.what();
-    return;
-  }
-}
-
-
-void
-GFRaveVertexFactory::findVertices ( std::vector <  genfit::GFRaveVertex* > * GFvertices, const std::vector < genfit::MeasuredStateOnPlane* > & GFMeasuredStateOnPlanes, bool use_beamspot ){
-  clearMaps();
-
-  try{
-    RaveToGFVertices(GFvertices,
-                     factory_->create(MeasuredStateOnPlanesToTracks(GFMeasuredStateOnPlanes, IdGFTrackMap_, IdGFMeasuredStateOnPlaneMap_, 0),
+                     factory_->create(GFTracksToTracks(GFTracks, IdGFTrackStateMap_, 0),
                                       use_beamspot),
-                     IdGFTrackMap_, IdGFMeasuredStateOnPlaneMap_);
+                     IdGFTrackStateMap_);
   }
   catch(Exception & e){
     std::cerr << e.what();
-    return;
   }
+
 }
 
 
@@ -121,14 +99,12 @@ GFRaveVertexFactory::setMethod(const std::string & method){
 
 
 void
-GFRaveVertexFactory::clearMaps(){
-  IdGFTrackMap_->clear();
+GFRaveVertexFactory::clearMap() {
 
-  for (unsigned int i=0; i<IdGFMeasuredStateOnPlaneMap_->size(); ++i){
-    // in here are copies or trackreps -> we have ownership
-    delete (*IdGFMeasuredStateOnPlaneMap_)[i];
-  }
-  IdGFMeasuredStateOnPlaneMap_->clear();
+  for (unsigned int i=0; i<IdGFTrackStateMap_.size(); ++i)
+    delete IdGFTrackStateMap_[i].state_;
+
+  IdGFTrackStateMap_.clear();
 }
 
 

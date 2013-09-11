@@ -29,6 +29,8 @@
 #ifndef GFRAVEPROPAGATOR_H
 #define GFRAVEPROPAGATOR_H
 
+#include "GFRaveVertexFactory.h"
+
 #include "rave/Propagator.h"
 #include "rave/Track.h"
 #include "rave/Plane.h"
@@ -66,17 +68,12 @@ class GFRavePropagator : public rave::Propagator
 
     virtual ~GFRavePropagator();
 
-    void setIdGFMeasuredStateOnPlaneMap(std::map < int, MeasuredStateOnPlane* > * map);
+    void setIdGFTrackStateMap(std::map < int, genfit::trackAndState > * map);
 
   private:
 
-
-    // check if everything is ok, otherwise throw Exception;
-    // get MeasuredStateOnPlane from IdGFMeasuredStateOnPlaneMap_ and set MeasuredStateOnPlane state and cov from track
-    MeasuredStateOnPlane* getMeasuredStateOnPlane(const rave::Track & track) const;
-
     // data members
-    std::map < int, MeasuredStateOnPlane* > * IdGFMeasuredStateOnPlaneMap_; // pointers to GFAbsTracksReps via rave track ID
+    std::map < int, genfit::trackAndState > * IdGFTrackStateMap_; // pointers to genfit::tracks and measuredStateOnPlanes via rave track ID
 };
 
 

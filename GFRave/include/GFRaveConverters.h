@@ -38,6 +38,7 @@
 #include "DetPlane.h"
 #include "Track.h"
 #include "GFRaveVertex.h"
+#include "GFRaveVertexFactory.h"
 
 #include "TVector3.h"
 #include "TVectorD.h"
@@ -59,26 +60,20 @@ namespace genfit {
    * rave::tracks.
    */
   std::vector < rave::Track > GFTracksToTracks(const std::vector < genfit::Track* > & GFTracks,
-                                               std::map<int, genfit::Track*> * IdGFTrackMap = NULL,
-                                               std::map<int, genfit::MeasuredStateOnPlane*> * IdGFMeasuredStateOnPlaneMap = NULL,
+                                               std::map<int, genfit::trackAndState>& IdGFTrackStateMap,
                                                int startID = 0);
 
-  std::vector < rave::Track > MeasuredStateOnPlanesToTracks(const std::vector < genfit::MeasuredStateOnPlane* >  & measuredStateOnPlanes,
-                                                  std::map<int, genfit::Track*> * IdGFTrackMap,
-                                                  std::map<int, genfit::MeasuredStateOnPlane*> * IdGFMeasuredStateOnPlaneMap,
-                                                  int startID);
-
-  rave::Track GFTrackToTrack(Track* orig, int id = -1, std::string tag="");
-  rave::Track MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, const rave::Track& orig);
-  rave::Track MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, int id = -1, Track* originaltrack = NULL, std::string tag="");
+  rave::Track GFTrackToTrack(trackAndState, int id = -1, std::string tag="");
+  //rave::Track MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, const rave::Track& orig);
+  //rave::Track MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, int id = -1, Track* originaltrack = NULL, std::string tag="");
 
   // RAVE to GENFIT
   /** set state and cov of a MeasuredStateOnPlane according to rave track
    */
   void setData(const rave::Track & orig, MeasuredStateOnPlane* state);
 
-  GFRaveVertex* RaveToGFVertex(const rave::Vertex &, const std::map<int, genfit::Track*> * IdGFTrackMap,  const std::map<int, genfit::MeasuredStateOnPlane*> * IdGFMeasuredStateOnPlaneMap);
-  void RaveToGFVertices(std::vector<GFRaveVertex*> *, const std::vector<rave::Vertex> &, const std::map<int, genfit::Track*> * IdGFTrackMap,  const std::map<int, genfit::MeasuredStateOnPlane*> * IdGFMeasuredStateOnPlaneMap);
+  GFRaveVertex* RaveToGFVertex(const rave::Vertex &, const std::map<int, genfit::trackAndState>& IdGFTrackStateMap);
+  void RaveToGFVertices(std::vector<GFRaveVertex*> *, const std::vector<rave::Vertex> &, const std::map<int, genfit::trackAndState>& IdGFTrackStateMap);
 
   SharedPlanePtr PlaneToGFDetPlane(const ravesurf::Plane& rplane);
 
