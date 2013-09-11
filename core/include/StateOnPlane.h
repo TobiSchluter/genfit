@@ -79,6 +79,8 @@ class StateOnPlane : public TObject {
   double extrapolateToSphere(double radius,
         const TVector3& point = TVector3(0.,0.,0.),
         bool stopAtBoundary = false) {return rep_->extrapolateToSphere(*this, radius, point, stopAtBoundary);}
+  double extrapolateBy(double step,
+        bool stopAtBoundary = false) {return rep_->extrapolateBy(*this, step, stopAtBoundary);}
 
   TVector3 getPos() const {return rep_->getPos(*this);}
   TVector3 getMom() const {return rep_->getMom(*this);}

@@ -499,6 +499,81 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
 }
 
 
+double RKTrackRep::extrapolateBy(StateOnPlane& state,
+    double step,
+    bool stopAtBoundary) const {
+
+  #ifdef DEBUG
+  std::cout << "RKTrackRep::extrapolateBy()\n";
+  #endif
+
+  checkCache(state, NULL);
+
+  static const unsigned int maxIt(1000);
+
+  // to 7D
+  M1x7 state7;
+  getState7(state, state7);
+
+  double tracklength(0.);
+
+  TVector3 dest, pos, dir;
+
+  bool isAtBoundary(false);
+
+  DetPlane startPlane(*(state.getPlane()));
+  boost::shared_ptr<genfit::DetPlane> plane(new DetPlane());
+  unsigned int iterations(0);
+
+  while(true){
+    if(++iterations == maxIt) {
+      Exception exc("RKTrackRep::extrapolateBy ==> maximum number of iterations reached",__LINE__,__FILE__);
+      exc.setFatal();
+      throw exc;
+    }
+
+    pos.SetXYZ(state7[0], state7[1], state7[2]);
+    dir.SetXYZ(state7[3], state7[4], state7[5]);
+
+    dest = pos + 1.5*(step-tracklength) * dir;
+
+    plane->setON(dest, dir);
+
+    tracklength += this->Extrap(startPlane, *plane, getCharge(state), isAtBoundary, state7, false, NULL, false, stopAtBoundary, (step-tracklength));
+
+    // check break conditions
+    if (stopAtBoundary && isAtBoundary) {
+      pos.SetXYZ(state7[0], state7[1], state7[2]);
+      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      plane->setON(pos, dir);
+      break;
+    }
+
+    if (fabs(tracklength-step) < MINSTEP) {
+      //#ifdef DEBUG
+      std::cout << "RKTrackRep::extrapolateBy(): reached after " << iterations << " iterations. \n";
+      //#endif
+      break;
+    }
+
+    startPlane = *plane;
+
+  }
+
+  if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
+    tracklength = extrapolateToPlane(state, plane);
+  }
+  else {
+    state.setPlane(plane);
+    getState5(state, state7);
+  }
+
+  lastEndState_ = state;
+
+  return tracklength;
+}
+
+
 TVector3 RKTrackRep::getPos(const StateOnPlane& state) const {
   M1x7 state7;
   getState7(state, state7);
@@ -1736,7 +1811,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
       }
       else {
         #ifdef DEBUG
-        std::cout << " RKTrackRep::estimateStep: use stepSize " << cachePos_ << " from cache: " << RKSteps_.at(cachePos_).stepSize_ << "\n";
+        std::cout << " RKTrackRep::estimateStep: use stepSize " << cachePos_ << " from cache: " << RKSteps_.at(cachePos_).matStep_.stepSize_ << "\n";
         #endif
         //for(int n = 0; n < 1*7; ++n) RKSteps_[cachePos_].state7_[n] = state7[n];
         ++RKStepsFXStop_;
@@ -2018,7 +2093,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     // propagation
     bool checkJacProj = false;
     StepLimits limits;
-    limits.setLimit(stp_sMaxArg, maxStep);
+    limits.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
     if( ! RKutta(SU, destPlane, charge, state7, &J_MMT_,
         coveredDistance, checkJacProj, noiseProjection,
@@ -2036,8 +2111,8 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 #ifdef DEBUG
     std::cout<<"RKSteps \n";
     for (std::vector<RKStep>::iterator it = RKSteps_.begin(); it != RKSteps_.end(); ++it){
-      std::cout << "stepSize = " << it->stepSize_ << "\t";
-      it->materialProperties_.Print();
+      std::cout << "stepSize = " << it->matStep_.stepSize_ << "\t";
+      it->matStep_.materialProperties_.Print();
     }
     std::cout<<"\n";
 #endif

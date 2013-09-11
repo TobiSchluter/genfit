@@ -85,6 +85,9 @@ class RKTrackRep : public AbsTrackRep {
       const TVector3& point = TVector3(0.,0.,0.),
       bool stopAtBoundary = false) const;
 
+  virtual double extrapolateBy(StateOnPlane& state,
+      double step,
+      bool stopAtBoundary = false) const;
 
 
   unsigned int getDim() const {return 5;}
@@ -182,7 +185,7 @@ class RKTrackRep : public AbsTrackRep {
               double charge,
               M1x7& state7,
               M7x7* jacobianT,
-              double& coveredDistance,
+              double& coveredDistance, // signed
               bool& checkJacProj,
               TMatrixD& noiseProjection,
               StepLimits& limits,

@@ -117,6 +117,16 @@ class AbsTrackRep : public TObject {
       const TVector3& point = TVector3(0.,0.,0.),
       bool stopAtBoundary = false) const = 0;
 
+  /** Extrapolates the state by #step cm and returns the extrapolation length
+   * and, via reference, the extrapolated state.
+   * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
+   * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
+   * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
+   */
+  virtual double extrapolateBy(StateOnPlane& state,
+      double step,
+      bool stopAtBoundary = false) const = 0;
+
   //! Get the dimension of the state vector used by the track representation.
   virtual unsigned int getDim() const = 0;
 

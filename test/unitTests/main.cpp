@@ -847,6 +847,57 @@ bool checkExtrapolateToSphere() {
     return true;
 
 }
+
+
+bool checkExtrapolateBy() {
+
+  double epsilonLen = 1.E-3; // 10 mu
+
+  int pdg = randomPdg();
+  genfit::AbsTrackRep* rep;
+  rep = new genfit::RKTrackRep(pdg);
+
+  //TVector3 pos(0,0,0);
+  TVector3 pos(0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1),0+gRandom->Gaus(0,0.1));
+  TVector3 mom(0,0.5,0.);
+  mom *= randomSign();
+
+
+  genfit::StateOnPlane state(rep);
+  rep->setPosMom(state, pos, mom);
+
+  genfit::SharedPlanePtr origPlane = state.getPlane();
+  genfit::StateOnPlane origState(state);
+
+  double step = gRandom->Uniform(-15.,15.);
+  double extrapolatedLen(0);
+
+  // forth
+  try {
+    extrapolatedLen = rep->extrapolateBy(state, step, false);
+  }
+  catch (genfit::Exception& e) {
+    return false;
+  }
+
+
+
+  // compare
+  if (fabs(extrapolatedLen-step) > epsilonLen) {
+
+      origState.Print();
+      state.Print();
+
+      std::cout << "extrapolatedLen-step = " << extrapolatedLen-step << "\n";
+
+      delete rep;
+      return false;
+    }
+
+    delete rep;
+    return true;
+
+}
 //=====================================================================================================================
 //=====================================================================================================================
 //=====================================================================================================================
@@ -928,6 +979,11 @@ int main() {
 
     if (!checkExtrapolateToSphere()) {
       std::cout << "failed checkExtrapolateToSphere nr" << i << "\n";
+      ++nFailed;
+    }
+
+    if (!checkExtrapolateBy()) {
+      std::cout << "failed checkExtrapolateBy nr" << i << "\n";
       ++nFailed;
     }
 
