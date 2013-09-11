@@ -251,27 +251,20 @@ INSTALL( TARGETS ${PROJECT_NAME} DESTINATION lib )
 # link ROOT libraries
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ROOT_LIBS})
 
-if(DEFINED ENV{RAVEPATH})
-	TARGET_LINK_LIBRARIES(
-		${PROJECT_NAME}
-		${ROOT_LIBS}  
-  		${RAVE_LDFLAGS_STR}
-  		-I${RAVE_INCLUDE_DIRS_I}
-  	)
-endif()
+# the examples, build with "make tests"
+ADD_CUSTOM_TARGET( tests )
+MACRO( ADD_GENFIT_TEST _testname )
+   INCLUDE_DIRECTORIES( BEFORE eventDisplay/include)
+   ADD_EXECUTABLE( ${_testname} EXCLUDE_FROM_ALL ${ARGN} )
+   ADD_DEPENDENCIES( tests  ${_testname} )
+   TARGET_LINK_LIBRARIES( ${_testname} ${PROJECT_NAME}  ${ROOT_LIBS} -lGeom )
+    #INSTALL( TARGETS ${_testname} DESTINATION ${EXECUTABLE_INSTALL_DIR})
+ENDMACRO( ADD_GENFIT_TEST )
 
-
-## the examples, build with "make tests"
-#ADD_CUSTOM_TARGET( tests )
-#MACRO( ADD_GENFIT_TEST _testname )
-#   ADD_EXECUTABLE( ${_testname} ${ARGN} )
-#   ADD_DEPENDENCIES( tests  ${_testname} )
-#   TARGET_LINK_LIBRARIES( ${_testname} ${PROJECT_NAME}  ${ROOT_LIBS} -lGeom )
-#   #INSTALL( TARGETS ${_testname} DESTINATION ${EXECUTABLE_INSTALL_DIR})
-#ENDMACRO( ADD_GENFIT_TEST )
-#
-#ADD_GENFIT_TEST( fitterTests test/fitterTests/main.cpp )
-#ADD_GENFIT_TEST( streamerTest test/streamerTest/main.cpp )
+ADD_GENFIT_TEST( fitterTests test/fitterTests/main.cpp eventDisplay/src/EventDisplay.cpp)
+ADD_GENFIT_TEST( minimalFittingExample test/minimalFittingExample/main.cpp)
+#ADD_GENFIT_TEST( genfit1Comparison test/genfit1Comparison/main.cpp)
+ADD_GENFIT_TEST( unitTests  test/unitTests/main.cpp)
 
 # generate and install following configuration files
 #GENERATE_PACKAGE_CONFIGURATION_FILES( genfitConfig.cmake genfitConfigVersion.cmake )
