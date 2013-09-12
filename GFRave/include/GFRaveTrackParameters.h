@@ -44,7 +44,7 @@ namespace genfit {
 
 /**
  * @brief GFRaveTrackParameters class
- * Contains a pointer to the original GFTrack, the weight of the track in the vertex,
+ * Contains a pointer to the original genfit::Track, the weight of the track in the vertex,
  * and smoothed (with the vertex information) state and covariance of the track.
  */
 
@@ -59,11 +59,8 @@ class GFRaveTrackParameters : public TObject
     // Accessors
     double getWeight() const {return weight_;}
 
-    bool hasTrack() const {return originalTrack_!=NULL;}
+    bool hasTrack() const {return originalTrack_.GetObject() != NULL;}
     const Track* getTrack() const {return  static_cast<Track*>(originalTrack_.GetObject());}
-
-    bool hasOriginalState() const {return stateOnPlane_!=NULL;}
-    MeasuredStateOnPlane* getOriginalState() const {return stateOnPlane_;}
 
     bool hasSmoothedData() const {return hasSmoothedData_;}
     TVectorD getState() const {return state_;}
@@ -79,16 +76,14 @@ class GFRaveTrackParameters : public TObject
   private:
 
     const TRef originalTrack_; // NO ownership. We use TRef, since the Tracks could be stored in another file or tree.
-    const TRef originalRep_; // NO ownership. Store the TrackRep of stateOnPlane_ here.
-    MeasuredStateOnPlane* stateOnPlane_; //-> Ownership
 
     double weight_; // weight of the track in the vertex
     TVectorD state_; // x, y, z, px, py, pz
     TMatrixDSym cov_; // 6x6 covariance matrix
-    bool hasSmoothedData_;
+    bool hasSmoothedData_; // true if state_ is forced to go through the vertex
 
   private:
-    ClassDef(GFRaveTrackParameters, 4)
+    ClassDef(GFRaveTrackParameters, 1)
 };
 
 

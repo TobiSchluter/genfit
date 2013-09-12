@@ -61,26 +61,17 @@ class GFRaveVertex : public TObject {
     ~GFRaveVertex();
 
 
-    // Modifiers
-
-
     // Accessors
-    /**
-     * get Position
-     */
+    //! get Position
     TVector3 getPos() const {return pos_;}
 
-    /**
-     * get 3x3 covariance (error) of position.
-     */
+    //!get 3x3 covariance (error) of position.
     TMatrixDSym getCov() const {return cov_;}
 
     double getNdf() const {return ndf_;}
     double getChi2() const {return chi2_;}
 
-    /**
-     * Number of tracks the vertex is made of
-     */
+    //! Number of tracks the vertex is made of
     unsigned int getNTracks() const {return smoothedTracks_.size();}
     GFRaveTrackParameters* getParameters(unsigned int i) const {return smoothedTracks_[i];}
 
@@ -100,7 +91,7 @@ class GFRaveVertex : public TObject {
     std::vector < genfit::GFRaveTrackParameters* > smoothedTracks_; //-> track parameters of smoothed (with the vertex information) tracks, weights and original tracks; Vertex has ownership!
 
   public:
-    ClassDef(GFRaveVertex,1)
+    ClassDef(GFRaveVertex, 1)
 
 };
 

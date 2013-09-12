@@ -46,12 +46,11 @@ namespace genfit {
 /**
  * @brief GFRavePropagator class
  * Inherits from rave::Propagator. A map has to be provided,
- * containing pointers to clones of the Cardinal Reps of the GFtracks.
- * The GFRavePropagator uses the information of the rave track to set
- * the state and covariance of the corresponding AbsTrackRep,
- * extrapolates and then returns a new rave track with the
+ * containing pointers the genfit::Tracks, as well as pointers to clones of fitted states.
+ * The GFRavePropagator uses the information of the rave::track to set
+ * the state and covariance of the corresponding MeasuredStateOnPlane,
+ * extrapolates and then returns a new rave::track with the
  * extrapolated state and covariance.
- *
  */
 
 class GFRavePropagator : public rave::Propagator

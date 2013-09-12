@@ -30,20 +30,20 @@ namespace genfit {
 GFRavePropagator::GFRavePropagator() :
     IdGFTrackStateMap_(NULL)
 {
-  std::cout << "GFRavePropagator::GFRavePropagator() \n";
+  //std::cout << "GFRavePropagator::GFRavePropagator() \n";
 }
   
 GFRavePropagator*
 GFRavePropagator::copy() const
 {
-  std::cout << "GFRavePropagator::copy() \n";
+  //std::cout << "GFRavePropagator::copy() \n";
   return new GFRavePropagator(*this);
 }
 
 
 GFRavePropagator::~GFRavePropagator()
 {
-  std::cout << "GFRavePropagator::~GFRavePropagator() \n";
+  //std::cout << "GFRavePropagator::~GFRavePropagator() \n";
 }
     
     

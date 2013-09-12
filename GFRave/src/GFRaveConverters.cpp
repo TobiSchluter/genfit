@@ -64,7 +64,7 @@ GFTracksToTracks(const std::vector < genfit::Track* >  & GFTracks,
     ++startID;
   }
 
-  std::cout << "IdGFTrackStateMap size " << IdGFTrackStateMap.size() << std::endl;
+  //std::cout << "IdGFTrackStateMap size " << IdGFTrackStateMap.size() << std::endl;
   return ravetracks;
 }
 
@@ -110,67 +110,11 @@ GFTrackToTrack(trackAndState trackAndState, int id, std::string tag){
       trackAndState.track_->getFitStatus()->getNdf(),
       static_cast<void*>(const_cast<Track*>(trackAndState.track_)), tag);
 
-  std::cout << "ret.originalObject() " << ret.originalObject() << "\n";
-  std::cout << "ret.id() " << ret.id() << "\n";
+  //std::cout << "ret.originalObject() " << ret.originalObject() << "\n";
+  //std::cout << "ret.id() " << ret.id() << "\n";
 
   return ret;
 }
-
-
-/*rave::Track
-MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, const rave::Track& orig) {
-  std::cout << "orig.originalObject() " << orig.originalObject() << "\n";
-  std::cout << "orig.id() " << orig.id() << "\n";
-  return MeasuredStateOnPlaneToTrack(state, orig.id(), static_cast<Track*>(orig.originalObject()), orig.tag());
-}
-
-
-rave::Track
-MeasuredStateOnPlaneToTrack(const MeasuredStateOnPlane* state, int id, Track* originaltrack, std::string tag) {
-
-  if (originaltrack == NULL) {
-    Exception exc("MeasuredStateOnPlaneToTrack ==> originaltrack is NULL",__LINE__,__FILE__);
-    throw exc;
-  }
-
-  if (! originaltrack->getFitStatus(originaltrack->getCardinalRep())->isFitConverged()) {
-    Exception exc("MeasuredStateOnPlaneToTrack ==> Trackfit is not converged",__LINE__,__FILE__);
-    throw exc;
-  }
-
-  TVector3 pos, mom;
-  TMatrixDSym cov;
-
-  originaltrack->getCardinalRep()->getPosMomCov(originaltrack->getFittedState(), pos, mom, cov);
-
-  // state
-  rave::Vector6D ravestate(pos.X(), pos.Y(), pos.Z(),
-                           mom.X(), mom.Y(), mom.Z());
-
-  // covariance
-  rave::Covariance6D ravecov(cov(0,0), cov(1,0), cov(2,0),
-                             cov(1,1), cov(2,1), cov(2,2),
-                             cov(3,0), cov(4,0), cov(5,0),
-                             cov(3,1), cov(4,1), cov(5,1),
-                             cov(3,2), cov(4,2), cov(5,2),
-                             cov(3,3), cov(4,3), cov(5,3),
-                             cov(4,4), cov(5,4), cov(5,5));
-
-  //std::cerr<<"create rave track with id " << id << std::endl;
-  //std::cerr<<"  pos: "; Point3DToTVector3(ravestate.position()).Print();
-  //std::cerr<<"  mom: "; Vector3DToTVector3(ravestate.momentum()).Print();
-
-  rave::Track ret(id, ravestate, ravecov,
-                  originaltrack->getFitStatus()->getCharge(),
-                  originaltrack->getFitStatus()->getChi2(),
-                  originaltrack->getFitStatus()->getNdf(),
-                  static_cast<void*>(originaltrack), tag);
-
-  std::cout << "ret.originalObject() " << ret.originalObject() << "\n";
-  std::cout << "ret.id() " << ret.id() << "\n";
-
-  return ret;
-}*/
 
 
 void

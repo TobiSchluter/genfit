@@ -63,7 +63,6 @@ class GFRaveVertexFactory {
   ~GFRaveVertexFactory();
 
   // functions
-
   void findVertices ( std::vector <  genfit::GFRaveVertex* > *, const std::vector < genfit::Track* > &, bool use_beamspot=false );
 
   void setBeamspot(const TVector3 & pos, const TMatrixDSym & cov);
@@ -80,9 +79,9 @@ class GFRaveVertexFactory {
 
   // data members
   std::map<int, genfit::trackAndState> IdGFTrackStateMap_; // map of copies of the cardinal MeasuredStateOnPlanes for the GFRavePropagator; ownership of MeasuredStateOnPlanes is HERE!!!
-  rave::VertexFactory* factory_;
-  rave::MagneticField* magneticField_;
-  rave::Propagator* propagator_;
+  rave::VertexFactory* factory_; // Ownership
+  rave::MagneticField* magneticField_; // Ownership
+  rave::Propagator* propagator_; // Ownership
 
 };
 

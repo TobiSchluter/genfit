@@ -30,8 +30,6 @@ namespace genfit {
 
 GFRaveTrackParameters::GFRaveTrackParameters() :
   originalTrack_(NULL),
-  originalRep_(NULL),
-  stateOnPlane_(NULL),
   weight_(0),
   state_(1,6),
   cov_(6,6),
@@ -43,8 +41,6 @@ GFRaveTrackParameters::GFRaveTrackParameters() :
 
 GFRaveTrackParameters::GFRaveTrackParameters(const Track* track, MeasuredStateOnPlane* originalState, double weight, const TVectorD & state6, const TMatrixDSym & cov6x6, bool isSmoothed) :
   originalTrack_(const_cast<Track*>(track)),
-  originalRep_(const_cast<AbsTrackRep*>(originalState->getRep())),
-  stateOnPlane_(originalState),
   weight_(weight),
   state_(state6),
   cov_(cov6x6),
@@ -64,8 +60,6 @@ GFRaveTrackParameters::GFRaveTrackParameters(const Track* track, MeasuredStateOn
 
 GFRaveTrackParameters::GFRaveTrackParameters(const Track* track, MeasuredStateOnPlane* originalState, double weight) :
   originalTrack_(const_cast<Track*>(track)),
-  originalRep_(const_cast<AbsTrackRep*>(originalState->getRep())),
-  stateOnPlane_(originalState),
   weight_(weight),
   state_(1,6),
   cov_(6,6),
@@ -95,7 +89,12 @@ GFRaveTrackParameters::getCharge() const {
 
 double
 GFRaveTrackParameters::getPdg() const{
-  return getTrack()->getCardinalRep()->getPDG();
+  if (hasTrack())
+    return getTrack()->getCardinalRep()->getPDG();
+  else {
+    Exception exc("GFRaveTrackParameters::getPdg() ==> no genfit::Track available!",__LINE__,__FILE__);
+    throw exc;
+  }
 }
 
 
@@ -107,17 +106,7 @@ GFRaveTrackParameters::Print(const Option_t*) const {
   std::cout << "cov: "; getCov().Print();
   if (hasTrack()) {std::cout << "genfit::Track: "; getTrack()->Print();}
   else std::cout << "NO genfit::Track pointer \n";
-  if (hasOriginalState()) {std::cout << "MeasuredStateOnPlane: "; getOriginalState()->Print();}
-  else std::cout << "NO MeasuredStateOnPlane pointer \n";
 }
 
-
-void
-GFRaveTrackParameters::Streamer(TBuffer &R__b)
-{
-   if (R__b.IsReading()) {
-     stateOnPlane_->setRep(static_cast<AbsTrackRep*>(originalRep_.GetObject()));
-   }
-}
 
 } /* End of namespace genfit */

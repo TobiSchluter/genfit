@@ -37,7 +37,7 @@ namespace genfit {
 class GFRaveMagneticField : public rave::MagneticField {
 /**
  * @brief GFRaveMagneticField class
- * Uses the GFFieldManager to provide a magnetic field to rave.
+ * Uses the FieldManager to provide a magnetic field to rave.
  */
   public:
     GFRaveMagneticField(){};

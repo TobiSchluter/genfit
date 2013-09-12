@@ -53,7 +53,7 @@ int main() {
   genfit::AbsKalmanFitter* fitter = new genfit::KalmanFitterRefTrack();
 
   // init vertex factory
-  genfit::GFRaveVertexFactory vertexFactory(100);
+  genfit::GFRaveVertexFactory vertexFactory;
   vertexFactory.setMethod("kalman-smoothing:1");
 
 
