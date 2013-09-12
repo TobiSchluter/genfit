@@ -227,30 +227,13 @@ void EventDisplay::open() {
 
   std::cout << "EventDisplay::open(); " << events_.size() << " events loaded" << std::endl;
 
-
-  // draw the geometry, does not really work yet. If it's fixed, the docu in the header file should be changed.
-  if(drawGeometry_) {
-    TGeoNode* top_node = gGeoManager->GetTopNode();
-    assert(top_node != NULL);
-
-    //Set transparency & color of geometry
-    TObjArray* volumes = gGeoManager->GetListOfVolumes();
-    for(int i = 0; i < volumes->GetEntriesFast(); i++) {
-      TGeoVolume* volume = dynamic_cast<TGeoVolume*>(volumes->At(i));
-      assert(volume != NULL);
-      volume->SetLineColor(12);
-      volume->SetTransparency(50);
-    }
-
-    TEveGeoTopNode* eve_top_node = new TEveGeoTopNode(gGeoManager, top_node);
-    eve_top_node->IncDenyDestroy();
-    gEve->AddGlobalElement(eve_top_node);
-  }
-
   if(getNEvents() > 0) {
     double old_error_scale = errorScale_;
     drawEvent(0);
-    if(old_error_scale != errorScale_) gotoEvent(0); // if autoscaling changed the error, draw again.
+    if(old_error_scale != errorScale_) {
+      std::cout << "autoscaling changed the error, draw again." << std::endl;
+      gotoEvent(0); // if autoscaling changed the error, draw again.
+    }
     errorScale_ = old_error_scale;
   }
 
@@ -268,6 +251,26 @@ void EventDisplay::open() {
 void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
   std::cout << "EventDisplay::drawEvent(" << id << ")" << std::endl;
+
+
+  // draw the geometry, does not really work yet. If it's fixed, the docu in the header file should be changed.
+  if(drawGeometry_) {
+    TGeoNode* top_node = gGeoManager->GetTopNode();
+    assert(top_node != NULL);
+
+    //Set transparency & color of geometry
+    TObjArray* volumes = gGeoManager->GetListOfVolumes();
+    for(int i = 0; i < volumes->GetEntriesFast(); i++) {
+      TGeoVolume* volume = dynamic_cast<TGeoVolume*>(volumes->At(i));
+      assert(volume != NULL);
+      volume->SetLineColor(12);
+      volume->SetTransparency(50);
+    }
+
+    TEveGeoTopNode* eve_top_node = new TEveGeoTopNode(gGeoManager, top_node);
+    eve_top_node->IncDenyDestroy();
+    gEve->AddElement(eve_top_node);
+  }
 
 
   for(unsigned int i = 0; i < events_.at(id)->size(); i++) { // loop over all tracks in an event
@@ -1170,7 +1173,7 @@ void EventDisplay::makeGui() {
       new TGRadioButton(guiFitterId_, "Reference Kalman");
       new TGRadioButton(guiFitterId_, "DAF w/ simple Kalman");
       new TGRadioButton(guiFitterId_, "DAF w/ reference Kalman");
-      fitterId_button->SetDown(true, true);
+      fitterId_button->SetDown(true, false);
       guiFitterId_->Show();
   }
   frmMain->AddFrame(hf);
@@ -1182,7 +1185,7 @@ void EventDisplay::makeGui() {
       TGRadioButton* mmHandling_button = new TGRadioButton(guiMmHandling_, "weighted average");
       new TGRadioButton(guiMmHandling_, "unweighted, closest to reference");
       new TGRadioButton(guiMmHandling_, "unweighted, closest to prediction");
-      mmHandling_button->SetDown(true, true);
+      mmHandling_button->SetDown(true, false);
       guiMmHandling_->Show();
   }
   frmMain->AddFrame(hf);
