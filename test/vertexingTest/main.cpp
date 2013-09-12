@@ -24,6 +24,9 @@
 #include <TVector3.h>
 #include <vector>
 
+#include <TROOT.h>
+#include <TFile.h>
+#include <TTree.h>
 #include "TDatabasePDG.h"
 #include <TMath.h>
 
@@ -57,16 +60,39 @@ int main() {
   vertexFactory.setMethod("kalman-smoothing:1");
 
 
+  // init root files;
+  // tracks and vertices are written to two different root files
   std::vector<genfit::Track*> tracks;
+  std::vector<genfit::GFRaveVertex*> vertices;
+
+  genfit::Track* aTrackPtr(NULL);
+  genfit::GFRaveVertex* aVertexPtr(NULL);
+
+  TFile* trackFile = new TFile("tracks.root", "RECREATE");
+  trackFile->cd();
+  TTree* tTracks = new TTree("tTracks", "fitted tracks");
+  tTracks->Branch("Track", "genfit::Track", &aTrackPtr, 32000, -1);
+
+  TFile* vertexFile = new TFile("vertices.root", "RECREATE");
+  vertexFile->cd();
+  TTree* tVertices = new TTree("tVertices", "fitted vertices");
+  tVertices->Branch("GFRaveVertex", "genfit::GFRaveVertex", &aVertexPtr, 32000, -1);
+
 
   // main loop
-  for (unsigned int iEvent=0; iEvent<100; ++iEvent){
+  for (unsigned int iEvent=0; iEvent<1; ++iEvent){
 
     // clean up
     for (unsigned int i=0; i<tracks.size(); ++i){
       delete tracks[i];
     }
     tracks.clear();
+
+    for (unsigned int i=0; i<vertices.size(); ++i) {
+      delete vertices[i];
+    }
+    vertices.clear();
+
 
     unsigned int nTracks = gRandom->Uniform(2, 10);
     tracks.reserve(nTracks);
@@ -167,15 +193,18 @@ int main() {
       //check
       assert(tracks.back()->checkConsistency());
 
+
+      aTrackPtr = tracks.back();
+      tTracks->Fill();
+
     } // end loop over tracks
 
     // vertexing
-    std::vector <  genfit::GFRaveVertex* > vertices;
     vertexFactory.findVertices(&vertices, tracks);
 
-
     for (unsigned int i=0; i<vertices.size(); ++i) {
-      delete vertices[i];
+      aVertexPtr = vertices[i];
+      tVertices->Fill();
     }
 
 
@@ -186,7 +215,34 @@ int main() {
 
   }// end loop over events
 
+  trackFile->Write();
+  vertexFile->Write();
+
   delete fitter;
+  delete trackFile;
+  delete vertexFile;
+
+
+  // check written file
+  trackFile = TFile::Open("tracks.root", "READ");
+  trackFile->GetObject("tTracks", tTracks);
+
+  vertexFile = TFile::Open("vertices.root", "READ");
+  vertexFile->GetObject("tVertices", tVertices);
+  aTrackPtr = NULL;
+  aVertexPtr = NULL;
+  tVertices->SetBranchAddress("GFRaveVertex", &aVertexPtr);
+
+  for (Long_t nEntry = 0; nEntry < tVertices->GetEntries(); ++nEntry) {
+    tVertices->GetEntry(nEntry);
+
+    // when the track branch from the other root file is loaded, the TRefs to the tracks
+    // in the GFRaveTrackParameters are again pointing to them.
+    for (unsigned int i = 0; i<aVertexPtr->getNTracks(); ++i) {
+      assert(aVertexPtr->getParameters(i)->hasTrack());
+    }
+  }
+
 
   // open event display
   display->open();
