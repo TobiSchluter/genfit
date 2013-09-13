@@ -13,17 +13,25 @@
 #include <TFile.h>
 #include <TTree.h>
 
-
+#include <iostream>
 
 
 int main() {
-
+  genfit::Track tr; // pull in genfit libraries
 
   genfit::Track* aTrackPtr(NULL);
   genfit::GFRaveVertex* aVertexPtr(NULL);
 
   TFile* trackFile = TFile::Open("tracks.root", "READ");
+  if (!trackFile) {
+    std::cerr << "Couldn't open 'tracks.root'." << std::endl;
+    return -1;
+  }
   TTree* trackTree = (TTree*)trackFile->Get("trackTree");
+  if (!trackTree) {
+    std::cerr << "Couldn't find tree 'trackTree' in file 'tracks.root'." << std::endl;
+    return -1;
+  }
   TClonesArray* trackArray = new TClonesArray("genfit::Track");
   trackTree->SetBranchAddress("trackBranch", &trackArray);
 
@@ -67,7 +75,7 @@ int main() {
       // when the track branch from the tracks.root file is loaded, the TRefs to the tracks
       // in the GFRaveTrackParameters are again pointing to them.
       for (unsigned int k = 0; k<aVertexPtr->getNTracks(); ++k) {
-        if (aVertexPtr->getParameters(i)->hasTrack()) {
+        if (aVertexPtr->getParameters(k)->hasTrack()) {
           std::cout << "track parameters have track \n";
         }
         else {
