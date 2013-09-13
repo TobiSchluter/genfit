@@ -19,8 +19,10 @@
 
 #include "PlanarMeasurement.h"
 
-#include "Exception.h"
-#include "RKTrackRep.h"
+#include <Exception.h>
+#include <RKTrackRep.h>
+#include <HMatrixU.h>
+#include <HMatrixUV.h>
 
 #include <cassert>
 
@@ -61,30 +63,25 @@ std::vector<MeasurementOnPlane*> PlanarMeasurement::constructMeasurementsOnPlane
 }
 
 
-const TMatrixD& PlanarMeasurement::getHMatrix(const AbsTrackRep* rep) const {
+const AbsHMatrix* PlanarMeasurement::getHMatrix(const AbsTrackRep* rep) const {
 
-  if (dynamic_cast<const RKTrackRep*>(rep) != NULL) {
-    switch(rawHitCoords_.GetNrows()) {
-    case 1:
-      static const double HMatrixContent1[5] = {0, 0, 0, 1, 0};
-      static const TMatrixT<double> HMatrix1(1,5, HMatrixContent1);
-      return HMatrix1;
-
-    case 2:
-      static const double HMatrixContent2[10] = {0, 0, 0, 1, 0,
-                                                0, 0, 0, 0, 1};
-      static const TMatrixT<double> HMatrix2(2,5, HMatrixContent2);
-      return HMatrix2;
-
-    default:
-      Exception exc("SpacepointMeasurement default implementation can only handle 1D (strip) or 2D (pixel) measurements!", __LINE__,__FILE__);
-      throw exc;
-    }
-  }
-  else {
+  if (dynamic_cast<const RKTrackRep*>(rep) == NULL) {
     Exception exc("SpacepointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
     throw exc;
   }
+
+  switch(rawHitCoords_.GetNrows()) {
+  case 1:
+    return new HMatrixU();
+
+  case 2:
+    return new HMatrixUV();
+
+  default:
+    Exception exc("SpacepointMeasurement default implementation can only handle 1D (strip) or 2D (pixel) measurements!", __LINE__,__FILE__);
+    throw exc;
+  }
+
 }
 
 void PlanarMeasurement::Streamer(TBuffer &R__b)

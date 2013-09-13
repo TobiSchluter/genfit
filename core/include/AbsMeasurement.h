@@ -24,6 +24,7 @@
 #define genfit_AbsMeasurement_h
 
 #include "MeasurementOnPlane.h"
+#include "AbsHMatrix.h"
 
 #include <TObject.h>
 
@@ -58,6 +59,8 @@ class AbsMeasurement : public TObject {
   int getDetId() const {return detId_;}
   int getHitId() const {return hitId_;}
 
+  unsigned int getDim() const {return rawHitCoords_.GetNrows();}
+
 
   /**
    * Construct (virtual) detector plane (use state's TrackRep). It's possible to make corrections to the plane here.
@@ -70,7 +73,7 @@ class AbsMeasurement : public TObject {
    */
   virtual std::vector<genfit::MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const = 0;
 
-  virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const = 0;
+  virtual const AbsHMatrix* getHMatrix(const AbsTrackRep*) const = 0;
 
   virtual void Print(const Option_t* = "") const;
 

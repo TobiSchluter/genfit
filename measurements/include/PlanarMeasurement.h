@@ -24,6 +24,7 @@
 #define genfit_PlanarMeasurement_h
 
 #include "AbsMeasurement.h"
+#include "AbsHMatrix.h"
 #include "MeasurementOnPlane.h"
 
 
@@ -54,7 +55,7 @@ class PlanarMeasurement : public AbsMeasurement {
 
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const;
 
-  virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const;
+  virtual const AbsHMatrix* getHMatrix(const AbsTrackRep*) const;
 
   virtual void setPlane(const SharedPlanePtr& physicalPlane, int planeId = -1) {physicalPlane_ = physicalPlane; planeId_ = planeId;}
 

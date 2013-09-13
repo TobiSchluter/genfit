@@ -149,20 +149,21 @@ MACRO (ROOT_GENERATE_DICTIONARY INFILES INCLUDE_DIRS_IN LINKDEF_FILE OUTFILE)
 ENDMACRO (ROOT_GENERATE_DICTIONARY)
 
 SET(CORE_DICTIONARY_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/DetPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsFinitePlane.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/finitePlanes/include/RectangularFinitePlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsFitterInfo.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsHMatrix.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsTrackRep.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/StateOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/DetPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/FitStatus.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasuredStateOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementFactory.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementProducer.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasuredStateOnPlane.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsMeasurement.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsFitterInfo.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackPoint.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/FitStatus.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/StateOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/Track.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackPoint.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/finitePlanes/include/RectangularFinitePlane.h
 )
 ROOT_GENERATE_DICTIONARY("${CORE_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include"
@@ -197,6 +198,8 @@ ROOT_GENERATE_DICTIONARY("${FITTERS_DICTIONARY_SOURCES}"
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cpp" "${library_sources}")
 
 SET(MEASUREMENTS_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixU.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixUV.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/PlanarMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/ProlateSpacepointMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/SpacepointMeasurement.h
@@ -272,6 +275,7 @@ ENDMACRO( ADD_GENFIT_TEST )
 
 ADD_GENFIT_TEST( fitterTests           test/fitterTests/main.cpp)
 ADD_GENFIT_TEST( minimalFittingExample test/minimalFittingExample/main.cpp)
+ADD_GENFIT_TEST( streamerTest          test/streamerTest/main.cpp)
 ADD_GENFIT_TEST( unitTests             test/unitTests/main.cpp)
 if(DEFINED ENV{RAVEPATH})
   ADD_GENFIT_TEST( vertexingTest         test/vertexingTest/main.cpp)

@@ -24,6 +24,7 @@
 #define genfit_WireMeasurement_h
 
 #include "AbsMeasurement.h"
+#include "AbsHMatrix.h"
 #include "MeasurementOnPlane.h"
 
 
@@ -70,7 +71,7 @@ class WireMeasurement : public AbsMeasurement {
 
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const;
 
-  virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const;
+  virtual const AbsHMatrix* getHMatrix(const AbsTrackRep*) const;
 
   /** Set maximum drift distance. This is used to calculate the start weights of the two
    * measurementsOnPlane.

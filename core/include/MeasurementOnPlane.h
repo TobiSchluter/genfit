@@ -21,12 +21,13 @@
  * @{
  */
 
-#ifndef  _MeasurementOnPlane_h
-#define  _MeasurementOnPlane_h
+#ifndef genfit_MeasurementOnPlane_h
+#define genfit_MeasurementOnPlane_h
 
 #include <TMatrixD.h>
 
 #include "MeasuredStateOnPlane.h"
+#include "AbsHMatrix.h"
 
 #include <cmath>
 
@@ -37,23 +38,32 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
  public:
 
   MeasurementOnPlane(const AbsTrackRep* rep = NULL) :
-    MeasuredStateOnPlane(rep), hMatrix_(0,0), weight_(0) {}
-  MeasurementOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, const TMatrixD& hMatrix, double weight = 1.) :
+    MeasuredStateOnPlane(rep), hMatrix_(NULL), weight_(0) {}
+  MeasurementOnPlane(const TVectorD& state, const TMatrixDSym& cov, SharedPlanePtr plane, const AbsTrackRep* rep, const AbsHMatrix* hMatrix, double weight = 1.) :
     MeasuredStateOnPlane(state, cov, plane, rep), hMatrix_(hMatrix), weight_(weight) {}
+
+  //! copy constructor
+  MeasurementOnPlane(const MeasurementOnPlane& other);
+  //! assignment operator
+  MeasurementOnPlane& operator=(const MeasurementOnPlane& other);
 
   virtual ~MeasurementOnPlane() {}
 
-  const TMatrixD& getHMatrix() const {return hMatrix_;}
+  const AbsHMatrix* getHMatrix() const {return hMatrix_.get();}
   double getWeight() const {return weight_;}
 
-  void setHMatrix(const TMatrixD& hMatrix) {hMatrix_ = hMatrix;}
+  void setHMatrix(const AbsHMatrix* hMatrix) {hMatrix_.reset(hMatrix);}
   void setWeight(double weight) {weight_ = fmax(weight, 1.E-10);}
 
   void Print(Option_t* option = "") const ;
 
  protected:
 
-  TMatrixD hMatrix_; // projection matrix
+#ifndef __CINT__
+  boost::scoped_ptr<const AbsHMatrix> hMatrix_; // Ownership
+#else
+  const AbsHMatrix* hMatrix_; // Ownership. Projection matrix
+#endif
   double weight_;
 
 

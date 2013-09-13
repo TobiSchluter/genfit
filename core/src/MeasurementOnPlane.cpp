@@ -23,6 +23,23 @@
 
 namespace genfit {
 
+MeasurementOnPlane::MeasurementOnPlane(const MeasurementOnPlane& other) :
+    MeasuredStateOnPlane(other),
+    weight_(other.weight_)
+{
+  hMatrix_.reset(other.hMatrix_->clone());
+}
+
+
+MeasurementOnPlane& MeasurementOnPlane::operator=(const MeasurementOnPlane& other) {
+  MeasuredStateOnPlane::operator=(other);
+  weight_ = other.weight_;
+  hMatrix_.reset(other.hMatrix_->clone());
+
+  return *this;
+}
+
+
 void MeasurementOnPlane::Print(Option_t* option) const
 {
   std::cout << "genfit::MeasurementOnPlane, weight = " << weight_ << "\n";
@@ -30,8 +47,23 @@ void MeasurementOnPlane::Print(Option_t* option) const
   std::cout << " covariance matrix: "; cov_.Print();
   if (sharedPlane_ != NULL)
     std::cout << " defined in plane "; sharedPlane_->Print();
-  std::cout << " hMatrix: "; hMatrix_.Print();
+  std::cout << " hMatrix: "; hMatrix_->Print();
 
+}
+
+
+// Modified from auto-generated Streamer to correctly deal with smart pointers.
+void MeasurementOnPlane::Streamer(TBuffer &R__b)
+{
+  // Stream an object of class genfit::MeasurementOnPlane.
+
+  // FIXME: Implement!!!!
+
+  if (R__b.IsReading()) {
+
+  } else {
+
+  }
 }
 
 } /* End of namespace   */

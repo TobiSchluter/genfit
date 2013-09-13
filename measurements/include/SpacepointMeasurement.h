@@ -24,6 +24,7 @@
 #define genfit_SpacepointMeasurement_h
 
 #include "AbsMeasurement.h"
+#include "AbsHMatrix.h"
 
 
 namespace genfit {
@@ -54,7 +55,7 @@ class SpacepointMeasurement : public AbsMeasurement {
 
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const;
 
-  virtual const TMatrixD& getHMatrix(const AbsTrackRep*) const;
+  virtual const AbsHMatrix* getHMatrix(const AbsTrackRep*) const;
 
   ClassDef(SpacepointMeasurement,1)
 };

@@ -6,12 +6,12 @@
 
 // These need no special treatment.
 #pragma link C++ class genfit::AbsFinitePlane+;
+#pragma link C++ class genfit::AbsHMatrix+;
 #pragma link C++ class genfit::RectangularFinitePlane+;
 #pragma link C++ class genfit::FitStatus+;
 
 // These inherit from classes with custom streamers, or reference share_ptrs in their interfaces.
 #pragma link C++ class genfit::AbsTrackRep;
-#pragma link C++ class genfit::MeasurementOnPlane;
 #pragma link C++ class genfit::MeasuredStateOnPlane;
 
 // These need their owners fixed up after reading.
@@ -22,6 +22,7 @@
 // owners fixed up.
 #pragma link C++ class genfit::AbsFitterInfo-; // trackPoint_, rep_, sharedPlanePtr
 #pragma link C++ class genfit::DetPlane-;  // scoped_ptr<> finitePlane_
+#pragma link C++ class genfit::MeasurementOnPlane-; // scoped_ptr<> hMatrix_
 #pragma link C++ class genfit::StateOnPlane-;  // rep_, sharedPlanePtr
 #pragma link C++ class genfit::Track-;
 #pragma link C++ class genfit::TrackPoint-; // track_, fixup the map

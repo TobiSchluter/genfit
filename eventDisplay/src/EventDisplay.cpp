@@ -426,7 +426,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       double_t hit_v = 0;
       double_t plane_size = 4;
 
-      int hit_coords_dim = m->getHMatrix(rep).GetNrows();
+      int hit_coords_dim = m->getDim();
 
       if(dynamic_cast<const PlanarMeasurement*>(m) != NULL) {
         planar_hit = true;

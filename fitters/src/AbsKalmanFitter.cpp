@@ -182,14 +182,14 @@ const MeasurementOnPlane AbsKalmanFitter::getMeasurement(const KalmanFitterInfo*
         e.setFatal();
         throw e;
       }
-      return MeasurementOnPlane(*(fi->getClosestMeasurementOnPlane(fi->getReferenceState())));
+      return *(fi->getClosestMeasurementOnPlane(fi->getReferenceState()));
     case unweightedClosestToPrediction :
       if (!fi->hasPrediction(direction)) {
         Exception e("AbsKalmanFitter::getMeasurement: no prediction.", __LINE__,__FILE__);
         e.setFatal();
         throw e;
       }
-      return MeasurementOnPlane(*(fi->getClosestMeasurementOnPlane(fi->getPrediction(direction))));
+      return *(fi->getClosestMeasurementOnPlane(fi->getPrediction(direction)));
     default:
       Exception e("AbsKalmanFitter::getMeasurement: choice not valid.", __LINE__,__FILE__);
       e.setFatal();

@@ -226,7 +226,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   const MeasurementOnPlane& mOnPlane = getMeasurement(fi, direction);
   const TVectorD& measurement(mOnPlane.getState());
   const TMatrixDSym& V(mOnPlane.getCov());
-  const TMatrixD& H(mOnPlane.getHMatrix());
+  const AbsHMatrix* H(mOnPlane.getHMatrix());
   if (debugLvl_ > 0) {
     std::cout << "State prediction: "; stateVector.Print();
     std::cout << "Cov prediction: "; state->getCov().Print();
@@ -234,7 +234,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
     //measurement.Print();
   }
 
-  TVectorD res(measurement - H*stateVector);
+  TVectorD res(measurement - H->Hv(stateVector));
   if (debugLvl_ > 0) {
     std::cout << "Residual = (" << res(0);
     if (res.GetNrows() > 1)
@@ -246,11 +246,11 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   // calculate kalman gain ------------------------------
   // calculate covsum (V + HCH^T) and invert
   TMatrixDSym covSumInv(cov);
-  covSumInv.Similarity(H);
+  H->HMHt(covSumInv);
   covSumInv += V;
   tools::invertMatrix(covSumInv);
 
-  TMatrixD CHt(cov, TMatrixD::kMultTranspose, H);
+  const TMatrixD& CHt(H->MHt(cov));
   TVectorD update(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
 
   if (debugLvl_ > 0) {
@@ -268,7 +268,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
     std::cout << "updated cov: "; cov.Print();
   }
 
-  TVectorD resNew(measurement - H*stateVector);
+  TVectorD resNew(measurement - H->Hv(stateVector));
   if (debugLvl_ > 0) {
     std::cout << "Residual New = (" << resNew(0);
 
@@ -291,7 +291,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
 
   // Calculate chi²
   TMatrixDSym HCHt(cov);
-  HCHt.Similarity(H);
+  H->HMHt(HCHt);
   HCHt -= V;
   HCHt *= -1;
 

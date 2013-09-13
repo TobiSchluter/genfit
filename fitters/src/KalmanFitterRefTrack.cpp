@@ -855,15 +855,16 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
 
   // update
   const MeasurementOnPlane& m = getMeasurement(fi, direction);
+  const AbsHMatrix* H(m.getHMatrix());
 
   TMatrixDSym covSumInv(C); // (V_k + H_k C_{k|k-1} H_k^T)^(-1)
-  covSumInv.Similarity(m.getHMatrix());
+  H->HMHt(covSumInv);
   covSumInv += m.getCov();
   tools::invertMatrix(covSumInv);
 
-  TMatrixD CHt(C, TMatrixD::kMultTranspose, m.getHMatrix());
+  const TMatrixD& CHt(H->MHt(C));
 
-  const TVectorD& res = m.getState() - m.getHMatrix()*p; //
+  const TVectorD& res = m.getState() - H->Hv(p); //
   if (debugLvl_ > 1) {
     std::cout << "\033[34m";
     std::cout << "m (measurement) "; m.getState().Print();
@@ -893,7 +894,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   // Calculate chi² increment.  At the first point chi2inc == 0 and
   // the matrix will not be invertible.
   double chi2inc = 0;
-  TVectorD resNew(m.getState() - m.getHMatrix()*updated);
+  TVectorD resNew(m.getState() - H->Hv(updated));
   if (debugLvl_ > 1) {
     std::cout << " resNew ";
     resNew.Print();
@@ -903,7 +904,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   // If matrix inversion fails, chi2inc = 0
   if (resNew != 0) {
     TMatrixDSym Rinv(C);
-    Rinv.Similarity(m.getHMatrix());
+    H->HMHt(Rinv);
     Rinv -= m.getCov();
     Rinv *= -1;
 

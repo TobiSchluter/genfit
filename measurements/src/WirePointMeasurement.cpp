@@ -19,8 +19,9 @@
 
 #include "WirePointMeasurement.h"
 
-#include "Exception.h"
-#include "RKTrackRep.h"
+#include <Exception.h>
+#include <RKTrackRep.h>
+#include <HMatrixUV.h>
 
 #include <cassert>
 #include <algorithm>
@@ -80,18 +81,13 @@ std::vector<MeasurementOnPlane*> WirePointMeasurement::constructMeasurementsOnPl
   return retVal;
 }
 
-const TMatrixD& WirePointMeasurement::getHMatrix(const AbsTrackRep* rep) const {
-  if (dynamic_cast<const RKTrackRep*>(rep) != NULL) {
-    static const double HMatrixContent[10] = {0, 0, 0, 1, 0,
-                                              0, 0, 0, 0, 1};
-    static const TMatrixT<double> HMatrix(2,5, HMatrixContent);
-
-    return HMatrix;
-  }
-  else {
+const AbsHMatrix* WirePointMeasurement::getHMatrix(const AbsTrackRep* rep) const {
+  if (dynamic_cast<const RKTrackRep*>(rep) == NULL) {
     Exception exc("WirePointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
     throw exc;
   }
+
+  return new HMatrixUV();
 }
 
 } /* End of namespace genfit */
