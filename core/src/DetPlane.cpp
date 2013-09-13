@@ -352,9 +352,9 @@ void DetPlane::Streamer(TBuffer &R__b)
       char flag;
       R__b >> flag;
       if (flag)	{
-	AbsFinitePlane *p = 0;
-	R__b >> p;
-	finitePlane_.reset(p->clone());
+        AbsFinitePlane *p = 0;
+        R__b >> p;
+        finitePlane_.reset(p->clone());
       }
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
    } else {
@@ -364,12 +364,12 @@ void DetPlane::Streamer(TBuffer &R__b)
       u_.Streamer(R__b);
       v_.Streamer(R__b);
       if (finitePlane_) {
-	R__b << (char)1;
-	AbsFinitePlane *p = finitePlane_->clone();
-	R__b << p;
-	delete p;
+        R__b << (char)1;
+        AbsFinitePlane *p = finitePlane_->clone();
+        R__b << p;
+        delete p;
       } else {
-	R__b << (char)0;
+        R__b << (char)0;
       }
       R__b.SetByteCount(R__c, kTRUE);
    }

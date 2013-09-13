@@ -52,18 +52,40 @@ void MeasurementOnPlane::Print(Option_t* option) const
 }
 
 
-// Modified from auto-generated Streamer to correctly deal with smart pointers.
 void MeasurementOnPlane::Streamer(TBuffer &R__b)
 {
   // Stream an object of class genfit::MeasurementOnPlane.
 
-  // FIXME: Implement!!!!
-
+  //This works around a msvc bug and should be harmless on other platforms
+  typedef ::genfit::MeasurementOnPlane thisClass;
+  UInt_t R__s, R__c;
   if (R__b.IsReading()) {
-
+     Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+     MeasuredStateOnPlane::Streamer(R__b);
+     hMatrix_.reset();
+     char flag;
+     R__b >> flag;
+     if (flag) {
+       AbsHMatrix *h = 0;
+       R__b >> h;
+       hMatrix_.reset(h->clone());
+     }
+     R__b >> weight_;
+     R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
   } else {
-
+     R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+     MeasuredStateOnPlane::Streamer(R__b);
+     if (hMatrix_) {
+       R__b << (char)1;
+       AbsHMatrix *h = hMatrix_->clone();
+       R__b << h;
+       delete h;
+     } else {
+       R__b << (char)0;
+     }
+     R__b << weight_;
+     R__b.SetByteCount(R__c, kTRUE);
   }
 }
 
-} /* End of namespace   */
+} /* End of namespace genfit */
