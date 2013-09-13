@@ -275,6 +275,7 @@ ADD_GENFIT_TEST( minimalFittingExample test/minimalFittingExample/main.cpp)
 ADD_GENFIT_TEST( unitTests             test/unitTests/main.cpp)
 if(DEFINED ENV{RAVEPATH})
   ADD_GENFIT_TEST( vertexingTest         test/vertexingTest/main.cpp)
+  ADD_GENFIT_TEST( vertexingTestRead     test/vertexingTest/read.cpp)
 endif()
 
 # generate and install following configuration files

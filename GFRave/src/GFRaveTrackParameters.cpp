@@ -31,7 +31,7 @@ namespace genfit {
 GFRaveTrackParameters::GFRaveTrackParameters() :
   originalTrack_(NULL),
   weight_(0),
-  state_(1,6),
+  state_(6),
   cov_(6,6),
   hasSmoothedData_(false)
 {

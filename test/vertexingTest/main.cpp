@@ -25,9 +25,10 @@
 #include <vector>
 
 #include <TROOT.h>
+#include <TClonesArray.h>
 #include <TFile.h>
 #include <TTree.h>
-#include "TDatabasePDG.h"
+#include <TDatabasePDG.h>
 #include <TMath.h>
 
 
@@ -56,46 +57,39 @@ int main() {
   genfit::AbsKalmanFitter* fitter = new genfit::KalmanFitterRefTrack();
 
   // init vertex factory
-  genfit::GFRaveVertexFactory vertexFactory;
+  genfit::GFRaveVertexFactory vertexFactory(2);
   vertexFactory.setMethod("kalman-smoothing:1");
 
 
   // init root files;
   // tracks and vertices are written to two different root files
+  TFile* trackFile = new TFile("tracks.root", "RECREATE");
+  trackFile->cd();
+  TTree* trackTree = new TTree("trackTree", "fitted tracks");
+  TClonesArray trackArray("genfit::Track");
+  trackTree->Branch("trackBranch", &trackArray, 32000, -1);
+
+  //TFile* vertexFile = new TFile("vertices.root", "RECREATE");
+  //vertexFile->cd();
+  //TTree* vertexTree = new TTree("vertexTree", "fitted vertices");
+  TClonesArray vertexArray("genfit::GFRaveVertex");
+  //vertexTree->Branch("vertexBranch", &vertexArray, 32000, -1);
+  trackTree->Branch("vertexBranch", &vertexArray, 32000, -1);
+
   std::vector<genfit::Track*> tracks;
   std::vector<genfit::GFRaveVertex*> vertices;
 
-  genfit::Track* aTrackPtr(NULL);
-  genfit::GFRaveVertex* aVertexPtr(NULL);
-
-  TFile* trackFile = new TFile("tracks.root", "RECREATE");
-  trackFile->cd();
-  TTree* tTracks = new TTree("tTracks", "fitted tracks");
-  tTracks->Branch("Track", "genfit::Track", &aTrackPtr, 32000, -1);
-
-  TFile* vertexFile = new TFile("vertices.root", "RECREATE");
-  vertexFile->cd();
-  TTree* tVertices = new TTree("tVertices", "fitted vertices");
-  tVertices->Branch("GFRaveVertex", "genfit::GFRaveVertex", &aVertexPtr, 32000, -1);
-
-
   // main loop
-  for (unsigned int iEvent=0; iEvent<1; ++iEvent){
+  for (unsigned int iEvent=0; iEvent<10; ++iEvent){
 
     // clean up
-    for (unsigned int i=0; i<tracks.size(); ++i){
-      delete tracks[i];
-    }
+    trackArray.Delete();
+    vertexArray.Delete();
     tracks.clear();
-
-    for (unsigned int i=0; i<vertices.size(); ++i) {
-      delete vertices[i];
-    }
     vertices.clear();
 
 
     unsigned int nTracks = gRandom->Uniform(2, 10);
-    tracks.reserve(nTracks);
 
     for (unsigned int iTrack=0; iTrack<nTracks; ++iTrack){
 
@@ -155,8 +149,10 @@ int main() {
       TVectorD seedState(6);
       TMatrixDSym seedCov(6);
       rep->get6DStateCov(stateSmeared, seedState, seedCov);
-      tracks.push_back(new genfit::Track(rep, seedState, seedCov));
 
+      new(trackArray[iTrack]) genfit::Track(rep, seedState, seedCov);
+      genfit::Track* trackPtr(static_cast<genfit::Track*>(trackArray.At(iTrack)));
+      tracks.push_back(trackPtr);
 
       // create random measurement types
       std::vector<genfit::eMeasurementType> measurementTypes;
@@ -168,7 +164,7 @@ int main() {
       try{
         for (unsigned int i=1; i<measurementTypes.size(); ++i){
           genfit::AbsMeasurement* measurement = measurementCreator.create(measurementTypes[i], i*5.);
-          tracks.back()->insertPoint(new genfit::TrackPoint(measurement, tracks.back()));
+          trackPtr->insertPoint(new genfit::TrackPoint(measurement, trackPtr));
         }
       }
       catch(genfit::Exception& e){
@@ -178,11 +174,11 @@ int main() {
       }
 
       //check
-      assert(tracks.back()->checkConsistency());
+      assert(trackPtr->checkConsistency());
 
       // do the fit
       try{
-        fitter->processTrack(tracks.back());
+        fitter->processTrack(trackPtr);
       }
       catch(genfit::Exception& e){
         std::cerr << e.what();
@@ -191,21 +187,37 @@ int main() {
       }
 
       //check
-      assert(tracks.back()->checkConsistency());
-
-
-      aTrackPtr = tracks.back();
-      tTracks->Fill();
+      assert(trackPtr->checkConsistency());
 
     } // end loop over tracks
+
+
 
     // vertexing
     vertexFactory.findVertices(&vertices, tracks);
 
     for (unsigned int i=0; i<vertices.size(); ++i) {
-      aVertexPtr = vertices[i];
-      tVertices->Fill();
+      new(vertexArray[i]) genfit::GFRaveVertex(*(vertices[i]));
+
+      genfit::GFRaveVertex* vtx = static_cast<genfit::GFRaveVertex*>(vertices[i]);
+      for (unsigned int j=0; j<vtx->getNTracks(); ++j) {
+        std::cout << "track parameters uniqueID: " << vtx->getParameters(j)->GetUniqueID() << "\n";
+      }
     }
+
+
+    for (unsigned int i=0; i<tracks.size(); ++i) {
+      genfit::Track* trk = static_cast<genfit::Track*>(tracks[i]);
+      std::cout << "track uniqueID: " << trk->GetUniqueID() << "\n";
+    }
+
+
+    // fill tracks
+    std::cout << "trackArray nr of entries: " << trackArray.GetEntries() << "\n";
+    trackTree->Fill();
+
+    // fill vertices
+    //vertexTree->Fill();
 
 
     if (iEvent < 1000) {
@@ -213,39 +225,18 @@ int main() {
       display->addEvent(tracks);
     }
 
-  }// end loop over events
-
-  trackFile->Write();
-  vertexFile->Write();
+  } // end loop over events
 
   delete fitter;
-  delete trackFile;
-  delete vertexFile;
 
-
-  // check written file
-  trackFile = TFile::Open("tracks.root", "READ");
-  trackFile->GetObject("tTracks", tTracks);
-
-  vertexFile = TFile::Open("vertices.root", "READ");
-  vertexFile->GetObject("tVertices", tVertices);
-  aTrackPtr = NULL;
-  aVertexPtr = NULL;
-  tVertices->SetBranchAddress("GFRaveVertex", &aVertexPtr);
-
-  for (Long_t nEntry = 0; nEntry < tVertices->GetEntries(); ++nEntry) {
-    tVertices->GetEntry(nEntry);
-
-    // when the track branch from the other root file is loaded, the TRefs to the tracks
-    // in the GFRaveTrackParameters are again pointing to them.
-    for (unsigned int i = 0; i<aVertexPtr->getNTracks(); ++i) {
-      assert(aVertexPtr->getParameters(i)->hasTrack());
-    }
-  }
-
+  // write and close files
+  trackFile->Write();
+  trackFile->Close();
+  /*vertexFile->Write();
+  vertexFile->Close();*/
 
   // open event display
-  display->open();
+  //display->open();
 
 }
 

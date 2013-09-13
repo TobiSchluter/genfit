@@ -62,6 +62,8 @@ class GFRaveTrackParameters : public TObject
     bool hasTrack() const {return originalTrack_.GetObject() != NULL;}
     const Track* getTrack() const {return  static_cast<Track*>(originalTrack_.GetObject());}
 
+    UInt_t GetUniqueID() const {return originalTrack_.GetUniqueID();}
+
     bool hasSmoothedData() const {return hasSmoothedData_;}
     TVectorD getState() const {return state_;}
     TVector3 getPos() const;
