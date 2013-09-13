@@ -13,10 +13,11 @@
 #include <TFile.h>
 #include <TTree.h>
 
-#include <iostream>
+
 
 
 int main() {
+
   genfit::Track tr; // pull in genfit libraries
 
   genfit::Track* aTrackPtr(NULL);
@@ -27,25 +28,22 @@ int main() {
     std::cerr << "Couldn't open 'tracks.root'." << std::endl;
     return -1;
   }
-  TTree* trackTree = (TTree*)trackFile->Get("trackTree");
-  if (!trackTree) {
-    std::cerr << "Couldn't find tree 'trackTree' in file 'tracks.root'." << std::endl;
+  TTree* tree = (TTree*)trackFile->Get("tree");
+  if (!tree) {
+    std::cerr << "Couldn't find tree 'tree' in file 'tracks.root'." << std::endl;
     return -1;
   }
   TClonesArray* trackArray = new TClonesArray("genfit::Track");
-  trackTree->SetBranchAddress("trackBranch", &trackArray);
+  tree->SetBranchAddress("trackBranch", &trackArray);
 
-  trackTree->Print();
+  tree->Print();
 
-  //TFile* vertexFile = TFile::Open("vertices.root", "READ");
-  //TTree* vertexTree = (TTree*)trackFile->Get("vertexTree");
   TClonesArray* vertexArray = new TClonesArray("genfit::GFRaveVertex");
-  trackTree->SetBranchAddress("vertexBranch", &vertexArray);
+  tree->SetBranchAddress("vertexBranch", &vertexArray);
 
-  //vertexTree->Print();
 
-  for (Long_t i = 0; i < trackTree->GetEntries(); ++i) {
-    trackTree->GetEntry(i);
+  for (Long_t i = 0; i < tree->GetEntries(); ++i) {
+    tree->GetEntry(i);
 
     std::cout << "trackArray nr of entries: " << trackArray->GetEntries() << "\n";
 
@@ -54,16 +52,7 @@ int main() {
           " (" << static_cast<genfit::Track*>(trackArray->At(j))->GetUniqueID() - 16777216 << ")\n";
     }
 
-    /*for (Long_t j = 0; j < trackArray->GetEntriesFast(); ++j) {
-      aTrackPtr = static_cast<genfit::Track*>(trackArray->At(j));
-    }*/
-  /*}
-
-  for (Long_t i = 0; i < vertexTree->GetEntries(); ++i) {*/
-    //vertexTree->GetEntry(i);
-
     for (Long_t j = 0; j < vertexArray->GetEntriesFast(); ++j) {
-
 
       aVertexPtr = (genfit::GFRaveVertex*)(vertexArray->At(j));
       //aVertexPtr->Print();
@@ -82,7 +71,6 @@ int main() {
           std::cout << "track parameters have NO track <--------------------------------- \n";
         }
       }
-
 
     }
 

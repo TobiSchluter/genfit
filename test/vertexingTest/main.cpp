@@ -61,20 +61,16 @@ int main() {
   vertexFactory.setMethod("kalman-smoothing:1");
 
 
-  // init root files;
-  // tracks and vertices are written to two different root files
+  // init root file
+  // tracks and vertices are written to two different branches
   TFile* trackFile = new TFile("tracks.root", "RECREATE");
   trackFile->cd();
-  TTree* trackTree = new TTree("trackTree", "fitted tracks");
+  TTree* tree = new TTree("tree", "fitted tracks");
   TClonesArray trackArray("genfit::Track");
-  trackTree->Branch("trackBranch", &trackArray, 32000, -1);
+  tree->Branch("trackBranch", &trackArray, 32000, -1);
 
-  //TFile* vertexFile = new TFile("vertices.root", "RECREATE");
-  //vertexFile->cd();
-  //TTree* vertexTree = new TTree("vertexTree", "fitted vertices");
   TClonesArray vertexArray("genfit::GFRaveVertex");
-  //vertexTree->Branch("vertexBranch", &vertexArray, 32000, -1);
-  trackTree->Branch("vertexBranch", &vertexArray, 32000, -1);
+  tree->Branch("vertexBranch", &vertexArray, 32000, -1);
 
   std::vector<genfit::Track*> tracks;
   std::vector<genfit::GFRaveVertex*> vertices;
@@ -212,12 +208,9 @@ int main() {
     }
 
 
-    // fill tracks
+    // fill
     std::cout << "trackArray nr of entries: " << trackArray.GetEntries() << "\n";
-    trackTree->Fill();
-
-    // fill vertices
-    //vertexTree->Fill();
+    tree->Fill();
 
 
     if (iEvent < 1000) {
