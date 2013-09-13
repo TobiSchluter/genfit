@@ -33,8 +33,6 @@
 #include "Track.h"
 #include "GFRaveTrackParameters.h"
 
-#include <iostream>
-
 namespace genfit {
 
 class GFRaveVertex : public TObject {
