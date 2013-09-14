@@ -43,6 +43,7 @@ class HMatrixU : public AbsHMatrix {
 
   // M*H^t
   TMatrixD MHt(const TMatrixDSym& M) const;
+  TMatrixD MHt(const TMatrixD& M) const;
 
   // similarity: H*M*H^t
   void HMHt(TMatrixDSym& M) const;

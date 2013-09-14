@@ -41,6 +41,7 @@ class AbsHMatrix : public TObject {
 
   // M*H^t
   virtual TMatrixD MHt(const TMatrixDSym& M) const = 0;
+  virtual TMatrixD MHt(const TMatrixD& M) const = 0;
 
   // similarity: H*M*H^t
   virtual void HMHt(TMatrixDSym& M) const = 0;

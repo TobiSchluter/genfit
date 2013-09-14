@@ -58,6 +58,27 @@ TMatrixD HMatrixUV::MHt(const TMatrixDSym& M) const {
 }
 
 
+TMatrixD HMatrixUV::MHt(const TMatrixD& M) const {
+  assert (M.GetNrows() == 5);
+
+  TMatrixD retVal(5,2);
+
+  retVal(0,0) = M(0,3);
+  retVal(1,0) = M(1,3);
+  retVal(2,0) = M(2,3);
+  retVal(3,0) = M(3,3);
+  retVal(4,0) = M(4,3);
+
+  retVal(0,1) = M(0,4);
+  retVal(1,1) = M(1,4);
+  retVal(2,1) = M(2,4);
+  retVal(3,1) = M(3,4);
+  retVal(4,1) = M(4,4);
+
+  return retVal;
+}
+
+
 void HMatrixUV::HMHt(TMatrixDSym& M) const {
   assert (M.GetNrows() == 5);
 
