@@ -31,11 +31,60 @@
 #include "Tools.h"
 
 #include <Math/ProbFunc.h>
+#include <TDecompChol.h>
+#include <TMatrixDSymEigen.h>
 #include <algorithm>
-
 
 using namespace genfit;
 
+namespace {
+  const bool squareRootFormalism = false;
+
+#if 0
+// This is kept as reference.  We don't use this, only the derivative
+// version for transposed matrices below.
+//
+// Solves L x = b for lower-diagonal L by forward substitution.  b is
+// replaced.
+bool
+forwardSubstitution(const TMatrixD& L, TVectorD& b)
+{
+  size_t n = L.GetNrows();
+  for (size_t i = 0; i < n; ++i)
+    {
+      double sum = b(i);
+      for (int j = 0; j < i; ++j)
+	{
+	  sum -= L(i,j)*b(j);  // already replaced previous elements in b.
+	}
+      if (L(i,i) == 0)
+	return false;
+      b(i) = sum / L(i,i);
+    }
+  return true;
+}
+#endif
+
+// Solves x^T R^T = b^T, replaces b with the result x.  R is assumed
+// to be upper-diagonal.
+bool
+transposedForwardSubstitution(const TMatrixD& R, TVectorD& b)
+{
+  size_t n = R.GetNrows();
+  for (size_t i = 0; i < n; ++i)
+    {
+      double sum = b(i);
+      for (int j = 0; j < i; ++j)
+	{
+	  sum -= b(j)*R(j,i);  // already replaced previous elements in b.
+	}
+      if (R(i,i) == 0)
+	return false;
+      b(i) = sum / R(i,i);
+    }
+  return true;
+}
+}
 
 void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
     double& chi2, double& ndf,
@@ -243,26 +292,130 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   }
   // If hit, do Kalman algebra.
 
-  // calculate kalman gain ------------------------------
-  // calculate covsum (V + HCH^T) and invert
-  TMatrixDSym covSumInv(cov);
-  H->HMHt(covSumInv);
-  covSumInv += V;
-  tools::invertMatrix(covSumInv);
+  if (squareRootFormalism)
+    {
+      // Square Root formalism, Anderson & Moore, 6.5.12 gives the
+      // formalism for combined update and prediction in that
+      // sequence.  We need the opposite sequence.  Therefore, this is
+      // my own invention.
+      TMatrixD F;
+      TMatrixDSym noise;
+      TVectorD deltaState;
+      rep->getForwardJacobianAndNoise(F, noise, deltaState);
+      const TMatrixDSym& oldCov(currentState_->getCov());
 
-  const TMatrixD& CHt(H->MHt(cov));
-  TVectorD update(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
+      // Square Roots:
+      //
+      // The noise matrix is only positive semi-definite, for instance
+      // no noise on q/p.  A Cholesky decomposition is therefore not
+      // possible.  Hence we pull out the eigenvalues, viz noise = z d
+      // z^T (with z orthogonal, d diagonal) and then construct the
+      // square root according to Q^T = sqrt(d) z where sqrt is
+      // applied element-wise and negative eigenvalues are forced to
+      // zero.  We then reduce the matrix such that the zero
+      // eigenvalues don't appear in the remainder of the calculation.
+      //
+      // FIXME
+      // Careful, this is not tested with actual noise.  Do I need the
+      // transpose???
+      TMatrixDSymEigen eig(noise);
+      TMatrixD Q(eig.GetEigenVectors());
+      const TVectorD& evs(eig.GetEigenValues());
+      // Multiplication with a diagonal matrix ... eigenvalues are
+      // sorted in descending order.
+      size_t iRow = 0;
+      for (iRow = 0; iRow < Q.GetNrows(); ++iRow)
+	{
+	  double ev = evs(iRow) > 0 ? sqrt(evs(iRow)) : 0;
+	  //FIXME, see below we do no resizing as of now
+	  //if (ev == 0)
+	  //break;
+	  for (size_t j = 0; j < Q.GetNcols(); ++j)
+	    Q(iRow,j) *= ev;
+	}
+      /*
+      // FIXME this is disabled because ROOT apparently cannot
+      //resize a matrix that is kept in its inline memory???
+      if (iRow < Q.GetNrows())
+	{
+	  // Hit zero eigenvalue, resize matrix ...
+	  Q.ResizeTo(iRow, Q.GetNrows());
+	}
+      */
+      //Q.Print();
 
-  if (debugLvl_ > 0) {
-    //std::cout << "STATUS:" << std::endl;
-    //stateVector.Print();
-    std::cout << "Update: "; update.Print();
-    //cov.Print();
-  }
+      //std::cout << "cov root" << std::endl;
+      TDecompChol oldCovDecomp(oldCov);
+      oldCovDecomp.Decompose();
+      const TMatrixD& S(oldCovDecomp.GetU()); // this actually the transposed we want.
 
-  stateVector += update;
-  covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
-  cov -= covSumInv;
+      TDecompChol decompR(V);
+      decompR.Decompose();
+
+      TMatrixD pre(S.GetNrows() + Q.GetNrows() + V.GetNrows(),
+		   S.GetNcols() + V.GetNcols());
+      pre.SetSub(0, V.GetNcols(),
+		 TMatrixD(S, TMatrixD::kMultTranspose, F));
+      pre.SetSub(S.GetNrows(), V.GetNcols(), Q);
+      pre.SetSub(0, 0, 
+		 H->MHt(TMatrixD(S, TMatrixD::kMultTranspose, F)));
+      pre.SetSub(S.GetNrows(), 0, H->MHt(Q));
+      pre.SetSub(S.GetNrows() + Q.GetNrows(), 0, decompR.GetU());
+
+      // This is a way of obtaining the upper right matrix one would
+      // obtain in a QR decomposition that works for a non-square
+      // matrix.  Of course, calculating the intermediate matrix is a
+      // fairly wasteful, but then one saves the effort of calculating
+      // the orthogonal matrix (and that of actually finding a QR code
+      // that handles non-square matrices).
+      // FIXME: a real QR decomp, taking the zeros into account could
+      // speed this up.
+      TMatrixDSym master(TMatrixDSym::kAtA, pre);
+      TDecompChol decompMaster(master);
+      decompMaster.Decompose();
+      // decompMaster.GetU() is now the upper diagonal matrix.
+      const TMatrixD& r = decompMaster.GetU();
+
+      TMatrixD R(r.GetSub(0, V.GetNrows()-1, 0, V.GetNcols()-1));
+    //R.Print();
+      TMatrixD K(TMatrixD::kTransposed, r.GetSub(0, V.GetNrows()-1, V.GetNcols(), pre.GetNcols()-1));
+      //K.Print();
+      //(K*R).Print();
+      TMatrixD Snew(r.GetSub(V.GetNrows(), V.GetNrows() + S.GetNrows() - 1,
+			     V.GetNcols(), pre.GetNcols()-1));
+      //Snew.Print();
+      // No need for matrix inversion.
+      TVectorD update(res);
+      transposedForwardSubstitution(R, update);
+      update *= K;
+      stateVector += update;
+      cov = TMatrixDSym(TMatrixDSym::kAtA, Snew); // Note that this is transposed in just the right way.
+    }
+  else
+    {
+      // calculate kalman gain ------------------------------
+      // calculate covsum (V + HCH^T) and invert
+      TMatrixDSym covSumInv(cov);
+      H->HMHt(covSumInv);
+      covSumInv += V;
+      tools::invertMatrix(covSumInv);
+
+      TMatrixD CHt(H->MHt(cov));
+      TVectorD update(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
+      //TMatrixD(CHt, TMatrixD::kMult, covSumInv).Print();
+
+      if (debugLvl_ > 0) {
+        //std::cout << "STATUS:" << std::endl;
+        //stateVector.Print();
+        std::cout << "Update: "; update.Print();
+        //cov.Print();
+      }
+
+      stateVector += update;
+      covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
+      cov -= covSumInv;
+    }
+
   if (debugLvl_ > 0) {
     std::cout << "updated state: "; stateVector.Print();
     std::cout << "updated cov: "; cov.Print();
