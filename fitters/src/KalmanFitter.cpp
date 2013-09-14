@@ -65,7 +65,7 @@ forwardSubstitution(const TMatrixD& L, TVectorD& b)
 }
 #endif
 
-// Solves x^T R^T = b^T, replaces b with the result x.  R is assumed
+// Solves R^T x = b, replaces b with the result x.  R is assumed
 // to be upper-diagonal.
 bool
 transposedForwardSubstitution(const TMatrixD& R, TVectorD& b)
