@@ -1,5 +1,5 @@
-/* Copyright 2008-2010, Technische Universitaet Muenchen,
-   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
+/* Copyright 2013, Technische Universitaet Muenchen,
+   Authors: Johannes Rauch
 
    This file is part of GENFIT.
 
@@ -34,22 +34,6 @@
 
 
 namespace genfit {
-
-/** @brief Detector plane genfit geometry class
- *
- * A detector plane is the principle object to define coordinate systems for
- * track fitting in genfit. Since a particle trajectory is a
- * one-dimensional object (regardless of any specific parameterization)
- * positions with respect to the track are always measured in a plane.
- *
- * Which plane is chosen depends on the type of detector. Fixed plane
- * detectors have their detector plane defined by their mechanical setup. While
- * wire chambers or time projection chambers might want to define a detector
- * plane more flexibly.
- *
- * This class parameterizes a plane in terms of an origin vector o
- * and two plane-spanning directions u and v.
- */
 
 class HelixTrackModel : public TObject {
 
