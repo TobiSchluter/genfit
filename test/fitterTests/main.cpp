@@ -196,7 +196,7 @@ int main() {
   measurementTypes.push_back(genfit::StripU);
   measurementTypes.push_back(genfit::Wire);
   measurementTypes.push_back(genfit::WirePoint);*/
-  for (int i = 0; i < nMeasurements; ++i)
+  for (unsigned int i = 0; i < nMeasurements; ++i)
     measurementTypes.push_back(genfit::eMeasurementType(gRandom->Uniform(7)));
 
 
@@ -257,7 +257,7 @@ int main() {
 
 
   // init geometry and mag. field
-  TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
+  new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
   genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,BField));
   genfit::FieldManager::getInstance()->useCache(true, 8);

@@ -37,7 +37,7 @@ int main() {
 
 
   // init geometry and mag. field
-  TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
+  new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
   genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0., 15.)); // 15 kGauss
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());

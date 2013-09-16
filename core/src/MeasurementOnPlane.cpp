@@ -69,6 +69,7 @@ void MeasurementOnPlane::Streamer(TBuffer &R__b)
        AbsHMatrix *h = 0;
        R__b >> h;
        hMatrix_.reset(h->clone());
+       //delete h; // segfaults!
      }
      R__b >> weight_;
      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());

@@ -71,20 +71,19 @@ bool
 transposedForwardSubstitution(const TMatrixD& R, TVectorD& b)
 {
   size_t n = R.GetNrows();
-  for (size_t i = 0; i < n; ++i)
-    {
-      double sum = b(i);
-      for (int j = 0; j < i; ++j)
-	{
-	  sum -= b(j)*R(j,i);  // already replaced previous elements in b.
-	}
-      if (R(i,i) == 0)
-	return false;
-      b(i) = sum / R(i,i);
+  for (unsigned int i = 0; i < n; ++i) {
+    double sum = b(i);
+    for (unsigned int j = 0; j < i; ++j) {
+      sum -= b(j)*R(j,i);  // already replaced previous elements in b.
     }
+    if (R(i,i) == 0)
+      return false;
+    b(i) = sum / R(i,i);
+  }
   return true;
 }
-}
+
+} // end of namespace
 
 void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
     double& chi2, double& ndf,
@@ -323,24 +322,23 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
       const TVectorD& evs(eig.GetEigenValues());
       // Multiplication with a diagonal matrix ... eigenvalues are
       // sorted in descending order.
-      size_t iRow = 0;
-      for (iRow = 0; iRow < Q.GetNrows(); ++iRow)
-	{
-	  double ev = evs(iRow) > 0 ? sqrt(evs(iRow)) : 0;
-	  //FIXME, see below we do no resizing as of now
-	  //if (ev == 0)
-	  //break;
-	  for (size_t j = 0; j < Q.GetNcols(); ++j)
-	    Q(iRow,j) *= ev;
-	}
+      int iRow = 0;
+      for (iRow = 0; iRow < Q.GetNrows(); ++iRow) {
+        double ev = evs(iRow) > 0 ? sqrt(evs(iRow)) : 0;
+        //FIXME, see below we do no resizing as of now
+        //if (ev == 0)
+        //break;
+        for (int j = 0; j < Q.GetNcols(); ++j)
+          Q(iRow,j) *= ev;
+      }
       /*
       // FIXME this is disabled because ROOT apparently cannot
       //resize a matrix that is kept in its inline memory???
       if (iRow < Q.GetNrows())
-	{
-	  // Hit zero eigenvalue, resize matrix ...
-	  Q.ResizeTo(iRow, Q.GetNrows());
-	}
+      {
+        // Hit zero eigenvalue, resize matrix ...
+        Q.ResizeTo(iRow, Q.GetNrows());
+      }
       */
       //Q.Print();
 
@@ -353,12 +351,12 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
       decompR.Decompose();
 
       TMatrixD pre(S.GetNrows() + Q.GetNrows() + V.GetNrows(),
-		   S.GetNcols() + V.GetNcols());
+		  S.GetNcols() + V.GetNcols());
       pre.SetSub(0, V.GetNcols(),
-		 TMatrixD(S, TMatrixD::kMultTranspose, F));
+		  TMatrixD(S, TMatrixD::kMultTranspose, F));
       pre.SetSub(S.GetNrows(), V.GetNcols(), Q);
       pre.SetSub(0, 0, 
-		 H->MHt(TMatrixD(S, TMatrixD::kMultTranspose, F)));
+		  H->MHt(TMatrixD(S, TMatrixD::kMultTranspose, F)));
       pre.SetSub(S.GetNrows(), 0, H->MHt(Q));
       pre.SetSub(S.GetNrows() + Q.GetNrows(), 0, decompR.GetU());
 
@@ -377,7 +375,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
       const TMatrixD& r = decompMaster.GetU();
 
       TMatrixD R(r.GetSub(0, V.GetNrows()-1, 0, V.GetNcols()-1));
-    //R.Print();
+      //R.Print();
       TMatrixD K(TMatrixD::kTransposed, r.GetSub(0, V.GetNrows()-1, V.GetNcols(), pre.GetNcols()-1));
       //K.Print();
       //(K*R).Print();
