@@ -36,18 +36,18 @@ class TrackCandHit : public TObject {
   TrackCandHit(int detId   = -1,
                  int hitId   = -1,
                  int planeId = -1,
-                 double rho  =  0.);
+                 double sortingParameter  =  0.);
 
   ~TrackCandHit();
 
-  /** @brief Equality operator. Does not check rho.
+  /** @brief Equality operator. Does not check sortingParameter.
    */
   friend bool operator== (const TrackCandHit& lhs, const TrackCandHit& rhs);
   friend bool operator!= (const TrackCandHit& lhs, const TrackCandHit& rhs) {
     return !(lhs == rhs);
   }
 
-  /** @brief Compare rho, needed for sorting
+  /** @brief Compare sortingParameter, needed for sorting
    */
   friend bool operator< (const TrackCandHit& lhs, const TrackCandHit& rhs) {
     return (lhs.sortingParameter_ < rhs.sortingParameter_);
@@ -57,12 +57,12 @@ class TrackCandHit : public TObject {
   int    getDetId() const {return detId_;}
   int    getHitId() const {return hitId_;}
   int    getPlaneId() const {return planeId_;}
-  double getRho() const {return sortingParameter_;}
+  double getSortingParameter() const {return sortingParameter_;}
 
   virtual void Print(Option_t* option = "") const;
 
   // Modifiers
-  void setRho(double rho) {sortingParameter_ = rho;}
+  void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
 
  protected:
   // Private Data Members ------------

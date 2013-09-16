@@ -78,7 +78,10 @@ class Track : public TObject {
 
   TrackPoint* getPointWithMeasurementAndFitterInfo(int id, const AbsTrackRep* rep) const;
 
-  /** Shortcut to get FittedStates. Uses getPointWithMeasurementAndFitterInfo(id, rep).
+  /**
+   * @brief Shortcut to get FittedStates.
+   *
+   * Uses #getPointWithMeasurementAndFitterInfo(id, rep).
    * Per default, the fitted state of the fitterInfo of the first TrackPoint with measurements(s) and fitterInfo(s)
    * is returned. If no trackRep is specified, the fitter info of the cardinal rep will be used.
    */
@@ -87,7 +90,7 @@ class Track : public TObject {
   AbsTrackRep* getTrackRep(int id) const {return trackReps_.at(id);}
   unsigned int getNumReps() const {return trackReps_.size();}
 
-  // This is used when streaming TrackPoints.
+  //! This is used when streaming TrackPoints.
   int getIdForRep(const AbsTrackRep* rep) const;
 
   /** @brief Get cardinal track representation
@@ -95,6 +98,7 @@ class Track : public TObject {
    * The user has to choose which track rep should be considered the
    * best one after the fit. E.g. the track representation giving the
    * smallest chi2 could be chosen. By default the first in the list is returned.
+   * @sa #determineCardinalRep()
    */
   AbsTrackRep* getCardinalRep() const {return trackReps_.at(cardinalRep_);}
   unsigned int getCardinalRepId() const {return cardinalRep_;}
@@ -111,7 +115,9 @@ class Track : public TObject {
   const TMatrixDSym& getCovSeed() const {return covSeed_;}
   void setCovSeed(const TMatrixDSym& c) {covSeed_.ResizeTo(c); covSeed_ = c;}
 
-  /** Insert TrackPoint BEFORE TrackPoint with position id, if id >= 0.
+  /**
+   * @brief Insert TrackPoint BEFORE TrackPoint with position id, if id >= 0.
+   *
    * Id -1 means after last TrackPoint. Id -2 means before last TrackPoint. ...
    * Also deletes backwardInfos before new point and forwardInfos after new point.
    * Also sets Track backpointer of point accordingly.
@@ -123,7 +129,9 @@ class Track : public TObject {
   void deletePoint(int id);
 
   /**
-   * Merge two tracks. The TrackPoints of other will be inserted
+   * @brief Merge two tracks.
+   *
+   * The TrackPoints of other will be inserted
    * after id (per default, they will be appended at the end).
    * The other track will not be altered, the TrackPoints will be (deep) copied.
    * Only copies the TrackPoints, NOT the reps, fit statuses and seed state.
@@ -132,15 +140,16 @@ class Track : public TObject {
 
   void addTrackRep(AbsTrackRep* trackRep);
 
-  /** Delete a #TrackRep and all corresponding #FitterInfos in the #TrackPoints
-   */
+  //! Delete a #TrackRep and all corresponding #FitterInfos in the #TrackPoints
   void deleteTrackRep(int id);
 
   void setCardinalRep(int id);
   //! See with which rep the track was fitted best (converged fit w/ smallest chi2) and set the cardinal rep accordingly.
   void determineCardinalRep();
 
-  /** Sort #TrackPoints and according to their sorting parameters.
+  /**
+   * @brief Sort #TrackPoints and according to their sorting parameters.
+   *
    * Returns if the order of the trackPoints has actually changed.
    */
   bool sort();
@@ -157,6 +166,9 @@ class Track : public TObject {
   double getTOF(AbsTrackRep* rep, int startId = 0, int endId = -1) const;
 
   /**
+   * @brief Delete unneeded information from the track.
+   *
+   * Possible options:
    * C:  prune all reps except cardinalRep
    * F:  prune all points except first point
    * L:  prune all points except last point
@@ -197,5 +209,7 @@ class Track : public TObject {
 };
 
 } /* End of namespace genfit */
+
+/** @} */
 
 #endif // genfit_Track_h

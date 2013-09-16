@@ -26,11 +26,11 @@ namespace genfit {
 TrackCandHit::TrackCandHit(int detId,
                                int hitId,
                                int planeId,
-                               double rho)
+                               double sortingParameter)
   : detId_(detId),
     hitId_(hitId),
     planeId_(planeId),
-    sortingParameter_(rho)
+    sortingParameter_(sortingParameter)
 {
   ;
 }
@@ -45,7 +45,7 @@ void TrackCandHit::Print(Option_t* option) const {
   std::cout << "  TrackCandHit. DetId = " << detId_
             << " \t HitId = " << hitId_
             << " \t PlaneId = " << planeId_
-            << " \t Rho = " << sortingParameter_ << "\n";
+            << " \t SortingParameter = " << sortingParameter_ << "\n";
 }
 
 

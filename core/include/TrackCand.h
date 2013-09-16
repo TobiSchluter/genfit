@@ -80,7 +80,7 @@ class TrackCand : public TObject {
   //! assignment operator
   TrackCand& operator=( const TrackCand& other );
 
-  /* @brief == operator checks equality of TrackCandHits. Does not check for rho. */
+  //! == operator checks equality of TrackCandHits. Does not check for sorting parameters.
   friend bool operator== (const TrackCand& lhs, const TrackCand& rhs);
   friend bool operator!= (const TrackCand& lhs, const TrackCand& rhs) {return !(lhs == rhs);}
 
@@ -89,32 +89,31 @@ class TrackCand : public TObject {
   // Accessors -----------------------
   TrackCandHit* getHit(int i) const;
 
-  /** @brief Get detector Id and hit Id for hit number i
-   */
+  //!Get detector Id and hit Id for hit number i
   void getHit(int i, int& detId, int& hitId) const;
 
-  /** @brief Get detector Id, hit Id and sorting
-   * parameter for hit number i
-   */
+  //! Get detector Id, hit Id and sorting parameter for hit number i
   void getHit(int i, int& detId, int& hitId, double& sortingParameter) const;
 
-  /** @brief Get detector Id, hit Id and plane id
-   * for hit number i
-   */
+  //! Get detector Id, hit Id and plane id for hit number i
   void getHitWithPlane(int i, int& detId, int& hitId, int& planeId) const;
 
   unsigned int getNHits() const {return hits_.size();}
 
-  /** @brief get hit ids of from a specific detector. DetId -1 gives hitIds of
-   * hits with default detId -1. The default argument -2 gives hit Ids of all hits.
+  /**
+   * @brief Get hit ids of from a specific detector.
+   *
+   * DetId -1 gives hitIds of hits with default detId -1. The default argument -2 gives hit Ids of all hits.
    */
   std::vector<int>    getHitIDs(int detId = -2) const;
+
+  //! Get detector IDs of all hits
   std::vector<int>    getDetIDs() const;
-  std::vector<double> getRhos() const;
+  //!
+  std::vector<double> getSortingParameters() const;
   std::set<int>       getUniqueDetIDs() const;
 
-  /** @brief get the MCT track id, for MC simulations - default value -1
-   */
+  //! Get the MCT track id, for MC simulations - default value = -1
   int getMcTrackId() const {return mcTrackId_;}
 
   /** @brief get the seed value for track: pos. Identical to the first 3 components of getStateSeed*/
@@ -123,49 +122,42 @@ class TrackCand : public TObject {
   /** @brief get the seed value for track: mom. Identical to the last 3 components of getStateSeed*/
   TVector3 getMomSeed() const {return TVector3(state6D_(3), state6D_(4), state6D_(5));}
 
-  /** returns the 6D seed state; should be in global coordinates */
+  //! Returns the 6D seed state; should be in global coordinates.
   const TVectorD& getStateSeed() const {return state6D_;}
 
   double getChargeSeed() const {return q_;}
 
-  /** @brief get the PDG code*/
+  //! Get the PDG code
   int getPdgCode() const {return pdg_;}
 
+  //! Is there a hit with detId and hitId in the TrackCand?
   bool hitInTrack(int detId, int hitId) const;
 
   // Modifiers -----------------------
 
-  void addHit(int detId, int hitId, int planeId = -1, double rho = 0);
+  void addHit(int detId, int hitId, int planeId = -1, double sortingParameter = 0);
 
   void addHit(TrackCandHit* hit) {hits_.push_back(hit);}
 
-  /** @brief set the MCT track id, for MC simulations
-   */
+  //! Set the MCT track id, for MC simulations
   void setMcTrackId(int i) {mcTrackId_ = i;}
 
-  /** @brief Test if hit already is part of this track candidate
-   */
-
-  /** @brief set a particle hypothesis in form of a PDG code. This will also set the charge attribute
-   */
+  //! Set a particle hypothesis in form of a PDG code. This will also set the charge attribute
   void setPdgCode(int pdgCode);
 
   // TODO: make two functions: one that copies the hits from the other cand, and one that transferes ownership form the other cand
   void append(const TrackCand&);
 
-  /** @brief sort the hits that were already added to the trackCand using the rho parameter.
-   */
+  //! Sort the hits that were already added to the trackCand using the sorting parameters.
   void sortHits();
 
   void sortHits(const std::vector<unsigned int>& indices);
 
   // Operations ----------------------
-  /** @brief delete and clear the TrackCandHits
-   */
+  //! Delete and clear the TrackCandHits
   void reset();
 
-  /** @brief write the content of all private attributes to the terminal
-   */
+  //! Write the content of all private attributes to the terminal
   void Print(const Option_t* = "") const ;
 
   /** @brief sets the state to seed the track fitting. State has to be a TVectorD(6). First 3 elements are the staring postion second 3 elements the starting momentum. Everything in global coordinates

@@ -29,6 +29,11 @@
 
 namespace genfit {
 
+/** @brief Class where important numbers and properties of a fit can be stored.
+ *
+ *  @author Johannes Rauch (Technische Universit&auml;t M&uuml;nchen, original author)
+ */
+
 class FitStatus {
 
  public:
@@ -41,15 +46,25 @@ class FitStatus {
 
   virtual FitStatus* clone() const {return new FitStatus(*this);}
 
+  //! Has the track been fitted?
   bool isFitted() const {return isFitted_;}
+  //! Did the fit converge?
   bool isFitConverged() const {return isFitConverged_;}
+  //! Has anything in the Track been changed since the fit?
   bool hasTrackChanged() const {return trackHasChanged_;}
+  //! Has the track been pruned after the fit?
   bool isTrackPruned() const {return trackIsPruned_;}
+  //! Get the fitted charge.
   double getCharge() const {return charge_;}
-
+  //! Get chi^2 of the fit.
   double getChi2() const {return chi2_;}
+  //! Get the degrees of freedom of the fit.
   double getNdf() const {return ndf_;}
-  // Virtual, because the fitter may use a different probability distribution.
+  /**
+   * @brief Get the p value of the fit.
+   *
+   * Virtual, because the fitter may use a different probability distribution.
+   */
   virtual double getPVal() const {return ROOT::Math::chisquared_cdf_c(chi2_, ndf_);}
 
   void setIsFitted(bool fitted = true) {isFitted_ = fitted;}
@@ -65,14 +80,19 @@ class FitStatus {
 
  protected:
 
-  bool isFitted_; // has the track been fitted
-  bool isFitConverged_; // did the fit converge
-  bool trackHasChanged_; // has anything in the Track been changed sinde the fit -> fit isn't valid anymore
-  bool trackIsPruned_; // Information has been stripped off, no refitting possible!
-  double charge_; // fitted charge
+  //! has the track been fitted?
+  bool isFitted_;
+  //! did the fit converge?
+  bool isFitConverged_;
+  //! has anything in the Track been changed since the fit? -> fit isn't valid anymore
+  bool trackHasChanged_;
+  //! Information has been stripped off, no refitting possible!
+  bool trackIsPruned_;
+  //! fitted charge
+  double charge_;
 
-  // These are provided for the sake of the fitter, and their interpretation may vary.
-  // For the Kalman-derived fitters in particular, this corresponds to the backwards fit.
+  //! These are provided for the sake of the fitter, and their interpretation may vary.
+  //! For the Kalman-derived fitters in particular, this corresponds to the backwards fit.
   double chi2_;
   double ndf_;
 };

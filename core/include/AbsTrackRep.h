@@ -38,10 +38,13 @@ class AbsTrackRep : public TObject {
 
   virtual ~AbsTrackRep() {;}
 
+  //! Clone the trackRep.
   virtual AbsTrackRep* clone() const = 0;
 
-  /** Extrapolates the state to plane, and returns the extrapolation length
-   * and, via reference, the extrapolated state.
+  /**
+   * @brief Extrapolates the state to plane, and returns the extrapolation length
+   *        and, via reference, the extrapolated state.
+   *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
    * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
@@ -51,8 +54,10 @@ class AbsTrackRep : public TObject {
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const = 0;
 
-  /** Extrapolates the state to the POCA to a line, and returns the extrapolation length
-   * and, via reference, the extrapolated state.
+  /**
+   * @brief Extrapolates the state to the POCA to a line, and returns the extrapolation length
+   *        and, via reference, the extrapolated state.
+   *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
    * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
@@ -62,9 +67,13 @@ class AbsTrackRep : public TObject {
       const TVector3& lineDirection,
       bool stopAtBoundary = false) const = 0;
 
-  // This interface to extrapolateToLine is intended to resemble the
-  // interface of GFAbsTrackRep in old versions of genfit and is
-  // implemented by default via the preceding function.
+  /**
+   * @brief Resembles the interface of GFAbsTrackRep in old versions of genfit
+   *
+   * This interface to extrapolateToLine is intended to resemble the
+   * interface of GFAbsTrackRep in old versions of genfit and is
+   * implemented by default via the preceding function.
+   */
   virtual double extrapolateToLine(StateOnPlane& state,
       const TVector3& point1,
       const TVector3& point2,
@@ -84,8 +93,10 @@ class AbsTrackRep : public TObject {
     return retval;
   }
 
-  /** Extrapolates the state to the POCA to a point, and returns the extrapolation length
-   * and, via reference, the extrapolated state.
+  /**
+   * @brief Extrapolates the state to the POCA to a point, and returns the extrapolation length
+   *        and, via reference, the extrapolated state.
+   *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
    * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
@@ -94,8 +105,10 @@ class AbsTrackRep : public TObject {
       const TVector3& point,
       bool stopAtBoundary = false) const = 0;
 
-  /** Extrapolates the state to the cylinder surface, and returns the extrapolation length
-   * and, via reference, the extrapolated state.
+  /**
+   * @brief Extrapolates the state to the cylinder surface, and returns the extrapolation length
+   *       and, via reference, the extrapolated state.
+   *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
    * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
@@ -106,8 +119,10 @@ class AbsTrackRep : public TObject {
       const TVector3& lineDirection = TVector3(0.,0.,1.),
       bool stopAtBoundary = false) const = 0;
 
-  /** Extrapolates the state to the sphere surface, and returns the extrapolation length
-   * and, via reference, the extrapolated state.
+  /**
+   * @brief Extrapolates the state to the sphere surface, and returns the extrapolation length
+   *       and, via reference, the extrapolated state.
+   *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
    * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
@@ -117,8 +132,10 @@ class AbsTrackRep : public TObject {
       const TVector3& point = TVector3(0.,0.,0.),
       bool stopAtBoundary = false) const = 0;
 
-  /** Extrapolates the state by #step cm and returns the extrapolation length
-   * and, via reference, the extrapolated state.
+  /**
+   * @brief Extrapolates the state by #step cm and returns the extrapolation length
+   *       and, via reference, the extrapolated state.
+   *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.
    * If state has a covariance, jacobian and noise matrices will be calculated and the covariance will be propagated.
    * If state has no covariance, jacobian and noise will only be calculated if calcJacobianNoise == true.
@@ -148,42 +165,49 @@ class AbsTrackRep : public TObject {
   //! Get the 6D state vector (x, y, z, p_x, p_y, p_z).
   virtual TVectorD get6DState(const StateOnPlane& state) const;
 
-  /** Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance */
+  //! Translates MeasuredStateOnPlane into 3D position, momentum and 6x6 covariance.
   virtual void getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const = 0;
 
-  /** Translates MeasuredStateOnPlane into 6D state vector (x, y, z, p_x, p_y, p_z) and 6x6 covariance */
+  //! Translates MeasuredStateOnPlane into 6D state vector (x, y, z, p_x, p_y, p_z) and 6x6 covariance.
   virtual void get6DStateCov(const MeasuredStateOnPlane& state, TVectorD& stateVec, TMatrixDSym& cov) const;
 
-  //! get the magnitude of the momentum in GeV
+  //! get the magnitude of the momentum in GeV.
   virtual double getMomMag(const StateOnPlane& state) const = 0;
-  /** get the variance of the absolute value of the momentum  */
+  //! get the variance of the absolute value of the momentum .
   virtual double getMomVar(const MeasuredStateOnPlane& state) const = 0;
 
   //! Get the pdg code.
   int getPDG() const {return pdgCode_;}
 
-  //! Get the (fitted) charge of a state. This is not always equal the pdg charge (e.g. if the charge sign was flipped during the fit).
+  /**
+   * @brief Get the (fitted) charge of a state.
+   * This is not always equal the pdg charge (e.g. if the charge sign was flipped during the fit).
+   */
   virtual double getCharge(const StateOnPlane& state) const = 0;
-  //! get charge over momentum
+  //! Get charge over momentum.
   virtual double getQop(const StateOnPlane& state) const = 0;
+  //! Get tha particle mass in GeV/c^2
   double getMass(const StateOnPlane& state) const;
 
-  // Get propagation direction. (-1, 0, 1) -> (backward, auto, forward)
+  //! Get propagation direction. (-1, 0, 1) -> (backward, auto, forward).
   char getPropDir() const {return propDir_;}
 
-  /** Get the jacobian and noise matrix of the last extrapolation  */
+  //! Get the jacobian and noise matrix of the last extrapolation.
   virtual void getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const = 0;
 
-  /** Get the jacobian and noise matrix of the last extrapolation if it would have been done in opposite direction  */
+  //! Get the jacobian and noise matrix of the last extrapolation if it would have been done in opposite direction.
   virtual void getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const = 0;
 
   //! Get stepsizes and material properties of crossed materials of the last extrapolation.
   virtual std::vector<genfit::MatStep> getSteps() const = 0;
 
-  /** Get the radiation length of the material crossed in the last extrapolation.  */
+  //! Get the radiation length of the material crossed in the last extrapolation.
   virtual double getRadiationLenght() const = 0;
 
-  /** Calculate Jacobian of transportation numerically. Slow but accurate. Can be used to validate (semi)analytic calculations. */
+  /**
+   * @brief Calculate Jacobian of transportation numerically.
+   * Slow but accurate. Can be used to validate (semi)analytic calculations.
+   */
   void calcJacobianNumerically(const genfit::StateOnPlane& origState,
                                    const genfit::SharedPlanePtr destPlane,
                                    TMatrixD& jacobian);
@@ -199,12 +223,12 @@ class AbsTrackRep : public TObject {
   //! Set position, momentum and covariance of state.
   virtual void setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state6, const TMatrixDSym& cov6x6) const = 0;
 
-  //! Set the sign of the charge according to charge
+  //! Set the sign of the charge according to charge.
   virtual void setChargeSign(StateOnPlane& state, double charge) const = 0;
   //! Set charge/momentum.
   virtual void setQop(StateOnPlane& state, double qop) const = 0;
 
-  //! Set propagation direction. (-1, 0, 1) -> (backward, auto, forward)
+  //! Set propagation direction. (-1, 0, 1) -> (backward, auto, forward).
   void setPropDir(int dir) {
     if (dir>0) propDir_ = 1;
     else if (dir<0) propDir_ = -1;
@@ -224,13 +248,16 @@ class AbsTrackRep : public TObject {
 
  protected:
 
-  // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
-  AbsTrackRep(const AbsTrackRep&); // copy constructor
-  AbsTrackRep& operator=(const AbsTrackRep&); // assignment operator
+  //! protect from calling copy c'tor from outside the class. Use #clone() if you want a copy!
+  AbsTrackRep(const AbsTrackRep&);
+  //! protect from calling assignment operator from outside the class. Use #clone() instead!
+  AbsTrackRep& operator=(const AbsTrackRep&);
 
 
+  //! Particle code
   int pdgCode_;
-  char propDir_;  // propagation direction (-1, 0, 1) -> (backward, auto, forward)
+  //! propagation direction (-1, 0, 1) -> (backward, auto, forward)
+  char propDir_;
 
   ClassDef(AbsTrackRep,1);
 };

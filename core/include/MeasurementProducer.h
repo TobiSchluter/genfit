@@ -117,4 +117,6 @@ AbsMeasurement* MeasurementProducer<hit_T, measurement_T>::produce(int index) {
 
 } /* End of namespace genfit */
 
+/** @} */
+
 #endif // genfit_MeasurementProducer_h

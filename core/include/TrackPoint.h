@@ -46,13 +46,17 @@ class TrackPoint : public TObject {
   TrackPoint(Track* track);
 
   /**
-   * Contructor taking list of measurements. The #setTrackPoint() of each measurement will be called.
+   * @brief Contructor taking list of measurements.
+   *
+   * The #setTrackPoint() of each measurement will be called.
    * TrackPoint takes ownership over rawMeasurements.
    */
   TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurements, Track* track);
 
   /**
-   * Contructor taking one measurement. The #setTrackPoint() of the measurement will be called.
+   * @brief Contructor taking one measurement.
+   *
+   * The #setTrackPoint() of the measurement will be called.
    * TrackPoint takes ownership over the rawMeasurement.
    */
   TrackPoint(genfit::AbsMeasurement* rawMeasurement, Track* track);
@@ -60,8 +64,10 @@ class TrackPoint : public TObject {
   TrackPoint(const TrackPoint&); // copy constructor
   TrackPoint& operator=(const TrackPoint&); // assignment operator
 
-  //! custom copy constructor where all TrackRep pointers are exchanged according to the map.
-  //! FitterInfos with a rep in repsToIgnore will NOT be copied.
+  /**
+   * custom copy constructor where all TrackRep pointers are exchanged according to the map.
+   * FitterInfos with a rep in repsToIgnore will NOT be copied.
+   */
   TrackPoint(const TrackPoint&, const std::map<const genfit::AbsTrackRep*, genfit::AbsTrackRep*>&, const std::vector<const genfit::AbsTrackRep*> * repsToIgnore = NULL);
 
   virtual ~TrackPoint();
@@ -78,6 +84,7 @@ class TrackPoint : public TObject {
   bool hasRawMeasurements() const {return (rawMeasurements_.size() != 0);}
   //! Get list of all fitterInfos
   std::vector< genfit::AbsFitterInfo* > getFitterInfos() const;
+  //! Get fitterInfo for rep
   AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep) const {return fitterInfos_.at(rep);}
   bool hasFitterInfo(const AbsTrackRep* rep) const;
 
@@ -111,10 +118,7 @@ class TrackPoint : public TObject {
   //! Pointer to Track where TrackPoint belongs to
   Track* track_; //! No ownership
 
-  /** 
-   *  Can be more than one, e.g. multiple measurements in the same Si detector, left and right measurements of a wire detector etc.
-   * @element-type AbsMeasurement
-   */
+  //! Can be more than one, e.g. multiple measurements in the same Si detector, left and right measurements of a wire detector etc.
   std::vector<AbsMeasurement*> rawMeasurements_; // Ownership
 
   std::map< const AbsTrackRep*, AbsFitterInfo* > fitterInfos_; //! Ownership over FitterInfos

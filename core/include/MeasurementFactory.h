@@ -38,13 +38,13 @@ namespace genfit {
 
 /** @brief Factory object to create RecoHits from digitized and clustered data
  *
- * The GFMeasurementFactory is used to automatically fill Track objects with
- * hit data. For each detector type that is used, one GFRecoHitProducer
+ * The MeasurementFactory is used to automatically fill Track objects with
+ * hit data. For each detector type that is used, one AbsMeasurementProducer
  * has to be registered in the factory. The factory can the use the index
  * information from a TrackCand object to load the indexed hits into
  * the Track.
  *
- * @sa GFAbsMeasurementProducer
+ * @sa AbsMeasurementProducer
  * @sa TrackCand
  */
 template <class measurement_T>
@@ -73,7 +73,7 @@ class MeasurementFactory{
    *
    * Measurements have to implement a Constructor which takes the cluster object
    * from which the Measurement is build as the only parameter.
-   * See GFAbsMeasurementProducer for details
+   * @sa AbsMeasurementProducer
    */
   measurement_T* createOne (int detID, int index);
 
@@ -86,7 +86,7 @@ class MeasurementFactory{
    *
    * Measurements have to implement a constructor which takes the cluster object
    * from which the Measurement is build as the only parameter.
-   * See GFAbsMeasurementProducer for details
+   * @sa AbsMeasurementProducer
    */
   std::vector<measurement_T*> createMany(const TrackCand& cand);
 
@@ -99,7 +99,7 @@ void MeasurementFactory<measurement_T>::addProducer(int detID, AbsMeasurementPro
   if(it == hitProdMap_.end()) {
     hitProdMap_[detID] = hitProd;
   } else {
-    Exception exc("GFMeasurementFactory: detID already in use",__LINE__,__FILE__);
+    Exception exc("MeasurementFactory: detID already in use",__LINE__,__FILE__);
     exc.setFatal();
     std::vector<double> numbers;
     numbers.push_back(detID);
@@ -125,7 +125,7 @@ measurement_T* MeasurementFactory<measurement_T>::createOne(int detID, int index
   if(it != hitProdMap_.end()) {
     return it->second->produce(index);
   } else {
-    Exception exc("GFMeasurementFactory: no hitProducer for this detID available",__LINE__,__FILE__);
+    Exception exc("MeasurementFactory: no hitProducer for this detID available",__LINE__,__FILE__);
     exc.setFatal();
     std::vector<double> numbers;
     numbers.push_back(detID);
@@ -148,5 +148,7 @@ typename std::vector<measurement_T*> MeasurementFactory<measurement_T>::createMa
 
 
 } /* End of namespace genfit */
+
+/** @} */
 
 #endif // genfit_MeasurementFactory_h

@@ -132,8 +132,7 @@ class DetPlane : public TObject {
 
   void Print(const Option_t* = "") const;
 
-  //! this operator is called very often in Kalman filtering. It checks equality of planes
-  //! by comparing the 9 double values that define them.
+  //! Checks equality of planes by comparing the 9 double values that define them.
   friend bool operator== (const DetPlane& lhs, const DetPlane& rhs);
   //! returns NOT ==
   friend bool operator!= (const DetPlane& lhs, const DetPlane& rhs);
@@ -176,12 +175,13 @@ class DetPlane : public TObject {
   //! rotate u and v around normal. Angle is in rad. More for debugging than for actual use.
   void rotate(double angle);
 
-  // delete finitePlane_ and set O, U, V to default values
+  //! delete finitePlane_ and set O, U, V to default values
   void reset();
 
  private:
   // Private Methods -----------------
-  void sane(); // ensures orthonormal coordinates
+  //! ensures orthonormal coordinates
+  void sane();
 
   TVector3 o_;
   TVector3 u_;

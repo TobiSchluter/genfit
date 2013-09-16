@@ -33,6 +33,14 @@
 
 namespace genfit {
 
+/**
+ * @brief Measured coordinates on a plane.
+ *
+ * The dimensionality will usually be 1 or 2.
+ * The HMatrix is a projetion matrix, which is used to project the track parameters
+ * with the originalt dimesionality down to the measured dimensionality.
+ */
+
 class MeasurementOnPlane : public MeasuredStateOnPlane {
 
  public:

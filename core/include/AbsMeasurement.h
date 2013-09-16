@@ -102,6 +102,7 @@ class AbsMeasurement : public TObject {
 };
 
 } /* End of namespace genfit */
+
 /** @} */
 
 #endif // genfit_AbsMeasurement_h

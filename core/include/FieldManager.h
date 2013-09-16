@@ -85,8 +85,10 @@ class FieldManager {
     }
   }
 
+  //! Cache last lookup positions, and use stored field values if a lookup at (almost) the same position is done.
   void useCache(bool opt = true, unsigned int nBuckets = 8);
 
+  //! Get singleton instance.
   static FieldManager* getInstance(){
     if(instance_ == NULL) {
       instance_ = new FieldManager();

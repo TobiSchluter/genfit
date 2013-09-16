@@ -23,7 +23,8 @@ namespace genfit {
 
 bool Exception::quiet_ = false;
 
-Exception::Exception(std::string _excString, int _line, std::string  _file) : excString_(_excString), line_(_line), file_(_file),fatal_(false) {
+Exception::Exception(std::string excString, int line, std::string  file) :
+    excString_(excString), line_(line), file_(file), fatal_(false) {
   std::ostringstream ErrMsgStream;
   ErrMsgStream << "genfit::Exception thrown with excString:"
          << std::endl << excString_ << std::endl

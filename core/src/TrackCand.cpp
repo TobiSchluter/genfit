@@ -99,13 +99,13 @@ void TrackCand::getHit(int i, int& detId, int& hitId) const {
 }
 
 
-void TrackCand::getHit(int i, int& detId, int& hitId, double& rho) const {
+void TrackCand::getHit(int i, int& detId, int& hitId, double& sortingParameter) const {
   if (i < 0)
     i += hits_.size();
 
   detId = hits_.at(i)->getDetId();
   hitId = hits_[i]->getHitId();
-  rho = hits_[i]->getRho();
+  sortingParameter = hits_[i]->getSortingParameter();
 }
 
 
@@ -119,9 +119,9 @@ void TrackCand::getHitWithPlane(int i, int& detId, int& hitId, int& planeId) con
 }
 
 
-void TrackCand::addHit(int detId, int hitId, int planeId, double rho)
+void TrackCand::addHit(int detId, int hitId, int planeId, double sortingParameter)
 {
-  hits_.push_back(new TrackCandHit(detId, hitId, planeId, rho));
+  hits_.push_back(new TrackCandHit(detId, hitId, planeId, sortingParameter));
 }
 
 std::vector<int> TrackCand::getHitIDs(int detId) const {
@@ -142,10 +142,10 @@ std::vector<int> TrackCand::getDetIDs() const {
   return result;
 }
 
-std::vector<double> TrackCand::getRhos() const {
+std::vector<double> TrackCand::getSortingParameters() const {
   std::vector<double> result;
   for(unsigned int i=0; i<hits_.size(); ++i){
-    result.push_back(hits_[i]->getRho());
+    result.push_back(hits_[i]->getSortingParameter());
   }
   return result;
 }

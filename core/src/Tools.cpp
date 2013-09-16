@@ -39,7 +39,7 @@ void tools::invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* deter
 
   // check if numerical limits are reached (i.e at least one entry < 1E-100 and/or at least one entry > 1E100)
   if (!(mat<1.E100) || !(mat>-1.E100)){
-    Exception e("cannot invert matrix GFTools::invertMatrix(), entries too big (>1e100)",
+    Exception e("Tools::invertMatrix() - cannot invert matrix, entries too big (>1e100)",
         __LINE__,__FILE__);
     e.setFatal();
     throw e;
@@ -55,7 +55,7 @@ void tools::invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* deter
     double det = mat(0,0)*mat(1,1) - mat(1,0)*mat(1,0);
     if (determinant != NULL) *determinant = det;
     if(fabs(det) < 1E-50){
-      Exception e("cannot invert matrix GFTools::invertMatrix(), determinant = 0",
+      Exception e("Tools::invertMatrix() - cannot invert matrix , determinant = 0",
           __LINE__,__FILE__);
       e.setFatal();
       throw e;
@@ -85,7 +85,7 @@ void tools::invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* deter
 
     Bool_t success = inversion(inv, determinant);
     if (!success){
-      Exception e("cannot invert matrix GFTools::invertMatrix(), determinant = 0",
+      Exception e("Tools::invertMatrix() - cannot invert matrix, determinant = 0",
           __LINE__,__FILE__);
       e.setFatal();
       throw e;
@@ -99,7 +99,7 @@ void tools::invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* deter
 
   status = invertAlgo.Invert(inv);
   if(status == 0){
-    Exception e("cannot invert matrix GFTools::invertMatrix(), status = 0",
+    Exception e("Tools::invertMatrix() - cannot invert matrix, status = 0",
         __LINE__,__FILE__);
     e.setFatal();
     throw e;
@@ -115,7 +115,7 @@ void tools::invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* deter
 void tools::invertMatrix(TMatrixDSym& mat, double* determinant){
   // check if numerical limits are reached (i.e at least one entry < 1E-100 and/or at least one entry > 1E100)
   if (!(mat<1.E100) || !(mat>-1.E100)){
-    Exception e("cannot invert matrix GFTools::invertMatrix(), entries too big (>1e100)",
+    Exception e("Tools::invertMatrix() - cannot invert matrix, entries too big (>1e100)",
         __LINE__,__FILE__);
     e.setFatal();
     throw e;
@@ -132,7 +132,7 @@ void tools::invertMatrix(TMatrixDSym& mat, double* determinant){
     double det = arr[0]*arr[3] - arr[1]*arr[1];
     if (determinant != NULL) *determinant = det;
     if(fabs(det) < 1E-50){
-      Exception e("cannot invert matrix GFTools::invertMatrix(), determinant = 0",
+      Exception e("Tools::invertMatrix() - cannot invert matrix, determinant = 0",
           __LINE__,__FILE__);
       e.setFatal();
       throw e;
@@ -164,7 +164,7 @@ void tools::invertMatrix(TMatrixDSym& mat, double* determinant){
 
     Bool_t success = inversion(mat, determinant);
     if (!success){
-      Exception e("cannot invert matrix GFTools::invertMatrix(), determinant = 0",
+      Exception e("Tools::invertMatrix() - cannot invert matrix, determinant = 0",
           __LINE__,__FILE__);
       e.setFatal();
       throw e;
@@ -178,7 +178,7 @@ void tools::invertMatrix(TMatrixDSym& mat, double* determinant){
 
   status = invertAlgo.Invert(mat);
   if(status == 0){
-    Exception e("cannot invert matrix GFTools::invertMatrix(), status = 0",
+    Exception e("Tools::invertMatrix() - cannot invert matrix, status = 0",
         __LINE__,__FILE__);
     e.setFatal();
     throw e;

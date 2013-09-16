@@ -51,32 +51,31 @@ class Exception : public TObject {
  public:
   /** @brief Initializing constructor
    *
-   * @param what error message
-   * @param line line at which the exception is created. Can be set through
-   * __LINE__ macro
-   * @param file sorcefile in which the exception is created.
-   * Can be set through __FILE__ macro
+   * @param excString error message.
+   * @param line line at which the exception is created. Can be set through __LINE__ macro.
+   * @param file sourcefile in which the exception is created. Can be set through __FILE__ macro.
    */
-  Exception(std::string, int, std::string);
+  Exception(std::string excString, int line, std::string  file);
   virtual ~Exception() throw();
 
-  /** @brief set fatal flag. if this is true, the fit stops for this current track repr. */
+  //! Set fatal flag.
   void setFatal (bool b=true){fatal_=b;}
-  /** @brief get fatal flag. */
+  //! Get fatal flag.
   bool isFatal (){return fatal_;}
-  /** @brief set list of numbers with description */
+  //! Set list of numbers with description.
   void setNumbers (std::string, const std::vector<double>&);
-  /** @brief set list of matrices with description */
+  //! Set list of matrices with description.
   void setMatrices(std::string, const std::vector<TMatrixD>&);
 
-  /** @brief print information in the exception object */
+  //! Print information in the exception object.
   void info();
 
-  //! standard error message handling for exceptions. use like "std::cerr << e.what();"
+  //! Standard error message handling for exceptions. use like "std::cerr << e.what();"
   virtual const char* what() const throw();
 
   std::string getExcString(){return excString_;}
 
+  //! "std::cerr << e.what();" will not write anything.
   static void quiet(bool b=true){quiet_=b;}
 
  private:
