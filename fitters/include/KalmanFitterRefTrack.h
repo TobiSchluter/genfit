@@ -36,20 +36,24 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
     : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), refitAll_(false), deltaChi2Ref_(1) {}
   ~KalmanFitterRefTrack() {}
 
-  /**
+  /** @brief Fit the track.
+   *
    * Needs a prepared track! Return last TrackPoint that has been processed.
    */
   TrackPoint* fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
+
   void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits);
-  /**
-   * Prepare the track: calc all reference states.
+
+  /** @brief Prepare the track
+   *
+   * Calc all reference states.
    * If #setSortingParams is true, the extrapolation lengths will be set as sorting parameters
    * of the TrackPoints.
    * Returns if the track has been changed.
    */
   bool prepareTrack(Track* tr, const AbsTrackRep* rep, bool setSortingParams = false);
 
-
+  //! If true always refit all points, otherwise fit points only if reference states have changed
   void setRefitAll(bool refit = true) {refitAll_ = refit;}
 
   /**
@@ -62,15 +66,14 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
   void processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, double& ndf, int direction);
 
   /**
-   * Remove referenceStates if they are too far from smoothed states.
+   * @brief Remove referenceStates if they are too far from smoothed states.
+   *
    * Does NOT remove forward and backward info, but returns from/to where they have to be removed later
    * Return if anything has changed.
    */
   bool removeOutdated(Track* tr, const AbsTrackRep* rep, int& notChangedUntil, int& notChangedFrom) const;
 
-  /**
-   * If refitAll_, remove all information.
-   */
+  //! If refitAll_, remove all information.
   void removeForwardBackwardInfo(Track* tr, const AbsTrackRep* rep, int notChangedUntil, int notChangedFrom) const;
 
   bool refitAll_; // always refit all points or only if reference states have changed

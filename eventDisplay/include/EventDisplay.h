@@ -51,7 +51,7 @@ enum eFitterType {
  *  @author Karl Bicker (Technische Universit&auml;t M&uuml;nchen, original author)
  * 
  * The EventDisplay class is a singelton used to visualize the events processed with Genfit. The
- * event display uses the EVE event visualization package to visualize Tracks which are bundeled 
+ * event display uses the EVE event visualization package to visualize Tracks which are bundled
  * in a vector and which form one event. The information about the tracks is supplied in Track
  * objects. To use the event display, the geometry (TGeoManager)and magnetic field (FieldManager)
  * have to be initialized and gApplication and gEve have to exist.

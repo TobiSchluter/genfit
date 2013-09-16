@@ -40,10 +40,8 @@ namespace genfit {
  * Communications 120 (1999) 197-214 and CERN thesis: Dissertation by Matthias
  * Winkler.
  *
- * The weights which were assigned to the hits by the DAF are accessible by using the
- * bookkeeping object of the fitted track. The weight is stored under the key "dafWeight".
- * So to retrieve for example the weight of hit 10, fitted with track representation 2,
- * use GFTrack::getBK(2)->getNumber("dafWeight", 10,  double& wght).
+ * The weights which were assigned to the hits by the #DAF are accessible in the #MeasurementOnPlanes
+ * in the #KalmanFitterInfos.
  */
 
 class DAF : public AbsKalmanFitter {
@@ -55,8 +53,7 @@ class DAF : public AbsKalmanFitter {
   DAF(AbsKalmanFitter* kalman);
   ~DAF() {};
 
-  /** @brief Process a track using the DAF.
-   */
+  //! Process a track using the DAF.
   void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits);
 
   /** @brief Set the probability cut for the weight calculation for the hits.
@@ -67,12 +64,12 @@ class DAF : public AbsKalmanFitter {
    */
   void setProbCut(const double prob_cut);
 
-  /** Set the probability cut for the weight calculation for the hits for a specific measurement dimensionality*/
+  //! Set the probability cut for the weight calculation for the hits for a specific measurement dimensionality.
   void addProbCut(const double prob_cut, const int measDim);
 
   /** @brief Configure the annealing scheme.
    *
-   * In the current implementation you need to provide at least one temperatures
+   * In the current implementation you need to provide at least one temperature
    * and not more then ten temperatures.
    * Also sets #maxIterations_.
    */
@@ -87,17 +84,16 @@ class DAF : public AbsKalmanFitter {
 
   void setMaxIterations(unsigned int n) {maxIterations_ = n; betas_.resize(maxIterations_,betas_.back());}
 
-  /**
-   * If all weights change less than delta between two iterations, the fit is regarded as converged.
-   */
+  //! If all weights change less than delta between two iterations, the fit is regarded as converged.
   void setConvergenceDeltaWeight(double delta) {deltaWeight_ = delta;}
 
   AbsKalmanFitter* getKalman() const {return kalman_.get();}
 
  private:
 
-  /** @brief check if convergence is met so the main iteration (over the betas) can be left
-   * the convergence criteria is the largest change in the weights
+  /** @brief check if convergence is met.
+   *
+   * the convergence criteria is the largest absolute change of all weights.
    */
   bool isConvergent(const std::vector<std::vector<double> >& oldWeights, const AbsTrackRep* rep) const;
 

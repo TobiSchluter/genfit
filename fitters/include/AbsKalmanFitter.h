@@ -55,6 +55,7 @@ class AbsKalmanFitter : public AbsFitter {
   eMultipleMeasurementHandling getMultipleMeasurementHandling() const {return multipleMeasurementHandling_;}
 
   virtual void setMaxIterations(unsigned int n) {maxIterations_ = n;}
+  //! How should multiple measurements be handled?
   void setMultipleMeasurementHandling(eMultipleMeasurementHandling mmh) {multipleMeasurementHandling_ = mmh;}
 
   bool isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const;
@@ -65,18 +66,19 @@ class AbsKalmanFitter : public AbsFitter {
   //! get the measurementOnPlane taking the multipleMeasurementHandling_ into account
   const MeasurementOnPlane getMeasurement(const KalmanFitterInfo* fi, int direction) const;
 
-  // Maximum number of iterations to attempt.  Forward and backward
-  // are counted as one iteration.
+  //! Maximum number of iterations to attempt.  Forward and backward are counted as one iteration.
   unsigned int maxIterations_;
-  // Convergence criterion: if track total P-value changes less than this
-  // between consecutive iterations, consider the track converged.
-  // chi² from the backwards fit is used.
+  /**
+   * @brief Convergence criterion
+   *
+   * if track total P-value changes less than this between consecutive iterations, consider the track converged.
+   * chi² from the backwards fit is used.
+   */
   double deltaPval_;
-  // Blow up the covariance of the forward (backward) fit by this
-  // factor before seeding the backward (forward) fit.
+  //! Blow up the covariance of the forward (backward) fit by this factor before seeding the backward (forward) fit.
   double blowUpFactor_;
 
-  // How to handle if there are multiple MeasurementsOnPlane
+  //! How to handle if there are multiple MeasurementsOnPlane
   eMultipleMeasurementHandling multipleMeasurementHandling_;
 
   ClassDef(AbsKalmanFitter, 1)

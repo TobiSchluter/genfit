@@ -61,6 +61,7 @@ class SpacepointMeasurement : public AbsMeasurement {
 };
 
 } /* End of namespace genfit */
+
 /** @} */
 
 #endif // genfit_SpacepointMeasurement_h

@@ -27,6 +27,10 @@
 #include <TMatrixDSym.h>
 #include <TVectorD.h>
 
+/**
+ * @brief HMatrix for projecting from #AbsTrackRep parameters to measured parameters in a #DetPlane.
+ *
+ */
 
 namespace genfit {
 
@@ -36,14 +40,14 @@ class AbsHMatrix : public TObject {
 
   AbsHMatrix() {;}
 
-  // H*v
+  //! H*v
   virtual TVectorD Hv(const TVectorD& v) const = 0;
 
-  // M*H^t
+  //! M*H^t
   virtual TMatrixD MHt(const TMatrixDSym& M) const = 0;
   virtual TMatrixD MHt(const TMatrixD& M) const = 0;
 
-  // similarity: H*M*H^t
+  //! similarity: H*M*H^t
   virtual void HMHt(TMatrixDSym& M) const = 0;
 
   virtual AbsHMatrix* clone() const = 0;

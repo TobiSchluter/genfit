@@ -65,7 +65,7 @@ public:
   static MaterialEffects* getInstance();
   static void destruct();
 
-  //! set the material interface here. Material interface classes must be derived from AbsMaterialInterface.
+  //! set the material interface here. Material interface classes must be derived from #AbsMaterialInterface.
   void init(AbsMaterialInterface* matIfc);
   bool isInitialized() { return materialInterface_ != nullptr; }
 
@@ -78,6 +78,7 @@ public:
   void setNoiseBrems(bool opt = true) {noiseBrems_ = opt; noEffects_ = false;}
 
   /** @brief Select the multiple scattering model that will be used during track fit.
+   *
    *  At the moment two model are available GEANE and Highland. GEANE is the model was was present in Genfit first.
    *  Note that using this function has no effect if setNoiseCoulomb(false) is set.
    */
@@ -92,9 +93,10 @@ public:
                  const int& pdg,
                  M7x7* noise = nullptr);
 
-  //! Returns maximum length so that a specified momentum loss will not be exceeded
-  /**  The stepper returns the maximum length that the particle may travel, so that a specified relative momentum loss will not be exceeded,
-   *   or the next material boundary is reached. The material crossed are stored together with their stepsizes.
+  /**  @brief Returns maximum length so that a specified momentum loss will not be exceeded.
+   *
+   * The stepper returns the maximum length that the particle may travel, so that a specified relative momentum loss will not be exceeded,
+   * or the next material boundary is reached. The material crossed are stored together with their stepsizes.
   */
   void stepper(const RKTrackRep* rep,
                M1x7& state7,
@@ -191,10 +193,12 @@ public:
   AbsMaterialInterface* materialInterface_;
 
 
-  // ClassDef(MaterialEffects, 4);
+  // ClassDef(MaterialEffects, 1);
 
 };
 
 } /* End of namespace genfit */
+
+/** @} */
 
 #endif // genfit_MaterialEffects_h

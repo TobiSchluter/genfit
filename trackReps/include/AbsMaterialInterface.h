@@ -52,6 +52,7 @@ class AbsMaterialInterface : public TObject {
                                      double& mEE) = 0;
 
   /** @brief Make a step until maxStep or the next boundary is reached.
+   *
    * After making a step to a boundary, the position has to be beyond the boundary,
    * i.e. in the current material has to be that beyond the boundary.
    * The actual step made is returned.
@@ -69,5 +70,7 @@ class AbsMaterialInterface : public TObject {
 };
 
 } /* End of namespace genfit */
+
+/** @} */
 
 #endif // genfit_AbsMaterialInterface_h

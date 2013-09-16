@@ -55,50 +55,39 @@ class StepLimits {
   StepLimits()
   : limits_(ENUM_NR_ITEMS, maxLimit_), stepSign_(1) {;}
 
-  /**
-   * Get limit of #type. If that limit has not yet been set, return max double value.
-   */
+  //! Get limit of #type. If that limit has not yet been set, return max double value.
   double getLimit(StepLimitType type) const {return limits_[type];}
   double getLimitSigned(StepLimitType type) const {
     return stepSign_*getLimit(type);
   }
+
   /**
-   * Get the lowest limit.
+   * @brief Get the lowest limit.
+   *
    * If hard limits are there, medium limits can be exceeded by up to #margin
    * (default margin is 0.1, i.e. medium limits can be exceeded by up to 10%).
    * If no limit has been set yet, return std::pair<stp_noLimit, std::numeric_limits<double>::max>.
    */
   std::pair<StepLimitType, double> getLowestLimit(double margin = 1.E-3) const;
-  /**
-   * Get the unsigned numerical value of the lowest limit
-   */
+
+  //! Get the unsigned numerical value of the lowest limit.
   double getLowestLimitVal(double margin = 1.E-3) const {
     return getLowestLimit(margin).second;
   }
-  /**
-   * Get the numerical value of the lowest limit, signed with #stepSign_.
-   */
+  //! Get the numerical value of the lowest limit, signed with #stepSign_.
   double getLowestLimitSignedVal(double margin = 1.E-3) const {
     return getLowestLimit(margin).second * stepSign_;
   }
 
   char getStepSign() const {return stepSign_;} // +- 1
 
-  /**
-   * absolute of #value will be taken! If limit is already lower, it will stay.
-   */
+  //! absolute of #value will be taken! If limit is already lower, it will stay.
   void reduceLimit(StepLimitType type, double value);
-  /**
-   * absolute of value will be taken! If limit is already lower, it will be set to value anyway.
-   */
+  //! absolute of value will be taken! If limit is already lower, it will be set to value anyway.
   void setLimit(StepLimitType type, double value) {limits_[type] = fabs(value);}
-  /**
-   * sets #stepSign_ to sign of #signedVal
-   */
+  //! sets #stepSign_ to sign of #signedVal
   void setStepSign(char signedVal);
-  /**
-   * sets #stepSign_ to sign of #signedVal
-   */
+  //! sets #stepSign_ to sign of #signedVal
   void setStepSign(double signedVal);
 
   void removeLimit(StepLimitType type) {limits_[type] = maxLimit_;}
@@ -114,5 +103,7 @@ class StepLimits {
 };
 
 } /* End of namespace genfit */
+
+/** @} */
 
 #endif // genfit_StepLimits_h

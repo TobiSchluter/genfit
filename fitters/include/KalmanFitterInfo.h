@@ -41,7 +41,7 @@ namespace genfit {
 
 
   /** 
-   *  This class collects all information needed and produced by a Kalman filter or DAF and is specific to one #GFAbsTrackRep of the #GFTrack.
+   *  This class collects all information needed and produced by a Kalman filter or #DAF and is specific to one #AbsTrackRep of the #Track.
    */
 class KalmanFitterInfo : public AbsFitterInfo {
 
@@ -62,16 +62,16 @@ class KalmanFitterInfo : public AbsFitterInfo {
   KalmanFittedStateOnPlane* getUpdate(int direction) const {if (direction >=0) return forwardUpdate_.get(); return backwardUpdate_.get();}
   std::vector< genfit::MeasurementOnPlane* > getMeasurementsOnPlane() const;
   MeasurementOnPlane* getMeasurementOnPlane(int i = 0) const {if (i<0) i += measurementsOnPlane_.size(); return measurementsOnPlane_.at(i);}
-  /** Get weighted mean of all measurements. */
+  //! Get weighted mean of all measurements.
   MeasurementOnPlane getAvgWeightedMeasurementOnPlane() const;
-  /** Get measurements which is closest to state. */
+  //! Get measurements which is closest to state.
   const MeasurementOnPlane* getClosestMeasurementOnPlane(const StateOnPlane*) const;
   unsigned int getNumMeasurements() const {return measurementsOnPlane_.size();}
-  /** Get weights of measurements */
+  //! Get weights of measurements.
   std::vector<double> getWeights() const;
-  /** Get unbiased or biased (default) smoothed state */
+  //! Get unbiased or biased (default) smoothed state.
   const MeasuredStateOnPlane& getFittedState(bool biased = true) const;
-  /** Get unbiased (default) or biased residual from ith measurement */
+  //! Get unbiased (default) or biased residual from ith measurement.
   MeasurementOnPlane getResidual(unsigned int iMeasurement = 0, bool biased = false, bool onlyMeasurementErrors = true) const; // calculate residual, track and measurement errors are added if onlyMeasurementErrors is false
 
   bool hasMeasurements() const {return getNumMeasurements() > 0;}
@@ -92,7 +92,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
   void addMeasurementOnPlane(MeasurementOnPlane* measurementOnPlane);
   void addMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
-  /** Set weights of measurements */
+  //! Set weights of measurements.
   void setWeights(const std::vector<double>&);
   void setRep(const AbsTrackRep* rep);
 
@@ -142,13 +142,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
 	*/
 
 
-
-  /** 
-   *  Number of measurements must be equal to size of #fRawMeasurements in #GFTrackPoint.
-   * @element-type MeasurementOnPlane
-   */
   std::vector<MeasurementOnPlane*> measurementsOnPlane_; // Ownership
-
 
 
   ClassDef(KalmanFitterInfo,1)
@@ -156,6 +150,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
 };
 
 } /* End of namespace genfit */
+
 /** @} */
 
 #endif // genfit_KalmanFitterInfo_h

@@ -31,21 +31,21 @@ namespace genfit {
 class HMatrixU : public AbsHMatrix {
 
   /**
-   * 0, 0, 0, 1, 0
+   * @brief For one-dimensional measurements and #RKTrackRep parameterization.
+   *
+   * This basically projects out u.
+   * H = (0, 0, 0, 1, 0)
    */
 
  public:
 
   HMatrixU() {;}
 
-  // H*v
   TVectorD Hv(const TVectorD& v) const;
 
-  // M*H^t
   TMatrixD MHt(const TMatrixDSym& M) const;
   TMatrixD MHt(const TMatrixD& M) const;
 
-  // similarity: H*M*H^t
   void HMHt(TMatrixDSym& M) const;
 
   virtual AbsHMatrix* clone() const {return new HMatrixU(*this);}
@@ -55,6 +55,7 @@ class HMatrixU : public AbsHMatrix {
 };
 
 } /* End of namespace genfit */
+
 /** @} */
 
 #endif // genfit_HMatrixU_h
