@@ -30,9 +30,9 @@
 namespace genfit {
 
 
-  /** 
-   *  Additional info produced by a Kalman filter or DAF.
-   */
+/**
+ *  @brief #MeasuredStateOnPlane with additional info produced by a Kalman filter or DAF.
+ */
 class KalmanFittedStateOnPlane : public MeasuredStateOnPlane {
 
  public:
@@ -53,9 +53,7 @@ class KalmanFittedStateOnPlane : public MeasuredStateOnPlane {
 
   double chiSquareIncrement_;
   
-  /** 
-   *  Degrees of freedom. Needs to be a double because of DAF.
-   */
+  //! Degrees of freedom. Needs to be a double because of DAF.
   double ndf_;
 
 

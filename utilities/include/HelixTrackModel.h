@@ -35,11 +35,10 @@
 
 namespace genfit {
 
+/**
+ * @brief Helix track model for testing purposes
+ */
 class HelixTrackModel : public TObject {
-
-  /**
-   * Helix track model for testing purposes
-   */
 
  public:
 

@@ -50,9 +50,16 @@ class TrackPointComparator {
 };
 
   /** 
+   * @brief Collection of #TrackPoints, #AbsTrackReps and #FitStatuses
+   *
    *  Holds a number of #AbsTrackRep, which correspond to the different particle hypotheses or track models which should be fitted.
+   *  A 6D seed #stateSeed_ (x,y,z,p_x,p_y,p_z) and 6x6 #covSeed_ should be provided as start values for fitting.
+   *  When fitting the #Track with a fitter, a #FitStatus object will be created, containing information about the fit.
+   *  The fitted states will be stored in #FitterInfos in the #TrackPoints.
+   *
+   *  The fit will be performed for every #AbsTrackRep, so after the fit there will be one #AbsFitterInfo for each #AbsTrackRep
+   *  in every #TrackPoint, as well as one #FitterInfo for every #AbsTrackRep.
    *  
-   *  Can be created from a TrackCand, then all the information from the TrackCand will go into the Track.
    */
 class Track : public TObject {
 

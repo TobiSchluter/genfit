@@ -26,13 +26,18 @@
 
 #include "TObject.h"
 
+
 namespace genfit {
 
-  class MaterialProperties {
+
+/**
+ * @brief Material properties needed e.g. for material effects calculation.
+ */
+class MaterialProperties {
 
  public:
 
-  /** Compares material parameters, but not segmentLength_ */
+  //! Compare material parameters
   friend bool operator== (const MaterialProperties& lhs, const MaterialProperties& rhs);
   friend bool operator!= (const MaterialProperties& lhs, const MaterialProperties& rhs);
 
@@ -67,11 +72,16 @@ namespace genfit {
  private:
 
   // material variables
-  double density_; // density of material
-  double Z_; // Atomic number Z of material
-  double A_; // Mass number A of material
-  double radiationLength_; // radiation length
-  double mEE_; // mean excitation energy [eV]
+  //! density of material
+  double density_;
+  //! Atomic number Z of material
+  double Z_;
+  //! Mass number A of material
+  double A_;
+  //! radiation length X0
+  double radiationLength_;
+  //! mean excitation energy [eV]
+  double mEE_;
 
 };
 

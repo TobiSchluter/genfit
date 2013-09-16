@@ -28,7 +28,7 @@
 
 namespace genfit {
 
-/** @brief Generic Interface to magnetic fields in GENFIT
+/** @brief Abstract Interface to magnetic fields in GENFIT
  *
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)

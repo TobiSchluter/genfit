@@ -40,9 +40,9 @@
 namespace genfit {
 
 
-  /** 
-   *  This class collects all information needed and produced by a Kalman filter or #DAF and is specific to one #AbsTrackRep of the #Track.
-   */
+/**
+ *  @brief Collects information needed and produced by a Kalman filter or #DAF and is specific to one #AbsTrackRep of the #Track.
+ */
 class KalmanFitterInfo : public AbsFitterInfo {
 
  public:
@@ -110,6 +110,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
 
 
 #ifndef __CINT__
+  //! Reference state. Used by #KalmanFitterRefTrack.
   boost::scoped_ptr<ReferenceStateOnPlane> referenceState_; // Ownership
   boost::scoped_ptr<MeasuredStateOnPlane> forwardPrediction_; // Ownership
   boost::scoped_ptr<KalmanFittedStateOnPlane> forwardUpdate_; // Ownership

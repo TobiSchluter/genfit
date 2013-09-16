@@ -31,7 +31,15 @@ namespace genfit {
 
 
   /** 
-   *  Transport matrices describe transport TO that plane.
+   * @brief #StateOnPlane with linearized transport to that #ReferenceStateOnPlane from previous and next #ReferenceStateOnPlane
+   *
+   * Transport matrices describe transport TO that plane.
+   * We have transport matrix F, noise matrix N and delta state c.
+   * Now, state p and covariance C follow this mathematics:
+   *
+   * p = F * p_old + c
+   * C = F * C_old * F^T + N
+   *
    */
 class ReferenceStateOnPlane : public StateOnPlane {
 
@@ -81,19 +89,14 @@ class ReferenceStateOnPlane : public StateOnPlane {
 
  protected:
 
-  /**
-   * p = F * p_old + c
-   * C = F * C_old * F^T + N
-   */
-
-  double forwardSegmentLength_; // Segment length from previous referenceState
-  double backwardSegmentLength_; //  Segment length from next referenceState
-  TMatrixD forwardTransportMatrix_; // transport matrix F from previous referenceState
-  TMatrixD backwardTransportMatrix_; // transport matrix F from next referenceState
-  TMatrixDSym forwardNoiseMatrix_; // noise matrix N for transport from previous referenceState
-  TMatrixDSym backwardNoiseMatrix_; // noise matrix N for transport from next referenceState
-  TVectorD forwardDeltaState_; // c
-  TVectorD backwardDeltaState_; // c
+  double forwardSegmentLength_; /**< Segment length from previous referenceState */
+  double backwardSegmentLength_; /**< Segment length from next referenceState */
+  TMatrixD forwardTransportMatrix_; /**< transport matrix F from previous referenceState */
+  TMatrixD backwardTransportMatrix_; /**< transport matrix F from next referenceState */
+  TMatrixDSym forwardNoiseMatrix_; /**< noise matrix N for transport from previous referenceState */
+  TMatrixDSym backwardNoiseMatrix_; /**< noise matrix N for transport from next referenceState */
+  TVectorD forwardDeltaState_; /**< c */
+  TVectorD backwardDeltaState_; /**< c */
 
 
   ClassDef(ReferenceStateOnPlane,1)

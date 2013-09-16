@@ -22,6 +22,8 @@ class StateOnPlane;
 class MeasuredStateOnPlane;
 
   /** 
+   * @brief Abstract base class for a track representation
+   *
    *  Provides functionality to extrapolate a #StateOnPlane to another #DetPlane,
    *  to the POCA to a line or a point, or a cylinder or sphere.
    *  Defines a set of parameters describing the track.
@@ -201,7 +203,7 @@ class AbsTrackRep : public TObject {
   //! Get stepsizes and material properties of crossed materials of the last extrapolation.
   virtual std::vector<genfit::MatStep> getSteps() const = 0;
 
-  //! Get the radiation length of the material crossed in the last extrapolation.
+  //! Get the accumulated X/X0 (path / radiation length) of the material crossed in the last extrapolation.
   virtual double getRadiationLenght() const = 0;
 
   /**

@@ -36,13 +36,13 @@ class AbsMeasurement;
 
 namespace genfit {
 
-/** @brief Factory object to create RecoHits from digitized and clustered data
+/** @brief Factory object to create #AbsMeasurements from digitized and clustered data
  *
- * The MeasurementFactory is used to automatically fill Track objects with
- * hit data. For each detector type that is used, one AbsMeasurementProducer
+ * The #MeasurementFactory is used to automatically fill #Track objects with
+ * hit data. For each detector type that is used, one #AbsMeasurementProducer
  * has to be registered in the factory. The factory can the use the index
- * information from a TrackCand object to load the indexed hits into
- * the Track.
+ * information from a #TrackCand object to load the indexed hits into
+ * the #Track.
  *
  * @sa AbsMeasurementProducer
  * @sa TrackCand
@@ -61,7 +61,7 @@ class MeasurementFactory{
    *
    * For each type of hit a separate producer is needed. The type of hit
    * is identified by the detector ID (detID). This index corresponds to the
-   * detector ID that is stored in the TrackCand object
+   * detector ID that is stored in the #TrackCand object
    */
   void addProducer(int detID, AbsMeasurementProducer<measurement_T>* hitProd);
 
@@ -79,10 +79,10 @@ class MeasurementFactory{
 
   /** @brief Create a collection of Measurements
    *
-   * This is the standard way to prepare the hit collection for a Track. The
+   * This is the standard way to prepare the hit collection for a #Track. The
    * resulting collection can contain hits from several detectors. The order
-   * of the hits is the same as in the TrackCand. It is assumed that this order
-   * is already along the track.
+   * of the hits is the same as in the #TrackCand. It is assumed that this order
+   * is already along the #Track.
    *
    * Measurements have to implement a constructor which takes the cluster object
    * from which the Measurement is build as the only parameter.

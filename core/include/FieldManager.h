@@ -31,10 +31,14 @@
 
 namespace genfit {
 
+/**
+ * @brief Cache B field at a position.
+ */
 struct fieldCache {
   double posX; double posY; double posZ;
   double Bx; double By; double Bz;
 };
+/** @} */
 
 /** @brief Singleton which provides access to magnetic field for track representations
  *
@@ -42,7 +46,6 @@ struct fieldCache {
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
  * 
  */
-
 class FieldManager {
 
  public:

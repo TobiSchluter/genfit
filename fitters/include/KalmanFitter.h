@@ -29,25 +29,30 @@
 #include "boost/scoped_ptr.hpp"
 #endif
 
+
 namespace genfit {
 
 class KalmanFitterInfo;
 class MeasuredStateOnPlane;
 class TrackPoint;
 
+/*
+ * @brief Simple Kalman filter
+ */
 class KalmanFitter : public AbsKalmanFitter {
+
+ public:
+
   KalmanFitter(const KalmanFitter&);
   KalmanFitter& operator=(KalmanFitter const&);
- public:
   KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
     : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor) {}
+
   ~KalmanFitter() {}
 
   void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
 
-  /**
-   * Hit resorting currently NOT supported.
-   */
+  //! Hit resorting currently NOT supported.
   void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits);
 
  private:
@@ -59,10 +64,14 @@ class KalmanFitter : public AbsKalmanFitter {
 #else
   MeasuredStateOnPlane* currentState_;
 #endif
+
+ public:
   ClassDef(KalmanFitter,1)
+
 };
 
-}
+} /* End of namespace genfit */
+
 /** @} */
 
 #endif //genfit_KalmanFitter_h

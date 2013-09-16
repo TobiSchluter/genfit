@@ -34,9 +34,12 @@
 namespace genfit {
 
   /** 
-   *  A state with arbitrary dimension defined in a #GFDetPlane. #sharedPlane_ is a shared_pointer, the ownership over that plane is shared between all #StateOnPlane objects defined in that plane.
-   *  The definition of the state is bound to the TrackRep #rep_. Therefore, the #StateOnPlane contains a pointer to a #AbsTrackRep. It will provide functionality to extrapolate it and translate the state it into cartesian coordinates.
-   *  Shortcuts to all functions of the trackRep which use this  #StateOnPlane are also provided here.
+   * @brief A state with arbitrary dimension defined in a #DetPlane.
+   *
+   * The dimension and meaning of the #state_ vector are defined by the track parameterization of the #rep_.
+   * #sharedPlane_ is a shared_pointer, the ownership over that plane is shared between all #StateOnPlane objects defined in that plane.
+   * The definition of the state is bound to the TrackRep #rep_. Therefore, the #StateOnPlane contains a pointer to a #AbsTrackRep. It will provide functionality to extrapolate it and translate the state it into cartesian coordinates.
+   * Shortcuts to all functions of the trackRep which use this  #StateOnPlane are also provided here.
    */
 class StateOnPlane : public TObject {
 

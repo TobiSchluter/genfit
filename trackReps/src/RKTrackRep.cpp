@@ -799,7 +799,7 @@ std::vector<genfit::MatStep> RKTrackRep::getSteps() const {
   // Todo: test
 
   if (RKSteps_.size() == 0) {
-    Exception exc("RKTrackRep::getRadiationLenght ==> cache is empty.",__LINE__,__FILE__);
+    Exception exc("RKTrackRep::getSteps ==> cache is empty.",__LINE__,__FILE__);
     throw exc;
   }
 
@@ -826,7 +826,7 @@ double RKTrackRep::getRadiationLenght() const {
   double radLen(0);
 
   for (unsigned int i = 0; i<RKSteps_.size(); ++i) {
-    radLen += RKSteps_.at(i).matStep_.materialProperties_.getRadLen();
+    radLen += RKSteps_.at(i).matStep_.stepSize_ / RKSteps_.at(i).matStep_.materialProperties_.getRadLen();
   }
 
   return radLen;

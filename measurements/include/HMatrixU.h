@@ -28,14 +28,13 @@
 
 namespace genfit {
 
+/**
+ * @brief For one-dimensional measurements and #RKTrackRep parameterization.
+ *
+ * This basically projects out u.
+ * H = (0, 0, 0, 1, 0)
+ */
 class HMatrixU : public AbsHMatrix {
-
-  /**
-   * @brief For one-dimensional measurements and #RKTrackRep parameterization.
-   *
-   * This basically projects out u.
-   * H = (0, 0, 0, 1, 0)
-   */
 
  public:
 

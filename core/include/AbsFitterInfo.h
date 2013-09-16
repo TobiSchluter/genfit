@@ -36,9 +36,9 @@ namespace genfit {
 class AbsTrackRep;
 class TrackPoint;
 
-  /** 
-   *  This class collects all information needed and produced by a specific fitter and is specific to one #AbsTrackRep of the #Track.
-   */
+/**
+ *  @brief This class collects all information needed and produced by a specific #AbsFitter and is specific to one #AbsTrackRep of the #Track.
+ */
 class AbsFitterInfo : public TObject {
 
  public:

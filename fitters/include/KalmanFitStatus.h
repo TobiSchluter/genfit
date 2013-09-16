@@ -29,6 +29,9 @@
 
 namespace genfit {
 
+/**
+ * @brief #FitStatus for use with #AbsKalmanFitters
+ */
 class KalmanFitStatus : public FitStatus {
 
  public:

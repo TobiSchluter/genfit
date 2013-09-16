@@ -43,7 +43,7 @@
 
 namespace genfit {
 
-/** @brief Detector plane genfit geometry class
+/** @brief Detector plane.
  *
  * A detector plane is the principle object to define coordinate systems for
  * track fitting in genfit. Since a particle trajectory is a

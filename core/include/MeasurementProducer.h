@@ -48,7 +48,7 @@ public:
 };
 
 
-/** @brief Template class for a hit producer module
+/** @brief Template class for a measurement producer module
  *
  * A MeasurementProducer module is used by MeasurementFactory to create Measurements for
  * one specific detector type.
@@ -57,7 +57,7 @@ public:
  * clustering some sort of hit or cluster class which stores all information that
  * corresponds to a measured hit in that detector. The MeasurementProducer
  * converts this information into a class that can be handled by genfit.
- * This class is realized as a Measurement (a class inheriting from AbsMeasurement).
+ * This class is realized as a Measurement (a class inheriting from #AbsMeasurement).
  *
  * In order to use the MeasurementProducer facility, a
  * Measurement has to implement a constructor which takes as an argument

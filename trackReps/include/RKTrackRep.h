@@ -33,23 +33,36 @@
 
 namespace genfit {
 
+/**
+ * @brief Helper for #RKTrackRep
+ */
 struct RKStep {
   MatStep matStep_; // material properties and stepsize
   M1x7 state7_; // 7D state vector
   StepLimits limits_;
 };
 
+/** @} */
+
+/**
+ * @brief Helper for #RKTrackRep
+ */
 struct ExtrapStep {
   M5x5 jac_; // 5D jacobian of transport
   M5x5 noise_; // 5D noise matrix
 };
 
+/** @} */
+
+/**
+ * @brief TrackRep with 5D track parameterization in plane coordinates: (q/p, u', v', u, v)
+ *
+ * q/p is charge over momentum.
+ * u' and v' are direction tangents.
+ * u and v are positions on a #DetPlane.
+ */
 class RKTrackRep : public AbsTrackRep {
 
-  /**
-   * 5D track parameterization in plane coordinates: (q/p, u', v', u, v)
-   *
-   */
 
  public:
 
@@ -254,6 +267,7 @@ class RKTrackRep : public AbsTrackRep {
 };
 
 } /* End of namespace genfit */
+
 /** @} */
 
 #endif // genfit_RKTrackRep_h

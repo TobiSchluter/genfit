@@ -35,7 +35,9 @@ class AbsTrackRep;
 class TrackPoint;
 
   /** 
-   *  Contains the measurement and covariance in detector coordinates. Detector and hit ids can be used to point back to the original detector hits (clusters etc.).
+   *  @brief Contains the measurement and covariance in raw detector coordinates.
+   *
+   *  Detector and hit ids can be used to point back to the original detector hits (clusters etc.).
    */
 class AbsMeasurement : public TObject {
 

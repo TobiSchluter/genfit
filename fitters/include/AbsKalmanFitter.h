@@ -38,7 +38,9 @@ enum eMultipleMeasurementHandling {
   unweightedClosestToPrediction
 };
 
-
+/**
+ * @brief Abstract base class for Kalman fitter and derived fitting algorithms
+ */
 class AbsKalmanFitter : public AbsFitter {
  public:
   AbsKalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)

@@ -31,6 +31,9 @@
 
 namespace genfit {
 
+/**
+ * @brief Abstract base class for geometry interfacing
+ */
 class AbsMaterialInterface : public TObject {
 
  public:

@@ -31,7 +31,9 @@
 #include "DetPlane.h"
 
 /**
- * Pointer to a #DetPlane. Ownership can be shared, e.g between multiple #StateOnPlane objects.
+ * @brief Shared Pointer to a #DetPlane.
+ *
+ * Ownership can be shared, e.g between multiple #StateOnPlane objects.
  * The #DetPlane will automatically be deleted, if no owner remains.
  */
 

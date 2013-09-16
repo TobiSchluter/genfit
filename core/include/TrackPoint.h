@@ -38,6 +38,11 @@ namespace genfit {
 
 class Track;
 
+/**
+ * @brief Object containing #AbsMeasurements and #AbsFitterInfos
+ *
+ */
+
 class TrackPoint : public TObject {
 
  public:

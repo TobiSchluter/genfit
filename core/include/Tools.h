@@ -26,6 +26,10 @@
 
 #include <TMatrixDSym.h>
 
+/**
+ * @brief Matrix inversion tools.
+ */
+
 namespace genfit {
 namespace tools {
 

@@ -27,13 +27,12 @@
 #include <TMatrixDSym.h>
 #include <TVectorD.h>
 
+namespace genfit {
+
 /**
  * @brief HMatrix for projecting from #AbsTrackRep parameters to measured parameters in a #DetPlane.
  *
  */
-
-namespace genfit {
-
 class AbsHMatrix : public TObject {
 
  public:

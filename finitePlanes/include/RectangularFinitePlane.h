@@ -10,7 +10,7 @@ class RectangularFinitePlane : public AbsFinitePlane {
 
  public:
 
-  //! give dimensions of finite rectangle: u1,u2,v1,v2
+  //! give dimensions of finite rectangle: u1,u2, v1,v2
   RectangularFinitePlane(const double&, const double&, const double&, const double&);
   RectangularFinitePlane();
   virtual ~RectangularFinitePlane();

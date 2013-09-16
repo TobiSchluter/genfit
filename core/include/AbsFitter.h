@@ -28,6 +28,10 @@ namespace genfit {
 class Track;
 class AbsTrackRep;
 
+/**
+ * @brief Abstract base class for fitters.
+ */
+
 class AbsFitter {
  public:
   AbsFitter() : debugLvl_(0) {}

@@ -33,9 +33,9 @@
 namespace genfit {
 
 
-  /** 
-   *  Additional covariance matrix.
-   */
+/**
+ *  @brief #StateOnPlane with additional covariance matrix.
+ */
 class MeasuredStateOnPlane : public StateOnPlane {
 
  public:
