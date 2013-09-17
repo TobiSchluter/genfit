@@ -101,9 +101,8 @@ class AbsMeasurement : public TObject {
   ClassDef(AbsMeasurement, 1)
 
 };
-/** @} */
 
 } /* End of namespace genfit */
-
+/** @} */
 
 #endif // genfit_AbsMeasurement_h

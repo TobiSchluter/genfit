@@ -70,8 +70,6 @@ public:
  * @param hit_t template parameter specifying hit/cluster class
  * @param measurement_T template parameter specifying Measurement
  */
-
-
 template <class hit_T, class measurement_T>
 class MeasurementProducer : public AbsMeasurementProducer<genfit::AbsMeasurement> {
  private:
@@ -88,7 +86,6 @@ class MeasurementProducer : public AbsMeasurementProducer<genfit::AbsMeasurement
    */
   virtual AbsMeasurement* produce(int index);
 };
-/** @} */
 
 
 template <class hit_T, class measurement_T>
@@ -116,7 +113,6 @@ AbsMeasurement* MeasurementProducer<hit_T, measurement_T>::produce(int index) {
 
 
 } /* End of namespace genfit */
-
 /** @} */
 
 #endif // genfit_MeasurementProducer_h

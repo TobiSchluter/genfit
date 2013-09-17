@@ -42,7 +42,6 @@ class Track;
  * @brief Object containing #AbsMeasurements and #AbsFitterInfos
  *
  */
-
 class TrackPoint : public TObject {
 
  public:
@@ -144,6 +143,7 @@ class TrackPoint : public TObject {
   //MaterialInfo* material_; // Ownership
 
  public:
+
   ClassDef(TrackPoint,1)
 
 };

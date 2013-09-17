@@ -48,7 +48,7 @@ namespace genfit {
  * @sa TrackCand
  */
 template <class measurement_T>
-class MeasurementFactory{
+class MeasurementFactory {
  private:
   std::map<int, AbsMeasurementProducer<measurement_T>*> hitProdMap_;
 
@@ -148,7 +148,6 @@ typename std::vector<measurement_T*> MeasurementFactory<measurement_T>::createMa
 
 
 } /* End of namespace genfit */
-
 /** @} */
 
 #endif // genfit_MeasurementFactory_h

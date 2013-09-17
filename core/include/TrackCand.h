@@ -45,6 +45,7 @@ namespace genfit {
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Moritz Nadler (maintainer during 2012)
+ *
  * The main task of the TrackCand object is to store a list of indices to
  * cluster objects. Each cluster in the Track is identified by it's
  * detector ID and it's index in the corresponding TClonesArray.
@@ -65,7 +66,6 @@ namespace genfit {
  *
  * @sa RecoHitFactory
  */
-
 class TrackCand : public TObject {
 
 
@@ -191,7 +191,9 @@ class TrackCand : public TObject {
   double q_; /**< the charge of the particle in units of elementary charge */
 
 
-  //ClassDef(TrackCand,1)
+ public:
+
+  ClassDef(TrackCand,1)
 
 };
 

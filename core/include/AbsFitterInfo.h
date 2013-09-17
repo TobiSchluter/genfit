@@ -30,7 +30,6 @@
 #include "MeasurementOnPlane.h"
 
 
-
 namespace genfit {
 
 class AbsTrackRep;
@@ -104,12 +103,11 @@ class AbsFitterInfo : public TObject {
 
 };
 
-// Needed for boost cloneability:
+//! Needed for boost cloneability:
 inline AbsFitterInfo* new_clone( const AbsFitterInfo & a)
 {
   return a.clone();
 }
-
 
 } /* End of namespace genfit */
 /** @} */

@@ -39,7 +39,6 @@ namespace genfit {
  * This is most important for avoiding fake intersection points in fitting of curlers.
  * This should be implemented for silicon detectors most importantly.
  */
-
 class AbsFinitePlane {
 
  public:

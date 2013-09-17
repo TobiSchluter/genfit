@@ -95,7 +95,6 @@ class Exception : public TObject {
 
   bool fatal_;
 
-
   //ClassDef(Exception,1)
 
 };

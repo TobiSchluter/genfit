@@ -29,7 +29,6 @@
 /**
  * @brief Matrix inversion tools.
  */
-
 namespace genfit {
 namespace tools {
 

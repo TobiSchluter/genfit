@@ -33,7 +33,6 @@ namespace genfit {
  *
  *  @author Johannes Rauch (Technische Universit&auml;t M&uuml;nchen, original author)
  */
-
 class FitStatus {
 
  public:

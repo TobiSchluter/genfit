@@ -30,22 +30,22 @@
 
 #include "DetPlane.h"
 
+
+namespace genfit {
+
 /**
  * @brief Shared Pointer to a #DetPlane.
  *
  * Ownership can be shared, e.g between multiple #StateOnPlane objects.
  * The #DetPlane will automatically be deleted, if no owner remains.
  */
-
-namespace genfit {
-
 #ifndef __CINT__
 typedef boost::shared_ptr< genfit::DetPlane > SharedPlanePtr;
 #else
 class SharedPlanePtr;
 #endif
 
-}
+} /* End of namespace genfit */
 /** @} */
 
 #endif // genfit_SharedPlanePtr_h

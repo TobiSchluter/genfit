@@ -76,6 +76,8 @@ class TrackCandHit : public TObject {
   double sortingParameter_; // sorting parameter
 
 
+ public:
+
   ClassDef(TrackCandHit,1)
 
 };

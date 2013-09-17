@@ -30,11 +30,16 @@
 
 #include "MaterialProperties.h"
 
+
+namespace genfit {
+
 #ifndef __CINT__
 typedef boost::shared_ptr< const genfit::MaterialProperties > SharedMaterialPropertiesPtr;
 #else
 class SharedMaterialPropertiesPrt;
 #endif
+
+} /* End of namespace genfit */
 /** @} */
 
 #endif // genfit_SharedMaterialPropertiesPtr_h

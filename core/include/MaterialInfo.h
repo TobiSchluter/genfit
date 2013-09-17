@@ -31,6 +31,9 @@
 
 namespace genfit {
 
+/**
+ * @brief Thin or thick scatterer
+ */
 class MaterialInfo : public TObject {
 
  public:

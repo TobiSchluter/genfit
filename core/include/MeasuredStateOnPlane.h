@@ -80,6 +80,10 @@ class MeasuredStateOnPlane : public StateOnPlane {
 
 };
 
+
+/**
+ * @brief Calculate weighted average between two MeasuredStateOnPlanes
+ */
 MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, const MeasuredStateOnPlane& backwardState);
 
 
@@ -127,8 +131,6 @@ inline MeasuredStateOnPlane& MeasuredStateOnPlane::operator= (const MeasuredStat
 
   return *this;
 }
-
-
 
 
 } /* End of namespace genfit */

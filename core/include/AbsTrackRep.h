@@ -20,7 +20,6 @@ struct MatStep {
   MaterialProperties materialProperties_;
   double stepSize_;
 };
-/** @} */
 
 class StateOnPlane;
 class MeasuredStateOnPlane;
@@ -271,5 +270,6 @@ class AbsTrackRep : public TObject {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_AbsTrackRep_h

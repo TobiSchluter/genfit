@@ -48,7 +48,7 @@ class TrackPointComparator {
     return lhs->getSortingParameter() < rhs->getSortingParameter();
   }
 };
-/** @} */
+
 
 /**
  * @brief Collection of #TrackPoints, #AbsTrackReps and #FitStatuses
@@ -219,7 +219,6 @@ class Track : public TObject {
 };
 
 } /* End of namespace genfit */
-
 /** @} */
 
 #endif // genfit_Track_h

@@ -32,9 +32,7 @@ namespace genfit {
  *
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
- * 
  */
-
 class AbsBField {
 public:
 
@@ -60,7 +58,6 @@ public:
 };
 
 } /* End of namespace genfit */
-
 /** @} */
 
 #endif // genfit_AbsBField_h

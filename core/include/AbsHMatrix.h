@@ -63,7 +63,6 @@ class AbsHMatrix : public TObject {
 
 };
 
-
 } /* End of namespace genfit */
 /** @} */
 

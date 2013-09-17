@@ -38,13 +38,12 @@ struct fieldCache {
   double posX; double posY; double posZ;
   double Bx; double By; double Bz;
 };
-/** @} */
+
 
 /** @brief Singleton which provides access to magnetic field maps.
  *
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
- * 
  */
 class FieldManager {
 

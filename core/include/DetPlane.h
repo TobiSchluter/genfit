@@ -58,8 +58,6 @@ namespace genfit {
  * This class parameterizes a plane in terms of an origin vector o
  * and two plane-spanning directions u and v.
  */
-
-
 class DetPlane : public TObject {
 
  public:
