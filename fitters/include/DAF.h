@@ -118,7 +118,10 @@ class DAF : public AbsKalmanFitter {
   AbsKalmanFitter* kalman_;
 #endif
 
+ public:
+
   ClassDef(DAF,1)
+
 };
 
 }  /* End of namespace genfit */

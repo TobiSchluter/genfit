@@ -43,8 +43,6 @@ class KalmanFitter : public AbsKalmanFitter {
 
  public:
 
-  KalmanFitter(const KalmanFitter&);
-  KalmanFitter& operator=(KalmanFitter const&);
   KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
     : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor) {}
 

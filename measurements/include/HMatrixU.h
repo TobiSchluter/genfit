@@ -54,7 +54,6 @@ class HMatrixU : public AbsHMatrix {
 };
 
 } /* End of namespace genfit */
-
 /** @} */
 
 #endif // genfit_HMatrixU_h

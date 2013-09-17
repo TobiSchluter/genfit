@@ -83,10 +83,13 @@ class AbsKalmanFitter : public AbsFitter {
   //! How to handle if there are multiple MeasurementsOnPlane
   eMultipleMeasurementHandling multipleMeasurementHandling_;
 
+ public:
+
   ClassDef(AbsKalmanFitter, 1)
+
 };
 
-}
+} /* End of namespace genfit */
 /** @} */
 
 #endif //genfit_AbsKalmanFitter_h

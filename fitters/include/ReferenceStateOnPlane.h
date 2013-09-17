@@ -30,17 +30,17 @@
 namespace genfit {
 
 
-  /** 
-   * @brief #StateOnPlane with linearized transport to that #ReferenceStateOnPlane from previous and next #ReferenceStateOnPlane
-   *
-   * Transport matrices describe transport TO that plane.
-   * We have transport matrix F, noise matrix N and delta state c.
-   * Now, state p and covariance C follow this mathematics:
-   *
-   * p = F * p_old + c
-   * C = F * C_old * F^T + N
-   *
-   */
+/**
+ * @brief #StateOnPlane with linearized transport to that #ReferenceStateOnPlane from previous and next #ReferenceStateOnPlane
+ *
+ * Transport matrices describe transport TO that plane.
+ * We have transport matrix F, noise matrix N and delta state c.
+ * Now, state p and covariance C follow this mathematics:
+ *
+ * p = F * p_old + c
+ * C = F * C_old * F^T + N
+ *
+ */
 class ReferenceStateOnPlane : public StateOnPlane {
 
  public:
@@ -98,6 +98,8 @@ class ReferenceStateOnPlane : public StateOnPlane {
   TVectorD forwardDeltaState_; /**< c */
   TVectorD backwardDeltaState_; /**< c */
 
+
+ public:
 
   ClassDef(ReferenceStateOnPlane,1)
 

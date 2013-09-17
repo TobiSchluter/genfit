@@ -42,7 +42,6 @@ struct RKStep {
   StepLimits limits_;
 };
 
-/** @} */
 
 /**
  * @brief Helper for #RKTrackRep
@@ -52,7 +51,6 @@ struct ExtrapStep {
   M5x5 noise_; // 5D noise matrix
 };
 
-/** @} */
 
 /**
  * @brief TrackRep with 5D track parameterization in plane coordinates: (q/p, u', v', u, v)
@@ -263,11 +261,14 @@ class RKTrackRep : public AbsTrackRep {
   mutable M7x5 J_Mp_7x5_; //!  // FIXME this is actually (J_pM)^T
   mutable M6x5 J_Mp_6x5_; //!  // FIXME this is actually (J_pM)^T
 
+
+ public:
+
   ClassDef(RKTrackRep, 1)
+
 };
 
 } /* End of namespace genfit */
-
 /** @} */
 
 #endif // genfit_RKTrackRep_h

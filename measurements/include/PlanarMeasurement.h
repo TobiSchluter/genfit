@@ -61,13 +61,16 @@ class PlanarMeasurement : public AbsMeasurement {
 
  protected:
   SharedPlanePtr physicalPlane_;
-  int planeId_;
+  int planeId_; // planeId id is -1 per default
+
+
+ public:
 
   ClassDef(PlanarMeasurement,1)
+
 };
 
 } /* End of namespace genfit */
-
 /** @} */
 
 #endif // genfit_PlanarMeasurement_h

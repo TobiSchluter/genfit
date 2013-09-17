@@ -9,6 +9,8 @@
 #pragma link C++ class genfit::AbsHMatrix+;
 #pragma link C++ class genfit::RectangularFinitePlane+;
 #pragma link C++ class genfit::FitStatus+;
+#pragma link C++ class genfit::TrackCand+;
+#pragma link C++ class genfit::TrackCandHit+;
 
 // These inherit from classes with custom streamers, or reference share_ptrs in their interfaces.
 #pragma link C++ class genfit::AbsTrackRep;

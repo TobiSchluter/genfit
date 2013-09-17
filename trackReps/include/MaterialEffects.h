@@ -36,8 +36,7 @@
 
 namespace genfit {
 
-/** @brief  Contains stepper and energy loss/noise matrix calculation
- *
+/** @brief Stepper and energy loss/noise matrix calculation
  *
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
@@ -49,7 +48,6 @@ namespace genfit {
  *  You have to set which energy-loss and noise mechanisms you want to use.
  *  At the moment, per default all energy loss and noise options are ON.
  */
-
 class MaterialEffects : public TObject {
 
  private:
@@ -198,7 +196,6 @@ public:
 };
 
 } /* End of namespace genfit */
-
 /** @} */
 
 #endif // genfit_MaterialEffects_h

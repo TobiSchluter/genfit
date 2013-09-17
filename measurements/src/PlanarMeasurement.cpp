@@ -100,8 +100,8 @@ void PlanarMeasurement::Streamer(TBuffer &R__b)
       R__b >> flag;
       physicalPlane_.reset();
       if (flag) {
-	physicalPlane_.reset(new DetPlane());
-	physicalPlane_->Streamer(R__b);
+        physicalPlane_.reset(new DetPlane());
+        physicalPlane_->Streamer(R__b);
       }
       R__b >> planeId_;
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
@@ -111,10 +111,10 @@ void PlanarMeasurement::Streamer(TBuffer &R__b)
       typedef genfit::AbsMeasurement baseClass0;
       baseClass0::Streamer(R__b);
       if (physicalPlane_) {
-	R__b << (char)1;
-	physicalPlane_->Streamer(R__b);
+        R__b << (char)1;
+        physicalPlane_->Streamer(R__b);
       } else {
-	R__b << (char)0;
+        R__b << (char)0;
       }
       R__b << planeId_;
       R__b.SetByteCount(R__c, kTRUE);

@@ -74,7 +74,6 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_TGeoMaterialInterface_h
-
-/** @} */

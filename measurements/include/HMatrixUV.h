@@ -57,7 +57,7 @@ class HMatrixUV : public AbsHMatrix {
 };
 
 } /* End of namespace genfit */
-
 /** @} */
+
 
 #endif // genfit_HMatrixUV_h

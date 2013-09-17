@@ -78,6 +78,11 @@ class KalmanFitStatus : public FitStatus {
   double fChi2_; // chi^2 of the forward fit
   double fNdf_; // degrees of freedom of the forward fit
   double fPval_; // p-value of the forward fit, set whenever either of chi2 or ndf changes
+
+ public:
+
+  ClassDef(KalmanFitStatus, 1)
+
 };
 
 } /* End of namespace genfit */

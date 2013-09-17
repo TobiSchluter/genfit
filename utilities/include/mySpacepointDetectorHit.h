@@ -52,8 +52,8 @@ class mySpacepointDetectorHit : public TObject {
 
   ClassDef(mySpacepointDetectorHit,1)
 };
+/** @} */
 
 } /* End of namespace genfit */
-/** @} */
 
 #endif // genfit_mySpacepointDetectorHit_h

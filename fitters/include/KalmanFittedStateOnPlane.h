@@ -57,9 +57,12 @@ class KalmanFittedStateOnPlane : public MeasuredStateOnPlane {
   double ndf_;
 
 
+ public:
+
   ClassDef(KalmanFittedStateOnPlane,1)
 
 };
+
 
 inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane() :
   MeasuredStateOnPlane(), chiSquareIncrement_(0), ndf_(0)

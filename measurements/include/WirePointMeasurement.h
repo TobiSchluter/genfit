@@ -60,7 +60,11 @@ class WirePointMeasurement : public WireMeasurement {
 
   virtual const AbsHMatrix* getHMatrix(const AbsTrackRep*) const;
 
+
+ public:
+
   ClassDef(WirePointMeasurement,1)
+
 };
 
 } /* End of namespace genfit */

@@ -57,7 +57,6 @@ enum eFitterType {
  * have to be initialized and gApplication and gEve have to exist.
  *
  */
-
 class EventDisplay : public TNamed {
 	private:
 		EventDisplay();
@@ -226,8 +225,8 @@ class EventDisplay : public TNamed {
 
 };
 
-}
+} /* End of namespace genfit */
+/** @} */
 
 #endif
 
-/** @} */

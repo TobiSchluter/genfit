@@ -60,11 +60,13 @@ class ProlateSpacepointMeasurement : public SpacepointMeasurement {
  protected:
   TVector3 largestErrorDirection_; // direction of largest error
 
-  ClassDef(ProlateSpacepointMeasurement,1);
+ public:
+
+  ClassDef(ProlateSpacepointMeasurement,1)
+
 };
 
 } /* End of namespace genfit */
-
 /** @} */
 
 #endif // genfit_ProlateSpacepointMeasurement_h

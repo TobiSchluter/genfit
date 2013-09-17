@@ -55,8 +55,8 @@ class mySpacepointMeasurement : public SpacepointMeasurement {
 
   ClassDef(mySpacepointMeasurement,1)
 };
+/** @} */
 
 } /* End of namespace genfit */
-/** @} */
 
 #endif // genfit_mySpacepointMeasurement_h

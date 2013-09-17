@@ -73,7 +73,6 @@ class AbsMaterialInterface : public TObject {
 };
 
 } /* End of namespace genfit */
-
 /** @} */
 
 #endif // genfit_AbsMaterialInterface_h

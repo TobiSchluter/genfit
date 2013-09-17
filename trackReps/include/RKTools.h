@@ -26,8 +26,10 @@
 
 namespace genfit {
 
-// Array Matrix typedefs. They are needed for SSE optimization:
-// gcc can vectorize loops only if the array sizes are known.
+/**
+ * Array Matrix typedefs. They are needed for SSE optimization:
+ * gcc can vectorize loops only if the array sizes are known.
+ */
 typedef double M1x3[1*3];
 typedef double M1x4[1*4];
 typedef double M1x6[1*6];
@@ -41,6 +43,9 @@ typedef double M7x5[7*5];
 typedef double M5x6[5*6];
 typedef double M5x7[5*7];
 
+/**
+ * @brief Array matrix multiplications used in RKTrackRep
+ */
 namespace RKTools {
 
   void J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7);
@@ -60,7 +65,7 @@ namespace RKTools {
 }
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_RKTools_h
 
-/** @} */

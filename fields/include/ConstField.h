@@ -34,7 +34,6 @@ namespace genfit {
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)
  * 
  */
-
 class ConstField : public AbsBField {
  public:
   //! define the constant field in this ctor

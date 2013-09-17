@@ -913,28 +913,12 @@ int main() {
   signal(SIGSEGV, handler);   // install our handler
 
   // init geometry and mag. field
-  TGeoManager* geom = new TGeoManager("Geometry", "Geane geometry");
+  new TGeoManager("Geometry", "Geane geometry");
   TGeoManager::Import("genfitGeom.root");
   genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,BField));
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
   TDatabasePDG::Instance()->GetParticle(211);
-
-
-/*
-  TString outname = "test.root";
-  TFile *file = TFile::Open(outname,"RECREATE");
-  TTree *tree = new TTree("t","Tracks");
-  tree->Branch("testTracks","genfit::Track",&testTrack);
-
-
-
-
-
-  tree->Fill();
-  if (debug) std::cout<<"Write Tree ...";
-  tree->Write();
-  file->Close();*/
 
 
   unsigned int nFailed(0);

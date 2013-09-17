@@ -105,7 +105,6 @@ class StepLimits {
 };
 
 } /* End of namespace genfit */
-
 /** @} */
 
 #endif // genfit_StepLimits_h

@@ -142,16 +142,16 @@ class KalmanFitterInfo : public AbsFitterInfo {
 };
 	*/
 
-
   std::vector<MeasurementOnPlane*> measurementsOnPlane_; // Ownership
 
+
+ public:
 
   ClassDef(KalmanFitterInfo,1)
 
 };
 
 } /* End of namespace genfit */
-
 /** @} */
 
 #endif // genfit_KalmanFitterInfo_h
