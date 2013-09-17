@@ -152,7 +152,6 @@ SET(CORE_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsFinitePlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsFitterInfo.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsHMatrix.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsTrackRep.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/DetPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/FitStatus.h
@@ -161,6 +160,7 @@ SET(CORE_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementProducer.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/StateOnPlane.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/AbsMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/Track.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackCand.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackCandHit.h
