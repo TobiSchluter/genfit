@@ -35,15 +35,16 @@
 
 namespace genfit {
 
-class GFRaveVertex : public TObject {
 /**
  * @brief GFRaveVertex class
+ *
  * A Vertex contains information about its position and covariance.
  * The tracks the vertex is consisting of are stored in smoothedTracks_.
  * These GFRaveTrackParameters contain the weight of the corresponding track
  * in the vertex, smoothed track parameters and a pointer to the original
  * unaltered genfit::Track.
  */
+class GFRaveVertex : public TObject {
 
   public:
     // constructors, destructors
@@ -94,9 +95,6 @@ class GFRaveVertex : public TObject {
 };
 
 } /* End of namespace genfit */
-
-#endif
-
 /** @} */
 
-
+#endif // GFRAVEVERTEX_H

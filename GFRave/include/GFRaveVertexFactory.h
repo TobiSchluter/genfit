@@ -52,9 +52,10 @@ struct trackAndState {
 
 /**
  * @brief GFRaveVertexFactory
- *  The GFRaveVertexFactory is basically a wrapper around the rave::VertexFactory.
- *  It takes care of initializing the rave::VertexFactory, building the necessary maps,
- *  convert GENFIT to rave objects and vice versa.
+ *
+ * The GFRaveVertexFactory is basically a wrapper around the rave::VertexFactory.
+ * It takes care of initializing the rave::VertexFactory, building the necessary maps,
+ * convert GENFIT to rave objects and vice versa.
  **/
 class GFRaveVertexFactory {
  public:
@@ -86,8 +87,6 @@ class GFRaveVertexFactory {
 };
 
 } /* End of namespace genfit */
-
-#endif
-
 /** @} */
 
+#endif // GFRAVEVERTEXFACTORY_H

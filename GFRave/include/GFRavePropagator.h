@@ -45,6 +45,7 @@ namespace genfit {
 
 /**
  * @brief GFRavePropagator class
+ *
  * Inherits from rave::Propagator. A map has to be provided,
  * containing pointers the genfit::Tracks, as well as pointers to clones of fitted states.
  * The GFRavePropagator uses the information of the rave::track to set
@@ -52,7 +53,6 @@ namespace genfit {
  * extrapolates and then returns a new rave::track with the
  * extrapolated state and covariance.
  */
-
 class GFRavePropagator : public rave::Propagator
 {
   public:
@@ -75,7 +75,7 @@ class GFRavePropagator : public rave::Propagator
     std::map < int, genfit::trackAndState > * IdGFTrackStateMap_; // pointers to genfit::tracks and measuredStateOnPlanes via rave track ID
 };
 
-
 } /* End of namespace genfit */
+/** @} */
 
-#endif
+#endif // GFRAVEPROPAGATOR_H

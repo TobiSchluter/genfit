@@ -19,7 +19,6 @@
 
 /**
  *  @author Johannes Rauch (Technische Universit&auml;t M&uuml;nchen, original author)
- *
  */
 
 /** @addtogroup GFRave
@@ -34,11 +33,11 @@
 
 namespace genfit {
 
-class GFRaveMagneticField : public rave::MagneticField {
 /**
  * @brief GFRaveMagneticField class
  * Uses the FieldManager to provide a magnetic field to rave.
  */
+class GFRaveMagneticField : public rave::MagneticField {
   public:
     GFRaveMagneticField(){};
     virtual GFRaveMagneticField * copy() const;
@@ -50,7 +49,7 @@ class GFRaveMagneticField : public rave::MagneticField {
 
 };
 
-
 } /* End of namespace genfit */
+/** @} */
 
-#endif
+#endif // GFRAVEMAGNETICFIELD_H

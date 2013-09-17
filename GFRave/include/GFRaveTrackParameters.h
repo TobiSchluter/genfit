@@ -47,7 +47,6 @@ namespace genfit {
  * Contains a pointer to the original genfit::Track, the weight of the track in the vertex,
  * and smoothed (with the vertex information) state and covariance of the track.
  */
-
 class GFRaveTrackParameters : public TObject
 {
   public:
@@ -88,12 +87,7 @@ class GFRaveTrackParameters : public TObject
     ClassDef(GFRaveTrackParameters, 1)
 };
 
-
 } /* End of namespace genfit */
-
-
-#endif
-
 /** @} */
 
-
+#endif // GFRAVETRACKPARAMETERS_H

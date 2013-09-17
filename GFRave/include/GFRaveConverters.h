@@ -49,7 +49,6 @@
 /**
  * @brief Collection of converter functions
  **/
-
 namespace genfit {
 
   // GENFIT to RAVE
@@ -91,8 +90,7 @@ namespace genfit {
 
 
 } /* End of namespace genfit */
-
-
-#endif
-
 /** @} */
+
+#endif // GFRAVECONVERTERS_H
+
