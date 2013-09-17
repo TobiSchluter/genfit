@@ -194,6 +194,7 @@ class DetPlane : public TObject {
 #endif
 
 
+ public:
   ClassDef(DetPlane,1)
 
 };

@@ -75,7 +75,7 @@ class MeasuredStateOnPlane : public StateOnPlane {
 
   TMatrixDSym cov_;
 
-
+ public:
   ClassDef(MeasuredStateOnPlane,1)
 
 };

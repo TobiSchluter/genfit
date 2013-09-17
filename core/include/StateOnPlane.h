@@ -117,7 +117,7 @@ class StateOnPlane : public TObject {
    */
   const AbsTrackRep* rep_; //! No ownership
 
-
+ public:
   ClassDef(StateOnPlane,1)
 
 };

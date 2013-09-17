@@ -74,7 +74,7 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
 #endif
   double weight_;
 
-
+ public:
   ClassDef(MeasurementOnPlane,1)
 
 };

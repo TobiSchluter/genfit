@@ -212,6 +212,8 @@ class Track : public TObject {
   TVectorD stateSeed_; // 6D: position, momentum
   TMatrixDSym covSeed_; // 6D
 
+
+ public:
   ClassDef(Track,1)
 
 };

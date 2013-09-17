@@ -162,6 +162,8 @@ SET(CORE_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/MeasurementProducer.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/StateOnPlane.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/Track.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackCand.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackCandHit.h
   ${CMAKE_CURRENT_SOURCE_DIR}/core/include/TrackPoint.h
   ${CMAKE_CURRENT_SOURCE_DIR}/finitePlanes/include/RectangularFinitePlane.h
 )

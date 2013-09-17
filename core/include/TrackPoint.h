@@ -113,12 +113,15 @@ class TrackPoint : public TObject {
 
   void Print(const Option_t* = "") const;
 
-  // This function is used when reading the TrackPoint and is called
-  // by the owner in order to build fitterInfos_ from vFitterInfos_.
-  // This requires that the track_ be set.  It also empties
-  // vFitterInfos_ which has served its purpose after this function is
-  // called.
+  /**
+   * This function is used when reading the TrackPoint and is called
+   * by the owner in order to build fitterInfos_ from vFitterInfos_.
+   * This requires that the track_ be set.  It also empties
+   * vFitterInfos_ which has served its purpose after this function is
+   * called.
+   */
   void fixupRepsForReading();
+
  private:
   double sortingParameter_;
 
@@ -130,15 +133,17 @@ class TrackPoint : public TObject {
 
   std::map< const AbsTrackRep*, AbsFitterInfo* > fitterInfos_; //! Ownership over FitterInfos
 
-  // The following vector is read while streaming.  After reading the
-  // TrackPoint, the Track's streamer will call fixupRepsForReading,
-  // and this vector will be translated into the map fitterInfos.  The
-  // vector is indexed by the ids of the corresponding TrackReps.
+  /**
+   * The following vector is read while streaming.  After reading the
+   * TrackPoint, the Track's streamer will call fixupRepsForReading,
+   * and this vector will be translated into the map fitterInfos. The
+   * vector is indexed by the ids of the corresponding TrackReps.
+   */
   std::vector< AbsFitterInfo* > vFitterInfos_; //!
 
   //MaterialInfo* material_; // Ownership
 
-
+ public:
   ClassDef(TrackPoint,1)
 
 };

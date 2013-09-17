@@ -60,6 +60,7 @@ class AbsHMatrix : public TObject {
 
  public:
   ClassDef(AbsHMatrix,1)
+
 };
 
 

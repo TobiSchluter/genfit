@@ -34,18 +34,17 @@ namespace genfit {
 class AbsTrackRep;
 class TrackPoint;
 
-  /** 
-   *  @brief Contains the measurement and covariance in raw detector coordinates.
-   *
-   *  Detector and hit ids can be used to point back to the original detector hits (clusters etc.).
-   */
+/**
+ *  @brief Contains the measurement and covariance in raw detector coordinates.
+ *
+ *  Detector and hit ids can be used to point back to the original detector hits (clusters etc.).
+ */
 class AbsMeasurement : public TObject {
-
 
  public:
 
-  AbsMeasurement() {};
-  AbsMeasurement(int nDims) : rawHitCoords_(nDims), rawHitCov_(nDims) {}
+  AbsMeasurement() : rawHitCoords_(), rawHitCov_(), detId_(-1), hitId_(-1) {;}
+  AbsMeasurement(int nDims) : rawHitCoords_(nDims), rawHitCov_(nDims), detId_(-1), hitId_(-1) {;}
   AbsMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
 
   virtual ~AbsMeasurement();
@@ -81,30 +80,30 @@ class AbsMeasurement : public TObject {
 
 
  private:
-  // protect from calling assignment operator from outside the class. Use #clone() if you want a copy!
+  //! protect from calling assignment operator from outside the class. Use #clone() if you want a copy!
   virtual AbsMeasurement& operator=(const AbsMeasurement&); // default cannot work because TVector and TMatrix = operators don't do resizing
 
  protected:
-  // protect from calling copy c'tor from outside the class. Use #clone() if you want a copy!
+  //! protect from calling copy c'tor from outside the class. Use #clone() if you want a copy!
   AbsMeasurement(const AbsMeasurement&);
 
   TVectorD rawHitCoords_;
   TMatrixDSym rawHitCov_;
-  int detId_;
-  int hitId_;
+  int detId_; // detId id is -1 per default
+  int hitId_; // hitId id is -1 per default
 
-  /** 
+  /**
    *  Pointer to #TrackPoint where the measurement belongs to
    */
   TrackPoint* trackPoint_; //! No ownership
 
-
-  ClassDef(AbsMeasurement,1)
+ public:
+  ClassDef(AbsMeasurement, 1)
 
 };
+/** @} */
 
 } /* End of namespace genfit */
 
-/** @} */
 
 #endif // genfit_AbsMeasurement_h

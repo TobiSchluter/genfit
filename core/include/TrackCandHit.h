@@ -17,7 +17,8 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
  */
 /** @addtogroup genfit
- * @{ */
+ * @{
+ */
 
 #ifndef genfit_TrackCandHit_h
 #define genfit_TrackCandHit_h
@@ -37,9 +38,9 @@ class TrackCandHit : public TObject {
 
   // Constructors/Destructors ---------
   TrackCandHit(int detId   = -1,
-                 int hitId   = -1,
-                 int planeId = -1,
-                 double sortingParameter  =  0.);
+               int hitId   = -1,
+               int planeId = -1,
+               double sortingParameter  =  0.);
 
   ~TrackCandHit();
 
@@ -75,7 +76,7 @@ class TrackCandHit : public TObject {
   double sortingParameter_; // sorting parameter
 
 
-  //ClassDef(TrackCandHit,1)
+  ClassDef(TrackCandHit,1)
 
 };
 

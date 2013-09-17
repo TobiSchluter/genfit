@@ -101,6 +101,7 @@ class AbsFitterInfo : public TObject {
 
  public:
   ClassDef(AbsFitterInfo,1)
+
 };
 
 // Needed for boost cloneability:
