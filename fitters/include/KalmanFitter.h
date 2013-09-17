@@ -41,6 +41,12 @@ class TrackPoint;
  */
 class KalmanFitter : public AbsKalmanFitter {
 
+ private:
+
+  // These private functions are needed, otherwise strange things happen, no idea why!
+  KalmanFitter(const KalmanFitter&);
+  KalmanFitter& operator=(KalmanFitter const&);
+
  public:
 
   KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
