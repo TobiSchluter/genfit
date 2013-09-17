@@ -36,8 +36,8 @@ class KalmanFitterInfo;
 class MeasuredStateOnPlane;
 class TrackPoint;
 
-/*
- * @brief Simple Kalman filter
+/**
+ * @brief Simple Kalman filter implementation.
  */
 class KalmanFitter : public AbsKalmanFitter {
 
@@ -71,7 +71,6 @@ class KalmanFitter : public AbsKalmanFitter {
 };
 
 } /* End of namespace genfit */
-
 /** @} */
 
 #endif //genfit_KalmanFitter_h

@@ -32,7 +32,7 @@
 namespace genfit {
 
 /**
- * @brief Cache B field at a position.
+ * @brief Cache B field at a position. Used by FieldManager.
  */
 struct fieldCache {
   double posX; double posY; double posZ;
@@ -40,7 +40,7 @@ struct fieldCache {
 };
 /** @} */
 
-/** @brief Singleton which provides access to magnetic field for track representations
+/** @brief Singleton which provides access to magnetic field maps.
  *
  *  @author Christian H&ouml;ppner (Technische Universit&auml;t M&uuml;nchen, original author)
  *  @author Sebastian Neubert  (Technische Universit&auml;t M&uuml;nchen, original author)

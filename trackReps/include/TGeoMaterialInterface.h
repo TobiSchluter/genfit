@@ -29,7 +29,9 @@
 
 namespace genfit {
 
-
+/**
+ * @brief AbsMaterialInterface implementation fir use with ROOT's TGeoManager.
+ */
 class TGeoMaterialInterface : public AbsMaterialInterface {
 
  public:

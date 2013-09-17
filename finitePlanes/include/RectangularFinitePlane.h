@@ -6,6 +6,9 @@
 
 namespace genfit {
 
+/**
+ * @brief Rectangular finite plane.
+ */
 class RectangularFinitePlane : public AbsFinitePlane {
 
  public:
@@ -32,5 +35,6 @@ class RectangularFinitePlane : public AbsFinitePlane {
 };
 
 } /* End of namespace genfit */
+/** @} */
 
 #endif // genfit_RectangularFinitePlane_h

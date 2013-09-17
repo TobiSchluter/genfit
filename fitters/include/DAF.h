@@ -43,10 +43,13 @@ namespace genfit {
  * The weights which were assigned to the hits by the #DAF are accessible in the #MeasurementOnPlanes
  * in the #KalmanFitterInfos.
  */
-
 class DAF : public AbsKalmanFitter {
+
+ private:
+
   DAF(const DAF&);
   DAF& operator=(genfit::DAF const&);
+
  public:
 
   DAF();
@@ -91,7 +94,7 @@ class DAF : public AbsKalmanFitter {
 
  private:
 
-  /** @brief check if convergence is met.
+  /** @brief Check if convergence is met.
    *
    * the convergence criteria is the largest absolute change of all weights.
    */

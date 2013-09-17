@@ -284,7 +284,7 @@ TMatrixD projCurv2Meas(SharedPlanePtr plane, TVector3 mom) {
   return p;
 }
 
-void GFGbl::processTrack(Track* trk) {
+void GFGbl::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
   //TGeoManager *gGeoManager;
 
   // flag for checking if desired sensor for alignment has been hitted
@@ -292,7 +292,6 @@ void GFGbl::processTrack(Track* trk) {
   bool simple = false;
 
   TrackPoint* point_meas;
-  AbsTrackRep* rep = trk->getCardinalRep();
   AbsMeasurement* raw_meas;
   TVectorD measPrec(2);
 

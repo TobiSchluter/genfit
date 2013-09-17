@@ -30,8 +30,8 @@ namespace genfit {
 class KalmanFitterInfo;
 class TrackPoint;
 
-/*
- * @brief Kalman filter with linearization around a reference track
+/**
+ * @brief Kalman filter implementation with linearization around a reference track
  */
 class KalmanFitterRefTrack : public AbsKalmanFitter {
  public:

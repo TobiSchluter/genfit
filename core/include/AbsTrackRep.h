@@ -13,24 +13,28 @@
 
 namespace genfit {
 
+/**
+ * @brief Simple struct containing MaterialProperties and stepsize in the material.
+ */
 struct MatStep {
   MaterialProperties materialProperties_;
   double stepSize_;
 };
+/** @} */
 
 class StateOnPlane;
 class MeasuredStateOnPlane;
 
-  /** 
-   * @brief Abstract base class for a track representation
-   *
-   *  Provides functionality to extrapolate a #StateOnPlane to another #DetPlane,
-   *  to the POCA to a line or a point, or a cylinder or sphere.
-   *  Defines a set of parameters describing the track.
-   *  #StateOnPlanes are always defined with a track parameterization of a specific TrackRep.
-   *  The TrackRep provides functionality to translate from the internal representation of a state
-   *  into cartesian position and momentum (and covariance) and vice versa.
-   */
+/**
+ * @brief Abstract base class for a track representation
+ *
+ *  Provides functionality to extrapolate a #StateOnPlane to another #DetPlane,
+ *  to the POCA to a line or a point, or a cylinder or sphere.
+ *  Defines a set of parameters describing the track.
+ *  #StateOnPlanes are always defined with a track parameterization of a specific TrackRep.
+ *  The TrackRep provides functionality to translate from the internal representation of a state
+ *  into cartesian position and momentum (and covariance) and vice versa.
+ */
 class AbsTrackRep : public TObject {
 
  public:

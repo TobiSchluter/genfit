@@ -29,7 +29,7 @@
 namespace genfit {
 
 /**
- * @brief For one-dimensional measurements and #RKTrackRep parameterization.
+ * @brief AbsHMatrix implementation for two-dimensional measurements and #RKTrackRep parameterization.
  *
  * This basically projects out u and v.
  * H = (0, 0, 0, 1, 0)

@@ -35,6 +35,7 @@
 #include "GblTrajectory.h"
 #include "Track.h"
 #include "AbsTrackRep.h"
+#include "AbsFitter.h"
 #include "AbsMeasurement.h"
 #include "TVector3.h"
 
@@ -48,7 +49,7 @@ namespace genfit {
    * The interface class to GBL track fit
    *
    */
-  class GFGbl {
+  class GFGbl : public AbsFitter {
     GFGbl(const GFGbl&);
     GFGbl& operator=(GFGbl const&);
 
@@ -58,6 +59,7 @@ namespace genfit {
      * Constructor
      */
     GFGbl();
+
     /**
      * Destructor
      */
@@ -65,8 +67,9 @@ namespace genfit {
    
     /**
      * Performs fit on a Track.
+     * Hit resorting currently NOT supported.
      */
-    void processTrack(Track* trk);
+    void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits);
 
     ClassDef(GFGbl, 1)
 

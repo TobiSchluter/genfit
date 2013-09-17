@@ -48,7 +48,9 @@ enum StepLimitType {
 };
 
 
-
+/**
+ * @brief Helper to store different limits on the stepsize for the RKTRackRep.
+ */
 class StepLimits {
 
  public:

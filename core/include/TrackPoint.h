@@ -73,7 +73,9 @@ class TrackPoint : public TObject {
    * custom copy constructor where all TrackRep pointers are exchanged according to the map.
    * FitterInfos with a rep in repsToIgnore will NOT be copied.
    */
-  TrackPoint(const TrackPoint&, const std::map<const genfit::AbsTrackRep*, genfit::AbsTrackRep*>&, const std::vector<const genfit::AbsTrackRep*> * repsToIgnore = NULL);
+  TrackPoint(const TrackPoint& rhs,
+      const std::map<const genfit::AbsTrackRep*, genfit::AbsTrackRep*>& map,
+      const std::vector<const genfit::AbsTrackRep*> * repsToIgnore = NULL);
 
   virtual ~TrackPoint();
 
