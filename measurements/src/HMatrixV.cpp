@@ -16,48 +16,62 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @addtogroup genfit
- * @{
- */
 
-#ifndef genfit_HMatrixUV_h
-#define genfit_HMatrixUV_h
-
-#include "AbsMeasurement.h"
+#include <HMatrixV.h>
 
 
 namespace genfit {
 
-/**
- * @brief AbsHMatrix implementation for two-dimensional measurements and #RKTrackRep parameterization.
- *
- * This basically projects out u and v.
- * H = (0, 0, 0, 1, 0)
- *     (0, 0, 0, 0, 1)
- *
- */
-class HMatrixUV : public AbsHMatrix {
+
+// 0, 0, 0, 0, 1
+
+TVectorD HMatrixV::Hv(const TVectorD& v) const {
+  assert (v.GetNrows() == 5);
+
+  TVectorD retVal(1);
+  retVal(0) = v(4); // u
+
+  return retVal;
+}
 
 
- public:
+TMatrixD HMatrixV::MHt(const TMatrixDSym& M) const {
+  assert (M.GetNrows() == 5);
 
-  HMatrixUV() {;}
+  TMatrixD retVal(5,1);
 
-  TVectorD Hv(const TVectorD& v) const;
+  retVal(0,0) = M(0,4);
+  retVal(1,0) = M(1,4);
+  retVal(2,0) = M(2,4);
+  retVal(3,0) = M(3,4);
+  retVal(4,0) = M(4,4);
 
-  TMatrixD MHt(const TMatrixDSym& M) const;
-  TMatrixD MHt(const TMatrixD& M) const;
+  return retVal;
+}
 
-  void HMHt(TMatrixDSym& M) const;
 
-  virtual AbsHMatrix* clone() const {return new HMatrixUV(*this);}
+TMatrixD HMatrixV::MHt(const TMatrixD& M) const {
+  assert (M.GetNrows() == 5);
 
-  ClassDef(HMatrixUV,1)
+  TMatrixD retVal(5,1);
 
-};
+  retVal(0,0) = M(0,4);
+  retVal(1,0) = M(1,4);
+  retVal(2,0) = M(2,4);
+  retVal(3,0) = M(3,4);
+  retVal(4,0) = M(4,4);
+
+  return retVal;
+}
+
+
+void HMatrixV::HMHt(TMatrixDSym& M) const {
+  assert (M.GetNrows() == 5);
+
+  M(0,0) = M(4,4);
+
+  M.ResizeTo(1,1);
+}
+
 
 } /* End of namespace genfit */
-/** @} */
-
-
-#endif // genfit_HMatrixUV_h

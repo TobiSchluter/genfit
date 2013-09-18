@@ -5,6 +5,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class genfit::HMatrixU+;
+#pragma link C++ class genfit::HMatrixV+;
 #pragma link C++ class genfit::HMatrixUV+;
 #pragma link C++ class genfit::ProlateSpacepointMeasurement+;
 #pragma link C++ class genfit::SpacepointMeasurement+;

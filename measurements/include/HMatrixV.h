@@ -20,8 +20,8 @@
  * @{
  */
 
-#ifndef genfit_HMatrixUV_h
-#define genfit_HMatrixUV_h
+#ifndef genfit_HMatrixV_h
+#define genfit_HMatrixV_h
 
 #include "AbsMeasurement.h"
 
@@ -29,19 +29,16 @@
 namespace genfit {
 
 /**
- * @brief AbsHMatrix implementation for two-dimensional measurements and #RKTrackRep parameterization.
+ * @brief AbsHMatrix implementation for one-dimensional measurements and #RKTrackRep parameterization.
  *
- * This basically projects out u and v.
- * H = (0, 0, 0, 1, 0)
- *     (0, 0, 0, 0, 1)
- *
+ * This basically projects out v.
+ * H = (0, 0, 0, 0, 1)
  */
-class HMatrixUV : public AbsHMatrix {
-
+class HMatrixV : public AbsHMatrix {
 
  public:
 
-  HMatrixUV() {;}
+  HMatrixV() {;}
 
   TVectorD Hv(const TVectorD& v) const;
 
@@ -50,14 +47,13 @@ class HMatrixUV : public AbsHMatrix {
 
   void HMHt(TMatrixDSym& M) const;
 
-  virtual AbsHMatrix* clone() const {return new HMatrixUV(*this);}
+  virtual AbsHMatrix* clone() const {return new HMatrixV(*this);}
 
-  ClassDef(HMatrixUV,1)
+  ClassDef(HMatrixV,1)
 
 };
 
 } /* End of namespace genfit */
 /** @} */
 
-
-#endif // genfit_HMatrixUV_h
+#endif // genfit_HMatrixV_h
