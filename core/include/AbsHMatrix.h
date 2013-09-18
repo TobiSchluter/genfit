@@ -37,7 +37,7 @@ class AbsHMatrix : public TObject {
 
  public:
 
- AbsHMatrix() : TObject() {;}
+ AbsHMatrix() {;}
 
   //! H*v
   virtual TVectorD Hv(const TVectorD& v) const = 0;
@@ -55,7 +55,7 @@ class AbsHMatrix : public TObject {
 
  protected:
   // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
-  AbsHMatrix(const AbsHMatrix&) {;}
+ AbsHMatrix(const AbsHMatrix& o) : TObject(o) {;}
   AbsHMatrix& operator=(const AbsHMatrix&);
 
  public:
