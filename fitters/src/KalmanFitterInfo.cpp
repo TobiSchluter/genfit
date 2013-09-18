@@ -85,16 +85,21 @@ std::vector< genfit::MeasurementOnPlane* > KalmanFitterInfo::getMeasurementsOnPl
 }
 
 
-MeasurementOnPlane KalmanFitterInfo::getAvgWeightedMeasurementOnPlane() const {
+MeasurementOnPlane KalmanFitterInfo::getAvgWeightedMeasurementOnPlane(bool ignoreWeights) const {
 
   MeasurementOnPlane retVal(*(measurementsOnPlane_[0]));
 
   if(measurementsOnPlane_.size() == 1) {
-    double weight = (measurementsOnPlane_[0])->getWeight();
-    if (weight != 1.) {
-      retVal.getCov() *= 1. / weight;
+    if (ignoreWeights) {
+      retVal.setWeight(1.);
     }
-    retVal.setWeight(weight);
+    else {
+      double weight = (measurementsOnPlane_[0])->getWeight();
+      if (weight != 1.) {
+        retVal.getCov() *= 1. / weight;
+      }
+      retVal.setWeight(weight);
+    }
     return retVal;
   }
 
@@ -117,9 +122,14 @@ MeasurementOnPlane KalmanFitterInfo::getAvgWeightedMeasurementOnPlane() const {
     }
 
     tools::invertMatrix(measurementsOnPlane_[i]->getCov(), covInv); // invert cov
-    weight = measurementsOnPlane_[i]->getWeight();
-    sumOfWeights += weight;
-    covInv *= weight; // weigh cov
+    if (ignoreWeights) {
+      sumOfWeights += 1.;
+    }
+    else {
+      weight = measurementsOnPlane_[i]->getWeight();
+      sumOfWeights += weight;
+      covInv *= weight; // weigh cov
+    }
     retVal.getCov() += covInv; // cov is already inverted and weighted
 
     retVal.getState() += covInv * measurementsOnPlane_[i]->getState();

@@ -81,8 +81,8 @@ EventDisplay::EventDisplay() :
   repId_(0),
   refit_(false),
   debugLvl_(0),
-  fitterId_(RefKalman),
-  mmHandling_(unweightedClosestToPrediction),
+  fitterId_(SimpleKalman),
+  mmHandling_(weightedAverage),
   dPVal_(1.E-3),
   nMaxIter_(4),
   resort_(false)
@@ -1183,7 +1183,10 @@ void EventDisplay::makeGui() {
     guiMmHandling_->Connect("Clicked(Int_t)","genfit::EventDisplay", fh, "guiSelectMmHandling(int)");
     hf->AddFrame(guiMmHandling_, new TGLayoutHints(kLHintsTop));
       TGRadioButton* mmHandling_button = new TGRadioButton(guiMmHandling_, "weighted average");
+      new TGRadioButton(guiMmHandling_, "unweighted average");
+      new TGRadioButton(guiMmHandling_, "weighted, closest to reference");
       new TGRadioButton(guiMmHandling_, "unweighted, closest to reference");
+      new TGRadioButton(guiMmHandling_, "weighted, closest to prediction");
       new TGRadioButton(guiMmHandling_, "unweighted, closest to prediction");
       mmHandling_button->SetDown(true, false);
       guiMmHandling_->Show();

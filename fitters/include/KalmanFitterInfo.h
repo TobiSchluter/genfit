@@ -63,7 +63,8 @@ class KalmanFitterInfo : public AbsFitterInfo {
   std::vector< genfit::MeasurementOnPlane* > getMeasurementsOnPlane() const;
   MeasurementOnPlane* getMeasurementOnPlane(int i = 0) const {if (i<0) i += measurementsOnPlane_.size(); return measurementsOnPlane_.at(i);}
   //! Get weighted mean of all measurements.
-  MeasurementOnPlane getAvgWeightedMeasurementOnPlane() const;
+  //! @param ignoreWeights If set, the weights of the individual measurements will be ignored (they will be treated as if they all had weight 1)
+  MeasurementOnPlane getAvgWeightedMeasurementOnPlane(bool ignoreWeights = false) const;
   //! Get measurements which is closest to state.
   const MeasurementOnPlane* getClosestMeasurementOnPlane(const StateOnPlane*) const;
   unsigned int getNumMeasurements() const {return measurementsOnPlane_.size();}
