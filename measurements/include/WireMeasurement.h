@@ -71,7 +71,7 @@ class WireMeasurement : public AbsMeasurement {
     */
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const;
 
-  virtual const AbsHMatrix* getHMatrix(const AbsTrackRep*) const;
+  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
 
   /** Set maximum drift distance. This is used to calculate the start weights of the two
    * measurementsOnPlane.

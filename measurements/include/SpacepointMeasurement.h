@@ -55,7 +55,7 @@ class SpacepointMeasurement : public AbsMeasurement {
 
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const;
 
-  virtual const AbsHMatrix* getHMatrix(const AbsTrackRep*) const;
+  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
 
   ClassDef(SpacepointMeasurement,1)
 };

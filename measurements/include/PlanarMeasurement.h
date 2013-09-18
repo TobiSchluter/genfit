@@ -55,7 +55,7 @@ class PlanarMeasurement : public AbsMeasurement {
 
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const;
 
-  virtual const AbsHMatrix* getHMatrix(const AbsTrackRep*) const;
+  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
 
   virtual void setPlane(const SharedPlanePtr& physicalPlane, int planeId = -1) {physicalPlane_ = physicalPlane; planeId_ = planeId;}
 

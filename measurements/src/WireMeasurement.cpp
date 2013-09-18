@@ -94,11 +94,11 @@ std::vector<MeasurementOnPlane*> WireMeasurement::constructMeasurementsOnPlane(c
 
   MeasurementOnPlane* mopL = new MeasurementOnPlane(TVectorD(1, &mL),
 			 TMatrixDSym(1, &V),
-			 plane, rep, getHMatrix(rep));
+			 plane, rep, constructHMatrix(rep));
 
   MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(1, &mR),
        TMatrixDSym(1, &V),
-       plane, rep, getHMatrix(rep));
+       plane, rep, constructHMatrix(rep));
 
   // set left/right weights
   if (leftRight_ < 0) {
@@ -121,7 +121,7 @@ std::vector<MeasurementOnPlane*> WireMeasurement::constructMeasurementsOnPlane(c
   return retVal;
 }
 
-const AbsHMatrix* WireMeasurement::getHMatrix(const AbsTrackRep* rep) const {
+const AbsHMatrix* WireMeasurement::constructHMatrix(const AbsTrackRep* rep) const {
   if (dynamic_cast<const RKTrackRep*>(rep) == NULL) {
     Exception exc("WireMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
     throw exc;

@@ -113,7 +113,7 @@ MeasurementOnPlane KalmanFitterInfo::getAvgWeightedMeasurementOnPlane() const {
       // make sure we have compatible measurement types
       // TODO: replace with Exceptions!
       assert(measurementsOnPlane_[i]->getPlane() == measurementsOnPlane_[0]->getPlane());
-      assert(measurementsOnPlane_[i]->getHMatrix() == measurementsOnPlane_[0]->getHMatrix());
+      assert(*(measurementsOnPlane_[i]->getHMatrix()) == *(measurementsOnPlane_[0]->getHMatrix()));
     }
 
     tools::invertMatrix(measurementsOnPlane_[i]->getCov(), covInv); // invert cov
@@ -230,7 +230,7 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
 }
 
 
-  MeasurementOnPlane KalmanFitterInfo::getResidual(unsigned int iMeasurement, bool biased, bool onlyMeasurementErrors) const {
+MeasurementOnPlane KalmanFitterInfo::getResidual(unsigned int iMeasurement, bool biased, bool onlyMeasurementErrors) const {
 
   const MeasuredStateOnPlane& smoothedState = getFittedState(biased);
   const MeasurementOnPlane* measurement = measurementsOnPlane_.at(iMeasurement);
@@ -254,14 +254,14 @@ const MeasuredStateOnPlane& KalmanFitterInfo::getFittedState(bool biased) const 
   res *= -1;
 
   if (onlyMeasurementErrors) {
-    return MeasurementOnPlane(res, measurement->getCov(), plane, smoothedState.getRep(), H, measurement->getWeight());
+    return MeasurementOnPlane(res, measurement->getCov(), plane, smoothedState.getRep(), H->clone(), measurement->getWeight());
   }
     
   TMatrixDSym cov(smoothedState.getCov());
   H->HMHt(cov);
   cov += measurement->getCov();
 
-  return MeasurementOnPlane(res, cov, plane, smoothedState.getRep(), H, measurement->getWeight());
+  return MeasurementOnPlane(res, cov, plane, smoothedState.getRep(), H->clone(), measurement->getWeight());
 }
 
 
@@ -306,9 +306,6 @@ void KalmanFitterInfo::setMeasurementsOnPlane(const std::vector< genfit::Measure
   for (std::vector<MeasurementOnPlane*>::const_iterator m = measurementsOnPlane.begin(), mend = measurementsOnPlane.end(); m < mend; ++m) {
     addMeasurementOnPlane(*m);
   }
-
-  if (measurementsOnPlane.size() != 0)
-    setPlane(measurementsOnPlane[0]->getPlane());
 }
 
 

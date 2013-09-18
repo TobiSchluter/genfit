@@ -46,7 +46,7 @@ std::vector<MeasurementOnPlane*> WirePointMeasurement::constructMeasurementsOnPl
 {
   MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(2),
        TMatrixDSym(2),
-       plane, rep, getHMatrix(rep));
+       plane, rep, constructHMatrix(rep));
 
   mopR->getState()(0) = rawHitCoords_(6);
   mopR->getState()(1) = rawHitCoords_(7);
@@ -81,7 +81,7 @@ std::vector<MeasurementOnPlane*> WirePointMeasurement::constructMeasurementsOnPl
   return retVal;
 }
 
-const AbsHMatrix* WirePointMeasurement::getHMatrix(const AbsTrackRep* rep) const {
+const AbsHMatrix* WirePointMeasurement::constructHMatrix(const AbsTrackRep* rep) const {
   if (dynamic_cast<const RKTrackRep*>(rep) == NULL) {
     Exception exc("WirePointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
     throw exc;

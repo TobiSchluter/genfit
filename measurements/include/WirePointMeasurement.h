@@ -58,7 +58,7 @@ class WirePointMeasurement : public WireMeasurement {
 
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const;
 
-  virtual const AbsHMatrix* getHMatrix(const AbsTrackRep*) const;
+  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
 
 
  public:

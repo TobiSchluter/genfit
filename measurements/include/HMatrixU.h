@@ -49,6 +49,8 @@ class HMatrixU : public AbsHMatrix {
 
   virtual AbsHMatrix* clone() const {return new HMatrixU(*this);}
 
+  virtual bool isEqual(const AbsHMatrix& other) const {return (dynamic_cast<const HMatrixU*>(&other) != NULL);}
+
   ClassDef(HMatrixU,1)
 
 };

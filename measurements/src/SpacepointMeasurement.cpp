@@ -61,7 +61,7 @@ std::vector<MeasurementOnPlane*> SpacepointMeasurement::constructMeasurementsOnP
 {
   MeasurementOnPlane* mop = new MeasurementOnPlane(TVectorD(2),
        TMatrixDSym(3), // will be resized to 2x2 by Similarity later
-       plane, rep, getHMatrix(rep));
+       plane, rep, constructHMatrix(rep));
 
   TVectorD& m = mop->getState();
   TMatrixDSym& V = mop->getCov();
@@ -100,7 +100,7 @@ std::vector<MeasurementOnPlane*> SpacepointMeasurement::constructMeasurementsOnP
 }
 
 
-const AbsHMatrix* SpacepointMeasurement::getHMatrix(const AbsTrackRep* rep) const {
+const AbsHMatrix* SpacepointMeasurement::constructHMatrix(const AbsTrackRep* rep) const {
   if (dynamic_cast<const RKTrackRep*>(rep) == NULL) {
     Exception exc("SpacepointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
     throw exc;

@@ -74,7 +74,10 @@ class AbsMeasurement : public TObject {
    */
   virtual std::vector<genfit::MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const = 0;
 
-  virtual const AbsHMatrix* getHMatrix(const AbsTrackRep*) const = 0;
+  /**
+   * Returns a new AbsHMatrix object. Caller must take ownership.
+   */
+  virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const = 0;
 
   virtual void Print(const Option_t* = "") const;
 

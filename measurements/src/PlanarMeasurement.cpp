@@ -55,7 +55,7 @@ std::vector<MeasurementOnPlane*> PlanarMeasurement::constructMeasurementsOnPlane
 
   MeasurementOnPlane* mop = new MeasurementOnPlane(rawHitCoords_,
        rawHitCov_,
-       plane, rep, getHMatrix(rep));
+       plane, rep, constructHMatrix(rep));
 
   std::vector<MeasurementOnPlane*> retVal;
   retVal.push_back(mop);
@@ -63,7 +63,7 @@ std::vector<MeasurementOnPlane*> PlanarMeasurement::constructMeasurementsOnPlane
 }
 
 
-const AbsHMatrix* PlanarMeasurement::getHMatrix(const AbsTrackRep* rep) const {
+const AbsHMatrix* PlanarMeasurement::constructHMatrix(const AbsTrackRep* rep) const {
 
   if (dynamic_cast<const RKTrackRep*>(rep) == NULL) {
     Exception exc("SpacepointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
