@@ -37,7 +37,7 @@ class AbsHMatrix : public TObject {
 
  public:
 
-  AbsHMatrix() {;}
+ AbsHMatrix() : TObject() {;}
 
   //! H*v
   virtual TVectorD Hv(const TVectorD& v) const = 0;
