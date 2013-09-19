@@ -32,23 +32,18 @@ namespace genfit {
 class mySpacepointDetectorHit : public TObject {
 
  public:
-  mySpacepointDetectorHit() :
-    detId_(-1), hitId_(-1) {;}
+  mySpacepointDetectorHit() {;}
 
-  mySpacepointDetectorHit(const TVector3& pos, const TMatrixDSym cov, int detId, int hitId)
-  : pos_(pos), cov_(cov), detId_(detId), hitId_(hitId) {;}
+  mySpacepointDetectorHit(const TVector3& pos, const TMatrixDSym cov)
+  : pos_(pos), cov_(cov) {;}
 
   const TVector3 getPos() const {return pos_;}
   const TMatrixDSym getCov() const {return cov_;}
-  int getDetId() const {return detId_;}
-  int getHitId() const {return hitId_;}
 
  private:
 
   TVector3 pos_;
   TMatrixDSym cov_;
-  int detId_;
-  int hitId_;
 
   ClassDef(mySpacepointDetectorHit,1)
 };

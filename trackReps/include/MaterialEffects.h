@@ -63,7 +63,7 @@ public:
   static MaterialEffects* getInstance();
   static void destruct();
 
-  //! set the material interface here. Material interface classes must be derived from #AbsMaterialInterface.
+  //! set the material interface here. Material interface classes must be derived from AbsMaterialInterface.
   void init(AbsMaterialInterface* matIfc);
   bool isInitialized() { return materialInterface_ != nullptr; }
 

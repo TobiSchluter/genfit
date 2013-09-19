@@ -30,7 +30,7 @@
 namespace genfit {
 
 /**
- * @brief HMatrix for projecting from #AbsTrackRep parameters to measured parameters in a #DetPlane.
+ * @brief HMatrix for projecting from AbsTrackRep parameters to measured parameters in a DetPlane.
  *
  */
 class AbsHMatrix : public TObject {

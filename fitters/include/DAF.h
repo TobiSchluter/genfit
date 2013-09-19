@@ -40,8 +40,8 @@ namespace genfit {
  * Communications 120 (1999) 197-214 and CERN thesis: Dissertation by Matthias
  * Winkler.
  *
- * The weights which were assigned to the hits by the #DAF are accessible in the #MeasurementOnPlanes
- * in the #KalmanFitterInfos.
+ * The weights which were assigned to the hits by the DAF are accessible in the MeasurementOnPlane objects
+ * in the KalmanFitterInfo objects.
  */
 class DAF : public AbsKalmanFitter {
 

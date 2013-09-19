@@ -62,15 +62,21 @@ class AbsMeasurement : public TObject {
 
   unsigned int getDim() const {return rawHitCoords_.GetNrows();}
 
+  void setDetId(int detId) {detId_ = detId;}
+  void setHitId(int hitId) {hitId_ = hitId;}
+
 
   /**
-   * Construct (virtual) detector plane (use state's TrackRep). It's possible to make corrections to the plane here.
+   * Construct (virtual) detector plane (use state's AbsTrackRep).
+   * It's possible to make corrections to the plane here.
    */
   virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const = 0;
 
   /**
-   * Construct measurement on given plane wrt. given TrackRep. The raw measurement has to be projected onto the plane. It's possible to make corrections to the coordinates here.
-   * Usually the vector will contain only one element. But in the case of e.g. WireMeasurements, it will be 2 (left and right).
+   * Construct MeasurementOnPlane on given plane wrt. given AbsTrackRep.
+   * The AbsMeasurement has to be projected onto the plane.
+   * It's possible to make corrections to the coordinates here.
+   * Usually the vector will contain only one element. But in the case of e.g. a WireMeasurement, it will be 2 (left and right).
    */
   virtual std::vector<genfit::MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const = 0;
 
@@ -95,9 +101,7 @@ class AbsMeasurement : public TObject {
   int detId_; // detId id is -1 per default
   int hitId_; // hitId id is -1 per default
 
-  /**
-   *  Pointer to #TrackPoint where the measurement belongs to
-   */
+  //! Pointer to TrackPoint where the measurement belongs to
   TrackPoint* trackPoint_; //! No ownership
 
  public:

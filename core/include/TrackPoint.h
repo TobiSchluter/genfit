@@ -39,7 +39,7 @@ namespace genfit {
 class Track;
 
 /**
- * @brief Object containing #AbsMeasurements and #AbsFitterInfos
+ * @brief Object containing AbsMeasurement and AbsFitterInfo objects.
  *
  */
 class TrackPoint : public TObject {
@@ -52,7 +52,7 @@ class TrackPoint : public TObject {
   /**
    * @brief Contructor taking list of measurements.
    *
-   * The #setTrackPoint() of each measurement will be called.
+   * AbsMeasurement::setTrackPoint() of each measurement will be called.
    * TrackPoint takes ownership over rawMeasurements.
    */
   TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurements, Track* track);
@@ -60,7 +60,7 @@ class TrackPoint : public TObject {
   /**
    * @brief Contructor taking one measurement.
    *
-   * The #setTrackPoint() of the measurement will be called.
+   * AbsMeasurement::setTrackPoint() of the measurement will be called.
    * TrackPoint takes ownership over the rawMeasurement.
    */
   TrackPoint(genfit::AbsMeasurement* rawMeasurement, Track* track);

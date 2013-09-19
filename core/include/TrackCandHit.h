@@ -29,7 +29,7 @@
 namespace genfit {
 
 /**
- * @brief Hit object for use in #TrackCand. Provides IDs and sorting parameters.
+ * @brief Hit object for use in TrackCand. Provides IDs and sorting parameters.
  */
 class TrackCandHit : public TObject {
  public:

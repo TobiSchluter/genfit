@@ -30,7 +30,7 @@
 namespace genfit {
 
 /**
- * @brief #FitStatus for use with #AbsKalmanFitters
+ * @brief FitStatus for use with AbsKalmanFitter implementations
  */
 class KalmanFitStatus : public FitStatus {
 

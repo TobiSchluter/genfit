@@ -27,11 +27,11 @@ class MeasuredStateOnPlane;
 /**
  * @brief Abstract base class for a track representation
  *
- *  Provides functionality to extrapolate a #StateOnPlane to another #DetPlane,
+ *  Provides functionality to extrapolate a StateOnPlane to another DetPlane,
  *  to the POCA to a line or a point, or a cylinder or sphere.
  *  Defines a set of parameters describing the track.
- *  #StateOnPlanes are always defined with a track parameterization of a specific TrackRep.
- *  The TrackRep provides functionality to translate from the internal representation of a state
+ *  StateOnPlane objects are always defined with a track parameterization of a specific AbsTrackRep.
+ *  The AbsTrackRep provides functionality to translate from the internal representation of a state
  *  into cartesian position and momentum (and covariance) and vice versa.
  */
 class AbsTrackRep : public TObject {
@@ -138,7 +138,7 @@ class AbsTrackRep : public TObject {
       bool stopAtBoundary = false) const = 0;
 
   /**
-   * @brief Extrapolates the state by #step cm and returns the extrapolation length
+   * @brief Extrapolates the state by step (cm) and returns the extrapolation length
    *       and, via reference, the extrapolated state.
    *
    * If stopAtBoundary is true, the extrapolation stops as soon as a material boundary is encountered.

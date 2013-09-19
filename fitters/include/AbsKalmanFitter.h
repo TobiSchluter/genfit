@@ -31,12 +31,12 @@ namespace genfit {
 class KalmanFitterInfo;
 
 enum eMultipleMeasurementHandling {
-  weightedAverage, // weighted average between measurements; used by DAF
-  unweightedAverage, // average between measurements, all weighted with 1
-  weightedClosestToReference, // closest to reference, weighted with its weight_
-  unweightedClosestToReference, // closest to reference, weighted with 1
-  weightedClosestToPrediction, // closest to prediction, weighted with its weight_
-  unweightedClosestToPrediction // closest to prediction, weighted with 1
+  weightedAverage, /**<  weighted average between measurements; used by DAF */
+  unweightedAverage, /**<  average between measurements, all weighted with 1 */
+  weightedClosestToReference, /**<  closest to reference, weighted with its weight_ */
+  unweightedClosestToReference, /**<  closest to reference, weighted with 1 */
+  weightedClosestToPrediction, /**<  closest to prediction, weighted with its weight_ */
+  unweightedClosestToPrediction /**<  closest to prediction, weighted with 1. Recommended for KalmanFitter to 'resolve' l/r ambiguities etc. */
 };
 
 /**

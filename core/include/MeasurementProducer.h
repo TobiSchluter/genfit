@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <TClonesArray.h>
 #include "Exception.h"
+#include "TrackCand.h"
 
 
 namespace genfit {
@@ -40,10 +41,10 @@ class AbsMeasurement;
 template <class measurement_T>
 class AbsMeasurementProducer {
 public:
-  /** @brief Virtual abstract method to produce a RecoHit.
+  /** @brief Virtual abstract method to produce a Measurement.
    * Implemented in MeasurementProducer
    */
-  virtual measurement_T* produce(int index) = 0;
+  virtual measurement_T* produce(int index, const TrackCandHit* hit) = 0;
   virtual ~AbsMeasurementProducer() {};
 };
 
@@ -57,11 +58,11 @@ public:
  * clustering some sort of hit or cluster class which stores all information that
  * corresponds to a measured hit in that detector. The MeasurementProducer
  * converts this information into a class that can be handled by genfit.
- * This class is realized as a Measurement (a class inheriting from #AbsMeasurement).
+ * This class is realized as a Measurement (a class inheriting from AbsMeasurement).
  *
  * In order to use the MeasurementProducer facility, a
  * Measurement has to implement a constructor which takes as an argument
- * a pointer to the cluster class. This constructor serves as the initializing
+ * a pointer to the cluster class and a TrackCandHit. This constructor serves as the initializing
  * constructor for the Measurement.
  *
  * The MeasurementProducer will fetch the cluster objects from a TClonesArray and
@@ -84,7 +85,7 @@ class MeasurementProducer : public AbsMeasurementProducer<genfit::AbsMeasurement
   /** @brief Create a Measurement from the cluster at position index
    * in TClonesArray
    */
-  virtual AbsMeasurement* produce(int index);
+  virtual AbsMeasurement* produce(int index, const TrackCandHit* hit);
 };
 
 
@@ -100,7 +101,7 @@ MeasurementProducer<hit_T, measurement_T>::~MeasurementProducer() {
 }
 
 template <class hit_T, class measurement_T>
-AbsMeasurement* MeasurementProducer<hit_T, measurement_T>::produce(int index) {
+AbsMeasurement* MeasurementProducer<hit_T, measurement_T>::produce(int index, const TrackCandHit* hit) {
   assert(hitArrayTClones_ != NULL);
   //std::cout << "hit array with " << hitArrayTClones_->GetEntries() << " entries, looking for entry " << index << "." << std::endl;
   if(hitArrayTClones_->At(index) == 0) {
@@ -108,7 +109,7 @@ AbsMeasurement* MeasurementProducer<hit_T, measurement_T>::produce(int index) {
     e.setFatal();
     throw e;
   }
-  return ( new measurement_T( (hit_T*) hitArrayTClones_->At(index) ) );
+  return ( new measurement_T( (hit_T*) hitArrayTClones_->At(index), hit ) );
 }
 
 

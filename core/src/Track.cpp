@@ -21,6 +21,7 @@
 
 #include "Exception.h"
 #include "KalmanFitterInfo.h"
+#include <PlanarMeasurement.h>
 
 #include <algorithm>
 #include <iostream>
@@ -42,13 +43,51 @@ Track::Track() :
   ;
 }
 
-Track::Track(const TrackCand& trackCand) :
-  cardinalRep_(0)
-{
-  // TODO: implement
 
+Track::Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMeasurement>& factory, AbsTrackRep* rep) :
+  cardinalRep_(0), fitStatuses_(), stateSeed_(6), covSeed_(6)
+{
+
+  if (rep != NULL)
+    addTrackRep(rep);
+
+  // create the measurements using the factory.
+  std::vector <genfit::AbsMeasurement*> factoryHits = factory.createMany(trackCand);
+
+  // create TrackPoints
+  PlanarMeasurement* lastPlanarMeas(NULL);
+  PlanarMeasurement* planarMeas(NULL);
+  for (unsigned int i=0; i<factoryHits.size(); ++i){
+    planarMeas = dynamic_cast<PlanarMeasurement*>(factoryHits[i]);
+
+    if (lastPlanarMeas != NULL && planarMeas != NULL &&
+        lastPlanarMeas->getDetId() == planarMeas->getDetId() &&
+        lastPlanarMeas->getPlaneId() == planarMeas->getPlaneId()) {
+      trackPoints_.back()->addRawMeasurement(factoryHits[i]);
+    }
+    else
+      insertPoint(new genfit::TrackPoint(factoryHits[i], this));
+
+    lastPlanarMeas = dynamic_cast<PlanarMeasurement*>(factoryHits[i]);
+  }
+
+  // fill seed state
+  stateSeed_ = trackCand.getStateSeed();
+
+  // initial guess for cov
+  double resolution = sqrt(factoryHits[0]->getRawHitCov().Max());
+  for (int i = 0; i < 3; ++i)
+    covSeed_(i,i) = resolution*resolution;
+  for (int i = 3; i < 6; ++i)
+    covSeed_(i,i) = pow(resolution / factoryHits.size() / sqrt(3), 2);
+
+  // fill cache
   fillPointsWithMeasurement();
+
+  // self test
+  assert(checkConsistency());
 }
+
 
 Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
   cardinalRep_(0), fitStatuses_(), stateSeed_(stateSeed),
@@ -56,6 +95,7 @@ Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed) :
 {
   addTrackRep(trackRep);
 }
+
 
 Track::Track(AbsTrackRep* trackRep, const TVectorD& stateSeed, const TMatrixDSym& covSeed) :
   cardinalRep_(0), fitStatuses_(), stateSeed_(stateSeed), covSeed_(covSeed)

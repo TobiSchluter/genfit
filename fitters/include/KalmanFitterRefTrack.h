@@ -50,7 +50,7 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
   /** @brief Prepare the track
    *
    * Calc all reference states.
-   * If #setSortingParams is true, the extrapolation lengths will be set as sorting parameters
+   * If setSortingParams is true, the extrapolation lengths will be set as sorting parameters
    * of the TrackPoints.
    * Returns if the track has been changed.
    */

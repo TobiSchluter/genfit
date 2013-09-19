@@ -32,7 +32,7 @@
 namespace genfit {
 namespace tools {
 
-  /** @brief Invert a matrix, throwing an #Exception when inversion fails.
+  /** @brief Invert a matrix, throwing an Exception when inversion fails.
    * Optional calculation of determinant.
    */
   void invertMatrix(const TMatrixDSym& mat, TMatrixDSym& inv, double* determinant = NULL);

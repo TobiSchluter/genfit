@@ -108,7 +108,7 @@ int main() {
       // Fill the TClonesArray and the TrackCand
       // In a real experiment, you detector code would deliver mySpacepointDetectorHits and fill the TClonesArray.
       // The patternRecognition would create the TrackCand.
-      new(myDetectorHitArray[i]) genfit::mySpacepointDetectorHit(currentPos, cov, myDetId, i);
+      new(myDetectorHitArray[i]) genfit::mySpacepointDetectorHit(currentPos, cov);
       myCand.addHit(myDetId, i);
     }
 
@@ -130,40 +130,14 @@ int main() {
       momM.SetTheta(gRandom->Gaus(mom.Theta(),momSmear));
       momM.SetMag(gRandom->Gaus(mom.Mag(), momMagSmear*mom.Mag()));
     }
-    TMatrixDSym covM(6);
-    for (int i = 0; i < 3; ++i)
-      covM(i,i) = resolution*resolution;
-    for (int i = 3; i < 6; ++i)
-      covM(i,i) = pow(resolution / nMeasurements / sqrt(3), 2);
 
 
     myCand.setPosMomSeedAndPdgCode(posM, momM, pdg);
 
 
-    // trackrep
-    genfit::AbsTrackRep* rep = new genfit::RKTrackRep(pdg);
-
-    // smeared start state
-    genfit::MeasuredStateOnPlane stateSmeared(rep);
-    rep->setPosMomCov(stateSmeared, posM, momM, covM);
-
-
     // create track
-    TVectorD seedState(6);
-    TMatrixDSym seedCov(6);
-    rep->get6DStateCov(stateSmeared, seedState, seedCov);
-    genfit::Track fitTrack(rep, seedState, seedCov);
+    genfit::Track fitTrack(myCand, factory, new genfit::RKTrackRep(pdg));
 
-
-    // now the measurements can be created using the factory.
-    std::vector <genfit::AbsMeasurement*> factoryHits = factory.createMany(myCand);
-    for (unsigned int i=0; i<factoryHits.size(); ++i){
-      fitTrack.insertPoint(new genfit::TrackPoint(factoryHits[i], &fitTrack));
-    }
-
-
-    //check
-    assert(fitTrack.checkConsistency());
 
     // do the fit
     try{

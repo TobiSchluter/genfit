@@ -34,7 +34,7 @@
 namespace genfit {
 
 /**
- * @brief Helper for #RKTrackRep
+ * @brief Helper for RKTrackRep
  */
 struct RKStep {
   MatStep matStep_; // material properties and stepsize
@@ -44,7 +44,7 @@ struct RKStep {
 
 
 /**
- * @brief Helper for #RKTrackRep
+ * @brief Helper for RKTrackRep
  */
 struct ExtrapStep {
   M5x5 jac_; // 5D jacobian of transport
@@ -53,11 +53,11 @@ struct ExtrapStep {
 
 
 /**
- * @brief TrackRep with 5D track parameterization in plane coordinates: (q/p, u', v', u, v)
+ * @brief AbsTrackRep with 5D track parameterization in plane coordinates: (q/p, u', v', u, v)
  *
  * q/p is charge over momentum.
  * u' and v' are direction tangents.
- * u and v are positions on a #DetPlane.
+ * u and v are positions on a DetPlane.
  */
 class RKTrackRep : public AbsTrackRep {
 
@@ -137,12 +137,12 @@ class RKTrackRep : public AbsTrackRep {
   void setSpu(StateOnPlane& state, double spu) const {(state.getAuxInfo())(0) = spu;}
 
   //! The actual Runge Kutta propagation
-  /** propagate #state7 with step #S. Fills #SA (Start directions derivatives dA/S).
-   *  If #jacobian is NULL, only the state is propagated,
-   *  otherwise also the 7x7 #jacobian is calculated.
-   *  If #varField is false, the magnetic field will only be evaluated at the starting position.
+  /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).
+   *  If jacobian is NULL, only the state is propagated,
+   *  otherwise also the 7x7 jacobian is calculated.
+   *  If varField is false, the magnetic field will only be evaluated at the starting position.
    *  The return value is an estimation on how good the extrapolation is, and it is usually fine if it is > 1.
-   *  It gives a suggestion how you must scale #S so that the quality will be sufficient.
+   *  It gives a suggestion how you must scale S so that the quality will be sufficient.
    */
   double RKPropagate(M1x7& state7,
                      M7x7* jacobian,
@@ -183,12 +183,12 @@ class RKTrackRep : public AbsTrackRep {
 
   //! Propagates the particle through the magnetic field.
   /** If the propagation is successful and the plane is reached, the function returns true.
-    * Propagated state and the jacobian of the extrapolation are written to #state7 and #jacobianT.
-    * The jacobian is only calculated if #jacobianT != NULL.
-    * In the main loop of the Runge Kutta algorithm, the #estimateStep() is called
+    * Propagated state and the jacobian of the extrapolation are written to state7 and jacobianT.
+    * The jacobian is only calculated if jacobianT != NULL.
+    * In the main loop of the Runge Kutta algorithm, the estimateStep() is called
     * and may reduce the estimated stepsize so that a maximum momentum loss will not be exceeded,
     * and stop at material boundaries.
-    * If this is the case, #RKutta() will only propagate the reduced distance and then return. This is to ensure that
+    * If this is the case, RKutta() will only propagate the reduced distance and then return. This is to ensure that
     * material effects, which are calculated after the propagation, are taken into account properly.
     */
   bool RKutta(const M1x4& SU,
@@ -219,7 +219,7 @@ class RKTrackRep : public AbsTrackRep {
     * #Extrap() needs a plane as an argument, hence #extrapolateToPoint() and #extrapolateToLine() create virtual detector planes.
     * In this function, #RKutta() is called and the resulting points and point paths are filtered
     * so that the direction doesn't change and tiny steps are filtered out.
-    * After the propagation the material effects are called via the #MaterialEffects singleton.
+    * After the propagation the material effects are called via the MaterialEffects singleton.
     * #Extrap() will loop until the plane is reached, unless the propagation fails or the maximum number of
     * iterations is exceeded.
     */

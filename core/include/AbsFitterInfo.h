@@ -36,7 +36,7 @@ class AbsTrackRep;
 class TrackPoint;
 
 /**
- *  @brief This class collects all information needed and produced by a specific #AbsFitter and is specific to one #AbsTrackRep of the #Track.
+ *  @brief This class collects all information needed and produced by a specific  AbsFitter and is specific to one AbsTrackRep of the Track.
  */
 class AbsFitterInfo : public TObject {
 
@@ -82,11 +82,11 @@ class AbsFitterInfo : public TObject {
 
  protected:
 
-  /** Pointer to #TrackPoint where the FitterInfo belongs to
+  /** Pointer to TrackPoint where the FitterInfo belongs to
    */
   const TrackPoint* trackPoint_; //! No ownership
 
-  /** Pointer to #TrackRep with respect to which the FitterInfo is defined
+  /** Pointer to AbsTrackRep with respect to which the FitterInfo is defined
    */
   const AbsTrackRep* rep_; //! No ownership
 

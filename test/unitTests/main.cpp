@@ -373,13 +373,12 @@ bool compareForthBackJacNoise() {
   TMatrixD jac_f_num;
   rep->calcJacobianNumerically(origState, plane, jac_f_num);
 
-  double extrapLen(0);
 
   // forth
   genfit::StateOnPlane extrapolatedState;
   try {
     //std::cout << "DO FORTH EXTRAPOLATION \n";
-    extrapLen = rep->extrapolateToPlane(state, plane);
+    rep->extrapolateToPlane(state, plane);
     //std::cout << "GET INFO FOR FORTH EXTRAPOLATION \n";
     extrapolatedState = state;
     rep->getForwardJacobianAndNoise(jac_f, noise_f, c_f);
