@@ -113,7 +113,7 @@ int main() {
     }
 
 
-    // smeared start values
+    // smeared start values (would come from the pattern recognition)
     const bool smearPosMom = true;   // init the Reps with smeared pos and mom
     const double posSmear = 0.1;     // cm
     const double momSmear = 3. /180.*TMath::Pi();     // rad
@@ -132,6 +132,7 @@ int main() {
     }
 
 
+    // set start values and pdg to cand
     myCand.setPosMomSeedAndPdgCode(posM, momM, pdg);
 
 
@@ -157,7 +158,6 @@ int main() {
       // add track to event display
       display->addEvent(&fitTrack);
     }
-
 
 
   }// end loop over events

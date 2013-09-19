@@ -71,21 +71,25 @@ class Track : public TObject {
  public:
 
   Track();
+
   /**
-   * @ brief Construct Track with TrackPoints from TrackCand, using a MeasurementFactory
+   * @ brief Construct Track from TrackCand, using a MeasurementFactory
    *
+   * The MeasurementFactory will be used to create AbsMeasuremen objects.
+   * TrackPoints will be created.
    * If two or more consecutive PlanarMeasurement objects with the same detector- and planeId
    * are created by the factory, they will be put into the same TrackPoint.
    *
    * Optionally, a AbsTrackRep can be provided.
    *
    * The stateSeed_ of the Track will be filled with the seed of the TrackCand.
-   * A guess for covSeed_ will be made using the largest entry of hte first measurement
+   * A guess for covSeed_ will be made using the largest entry of the cov of the first measurement
    * and the number of measurements (For the covSeed_, it is just important that it will be
    * big enough not to bias the fit too much, but not too big in order to avoid
    * numerical problems).
    */
   Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMeasurement>& factory, AbsTrackRep* rep = NULL);
+
   Track(AbsTrackRep* trackRep, const TVectorD& stateSeed);
   Track(AbsTrackRep* trackRep, const TVectorD& stateSeed, const TMatrixDSym& covSeed);
 
