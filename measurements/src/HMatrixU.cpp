@@ -51,15 +51,12 @@ TMatrixD HMatrixU::MHt(const TMatrixDSym& M) const {
 
 
 TMatrixD HMatrixU::MHt(const TMatrixD& M) const {
-  assert (M.GetNrows() == 5);
+  assert (M.GetNcols() == 5);
 
-  TMatrixD retVal(5,1);
+  TMatrixD retVal(M.GetNrows(),1);
 
-  retVal(0,0) = M(0,3);
-  retVal(1,0) = M(1,3);
-  retVal(2,0) = M(2,3);
-  retVal(3,0) = M(3,3);
-  retVal(4,0) = M(4,3);
+  for (int i = 0; i < M.GetNrows(); ++i)
+    retVal(i, 0) = M(i, 3);
 
   return retVal;
 }
