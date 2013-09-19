@@ -109,7 +109,7 @@ class TrackCand : public TObject {
 
   //! Get detector IDs of all hits
   std::vector<int>    getDetIDs() const;
-  //!
+  //! Get sorting parameterts of all hits
   std::vector<double> getSortingParameters() const;
   std::set<int>       getUniqueDetIDs() const;
 
@@ -145,7 +145,7 @@ class TrackCand : public TObject {
   //! Set a particle hypothesis in form of a PDG code. This will also set the charge attribute
   void setPdgCode(int pdgCode);
 
-  // TODO: make two functions: one that copies the hits from the other cand, and one that transferes ownership form the other cand
+  //! Clone the TrackCandHit objects from the other TrackCand and append them to this TrackCand
   void append(const TrackCand&);
 
   //! Sort the hits that were already added to the trackCand using the sorting parameters.
