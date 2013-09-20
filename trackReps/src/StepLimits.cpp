@@ -46,36 +46,26 @@ std::pair<StepLimitType, double> StepLimits::getLowestLimit(double margin) const
     }
   }
 
-  /*std::cout << "lowest limit:";
-      std::cout << "   | " << lowest << " cm due to ";
-      switch (static_cast<StepLimitType>(iLowest)) {
-      case stp_noLimit:
-        break;
-      case stp_fieldCurv:
-        std::cout << "stp_fieldCurv (medium limit): stepsize limited by curvature and magnetic field inhomogenities";
-        break;
-      case stp_momLoss:
-        std::cout << "stp_momLoss (medium limit): stepsize limited by stepper because maximum momLoss is reached";
-        break;
-      case stp_sMax:
-        std::cout << "stp_sMax (medium limit): stepsize limited by SMax defined in #estimateStep()";
-        break;
-      case stp_sMaxArg:
-        std::cout << "stp_sMaxArg (hard limit): stepsize limited by argument maxStepArg passed to #estimateStep()";
-        break;
-      case stp_boundary:
-        std::cout << "stp_boundary (hard limit): stepsize limited by stepper because material boundary is encountered";
-        break;
-      case stp_plane:
-        std::cout << "stp_plane (hard limit):  stepsize limited because destination plane is reached";
-        break;
-      case ENUM_NR_ITEMS:
-        break;
-      }
-*/
-
   return std::pair<StepLimitType, double>(static_cast<StepLimitType>(iLowest), lowest);
+}
 
+
+double StepLimits::getLowestLimitVal(double margin) const {
+
+  double lowest(maxLimit_);
+
+  for (unsigned int i=1; i<ENUM_NR_ITEMS; ++i) {
+
+    // lowest hard limit may exceed lowest soft limit by up to #margin
+    if (i == int(stp_sMaxArg))
+      lowest *= (1+margin);
+
+    if (limits_[i] < lowest) {
+      lowest = limits_[i];
+    }
+  }
+
+  return lowest;
 }
 
 

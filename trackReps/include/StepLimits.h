@@ -73,12 +73,10 @@ class StepLimits {
   std::pair<StepLimitType, double> getLowestLimit(double margin = 1.E-3) const;
 
   //! Get the unsigned numerical value of the lowest limit.
-  double getLowestLimitVal(double margin = 1.E-3) const {
-    return getLowestLimit(margin).second;
-  }
+  double getLowestLimitVal(double margin = 1.E-3) const;
   //! Get the numerical value of the lowest limit, signed with #stepSign_.
   double getLowestLimitSignedVal(double margin = 1.E-3) const {
-    return getLowestLimit(margin).second * stepSign_;
+    return getLowestLimitVal(margin) * stepSign_;
   }
 
   char getStepSign() const {return stepSign_;} // +- 1
