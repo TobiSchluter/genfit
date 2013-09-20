@@ -28,37 +28,40 @@ namespace genfit {
 TVectorD HMatrixU::Hv(const TVectorD& v) const {
   assert (v.GetNrows() == 5);
 
-  TVectorD retVal(1);
-  retVal(0) = v(3); // u
+  double* retValArray =(double *)alloca(sizeof(double) * 1);
 
-  return retVal;
+  retValArray[0] = v(3); // u
+
+  return TVectorD(1, retValArray);
 }
 
 
 TMatrixD HMatrixU::MHt(const TMatrixDSym& M) const {
   assert (M.GetNrows() == 5);
 
-  TMatrixD retVal(5,1);
+  double* retValArray =(double *)alloca(sizeof(double) * 5);
+  const double* MatArray = M.GetMatrixArray();
 
-  retVal(0,0) = M(0,3);
-  retVal(1,0) = M(1,3);
-  retVal(2,0) = M(2,3);
-  retVal(3,0) = M(3,3);
-  retVal(4,0) = M(4,3);
+  for (unsigned int i=0; i<5; ++i) {
+    retValArray[i] = MatArray[i*5 + 3];
+  }
 
-  return retVal;
+  return TMatrixD(5,1, retValArray);
 }
 
 
 TMatrixD HMatrixU::MHt(const TMatrixD& M) const {
   assert (M.GetNcols() == 5);
+  assert (M.GetNrows() == 5);
 
-  TMatrixD retVal(M.GetNrows(),1);
+  double* retValArray =(double *)alloca(sizeof(double) * 5);
+  const double* MatArray = M.GetMatrixArray();
 
-  for (int i = 0; i < M.GetNrows(); ++i)
-    retVal(i, 0) = M(i, 3);
+  for (unsigned int i = 0; i < 5; ++i) {
+    retValArray[i] = MatArray[i*5 + 3];
+  }
 
-  return retVal;
+  return TMatrixD(5,1, retValArray);
 }
 
 
