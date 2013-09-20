@@ -37,7 +37,7 @@ TVectorD HMatrixU::Hv(const TVectorD& v) const {
 
 
 TMatrixD HMatrixU::MHt(const TMatrixDSym& M) const {
-  assert (M.GetNrows() == 5);
+  assert (M.GetNcols() == 5);
 
   double* retValArray =(double *)alloca(sizeof(double) * 5);
   const double* MatArray = M.GetMatrixArray();
@@ -52,16 +52,15 @@ TMatrixD HMatrixU::MHt(const TMatrixDSym& M) const {
 
 TMatrixD HMatrixU::MHt(const TMatrixD& M) const {
   assert (M.GetNcols() == 5);
-  assert (M.GetNrows() == 5);
 
-  double* retValArray =(double *)alloca(sizeof(double) * 5);
+  double* retValArray =(double *)alloca(sizeof(double) * M.GetNrows());
   const double* MatArray = M.GetMatrixArray();
 
-  for (unsigned int i = 0; i < 5; ++i) {
+  for (int i = 0; i < M.GetNrows(); ++i) {
     retValArray[i] = MatArray[i*5 + 3];
   }
 
-  return TMatrixD(5,1, retValArray);
+  return TMatrixD(M.GetNrows(),1, retValArray);
 }
 
 
