@@ -93,6 +93,14 @@ void StepLimits::setStepSign(double signedVal) {
 }
 
 
+void StepLimits::reset() {
+  for (unsigned int i=1; i<ENUM_NR_ITEMS; ++i) {
+    limits_[i] = maxLimit_;
+  }
+  stepSign_ = 1;
+}
+
+
 void StepLimits::Print() {
   for (unsigned int i=0; i<ENUM_NR_ITEMS; ++i) {
     if (limits_[i] >= maxLimit_)

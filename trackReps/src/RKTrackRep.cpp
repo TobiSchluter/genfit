@@ -2090,19 +2090,19 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
     // propagation
     bool checkJacProj = false;
-    StepLimits limits;
-    limits.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
+    limits_.reset();
+    limits_.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
     if( ! RKutta(SU, destPlane, charge, state7, &J_MMT_,
         coveredDistance, checkJacProj, noiseProjection,
-        limits, onlyOneStep, !fillExtrapSteps) ) {
+        limits_, onlyOneStep, !fillExtrapSteps) ) {
       Exception exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
     }
 
-    bool atPlane(limits.getLowestLimit().first == stp_plane);
-    if (limits.getLowestLimit().first == stp_boundary)
+    bool atPlane(limits_.getLowestLimit().first == stp_plane);
+    if (limits_.getLowestLimit().first == stp_boundary)
       isAtBoundary = true;
 
 

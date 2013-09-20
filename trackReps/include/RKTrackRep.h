@@ -253,6 +253,7 @@ class RKTrackRep : public AbsTrackRep {
 
   // auxiliary variables and arrays
   // needed in Extrap()
+  mutable StepLimits limits_; //!
   mutable M7x7 noiseArray_; //! noise matrix of the last extrapolation
   mutable M7x7 J_MMT_; //!
   // needed in transform...
