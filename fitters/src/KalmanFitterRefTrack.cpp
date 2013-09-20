@@ -721,7 +721,7 @@ KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& not
 
       if (! fitterInfo->hasPredictionsAndUpdates()) {
         if (debugLvl_ > 0)
-	  std::cout << "reference state but not all predictions & updates -> do not touch reference state. \n";
+          std::cout << "reference state but not all predictions & updates -> do not touch reference state. \n";
         continue;
       }
 
@@ -732,16 +732,16 @@ KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& not
 
       // calculate chi2, ignore off diagonals
       for (int j=0; j<smoothedState.getCov().GetNcols(); ++j)
-        chi2 += res[j]*res[j] / smoothedState.getCov()(j,j);
+        chi2 += res(j)*res(j) / smoothedState.getCov()(j,j);
 
       if (chi2 < deltaChi2Ref_) {
         // reference state is near smoothed state ->  do not update reference state
         if (debugLvl_ > 0)
-	  std::cout << "reference state is near smoothed state ->  do not update reference state, chi2 = " << chi2 << "\n";
+          std::cout << "reference state is near smoothed state ->  do not update reference state, chi2 = " << chi2 << "\n";
         continue;
       } else {
         if (debugLvl_ > 0)
-	  std::cout << "reference state is not close to smoothed state, chi2 = " << chi2 << "\n";
+          std::cout << "reference state is not close to smoothed state, chi2 = " << chi2 << "\n";
       }
     }
 

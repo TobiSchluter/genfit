@@ -92,7 +92,9 @@ class TrackPoint : public TObject {
   std::vector< genfit::AbsFitterInfo* > getFitterInfos() const;
   //! Get fitterInfo for rep
   AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep) const {return fitterInfos_.at(rep);}
-  bool hasFitterInfo(const AbsTrackRep* rep) const;
+  bool hasFitterInfo(const AbsTrackRep* rep) const {
+    return (fitterInfos_.find(rep) != fitterInfos_.end());
+  }
 
   //MaterialInfo* getMaterialInfo() {return material_;}
   //bool hasMaterialInfo() {return material_ != nullptr;}
@@ -103,9 +105,7 @@ class TrackPoint : public TObject {
   void addRawMeasurement(genfit::AbsMeasurement* rawMeasurement) {assert(rawMeasurement!=NULL); rawMeasurement->setTrackPoint(this); rawMeasurements_.push_back(rawMeasurement);}
   void deleteRawMeasurements();
   //! Takes Ownership
-  void setFitterInfo(genfit::AbsFitterInfo* fitterInfo) {
-    if (fitterInfos_.find(fitterInfo->getRep()) != fitterInfos_.end()) { delete fitterInfos_[fitterInfo->getRep()]; }
-    fitterInfos_[fitterInfo->getRep()] = fitterInfo; }
+  void setFitterInfo(genfit::AbsFitterInfo* fitterInfo);
   void deleteFitterInfo(const AbsTrackRep* rep) {delete fitterInfos_[rep]; fitterInfos_.erase(rep);}
 
   //void setMaterial(MaterialInfo* material);

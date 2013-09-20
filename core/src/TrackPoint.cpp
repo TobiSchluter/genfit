@@ -186,20 +186,20 @@ std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos() const {
 }
 
 
-bool TrackPoint::hasFitterInfo(const AbsTrackRep* rep) const {
-  std::map< const AbsTrackRep*, AbsFitterInfo* >::const_iterator it = fitterInfos_.find(rep);
-  if (it == fitterInfos_.end())
-    return false;
-
-  return (it->second != NULL);
-}
-
-
 void TrackPoint::deleteRawMeasurements() {
   for (size_t i = 0; i < rawMeasurements_.size(); ++i)
     delete rawMeasurements_[i];
 
   rawMeasurements_.clear();
+}
+
+
+void TrackPoint::setFitterInfo(genfit::AbsFitterInfo* fitterInfo) {
+  assert (fitterInfo != NULL);
+  if (hasFitterInfo(fitterInfo->getRep()))
+    delete fitterInfos_[fitterInfo->getRep()];
+
+  fitterInfos_[fitterInfo->getRep()] = fitterInfo;
 }
 
 

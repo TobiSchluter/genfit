@@ -1204,23 +1204,23 @@ void RKTrackRep::getState7(const StateOnPlane& state, M1x7& state7) const {
   const TVector3& O(state.getPlane()->getO());
   const TVector3& W(state.getPlane()->getNormal());
 
-  const TVectorD& state5(state.getState());
+  const double* state5 = state.getState().GetMatrixArray();
 
   double spu = getSpu(state);
 
-  state7[0] = O.X() + state5(3)*U.X() + state5(4)*V.X(); // x
-  state7[1] = O.Y() + state5(3)*U.Y() + state5(4)*V.Y(); // y
-  state7[2] = O.Z() + state5(3)*U.Z() + state5(4)*V.Z(); // z
+  state7[0] = O.X() + state5[3]*U.X() + state5[4]*V.X(); // x
+  state7[1] = O.Y() + state5[3]*U.Y() + state5[4]*V.Y(); // y
+  state7[2] = O.Z() + state5[3]*U.Z() + state5[4]*V.Z(); // z
 
-  state7[3] = spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()); // a_x
-  state7[4] = spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()); // a_y
-  state7[5] = spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()); // a_z
+  state7[3] = spu * (W.X() + state5[1]*U.X() + state5[2]*V.X()); // a_x
+  state7[4] = spu * (W.Y() + state5[1]*U.Y() + state5[2]*V.Y()); // a_y
+  state7[5] = spu * (W.Z() + state5[1]*U.Z() + state5[2]*V.Z()); // a_z
 
   // normalize dir
   double norm = 1. / sqrt(state7[3]*state7[3] + state7[4]*state7[4] + state7[5]*state7[5]);
   for (unsigned int i=3; i<6; ++i) state7[i] *= norm;
 
-  state7[6] = state5(0); // q/p
+  state7[6] = state5[0]; // q/p
 }
 
 
