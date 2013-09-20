@@ -42,6 +42,8 @@ class KalmanFittedStateOnPlane : public MeasuredStateOnPlane {
   KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo, double chiSquareIncrement, double ndf);
   KalmanFittedStateOnPlane(const MeasuredStateOnPlane& state, double chiSquareIncrement, double ndf);
 
+  virtual ~KalmanFittedStateOnPlane() {}
+
   double getChiSquareIncrement() const {return chiSquareIncrement_;}
   double getNdf() const {return ndf_;}
 

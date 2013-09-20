@@ -71,9 +71,6 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
     std::cout<<"DAF::processTrack //////////////////////////////////////////////////////////////// \n";
   }
 
-  weights_.clear();
-  std::vector<std::vector<double> > oldWeights;
-
   KalmanFitStatus* status = 0;
   bool oneLastIter = false;
 
@@ -118,12 +115,9 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
 
 
     // get and update weights
-    getWeights(tr, rep);
-    if (iBeta > 0)
-      oldWeights = weights_;
-
+    bool converged(false);
     try{
-      weights_ = calcWeights(tr, rep, betas_.at(iBeta));
+      converged = calcWeights(tr, rep, betas_.at(iBeta));
     } catch(Exception& e) {
       std::cerr<<e.what();
       e.info();
@@ -135,24 +129,13 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
     }
 
     // check if converged
-    if (iBeta > 0) {
-      if ( isConvergent(oldWeights, rep) ){
-        if (debugLvl_ > 0) {
-        std::cout << "DAF::convergence reached in iteration " << iBeta << " -> Do one last iteration with updated weights.\n";
-        }
-        oneLastIter = true;
-        status->setIsFitConverged();
-      }
-    }
-
-    // check if fit is failing utterly
-    /*if (status->getForwardNdf() < 0. && betas_.at(iBeta) < 1.) {
+    if (iBeta > 0 && converged) {
       if (debugLvl_ > 0) {
-      std::cout << "DAF:: NDF < 0; skip track! \n";
+      std::cout << "DAF::convergence reached in iteration " << iBeta << " -> Do one last iteration with updated weights.\n";
       }
-      status->setIsFitConverged(false);
-      break;
-    }*/
+      oneLastIter = true;
+      status->setIsFitConverged();
+    }
 
   } // end loop over betas
 
@@ -246,69 +229,13 @@ void DAF::setAnnealingScheme(double bStart, double bFinal, unsigned int nSteps) 
 }
 
 
-bool DAF::isConvergent(const std::vector<std::vector<double> >& oldWeights, const AbsTrackRep* rep) const {
-  const int n = oldWeights.size();
-  assert(n == int(weights_.size()));
-  for( int i = 0; i != n; ++i){
-    const int m = oldWeights[i].size();
-    if (m != int(weights_[i].size())) {
-      std::cout << "m = " << m << ", newWeights[i].size() = " << weights_[i].size() << std::endl;
-      printWeights(oldWeights);
-      printWeights(weights_);
-      assert(m == int(weights_[i].size()));
-    }
-    for( int j = 0; j != m; ++j){
-      if( fabs(oldWeights[i][j] - weights_[i][j]) > deltaWeight_ ){
-        return false;
-      }
-    }
-  }
-  return true;
-}
+bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
 
-
-void DAF::getWeights(const Track* tr, const AbsTrackRep* rep) {
-
-if (debugLvl_ > 0) {
-  std::cout<<"DAF::getWeights \n";
-}
-
-  weights_.clear();
-
-  const std::vector< TrackPoint* >& trackPoints = tr->getPointsWithMeasurement();
-  for (std::vector< TrackPoint* >::const_iterator tp = trackPoints.begin(); tp != trackPoints.end(); ++tp) {
-    if (! (*tp)->hasFitterInfo(rep)) {
-      continue;
-    }
-    AbsFitterInfo* fi = (*tp)->getFitterInfo(rep);
-    if (dynamic_cast<KalmanFitterInfo*>(fi) == NULL){
-      Exception exc("DAF::getWeights ==> can only use KalmanFitterInfos",__LINE__,__FILE__);
-      throw exc;
-    }
-    KalmanFitterInfo* kfi = static_cast<KalmanFitterInfo*>(fi);
-    unsigned int nMeas = kfi->getNumMeasurements();
-    std::vector<double> weights;
-    weights.reserve(nMeas);
-    for (unsigned int i=0; i<nMeas; ++i) {
-      weights.push_back(kfi->getMeasurementOnPlane(i)->getWeight());
-    }
-    weights_.push_back(weights);
+  if (debugLvl_ > 0) {
+    std::cout<<"DAF::calcWeights \n";
   }
 
-if (debugLvl_ > 0) {
-  printWeights(weights_);
-}
-
-}
-
-
-std::vector<std::vector<double> > DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
-
-if (debugLvl_ > 0) {
-      std::cout<<"DAF::calcWeights \n";
-}
-
-  std::vector<std::vector<double> > ret_val;
+  bool converged(true);
 
   const std::vector< TrackPoint* >& trackPoints = tr->getPointsWithMeasurement();
   for (std::vector< TrackPoint* >::const_iterator tp = trackPoints.begin(); tp != trackPoints.end(); ++tp) {
@@ -356,7 +283,7 @@ if (debugLvl_ > 0) {
         //std::cerr << "hitDim " << hitDim << " fchi2Cuts[hitDim] " << fchi2Cuts[hitDim] << std::endl;
         double cutVal = chi2Cuts_[hitDim];
         assert(cutVal>1.E-6);
-        //the following assumes that in the competing hits (real hits in one DAF hit) could have different V otherwise calculation could be simplified
+        //the following assumes that in the competing hits could have different V otherwise calculation could be simplified
         phi_cut += norm*exp(-0.5*cutVal/beta);
       }
       catch(Exception& e) {
@@ -369,31 +296,25 @@ if (debugLvl_ > 0) {
     for(unsigned int j=0; j<nMeas; j++) {
       double weight = phi[j]/(phi_sum+phi_cut);
       weights[j] = weight;
+
+      // check convergence
+      if (converged && fabs(weight - kfi->getMeasurementOnPlane(j)->getWeight()) > deltaWeight_)
+        converged = false;
+
+      if (debugLvl_ > 0) {
+        std::cout<<"\t old weight: " << kfi->getMeasurementOnPlane(j)->getWeight();
+        std::cout<<"\t new weight: " << weight;
+      }
+
       kfi->getMeasurementOnPlane(j)->setWeight(weight);
     }
 
-    ret_val.push_back(weights);
+    if (debugLvl_ > 0)
+      std::cout << "\n";
+
   }
 
-  if (debugLvl_ > 0) {
-    printWeights(ret_val);
-  }
-
-  return ret_val;
-}
-
-
-void DAF::printWeights(const std::vector<std::vector<double> >& weights) const {
-  for (unsigned int i=0; i< weights.size(); ++i){
-    std::cout << "(";
-      for (unsigned int j=0; j<weights[i].size(); ++j) {
-        if (j > 0)
-          std::cout << ", ";
-        std::cout << weights[i][j];
-      }
-    std::cout << ") ";
-  }
-  std::cout << "\n";
+  return converged;
 }
 
 
@@ -449,8 +370,6 @@ void DAF::Streamer(TBuffer &R__b)
       typedef genfit::AbsKalmanFitter baseClass0;
       baseClass0::Streamer(R__b);
       R__b << deltaWeight_;
-      // weights_ are only of intermediate use -> not saved
-      weights_.clear();
       {
          std::vector<double> &R__stl =  betas_;
          int R__n=(&R__stl) ? int(R__stl.size()) : 0;

@@ -94,22 +94,14 @@ class DAF : public AbsKalmanFitter {
 
  private:
 
-  /** @brief Check if convergence is met.
-   *
-   * the convergence criteria is the largest absolute change of all weights.
-   */
-  bool isConvergent(const std::vector<std::vector<double> >& oldWeights, const AbsTrackRep* rep) const;
-
-  void getWeights(const Track* tr, const AbsTrackRep* rep);
-
-  /** @brief Calculate the weights for the next fitting pass.
+  /** @brief Calculate and set the weights for the next fitting pass.
+   * Return if convergence is met.
+   * The convergence criterium is the largest absolute change of all weights.
     */
-  std::vector<std::vector<double> > calcWeights(Track* trk, const AbsTrackRep* rep, double beta);
+  bool calcWeights(Track* trk, const AbsTrackRep* rep, double beta);
 
-  void printWeights(const std::vector<std::vector<double> >& weights) const;
 
   double deltaWeight_; // convergence criterium
-  std::vector<std::vector<double> > weights_;  //! not written/read by Streamer
   std::vector<double> betas_;
   std::map<int,double>  chi2Cuts_;
 #ifndef __CINT__
