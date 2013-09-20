@@ -44,6 +44,9 @@ namespace rave {
 
 namespace genfit {
 
+/**
+ * @brief Simple struct containing a Track pointer and a MeasuredStateOnPlane. Used in GFRave.
+ */
 struct trackAndState {
   const Track* track_; // pointer to original track
   MeasuredStateOnPlane* state_; // pointer to copy of fitted state; can be altered (extrapolated) during vertexing
@@ -51,7 +54,7 @@ struct trackAndState {
 
 
 /**
- * @brief GFRaveVertexFactory
+ * @brief Vertex factory for producing GFRaveVertex objects from Track objects.
  *
  * The GFRaveVertexFactory is basically a wrapper around the rave::VertexFactory.
  * It takes care of initializing the rave::VertexFactory, building the necessary maps,
