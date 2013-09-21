@@ -700,7 +700,13 @@ void RKTrackRep::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noi
 
   // lastEndState_ = jacobian * lastStartState_  + deltaState
   deltaState.ResizeTo(5);
-  deltaState = lastEndState_.getState() - jacobian * lastStartState_.getState();
+  // Calculate this without temporaries:
+  //deltaState = lastEndState_.getState() - jacobian * lastStartState_.getState()
+  deltaState = lastStartState_.getState();
+  deltaState *= jacobian;
+  deltaState -= lastEndState_.getState();
+  deltaState *= -1;
+
 
 #ifdef DEBUG
   std::cout << "delta state : "; deltaState.Print();
