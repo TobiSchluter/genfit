@@ -333,6 +333,11 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         continue;
       }
 
+      if (! refittedTrack->checkConsistency()){
+        std::cerr<<"refittedTrack is not consistent"<<std::endl;
+        continue;
+      }
+
       track = refittedTrack.get();
     }
 
@@ -473,7 +478,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       // finished drawing planes ------------------------------------------------------------
 
       // draw track if corresponding option is set ------------------------------------------
-      if (j > 0) {
+      if (j > 0 && prevFi != NULL) {
         if(drawTrack_) {
           makeLines(prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers_, drawErrors_, 3);
           if (drawErrors_) { // make sure to draw errors in both directions
@@ -487,6 +492,9 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         // draw reference track if corresponding option is set ------------------------------------------
         if(drawRefTrack_ && fi->hasReferenceState() && prevFi->hasReferenceState())
           makeLines(prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers_, false, 3);
+      }
+      else if (j > 0 && prevFi == NULL) {
+        std::cout << "previous FitterInfo == NULL \n";
       }
 
       // draw detectors if option is set, only important for wire hits ----------------------
