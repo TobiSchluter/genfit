@@ -52,12 +52,20 @@ class DAF : public AbsKalmanFitter {
 
  public:
 
-  DAF();
+  /**
+   * @brief Create DAF. Per default, use KalmanFitterRefTrack as fitter.
+   *
+   * @param useRefKalman If false, use KalmanFitter as fitter.
+   */
+  DAF(bool useRefKalman = true);
+  /**
+   * @brief Create DAF. Use the provided AbsKalmanFitter as fitter.
+   */
   DAF(AbsKalmanFitter* kalman);
   ~DAF() {};
 
   //! Process a track using the DAF.
-  void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits);
+  void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits = false);
 
   /** @brief Set the probability cut for the weight calculation for the hits.
    *

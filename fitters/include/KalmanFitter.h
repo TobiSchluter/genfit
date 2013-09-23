@@ -50,14 +50,14 @@ class KalmanFitter : public AbsKalmanFitter {
  public:
 
   KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
-    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor) {}
+    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), currentState_(NULL) {}
 
   ~KalmanFitter() {}
 
   void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
 
   //! Hit resorting currently NOT supported.
-  void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits);
+  void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits = false);
 
  private:
   void processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,

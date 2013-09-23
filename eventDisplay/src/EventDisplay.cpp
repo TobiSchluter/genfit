@@ -302,13 +302,10 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
           break;
 
         case DafSimple:
-          {
-            genfit::AbsKalmanFitter* DafsKalman = new genfit::KalmanFitter();
-            if (debugLvl_ > 1)
-              DafsKalman->setDebugLvl(debugLvl_-1);
-            fitter.reset(new DAF(DafsKalman));
-            fitter->setDebugLvl(debugLvl_);
-          }
+          fitter.reset(new DAF(false));
+          if (debugLvl_ > 1)
+            (static_cast<DAF*>(fitter.get()))->getKalman()->setDebugLvl(debugLvl_-1);
+          fitter->setDebugLvl(debugLvl_);
           break;
         case DafRef:
           fitter.reset(new DAF());

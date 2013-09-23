@@ -20,6 +20,7 @@
 #include "DAF.h"
 #include "Exception.h"
 #include "KalmanFitterInfo.h"
+#include "KalmanFitter.h"
 #include "KalmanFitterRefTrack.h"
 #include "KalmanFitStatus.h"
 #include "Tools.h"
@@ -37,13 +38,18 @@
 
 namespace genfit {
 
-DAF::DAF()
+DAF::DAF(bool useRefKalman)
   : AbsKalmanFitter(10), deltaWeight_(0.001)
 {
-  kalman_.reset(new KalmanFitterRefTrack());
+  if (useRefKalman) {
+    kalman_.reset(new KalmanFitterRefTrack());
+    static_cast<KalmanFitterRefTrack*>(kalman_.get())->setRefitAll();
+  }
+  else
+    kalman_.reset(new KalmanFitter());
+
   kalman_->setMultipleMeasurementHandling(weightedAverage);
   kalman_->setMaxIterations(1);
-  static_cast<KalmanFitterRefTrack*>(kalman_.get())->setRefitAll();
 
   setAnnealingScheme(100, 0.1, 5); // also sets maxIterations_
   setProbCut(0.01);
@@ -131,7 +137,7 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
     // check if converged
     if (iBeta > 0 && converged) {
       if (debugLvl_ > 0) {
-      std::cout << "DAF::convergence reached in iteration " << iBeta-1 << " -> Do one last iteration with updated weights.\n";
+      std::cout << "DAF::convergence reached in iteration " << iBeta+1 << " -> Do one last iteration with updated weights.\n";
       }
       oneLastIter = true;
       status->setIsFitConverged();
@@ -235,6 +241,7 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
   }
 
   bool converged(true);
+  double maxAbsChange(0);
 
   const std::vector< TrackPoint* >& trackPoints = tr->getPointsWithMeasurement();
   for (std::vector< TrackPoint* >::const_iterator tp = trackPoints.begin(); tp != trackPoints.end(); ++tp) {
@@ -295,8 +302,12 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
       double weight = phi[j]/(phi_sum+phi_cut);
 
       // check convergence
-      if (converged && fabs(weight - kfi->getMeasurementOnPlane(j)->getWeight()) > deltaWeight_)
+      double absChange(fabs(weight - kfi->getMeasurementOnPlane(j)->getWeight()));
+      if (converged && absChange > deltaWeight_) {
         converged = false;
+        if (absChange > maxAbsChange)
+          maxAbsChange = absChange;
+      }
 
       if (debugLvl_ > 0) {
         std::cout<<"\t old weight: " << kfi->getMeasurementOnPlane(j)->getWeight();
@@ -306,8 +317,10 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
       kfi->getMeasurementOnPlane(j)->setWeight(weight);
     }
 
-    if (debugLvl_ > 0)
+    if (debugLvl_ > 0) {
       std::cout << "\n";
+      std::cout << "maximum absolute weight change = " << maxAbsChange << "\n";
+    }
 
   }
 

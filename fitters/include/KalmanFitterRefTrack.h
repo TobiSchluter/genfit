@@ -45,7 +45,7 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
    */
   TrackPoint* fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
 
-  void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits);
+  void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits = false);
 
   /** @brief Prepare the track
    *

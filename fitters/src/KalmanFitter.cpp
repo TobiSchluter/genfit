@@ -159,27 +159,31 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHi
   for(;;) {
     try {
       if (debugLvl_ > 0) {
-      std::cout << "\033[1;21mstate pre" << std::endl;
-      currentState_->Print();
-      std::cout << "\033[0mfitting" << std::endl;
+        std::cout << "\033[1;21mstate pre" << std::endl;
+        currentState_->Print();
+        std::cout << "\033[0mfitting" << std::endl;
       }
+
       fitTrack(tr, rep, chi2FW, ndfFW, +1);
+
       if (debugLvl_ > 0) {
-      std::cout << "\033[1;21mstate post forward" << std::endl;
-      currentState_->Print();
-      std::cout << "\033[0m";
+        std::cout << "\033[1;21mstate post forward" << std::endl;
+        currentState_->Print();
+        std::cout << "\033[0m";
       }
 
       // Backwards iteration:
       currentState_->blowUpCov(blowUpFactor_);  // blow up cov
-      fitTrack(tr, rep, chi2BW, ndfBW, -1);
-      if (debugLvl_ > 0) {
-      std::cout << "\033[1;21mstate post backward" << std::endl;
-      currentState_->Print();
-      std::cout << "\033[0m";
 
-      std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
-          << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
+      fitTrack(tr, rep, chi2BW, ndfBW, -1);
+
+      if (debugLvl_ > 0) {
+        std::cout << "\033[1;21mstate post backward" << std::endl;
+        currentState_->Print();
+        std::cout << "\033[0m";
+
+        std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
+            << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
       }
 
       ++nIt;
