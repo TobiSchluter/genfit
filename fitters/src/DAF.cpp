@@ -74,17 +74,17 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
   KalmanFitStatus* status = 0;
   bool oneLastIter = false;
 
-  unsigned int iBeta = 0;
-  for(; iBeta != maxIterations_; ++iBeta) { // loop over. If no convergence is reached after 10 iterations just stop.
+  for(unsigned int iBeta = 0;; ++iBeta) {
 
     if (debugLvl_ > 0) {
-      std::cout<<"DAF::processTrack, trackRep  " << rep << ", iteration " << iBeta << ", beta = " << betas_.at(iBeta) << "\n";
+      std::cout<<"DAF::processTrack, trackRep  " << rep << ", iteration " << iBeta+1 << ", beta = " << betas_.at(iBeta) << "\n";
     }
 
     kalman_->processTrack(tr, rep, resortHits);
 
     status = static_cast<KalmanFitStatus*>(tr->getFitStatus(rep));
     status->setIsFittedWithDaf();
+    status->setNumIterations(iBeta+1);
 
 
     // check break conditions
@@ -105,7 +105,7 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
       break;
     }
 
-    if(iBeta == maxIterations_-1 ){
+    if(iBeta >= maxIterations_-1){
       status->setIsFitConverged(false);
       if (debugLvl_ > 0) {
       std::cout << "DAF::number of max iterations reached!\n";
@@ -131,7 +131,7 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
     // check if converged
     if (iBeta > 0 && converged) {
       if (debugLvl_ > 0) {
-      std::cout << "DAF::convergence reached in iteration " << iBeta << " -> Do one last iteration with updated weights.\n";
+      std::cout << "DAF::convergence reached in iteration " << iBeta-1 << " -> Do one last iteration with updated weights.\n";
       }
       oneLastIter = true;
       status->setIsFitConverged();
@@ -139,7 +139,6 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
 
   } // end loop over betas
 
-  status->setNumIterations(iBeta+1);
 
   if (status->getForwardPVal() == 0. &&
       status->getBackwardPVal() == 0.) {
@@ -292,10 +291,8 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
       }
     }
 
-    std::vector<double> weights(nMeas, 0.);
     for(unsigned int j=0; j<nMeas; j++) {
       double weight = phi[j]/(phi_sum+phi_cut);
-      weights[j] = weight;
 
       // check convergence
       if (converged && fabs(weight - kfi->getMeasurementOnPlane(j)->getWeight()) > deltaWeight_)
