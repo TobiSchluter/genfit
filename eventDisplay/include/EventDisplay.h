@@ -142,6 +142,7 @@ class EventDisplay : public TNamed {
 		/** @brief Open the event display.*/
 		void open();
 	
+	  void guiGoto();
 		void guiSetDrawParams();
 		void guiSelectFitterId(int val);
 		void guiSelectMmHandling(int val);
@@ -167,6 +168,8 @@ class EventDisplay : public TNamed {
     double errorScale_; //!
     std::vector< std::vector<genfit::Track*>* > events_; //!
 
+
+    TGNumberEntry* guiEvent;
 
     TGCheckButton* guiDrawGeometry_;
     bool drawGeometry_;

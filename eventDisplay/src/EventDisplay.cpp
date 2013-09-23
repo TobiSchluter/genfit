@@ -770,6 +770,11 @@ TEveBox* EventDisplay::boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, 
 void EventDisplay::makeLines(const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
     const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth, int markerPos)
 {
+  if (prevState == NULL || state == NULL) {
+    std::cerr << "prevState == NULL || state == NULL\n";
+    return;
+  }
+
   TVector3 pos, dir, oldPos, oldDir;
   rep->getPosDir(*state, pos, dir);
   rep->getPosDir(*prevState, oldPos, oldDir);
@@ -973,20 +978,24 @@ void EventDisplay::makeGui() {
   frmMain->SetCleanup(kDeepCleanup);
 
   TGLabel* lbl = 0;
+  TGTextButton* tb = 0;
   EventDisplay*  fh = EventDisplay::getInstance();
 
-  TGHorizontalFrame* hf = new TGHorizontalFrame(frmMain);
-  {
-    TString icondir( Form("%s/icons/", gSystem->Getenv("ROOTSYS")) );
-    TGPictureButton* b = 0;
+  TGHorizontalFrame* hf = new TGHorizontalFrame(frmMain); {
+    // evt number entry
+    lbl = new TGLabel(hf, "Go to event: ");
+    hf->AddFrame(lbl);
+    guiEvent = new TGNumberEntry(hf, 0, 9,999, TGNumberFormat::kNESInteger,
+                          TGNumberFormat::kNEANonNegative,
+                          TGNumberFormat::kNELLimitMinMax,
+                          0, 99999);
+    hf->AddFrame(guiEvent);
+    guiEvent->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiGoto()");
 
-    b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoBack.gif"));
-    hf->AddFrame(b);
-    b->Connect("Pressed()", "genfit::EventDisplay", fh, "prev(UInt_t)");
-
-    b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoForward.gif"));
-    hf->AddFrame(b);
-    b->Connect("Clicked()", "genfit::EventDisplay", fh, "next(UInt_t)");
+    // redraw button
+    tb = new TGTextButton(hf, "Redraw Event");
+    hf->AddFrame(tb);
+    tb->Connect("Clicked()", "genfit::EventDisplay", fh, "guiGoto()");
   }
   frmMain->AddFrame(hf);
 
@@ -1235,6 +1244,12 @@ void EventDisplay::makeGui() {
 
   browser->StopEmbedding();
   browser->SetTabTitle("Event Control", 0);
+}
+
+
+void EventDisplay::guiGoto(){
+  Long_t n = guiEvent->GetNumberEntry()->GetIntNumber();
+  gotoEvent(n);
 }
 
 
