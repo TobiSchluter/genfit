@@ -134,7 +134,7 @@ int main() {
   gRandom->SetSeed(14);
 
 
-  const unsigned int nEvents = 100;
+  const unsigned int nEvents = 1000;
   const unsigned int nMeasurements = 11;
   const double BField = 15.;       // kGauss
   const double momentum = 0.4;     // GeV
@@ -153,30 +153,34 @@ int main() {
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
-  const double outlierProb = 0;//0.1;
+  const double outlierProb = 0.1;
   const double outlierRange = 2;
 
-  const double hitSwitchProb = 0.; // probability to give hits to fit in wrong order (flip two hits)
+  const double hitSwitchProb = 0.1; // probability to give hits to fit in wrong order (flip two hits)
 
   const int splitTrack = 0; // for track merging testing:
 
   //const genfit::eFitterType fitterId = genfit::SimpleKalman;
-  const genfit::eFitterType fitterId = genfit::RefKalman;
-  //const genfit::eFitterType fitterId = genfit::DafRef;
+  //const genfit::eFitterType fitterId = genfit::RefKalman;
+  const genfit::eFitterType fitterId = genfit::DafRef;
+  //const genfit::eFitterType fitterId = genfit::DafSimple;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
   const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToReference;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToPrediction;
   const int nIter = 10; // max number of iterations
   const double dPVal = 1.E-3; // convergence criterion
 
   const bool resort = true;
+  const bool prefit = true; // make a simple Kalman iteration before the actual fit
 
   const bool twoReps = true; // test if everything works with more than one rep in the tracks
 
   const int pdg = 13;               // particle pdg code
 
   const bool smearPosMom = true;     // init the Reps with smeared pos and mom
-  const double chargeSwitchProb = 0.; // probability to seed with wrong charge sign
+  const double chargeSwitchProb = 0.1; // probability to seed with wrong charge sign
   const double posSmear = 10*resolution;     // cm
   const double momSmear = 5. /180.*TMath::Pi();     // rad
   const double momMagSmear = 0.2;   // relative
@@ -186,6 +190,7 @@ int main() {
   const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
 
   const bool debug = false;
+  const bool onlyDisplayFailed = true; // only load non-converged tracks into the display
 
   std::vector<genfit::eMeasurementType> measurementTypes;
 
@@ -217,11 +222,8 @@ int main() {
       break;
 
     case genfit::DafSimple:
-      {
-        genfit::AbsKalmanFitter* DafsKalman = new genfit::KalmanFitter();
-        DafsKalman->setMultipleMeasurementHandling(mmHandling);
-        fitter = new genfit::DAF(DafsKalman);
-      }
+      fitter = new genfit::DAF(false);
+      break;
       break;
     case genfit::DafRef:
       fitter = new genfit::DAF();
@@ -316,7 +318,11 @@ int main() {
   // main loop
   for (unsigned int iEvent=0; iEvent<nEvents; ++iEvent){
 
-      if (debug || (iEvent+1)%10==0) std::cout << "Event Nr. " << iEvent+1 << std::endl;
+      if (debug || (iEvent)%10==0)
+        std::cout << "Event Nr. " << iEvent << " ";
+      else std::cout << ". ";
+      if (debug || (iEvent+1)%10==0)
+        std::cout << "\n";
 
 
       // clean up
@@ -335,9 +341,9 @@ int main() {
       mom.SetMag(momentum);
       TMatrixDSym covM(6);
       for (int i = 0; i < 3; ++i)
-	covM(i,i) = resolution*resolution;
+        covM(i,i) = resolution*resolution;
       for (int i = 3; i < 6; ++i)
-	covM(i,i) = pow(resolution / nMeasurements / sqrt(3), 2);
+        covM(i,i) = pow(resolution / nMeasurements / sqrt(3), 2);
 
       if (debug) {
         std::cout << "start values \n";
@@ -469,6 +475,13 @@ int main() {
       // do the fit
       try{
         if (debug) std::cout<<"Starting the fitter"<<std::endl;
+
+        if (prefit) {
+          genfit::KalmanFitter prefitter(1, dPVal);
+          prefitter.setMultipleMeasurementHandling(genfit::weightedClosestToPrediction);
+          prefitter.processTrack(fitTrack, fitTrack->getCardinalRep());
+        }
+
         fitter->processTrack(fitTrack, resort);
         if (splitTrack > 0)
           fitter->processTrack(secondTrack, resort);
@@ -502,6 +515,13 @@ int main() {
       }
 
 
+      /*if (! fitTrack->getFitStatus(rep)->isFitConverged()) {
+        std::cout<<"Trying to fit again "<<std::endl;
+        fitTrack->deleteFitterInfo();
+        fitter->processTrack(fitTrack, resort);
+      }*/
+
+
       if (debug) {
         fitTrack->Print("C");
         fitTrack->getFitStatus(rep)->Print();
@@ -511,11 +531,10 @@ int main() {
       assert(secondTrack->checkConsistency());
 
 #ifndef VALGRIND
-      if (iEvent < 1000) {
+      if ((!onlyDisplayFailed && iEvent < 1000) ||
+          (onlyDisplayFailed && ! fitTrack->getFitStatus(rep)->isFitConverged())) {
         // add track to event display
-        std::vector<genfit::Track*> event;
-        event.push_back(fitTrack);
-        display->addEvent(event);
+        display->addEvent(fitTrack);
       }
 #endif
 
@@ -542,7 +561,6 @@ int main() {
 
 
       // check if fit was successful
-      //if (!fitter->isTrackFitted(fitTrack, rep)) {
       if (! fitTrack->getFitStatus(rep)->isFitConverged()) {
         std::cout << "Track could not be fitted successfully! Fit is not converged! \n";
         continue;
@@ -604,13 +622,8 @@ int main() {
       }
       catch (genfit::Exception& e) {
         std::cerr << e.what();
-        std::cout << "could not get TraclLen or TOF! \n";
+        std::cout << "could not get TrackLen or TOF! \n";
       }
-
-      // print covariance
-      if (debug) cov.Print();
-      else if((iEvent)%100==0)  cov.Print();
-
 
 
       // check l/r resolution and outlier rejection
@@ -788,5 +801,3 @@ int main() {
 
 
 }
-
-
