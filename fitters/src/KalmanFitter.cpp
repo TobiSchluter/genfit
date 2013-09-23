@@ -241,6 +241,11 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
 
   // construct measurementsOnPlane if forward fit
   if (direction == 1) {
+    // delete outdated stuff
+    fi->deleteForwardInfo();
+    fi->deleteBackwardInfo();
+
+    // construct new MeasurementsOnPlane
     std::vector< genfit::AbsMeasurement* > rawMeasurements =  tp->getRawMeasurements();
     // construct plane with first measurement
     SharedPlanePtr plane = rawMeasurements[0]->constructPlane(*currentState_);
