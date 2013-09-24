@@ -1769,19 +1769,28 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 #endif
 
       if (!calcOnlyLastRowOfJ) {
-	for (int iRow = 0; iRow < 7; ++iRow) {
-	  for (int iCol = 0; iCol < 7; ++iCol) {
-	    double val = (iRow == iCol);
-	    if (iRow < 3) {
-	      if (iCol < 3) {
-		val -= An * SU[iRow] * A[iCol];
-	      } else if (iCol < 6) {
-		val -= An * SU[iRow] * SA[iCol-3];
-	      }
-	    }
-	    noiseProjection.GetMatrixArray()[iRow*7 + iCol] = val;
-	  }
-	}
+        for (int iRow = 0; iRow < 7; ++iRow) {
+          for (int iCol = 0; iCol < 7; ++iCol) {
+            double val = (iRow == iCol);
+            if (iRow < 3) {
+              if (iCol < 3) {
+                val -= An * SU[iRow] * A[iCol];
+              } else if (iCol < 6) {
+                val -= An * SU[iRow] * SA[iCol-3];
+              }
+            }
+            noiseProjection.GetMatrixArray()[iRow*7 + iCol] = val;
+          }
+        }
+
+        // noiseProjection will look like this:
+        // x x x x x x 0
+        // x x x x x x 0
+        // x x x x x x 0
+        // 0 0 0 1 0 0 0
+        // 0 0 0 0 1 0 0
+        // 0 0 0 0 0 1 0
+        // 0 0 0 0 0 0 1
       }
 
     }
@@ -2179,15 +2188,22 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         calcJ_Mp_7x5(intermediatePlane.getU(), intermediatePlane.getV(), intermediatePlane.getNormal(), *((M1x3*) &state7[3]));
       }
 
+      // Project covariance down to 5D
       RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp_7x5_, J_MMT_, J_pM_5x7_, lastStep->jac_);
 
       if( checkJacProj == true ){
+        // TODO: simplify the calculation (exploit properties of noiseProjection and make a function in RKTools)
+
         //project the noise onto the destPlane
-        TMatrixDSym projectedNoise(7);
-        projectedNoise.SetMatrixArray(noiseArray_);
+        TMatrixDSym projectedNoise(7, noiseArray_);
         projectedNoise.SimilarityT(noiseProjection);
+        double* projectedNoiseArray = projectedNoise.GetMatrixArray();
+        // copy result back to noiseArray_
+        for (unsigned int i=0; i<7*7; ++i)
+          noiseArray_[i] = projectedNoiseArray[i];
       }
 
+      // Project noise down to 5D
       RKTools::J_MpTxcov7xJ_Mp(J_Mp_7x5_, noiseArray_, lastStep->noise_);
 
 
