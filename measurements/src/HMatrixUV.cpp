@@ -1,5 +1,5 @@
-/* Copyright 2008-2010, Technische Universitaet Muenchen,
-   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
+/* Copyright 2013, Technische Universitaet Muenchen, Ludwig-Maximilians-Universität München
+   Authors: Johannes Rauch, Tobias Schlüter
 
    This file is part of GENFIT.
 
@@ -17,8 +17,9 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <HMatrixUV.h>
-
+#include "HMatrixUV.h"
+#include <cassert>
+#include <alloca.h>
 
 namespace genfit {
 
@@ -71,15 +72,20 @@ TMatrixD HMatrixUV::MHt(const TMatrixD& M) const {
 
 void HMatrixUV::HMHt(TMatrixDSym& M) const {
   assert (M.GetNrows() == 5);
-
   double* MatArray = M.GetMatrixArray();
 
-  for (unsigned int i = 0; i < 2; ++i) {
-    MatArray[i] = MatArray[18+i];
-    MatArray[5+i] = MatArray[23+i];
-  }
+  //
+  //  HMH^t = ( M_33  M_34 ) where M_34 == M_43
+  //          ( M_43  M_44 )
+  //
+  double uu = MatArray[3*5 + 3];
+  double uv = MatArray[3*5 + 4];
+  double vv = MatArray[4*5 + 4];
 
   M.ResizeTo(2,2);
+  MatArray = M.GetMatrixArray();
+  MatArray[0] = uu; MatArray[1] = uv;
+  MatArray[2] = uv; MatArray[3] = vv;
 }
 
 

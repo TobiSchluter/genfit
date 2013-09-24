@@ -1,5 +1,5 @@
-/* Copyright 2008-2010, Technische Universitaet Muenchen,
-   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
+/* Copyright 2013, Technische Universitaet Muenchen,
+   Authors: Johannes Rauch
 
    This file is part of GENFIT.
 
@@ -17,7 +17,9 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <HMatrixU.h>
+#include "HMatrixU.h"
+#include <cassert>
+#include <alloca.h>
 
 
 namespace genfit {

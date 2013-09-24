@@ -23,8 +23,7 @@
 #ifndef genfit_HMatrixUV_h
 #define genfit_HMatrixUV_h
 
-#include "AbsMeasurement.h"
-
+#include "AbsHMatrix.h"
 
 namespace genfit {
 
