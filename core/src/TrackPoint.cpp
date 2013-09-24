@@ -145,25 +145,6 @@ TrackPoint::~TrackPoint() {
 }*/
 
 
-std::vector< genfit::AbsMeasurement* > TrackPoint::getRawMeasurements() {
-  // FIXME: Change type?  Why is this needed?
-  std::vector<genfit::AbsMeasurement*> vec;
-  vec.reserve(rawMeasurements_.size());
-  for (size_t i = 0; i < rawMeasurements_.size(); ++i)
-    vec.push_back(rawMeasurements_[i]);
-  return vec;
-
-  /*std::vector< genfit::AbsMeasurement* > retVal;
-  retVal.reserve(rawMeasurements_.size());
-
-  for (std::vector<AbsMeasurement*>::const_iterator it = rawMeasurements_.begin(); it!=rawMeasurements_.end(); ++it) {
-    retVal.push_back(*it);
-  }
-
-  return retVal;*/
-}
-
-
 AbsMeasurement* TrackPoint::getRawMeasurement(int i) const {
   if (i < 0)
     i += rawMeasurements_.size();

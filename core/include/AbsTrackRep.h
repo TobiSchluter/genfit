@@ -19,6 +19,11 @@ namespace genfit {
 struct MatStep {
   MaterialProperties materialProperties_;
   double stepSize_;
+
+  MatStep() {
+    stepSize_ = 0;
+  }
+
 };
 
 class StateOnPlane;

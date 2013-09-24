@@ -73,18 +73,6 @@ KalmanFitterInfo* KalmanFitterInfo::clone() const {
 }
 
 
-std::vector< genfit::MeasurementOnPlane* > KalmanFitterInfo::getMeasurementsOnPlane() const {
-  std::vector< genfit::MeasurementOnPlane* > retVal;
-  retVal.reserve(measurementsOnPlane_.size());
-
-  for (std::vector<MeasurementOnPlane*>::const_iterator it = measurementsOnPlane_.begin(); it != measurementsOnPlane_.end(); ++it) {
-    retVal.push_back(*it);
-  }
-
-  return retVal;
-}
-
-
 MeasurementOnPlane KalmanFitterInfo::getAvgWeightedMeasurementOnPlane(bool ignoreWeights) const {
 
   MeasurementOnPlane retVal(*(measurementsOnPlane_[0]));
@@ -170,10 +158,10 @@ const MeasurementOnPlane* KalmanFitterInfo::getClosestMeasurementOnPlane(const S
 
 
 std::vector<double> KalmanFitterInfo::getWeights() const {
-  std::vector<double> retVal;
+  std::vector<double> retVal(getNumMeasurements());
 
   for (unsigned int i=0; i<getNumMeasurements(); ++i) {
-    retVal.push_back(getMeasurementOnPlane(i)->getWeight());
+    retVal[i] = getMeasurementOnPlane(i)->getWeight();
   }
 
   return retVal;

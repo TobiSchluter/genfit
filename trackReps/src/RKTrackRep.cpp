@@ -1187,19 +1187,12 @@ double RKTrackRep::RKPropagate(M1x7& state7,
 
 
 void RKTrackRep::initArrays() const {
-  //! now invalid:
-  //~ noiseArray_.fill(0);
-  //~ J_MMT_.fill(0);
-  //~ J_pM_5x7_.fill(0);
-  //~ J_pM_5x6_.fill(0);
-  //~ J_Mp_7x5_.fill(0);
-  //~ J_Mp_6x5_.fill(0);
-  for(int i = 0; i < 7*7; ++i) noiseArray_[i] = 0;
-  for(int i = 0; i < 7*7; ++i) J_MMT_[i] = 0;
-  for(int i = 0; i < 5*7; ++i) J_pM_5x7_[i] = 0;
-  for(int i = 0; i < 5*6; ++i) J_pM_5x6_[i] = 0;
-  for(int i = 0; i < 7*5; ++i) J_Mp_7x5_[i] = 0;
-  for(int i = 0; i < 6*5; ++i) J_Mp_6x5_[i] = 0;
+  memset(noiseArray_, 0x00, 7*7*sizeof(double));
+  memset(J_MMT_,      0x00, 7*7*sizeof(double));
+  memset(J_pM_5x7_,   0x00, 5*7*sizeof(double));
+  memset(J_pM_5x6_,   0x00, 5*6*sizeof(double));
+  memset(J_Mp_7x5_,   0x00, 7*5*sizeof(double));
+  memset(J_Mp_6x5_,   0x00, 6*5*sizeof(double));
 
   RKSteps_.reserve(100);
   ExtrapSteps_.reserve(100);
@@ -2168,7 +2161,9 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
     // fill ExtrapSteps_
     if (fillExtrapSteps) {
-      ExtrapStep extrapStep;
+      static const ExtrapStep defaultExtrapStep;
+      ExtrapSteps_.push_back(defaultExtrapStep);
+      std::vector<ExtrapStep>::iterator lastStep = ExtrapSteps_.end() - 1;
 
       // calc J_pM
       if (atPlane) {
@@ -2184,7 +2179,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         calcJ_Mp_7x5(intermediatePlane.getU(), intermediatePlane.getV(), intermediatePlane.getNormal(), *((M1x3*) &state7[3]));
       }
 
-      RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp_7x5_, J_MMT_, J_pM_5x7_, extrapStep.jac_);
+      RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp_7x5_, J_MMT_, J_pM_5x7_, lastStep->jac_);
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane
@@ -2193,9 +2188,8 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
         projectedNoise.SimilarityT(noiseProjection);
       }
 
-      RKTools::J_MpTxcov7xJ_Mp(J_Mp_7x5_, noiseArray_, extrapStep.noise_);
+      RKTools::J_MpTxcov7xJ_Mp(J_Mp_7x5_, noiseArray_, lastStep->noise_);
 
-      ExtrapSteps_.push_back(extrapStep);
 
       /*#ifdef DEBUG
       std::cout<<"ExtrapSteps \n";

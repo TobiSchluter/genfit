@@ -604,8 +604,8 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
       // get MeasurementsOnPlane
       std::vector<double> oldWeights = fitterInfo->getWeights();
-      std::vector<AbsMeasurement*> rawMeasurements = trackPoint->getRawMeasurements();
-      for ( std::vector< genfit::AbsMeasurement* >::iterator measurement = rawMeasurements.begin(), lastMeasurement = rawMeasurements.end(); measurement != lastMeasurement; ++measurement) {
+      const std::vector<AbsMeasurement*>& rawMeasurements = trackPoint->getRawMeasurements();
+      for ( std::vector< genfit::AbsMeasurement* >::const_iterator measurement = rawMeasurements.begin(), lastMeasurement = rawMeasurements.end(); measurement != lastMeasurement; ++measurement) {
         assert((*measurement) != NULL);
         if (measurement == rawMeasurements.begin())
           fitterInfo->setMeasurementsOnPlane((*measurement)->constructMeasurementsOnPlane(rep, plane));

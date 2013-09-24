@@ -60,7 +60,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   KalmanFittedStateOnPlane* getForwardUpdate() const {return forwardUpdate_.get();}
   KalmanFittedStateOnPlane* getBackwardUpdate() const {return backwardUpdate_.get();}
   KalmanFittedStateOnPlane* getUpdate(int direction) const {if (direction >=0) return forwardUpdate_.get(); return backwardUpdate_.get();}
-  std::vector< genfit::MeasurementOnPlane* > getMeasurementsOnPlane() const;
+  const std::vector< genfit::MeasurementOnPlane* >& getMeasurementsOnPlane() const {return measurementsOnPlane_;}
   MeasurementOnPlane* getMeasurementOnPlane(int i = 0) const {if (i<0) i += measurementsOnPlane_.size(); return measurementsOnPlane_.at(i);}
   //! Get weighted mean of all measurements.
   //! @param ignoreWeights If set, the weights of the individual measurements will be ignored (they will be treated as if they all had weight 1)

@@ -40,6 +40,10 @@ struct RKStep {
   MatStep matStep_; // material properties and stepsize
   M1x7 state7_; // 7D state vector
   StepLimits limits_;
+
+  RKStep() {
+    memset(state7_, 0x00, 7*sizeof(double));
+  }
 };
 
 
@@ -49,6 +53,11 @@ struct RKStep {
 struct ExtrapStep {
   M5x5 jac_; // 5D jacobian of transport
   M5x5 noise_; // 5D noise matrix
+
+  ExtrapStep() {
+    memset(jac_,   0x00, 5*5*sizeof(double));
+    memset(noise_, 0x00, 5*5*sizeof(double));
+  }
 };
 
 

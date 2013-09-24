@@ -84,7 +84,7 @@ class TrackPoint : public TObject {
   Track* getTrack() const {return track_;}
   void setTrack(Track* track) {track_ = track;}
 
-  std::vector< genfit::AbsMeasurement* > getRawMeasurements();
+  const std::vector< genfit::AbsMeasurement* >& getRawMeasurements() {return rawMeasurements_;}
   AbsMeasurement* getRawMeasurement(int i = 0) const;
   unsigned int getNumRawMeasurements() const {return rawMeasurements_.size();}
   bool hasRawMeasurements() const {return (rawMeasurements_.size() != 0);}

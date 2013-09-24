@@ -117,6 +117,7 @@ Track::Track(const Track& rhs)
     oldRepNewRep[(*it)] = newRep;
   }
 
+  trackPoints_.reserve(rhs.trackPoints_.size());
   for (std::vector<TrackPoint*>::const_iterator it=rhs.trackPoints_.begin(); it!=rhs.trackPoints_.end(); ++it) {
     trackPoints_.push_back(new TrackPoint(**it, oldRepNewRep));
     trackPoints_.back()->setTrack(this);
@@ -1126,7 +1127,7 @@ bool Track::checkConsistency() const {
     }
 
     // check rawMeasurements
-    std::vector<AbsMeasurement*> rawMeasurements = (*tp)->getRawMeasurements();
+    const std::vector<AbsMeasurement*>& rawMeasurements = (*tp)->getRawMeasurements();
     for (std::vector<AbsMeasurement*>::const_iterator m = rawMeasurements.begin(); m != rawMeasurements.end(); ++m) {
       // check for NULL
       if ((*m) == NULL) {
@@ -1234,6 +1235,7 @@ void Track::trackHasChanged() {
 
 void Track::fillPointsWithMeasurement() {
   trackPointsWithMeasurement_.clear();
+  trackPointsWithMeasurement_.reserve(trackPoints_.size());
 
   for (std::vector<TrackPoint*>::const_iterator it = trackPoints_.begin(); it != trackPoints_.end(); ++it) {
     if ((*it)->hasRawMeasurements()) {
