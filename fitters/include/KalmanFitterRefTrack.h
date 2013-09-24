@@ -82,6 +82,21 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
   bool refitAll_; // always refit all points or only if reference states have changed
   double deltaChi2Ref_; // reference track update cut
 
+  // aux variables for prepareTrack
+  TMatrixD FTransportMatrix_; //!
+  TMatrixD BTransportMatrix_; //!
+  TMatrixDSym FNoiseMatrix_; //!
+  TMatrixDSym BNoiseMatrix_; //!
+  TVectorD forwardDeltaState_; //!
+  TVectorD backwardDeltaState_; //!
+
+  // aux variables for processTrackPoint
+  TVectorD p_; //!
+  TMatrixDSym C_; //!
+  TMatrixDSym covSumInv_; //!
+  TVectorD res_; //!
+  TMatrixDSym Rinv_; //!
+
  public:
   ClassDef(KalmanFitterRefTrack, 1)
 
