@@ -169,11 +169,12 @@ int main() {
   const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToReference;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToPrediction;
-  const int nIter = 10; // max number of iterations
+  const int nIter = 20; // max number of iterations
   const double dPVal = 1.E-3; // convergence criterion
 
   const bool resort = true;
   const bool prefit = true; // make a simple Kalman iteration before the actual fit
+  const bool refit  = true; // if fit did not converge, try to fit again
 
   const bool twoReps = true; // test if everything works with more than one rep in the tracks
 
@@ -224,20 +225,19 @@ int main() {
     case genfit::DafSimple:
       fitter = new genfit::DAF(false);
       break;
-      break;
     case genfit::DafRef:
       fitter = new genfit::DAF();
       break;
-
   }
+  fitter->setMaxIterations(nIter);
 
-  if (dynamic_cast<genfit::DAF*>(fitter) != NULL) {
+  /*if (dynamic_cast<genfit::DAF*>(fitter) != NULL) {
     //static_cast<genfit::DAF*>(fitter)->setBetas(100, 50, 25, 12, 6, 3, 1, 0.5, 0.1);
     //static_cast<genfit::DAF*>(fitter)->setBetas(81, 8, 4, 0.5, 0.1);
     static_cast<genfit::DAF*>(fitter)->setAnnealingScheme(100, 0.1, 5);
     //static_cast<genfit::DAF*>(fitter)->setConvergenceDeltaWeight(0.0001);
     //fitter->setMaxIterations(nIter);
-  }
+  }*/
 
 
   // init MeasurementCreator
@@ -515,11 +515,11 @@ int main() {
       }
 
 
-      /*if (! fitTrack->getFitStatus(rep)->isFitConverged()) {
+      if (refit && !fitTrack->getFitStatus(rep)->isFitConverged()) {
         std::cout<<"Trying to fit again "<<std::endl;
-        fitTrack->deleteFitterInfo();
         fitter->processTrack(fitTrack, resort);
-      }*/
+      }
+
 
 
       if (debug) {
