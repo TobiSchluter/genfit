@@ -78,7 +78,7 @@ const AbsHMatrix* PlanarMeasurement::constructHMatrix(const AbsTrackRep* rep) co
     return new HMatrixUV();
 
   default:
-    Exception exc("SpacepointMeasurement default implementation can only handle 1D (strip) or 2D (pixel) measurements!", __LINE__,__FILE__);
+    Exception exc("PlanarMeasurement default implementation can only handle 1D (strip) or 2D (pixel) measurements!", __LINE__,__FILE__);
     throw exc;
   }
 
