@@ -1200,6 +1200,9 @@ void RKTrackRep::initArrays() const {
   for(int i = 0; i < 5*6; ++i) J_pM_5x6_[i] = 0;
   for(int i = 0; i < 7*5; ++i) J_Mp_7x5_[i] = 0;
   for(int i = 0; i < 6*5; ++i) J_Mp_6x5_[i] = 0;
+
+  RKSteps_.reserve(100);
+  ExtrapSteps_.reserve(100);
 }
 
 
@@ -1962,7 +1965,8 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
 
   // call stepper and reduce stepsize if step not too small
-  RKSteps_.push_back( RKStep() );
+  static const RKStep defaultRKStep;
+  RKSteps_.push_back( defaultRKStep );
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
   //!invalid:  RKSteps_.back().state7_ = { state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] };
   for(int n = 0; n < 1*7; ++n) lastStep->state7_[n] = state7[n];
