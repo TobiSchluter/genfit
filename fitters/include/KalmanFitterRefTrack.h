@@ -74,7 +74,7 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
    * Does NOT remove forward and backward info, but returns from/to where they have to be removed later
    * Return if anything has changed.
    */
-  bool removeOutdated(Track* tr, const AbsTrackRep* rep, int& notChangedUntil, int& notChangedFrom) const;
+  bool removeOutdated(Track* tr, const AbsTrackRep* rep, int& notChangedUntil, int& notChangedFrom);
 
   //! If refitAll_, remove all information.
   void removeForwardBackwardInfo(Track* tr, const AbsTrackRep* rep, int notChangedUntil, int notChangedFrom) const;
@@ -94,8 +94,10 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
   TVectorD p_; //!
   TMatrixDSym C_; //!
   TMatrixDSym covSumInv_; //!
-  TVectorD res_; //!
   TMatrixDSym Rinv_; //!
+
+  // aux variables for processTrackPoint and removeOutdated
+  TVectorD res_; //!
 
  public:
   ClassDef(KalmanFitterRefTrack, 1)

@@ -689,7 +689,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
 
 bool
-KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& notChangedUntil, int& notChangedFrom) const {
+KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& notChangedUntil, int& notChangedFrom) {
 
   if (debugLvl_ > 0)
     std::cout << "KalmanFitterRefTrack::removeOutdated \n";
@@ -732,12 +732,15 @@ KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& not
 
 
       const MeasuredStateOnPlane& smoothedState = fitterInfo->getFittedState(true);
-      TVectorD res(smoothedState.getState() - fitterInfo->getReferenceState()->getState());
+      res_.ResizeTo(smoothedState.getState());
+      res_ = smoothedState.getState();
+      res_ -= fitterInfo->getReferenceState()->getState();
       double chi2(0);
 
       // calculate chi2, ignore off diagonals
+      double* resArray = res_.GetMatrixArray();
       for (int j=0; j<smoothedState.getCov().GetNcols(); ++j)
-        chi2 += res(j)*res(j) / smoothedState.getCov()(j,j);
+        chi2 += resArray[j]*resArray[j] / smoothedState.getCov()(j,j);
 
       if (chi2 < deltaChi2Ref_) {
         // reference state is near smoothed state ->  do not update reference state
