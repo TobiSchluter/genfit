@@ -1188,6 +1188,7 @@ double RKTrackRep::RKPropagate(M1x7& state7,
 
 void RKTrackRep::initArrays() const {
   memset(noiseArray_, 0x00, 7*7*sizeof(double));
+  memset(noiseProjection_, 0x00, 7*7*sizeof(double));
   memset(J_MMT_,      0x00, 7*7*sizeof(double));
   memset(J_pM_5x7_,   0x00, 5*7*sizeof(double));
   memset(J_pM_5x6_,   0x00, 5*6*sizeof(double));
@@ -1542,7 +1543,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
                         M7x7* jacobianT,
                         double& coveredDistance,
                         bool& checkJacProj,
-                        TMatrixD& noiseProjection,
+                        M7x7& noiseProjection,
                         StepLimits& limits,
                         bool onlyOneStep,
                         bool calcOnlyLastRowOfJ) const {
@@ -1779,7 +1780,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
                 val -= An * SU[iRow] * SA[iCol-3];
               }
             }
-            noiseProjection.GetMatrixArray()[iRow*7 + iCol] = val;
+            noiseProjection[iRow*7 + iCol] = val;
           }
         }
 
@@ -2041,7 +2042,6 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
   double coveredDistance(0.);
   double dqop(0.);
-  TMatrixD noiseProjection(7,7);
 
   const TVector3 W(destPlane.getNormal());
   M1x4 SU = {W.X(), W.Y(), W.Z(), destPlane.distance(0., 0., 0.)};
@@ -2106,7 +2106,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     limits_.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
     if( ! RKutta(SU, destPlane, charge, state7, &J_MMT_,
-        coveredDistance, checkJacProj, noiseProjection,
+        coveredDistance, checkJacProj, noiseProjection_,
         limits_, onlyOneStep, !fillExtrapSteps) ) {
       Exception exc("RKTrackRep::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
@@ -2192,15 +2192,8 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp_7x5_, J_MMT_, J_pM_5x7_, lastStep->jac_);
 
       if( checkJacProj == true ){
-        // TODO: simplify the calculation (exploit properties of noiseProjection and make a function in RKTools)
-
         //project the noise onto the destPlane
-        TMatrixDSym projectedNoise(7, noiseArray_);
-        projectedNoise.SimilarityT(noiseProjection);
-        double* projectedNoiseArray = projectedNoise.GetMatrixArray();
-        // copy result back to noiseArray_
-        for (unsigned int i=0; i<7*7; ++i)
-          noiseArray_[i] = projectedNoiseArray[i];
+        RKTools::NpT_N_Np(noiseProjection_, noiseArray_);
       }
 
       // Project noise down to 5D

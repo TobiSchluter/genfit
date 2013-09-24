@@ -20,6 +20,7 @@
 #include <RKTools.h>
 
 #include <TMatrixD.h>
+#include <TMatrixDSym.h>
 
 #include <iostream>
 #include <string.h>
@@ -543,6 +544,34 @@ void RKTools::J_pMTTxJ_MMTTxJ_MpTT(const M7x5& J_pMT, const M7x7& J_MMT, const M
   J_pp[4*5+2] = (J_pMT[0*5+4] * J_MMT[3*7+0] + J_pMT[1*5+4] * J_MMT[3*7+1] + J_pMT[2*5+4] * J_MMT[3*7+2]) * J_MpT[2*7+3] + (J_pMT[0*5+4] * J_MMT[4*7+0] + J_pMT[1*5+4] * J_MMT[4*7+1] + J_pMT[2*5+4] * J_MMT[4*7+2]) * J_MpT[2*7+4] + (J_pMT[0*5+4] * J_MMT[5*7+0] + J_pMT[1*5+4] * J_MMT[5*7+1] + J_pMT[2*5+4] * J_MMT[5*7+2]) * J_MpT[2*7+5];
   J_pp[4*5+3] = (J_pMT[0*5+4] * J_MMT[0*7+0] + J_pMT[1*5+4] * J_MMT[0*7+1] + J_pMT[2*5+4] * J_MMT[0*7+2]) * J_MpT[3*7+0] + (J_pMT[0*5+4] * J_MMT[1*7+0] + J_pMT[1*5+4] * J_MMT[1*7+1] + J_pMT[2*5+4] * J_MMT[1*7+2]) * J_MpT[3*7+1] + (J_pMT[0*5+4] * J_MMT[2*7+0] + J_pMT[1*5+4] * J_MMT[2*7+1] + J_pMT[2*5+4] * J_MMT[2*7+2]) * J_MpT[3*7+2];
   J_pp[4*5+4] = (J_pMT[0*5+4] * J_MMT[0*7+0] + J_pMT[1*5+4] * J_MMT[0*7+1] + J_pMT[2*5+4] * J_MMT[0*7+2]) * J_MpT[4*7+0] + (J_pMT[0*5+4] * J_MMT[1*7+0] + J_pMT[1*5+4] * J_MMT[1*7+1] + J_pMT[2*5+4] * J_MMT[1*7+2]) * J_MpT[4*7+1] + (J_pMT[0*5+4] * J_MMT[2*7+0] + J_pMT[1*5+4] * J_MMT[2*7+1] + J_pMT[2*5+4] * J_MMT[2*7+2]) * J_MpT[4*7+2];
+
+}
+
+
+void RKTools::NpT_N_Np(const M7x7& Np, M7x7& N) {
+
+  // Np
+  // x x x x x x 0
+  // x x x x x x 0
+  // x x x x x x 0
+  // 0 0 0 1 0 0 0
+  // 0 0 0 0 1 0 0
+  // 0 0 0 0 0 1 0
+  // 0 0 0 0 0 0 1
+
+  TMatrixDSym noiseProjection(7, Np);
+  TMatrixDSym projectedNoise(7, N);
+
+  projectedNoise.SimilarityT(noiseProjection);
+
+  double* projectedNoiseArray = projectedNoise.GetMatrixArray();
+
+  // copy result back to N
+  for (unsigned int i=0; i<7*7; ++i)
+    N[i] = projectedNoiseArray[i];
+
+
+  // TODO: implement simplified calculation
 
 }
 
