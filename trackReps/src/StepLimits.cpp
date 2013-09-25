@@ -29,6 +29,18 @@ namespace genfit {
 
 const double StepLimits::maxLimit_ = 99.E99;
 
+
+StepLimits& StepLimits::operator=(const StepLimits& other) {
+  for (unsigned int i=1; i<ENUM_NR_ITEMS; ++i) {
+    limits_[i] = other.limits_[i];
+  }
+
+  stepSign_ = other.stepSign_;
+
+  return *this;
+}
+
+
 std::pair<StepLimitType, double> StepLimits::getLowestLimit(double margin) const {
 
   double lowest(maxLimit_);
