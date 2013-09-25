@@ -24,6 +24,8 @@
 #ifndef genfit_Tools_h
 #define genfit_Tools_h
 
+#include <TVectorD.h>
+#include <TMatrixD.h>
 #include <TMatrixDSym.h>
 
 /**
@@ -39,6 +41,17 @@ namespace tools {
   /** @brief Same, replacing its argument.
    */
   void invertMatrix(TMatrixDSym& mat, double* determinant = NULL);
+
+  /** @brief Solves R^t x = b, replacing b with the solution for x.  R is
+   *  assumed to be upper diagonal.
+   */
+  bool transposedForwardSubstitution(const TMatrixD& R, TVectorD& b);
+
+  /** @brief Replaces A with an upper right matrix connected to A by
+   *  an orthongonal transformation.  I.e., it computes R from a QR
+   *  decomposition of A = QR, replacing A.
+   */
+void QR(TMatrixD& A);
 
 } /* End of namespace tools */
 } /* End of namespace genfit */

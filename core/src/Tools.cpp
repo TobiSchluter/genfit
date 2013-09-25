@@ -22,6 +22,7 @@
 #include <cmath>
 #include <memory>
 #include <typeinfo>
+#include <cassert>
 
 #include <TDecompChol.h>
 #include <TMatrixTSymCramerInv.h>
@@ -189,6 +190,79 @@ void tools::invertMatrix(TMatrixDSym& mat, double* determinant){
     invertAlgo.Det(d1, d2);
     *determinant = ldexp(d1, d2);
   }
+}
+
+
+// Solves R^T x = b, replaces b with the result x.  R is assumed
+// to be upper-diagonal.  This is forward substitution, but with
+// indices flipped.
+bool tools::transposedForwardSubstitution(const TMatrixD& R, TVectorD& b)
+{
+  size_t n = R.GetNrows();
+  for (unsigned int i = 0; i < n; ++i) {
+    double sum = b(i);
+    for (unsigned int j = 0; j < i; ++j) {
+      sum -= b(j)*R(j,i);  // already replaced previous elements in b.
+    }
+    if (R(i,i) == 0)
+      return false;
+    b(i) = sum / R(i,i);
+  }
+  return true;
+}
+
+// This replaces A with an upper right matrix connected to A by a
+// orthogonal transformation.  I.e., it computes the R from a QR
+// decomposition of A replacing A.
+void tools::QR(TMatrixD& A)
+{
+  int nCols = A.GetNcols();
+  int nRows = A.GetNrows();
+  assert(nRows >= nCols);
+  // This uses Businger and Golub's algorithm from Handbook for
+  // Automatical Computation, Vol. 2, Chapter 8, but without
+  // pivoting.  I.e., we stop at the middle of page 112.  We don't
+  // explicitly calculate the orthogonal matrix.
+
+  double *const ak = A.GetMatrixArray();
+  // No variable-length arrays in C++, alloca does the exact same thing ...
+  double *const u = (double *)alloca(sizeof(double)*nRows);
+
+  // Main loop over matrix columns.
+  for (int k = 0; k < nCols; ++k) {
+    double akk = ak[k*nCols + k];
+
+    double sum = akk*akk;
+    // Put together a housholder transformation.
+    for (int i = k + 1; i < nRows; ++i) {
+      sum += ak[i*nCols + k]*ak[i*nCols + k];
+      u[i] = ak[i*nCols + k];
+    }
+    double sigma = sqrt(sum);
+    double beta = 1/(sum + sigma*fabs(akk));
+    // The algorithm uses only the uk[i] for i >= k.
+    u[k] = copysign(sigma + fabs(akk), akk);
+
+    // Calculate y (again taking into account zero entries).  This
+    // encodes how the (sub)matrix changes by the householder transformation.
+    for (int i = k; i < nCols; ++i) {
+      double y = 0;
+      for (int j = k; j < nRows; ++j)
+	y += u[j]*ak[j*nCols + i];
+      y *= beta;
+      // ... and apply the changes.
+      for (int j = k; j < nRows; ++j)
+	ak[j*nCols + i] -= u[j]*y; //y[j];
+    }
+  }
+
+  // Zero below diagonal
+  for (int i = 1; i < nCols; ++i)
+    for (int j = 0; j < i; ++j)
+      ak[i*nCols + j] = 0.;
+  for (int i = nCols; i < nRows; ++i)
+    for (int j = 0; j < nCols; ++j)
+      ak[i*nCols + j] = 0.;
 }
 
 } /* End of namespace genfit */

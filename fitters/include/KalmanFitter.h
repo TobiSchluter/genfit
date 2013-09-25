@@ -49,8 +49,10 @@ class KalmanFitter : public AbsKalmanFitter {
 
  public:
 
-  KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
-    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), currentState_(NULL) {}
+  KalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3, bool squareRootFormalism = false)
+    : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), currentState_(NULL),
+      squareRootFormalism_(squareRootFormalism)
+  {}
 
   ~KalmanFitter() {}
 
@@ -68,6 +70,8 @@ class KalmanFitter : public AbsKalmanFitter {
 #else
   MeasuredStateOnPlane* currentState_;
 #endif
+
+  bool squareRootFormalism_;
 
  public:
   ClassDef(KalmanFitter,1)

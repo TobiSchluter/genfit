@@ -37,53 +37,6 @@
 
 using namespace genfit;
 
-namespace {
-  const bool squareRootFormalism = false;
-
-#if 0
-// This is kept as reference.  We don't use this, only the derivative
-// version for transposed matrices below.
-//
-// Solves L x = b for lower-diagonal L by forward substitution.  b is
-// replaced.
-bool
-forwardSubstitution(const TMatrixD& L, TVectorD& b)
-{
-  size_t n = L.GetNrows();
-  for (size_t i = 0; i < n; ++i)
-    {
-      double sum = b(i);
-      for (int j = 0; j < i; ++j)
-	{
-	  sum -= L(i,j)*b(j);  // already replaced previous elements in b.
-	}
-      if (L(i,i) == 0)
-	return false;
-      b(i) = sum / L(i,i);
-    }
-  return true;
-}
-#endif
-
-// Solves R^T x = b, replaces b with the result x.  R is assumed
-// to be upper-diagonal.
-bool
-transposedForwardSubstitution(const TMatrixD& R, TVectorD& b)
-{
-  size_t n = R.GetNrows();
-  for (unsigned int i = 0; i < n; ++i) {
-    double sum = b(i);
-    for (unsigned int j = 0; j < i; ++j) {
-      sum -= b(j)*R(j,i);  // already replaced previous elements in b.
-    }
-    if (R(i,i) == 0)
-      return false;
-    b(i) = sum / R(i,i);
-  }
-  return true;
-}
-
-} // end of namespace
 
 void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
     double& chi2, double& ndf,
@@ -322,7 +275,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   }
   // If hit, do Kalman algebra.
 
-  if (squareRootFormalism)
+  if (squareRootFormalism_)
     {
       // Square Root formalism, Anderson & Moore, 6.5.12 gives the
       // formalism for combined update and prediction in that
@@ -353,25 +306,22 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
       const TVectorD& evs(eig.GetEigenValues());
       // Multiplication with a diagonal matrix ... eigenvalues are
       // sorted in descending order.
-      int iRow = 0;
-      for (iRow = 0; iRow < Q.GetNrows(); ++iRow) {
-        double ev = evs(iRow) > 0 ? sqrt(evs(iRow)) : 0;
+      int iCol = 0;
+      for (; iCol < Q.GetNcols(); ++iCol) {
+        double ev = evs(iCol) > 0 ? sqrt(evs(iCol)) : 0;
         //FIXME, see below we do no resizing as of now
-        //if (ev == 0)
-        //break;
-        for (int j = 0; j < Q.GetNcols(); ++j)
-          Q(iRow,j) *= ev;
+        if (ev == 0)
+	  break;
+        for (int j = 0; j < Q.GetNrows(); ++j)
+          Q(j,iCol) *= ev;
       }
-      /*
-      // FIXME this is disabled because ROOT apparently cannot
-      //resize a matrix that is kept in its inline memory???
-      if (iRow < Q.GetNrows())
-      {
+      if (iCol < Q.GetNrows()) {
         // Hit zero eigenvalue, resize matrix ...
-        Q.ResizeTo(iRow, Q.GetNrows());
+        Q.ResizeTo(iCol, Q.GetNcols());
       }
-      */
-      //Q.Print();
+      // This gives the original matrix:
+      // TMatrixDSym(TMatrixDSym::kAtA,TMatrixD(TMatrixD::kTransposed,Q)).Print();
+      // i.e., we now have the transposed we need.
 
       //std::cout << "cov root" << std::endl;
       TDecompChol oldCovDecomp(oldCov);
@@ -382,28 +332,17 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
       decompR.Decompose();
 
       TMatrixD pre(S.GetNrows() + Q.GetNrows() + V.GetNrows(),
-		  S.GetNcols() + V.GetNcols());
-      pre.SetSub(0, V.GetNcols(),
-		  TMatrixD(S, TMatrixD::kMultTranspose, F));
-      pre.SetSub(S.GetNrows(), V.GetNcols(), Q);
-      pre.SetSub(0, 0, 
-		  H->MHt(TMatrixD(S, TMatrixD::kMultTranspose, F)));
-      pre.SetSub(S.GetNrows(), 0, H->MHt(Q));
-      pre.SetSub(S.GetNrows() + Q.GetNrows(), 0, decompR.GetU());
+		   S.GetNcols() + V.GetNcols());
+      TMatrixD SFt(S, TMatrixD::kMultTranspose, F);
+      pre.SetSub(                        0,0,decompR.GetU()); /* upper right block is zero */
+      pre.SetSub(             V.GetNrows(),0,H->MHt(SFt)); pre.SetSub(V.GetNrows(),             V.GetNcols(),SFt);
+      if (Q.GetNrows() > 0) { // needed to suppress warnings when inserting an empty Q
+	pre.SetSub(S.GetNrows()+V.GetNrows(),0,H->MHt(Q));   pre.SetSub(S.GetNrows()+V.GetNrows(),V.GetNcols(),Q);
+      }
+				
 
-      // This is a way of obtaining the upper right matrix one would
-      // obtain in a QR decomposition that works for a non-square
-      // matrix.  Of course, calculating the intermediate matrix is a
-      // fairly wasteful, but then one saves the effort of calculating
-      // the orthogonal matrix (and that of actually finding a QR code
-      // that handles non-square matrices).
-      // FIXME: a real QR decomp, taking the zeros into account could
-      // speed this up.
-      TMatrixDSym master(TMatrixDSym::kAtA, pre);
-      TDecompChol decompMaster(master);
-      decompMaster.Decompose();
-      // decompMaster.GetU() is now the upper diagonal matrix.
-      const TMatrixD& r = decompMaster.GetU();
+      tools::QR(pre);
+      const TMatrixD& r = pre;
 
       TMatrixD R(r.GetSub(0, V.GetNrows()-1, 0, V.GetNcols()-1));
       //R.Print();
@@ -415,7 +354,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
       //Snew.Print();
       // No need for matrix inversion.
       TVectorD update(res);
-      transposedForwardSubstitution(R, update);
+      tools::transposedForwardSubstitution(R, update);
       update *= K;
       stateVector += update;
       cov = TMatrixDSym(TMatrixDSym::kAtA, Snew); // Note that this is transposed in just the right way.
