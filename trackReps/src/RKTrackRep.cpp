@@ -1189,6 +1189,8 @@ double RKTrackRep::RKPropagate(M1x7& state7,
 void RKTrackRep::initArrays() const {
   memset(noiseArray_, 0x00, 7*7*sizeof(double));
   memset(noiseProjection_, 0x00, 7*7*sizeof(double));
+  for (unsigned int i=0; i<7; ++i) // initialize as diagonal matrix
+    noiseProjection_[i*8] = 1;
   memset(J_MMT_,      0x00, 7*7*sizeof(double));
   memset(J_pM_5x7_,   0x00, 5*7*sizeof(double));
   memset(J_pM_5x6_,   0x00, 5*6*sizeof(double));
@@ -1770,27 +1772,24 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 #endif
 
       if (!calcOnlyLastRowOfJ) {
-        for (int iRow = 0; iRow < 7; ++iRow) {
-          for (int iCol = 0; iCol < 7; ++iCol) {
+        for (int iRow = 0; iRow < 3; ++iRow) {
+          for (int iCol = 0; iCol < 6; ++iCol) {
             double val = (iRow == iCol);
-            if (iRow < 3) {
-              if (iCol < 3) {
-                val -= An * SU[iRow] * A[iCol];
-              } else if (iCol < 6) {
-                val -= An * SU[iRow] * SA[iCol-3];
-              }
-            }
-            noiseProjection[iRow*7 + iCol] = val;
+            if (iCol < 3)
+              val -= An * SU[iRow] * A[iCol];
+            else
+              val -= An * SU[iRow] * SA[iCol-3];
+            noiseProjection[iCol*7 + iRow] = val;
           }
         }
 
         // noiseProjection will look like this:
-        // x x x x x x 0
-        // x x x x x x 0
-        // x x x x x x 0
-        // 0 0 0 1 0 0 0
-        // 0 0 0 0 1 0 0
-        // 0 0 0 0 0 1 0
+        // x x x 0 0 0 0
+        // x x x 0 0 0 0
+        // x x x 0 0 0 0
+        // x x x 1 0 0 0
+        // x x x 0 1 0 0
+        // x x x 0 0 1 0
         // 0 0 0 0 0 0 1
       }
 
@@ -2193,7 +2192,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane
-        RKTools::NpT_N_Np(noiseProjection_, noiseArray_);
+        RKTools::Np_N_NpT(noiseProjection_, noiseArray_);
       }
 
       // Project noise down to 5D
