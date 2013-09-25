@@ -732,13 +732,13 @@ KalmanFitterRefTrack::removeOutdated(Track* tr, const AbsTrackRep* rep, int& not
 
 
       const MeasuredStateOnPlane& smoothedState = fitterInfo->getFittedState(true);
-      res_.ResizeTo(smoothedState.getState());
-      res_ = smoothedState.getState();
-      res_ -= fitterInfo->getReferenceState()->getState();
+      resM_.ResizeTo(smoothedState.getState());
+      resM_ = smoothedState.getState();
+      resM_ -= fitterInfo->getReferenceState()->getState();
       double chi2(0);
 
       // calculate chi2, ignore off diagonals
-      double* resArray = res_.GetMatrixArray();
+      double* resArray = resM_.GetMatrixArray();
       for (int j=0; j<smoothedState.getCov().GetNcols(); ++j)
         chi2 += resArray[j]*resArray[j] / smoothedState.getCov()(j,j);
 
@@ -812,7 +812,11 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
     const TMatrixD& F = fi->getReferenceState()->getTransportMatrix(direction); // Transport matrix
     assert(F.GetNcols() == (int)dim);
     const TMatrixDSym& N = fi->getReferenceState()->getNoiseMatrix(direction); // Noise matrix
-    p_ = ( F * prevFi->getUpdate(direction)->getState() ) + fi->getReferenceState()->getDeltaState(direction);
+    //p_ = ( F * prevFi->getUpdate(direction)->getState() ) + fi->getReferenceState()->getDeltaState(direction);
+    p_ = prevFi->getUpdate(direction)->getState();
+    p_ *= F;
+    p_ += fi->getReferenceState()->getDeltaState(direction);
+
     C_ = prevFi->getUpdate(direction)->getCov();
     C_.Similarity(F);
     C_ += N;

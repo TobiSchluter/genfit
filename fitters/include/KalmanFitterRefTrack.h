@@ -95,9 +95,10 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
   TMatrixDSym C_; //!
   TMatrixDSym covSumInv_; //!
   TMatrixDSym Rinv_; //!
-
-  // aux variables for processTrackPoint and removeOutdated
   TVectorD res_; //!
+
+  // aux variables for removeOutdated
+  TVectorD resM_; //!
 
  public:
   ClassDef(KalmanFitterRefTrack, 1)
