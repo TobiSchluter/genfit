@@ -138,7 +138,25 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHi
   }
 
   currentState_.reset(new MeasuredStateOnPlane(rep));
-  rep->setPosMomCov(*currentState_, tr->getStateSeed(), tr->getCovSeed());
+
+  TrackPoint* trackPoint = tr->getPointWithMeasurement(0);
+
+  if (rep != tr->getCardinalRep() &&
+      trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
+      dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
+      static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
+    if (debugLvl_ > 0)
+      std::cout << "take smoothed state of cardinal rep fit as seed \n";
+    TVector3 pos, mom;
+    const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
+    tr->getCardinalRep()->getPosMom(fittedState, pos, mom);
+    rep->setPosMom(*currentState_, pos, mom);
+    rep->setQop(*currentState_, tr->getCardinalRep()->getQop(fittedState));
+  }
+  else {
+    rep->setPosMomCov(*currentState_, tr->getStateSeed(), tr->getCovSeed());
+  }
+
   // Only after we have linearly propagated the error into the TrackRep can we
   // blow up the error in good faith.
   currentState_->blowUpCov(blowUpFactor_);
