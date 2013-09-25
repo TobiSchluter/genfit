@@ -109,7 +109,7 @@ bool compareMatrices(const TMatrixTBase<double>& A, const TMatrixTBase<double>& 
   double max(0);
   for (int i=0; i<A.GetNrows(); ++i) {
     for (int j=0; j<A.GetNcols(); ++j) {
-      if (fabs(A(i,j) > max))
+      if (fabs(A(i,j)) > max)
         max = fabs(A(i,j));
     }
   }
