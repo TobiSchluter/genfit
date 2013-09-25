@@ -1772,14 +1772,14 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 #endif
 
       if (!calcOnlyLastRowOfJ) {
-        for (int iRow = 0; iRow < 3; ++iRow) {
-          for (int iCol = 0; iCol < 6; ++iCol) {
+	for (int iRow = 0; iRow < 6; ++iRow) {
+	  for (int iCol = 0; iCol < 3; ++iCol) {
             double val = (iRow == iCol);
-            if (iCol < 3)
-              val -= An * SU[iRow] * A[iCol];
+            if (iRow < 3)
+              val -= An * SU[iCol] * A[iRow];
             else
-              val -= An * SU[iRow] * SA[iCol-3];
-            noiseProjection[iCol*7 + iRow] = val;
+              val -= An * SU[iCol] * SA[iRow-3];
+            noiseProjection[iRow*7 + iCol] = val;
           }
         }
 
