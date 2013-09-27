@@ -1153,21 +1153,53 @@ void EventDisplay::makeGui() {
 
 
 
-  hf = new TGHorizontalFrame(frmMain); {
+
+  frmMain->MapSubwindows();
+  frmMain->Resize();
+  frmMain->MapWindow();
+
+  browser->StopEmbedding();
+  browser->SetTabTitle("Draw Control", 0);
+
+
+  browser->StartEmbedding(TRootBrowser::kLeft);
+  TGMainFrame* frmMain2 = new TGMainFrame(gClient->GetRoot(), 1000, 600);
+  frmMain2->SetWindowName("XX GUI");
+  frmMain2->SetCleanup(kDeepCleanup);
+
+  hf = new TGHorizontalFrame(frmMain2); {
+    // evt number entry
+    lbl = new TGLabel(hf, "Go to event: ");
+    hf->AddFrame(lbl);
+    guiEvent = new TGNumberEntry(hf, 0, 9,999, TGNumberFormat::kNESInteger,
+                          TGNumberFormat::kNEANonNegative,
+                          TGNumberFormat::kNELLimitMinMax,
+                          0, 99999);
+    hf->AddFrame(guiEvent);
+    guiEvent->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiGoto()");
+
+    // redraw button
+    tb = new TGTextButton(hf, "Redraw Event");
+    hf->AddFrame(tb);
+    tb->Connect("Clicked()", "genfit::EventDisplay", fh, "guiGoto()");
+  }
+  frmMain2->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain2); {
     lbl = new TGLabel(hf, "\n Fitting options");
     hf->AddFrame(lbl);
   }
-  frmMain->AddFrame(hf);
+  frmMain2->AddFrame(hf);
 
-  hf = new TGHorizontalFrame(frmMain); {
+  hf = new TGHorizontalFrame(frmMain2); {
     guiRefit_ =  new TGCheckButton(hf, "Refit");
     if(refit_) guiRefit_->Toggle();
     hf->AddFrame(guiRefit_);
     guiRefit_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
   }
-  frmMain->AddFrame(hf);
+  frmMain2->AddFrame(hf);
 
-  hf = new TGHorizontalFrame(frmMain); {
+  hf = new TGHorizontalFrame(frmMain2); {
     guiDebugLvl_ = new TGNumberEntry(hf, debugLvl_, 6,999, TGNumberFormat::kNESInteger,
                           TGNumberFormat::kNEANonNegative,
                           TGNumberFormat::kNELLimitMinMax,
@@ -1177,9 +1209,9 @@ void EventDisplay::makeGui() {
     lbl = new TGLabel(hf, "debug level");
     hf->AddFrame(lbl);
   }
-  frmMain->AddFrame(hf);
+  frmMain2->AddFrame(hf);
 
-  hf = new TGHorizontalFrame(frmMain); {
+  hf = new TGHorizontalFrame(frmMain2); {
     guiFitterId_ = new TGButtonGroup(hf,"Fitter type:");
     guiFitterId_->Connect("Clicked(Int_t)","genfit::EventDisplay", fh, "guiSelectFitterId(int)");
     hf->AddFrame(guiFitterId_, new TGLayoutHints(kLHintsTop));
@@ -1190,9 +1222,9 @@ void EventDisplay::makeGui() {
       fitterId_button->SetDown(true, false);
       guiFitterId_->Show();
   }
-  frmMain->AddFrame(hf);
+  frmMain2->AddFrame(hf);
 
-  hf = new TGHorizontalFrame(frmMain); {
+  hf = new TGHorizontalFrame(frmMain2); {
     guiMmHandling_ = new TGButtonGroup(hf,"Multiple measurement handling in Kalman:");
     guiMmHandling_->Connect("Clicked(Int_t)","genfit::EventDisplay", fh, "guiSelectMmHandling(int)");
     hf->AddFrame(guiMmHandling_, new TGLayoutHints(kLHintsTop));
@@ -1205,9 +1237,9 @@ void EventDisplay::makeGui() {
       mmHandling_button->SetDown(true, false);
       guiMmHandling_->Show();
   }
-  frmMain->AddFrame(hf);
+  frmMain2->AddFrame(hf);
 
-  hf = new TGHorizontalFrame(frmMain); {
+  hf = new TGHorizontalFrame(frmMain2); {
     guiDPVal_ = new TGNumberEntry(hf, dPVal_, 6,999, TGNumberFormat::kNESReal,
                           TGNumberFormat::kNEANonNegative,
                           TGNumberFormat::kNELLimitMinMax,
@@ -1217,9 +1249,9 @@ void EventDisplay::makeGui() {
     lbl = new TGLabel(hf, "delta pVal (convergence criterium)");
     hf->AddFrame(lbl);
   }
-  frmMain->AddFrame(hf);
+  frmMain2->AddFrame(hf);
 
-  hf = new TGHorizontalFrame(frmMain); {
+  hf = new TGHorizontalFrame(frmMain2); {
     guiNMaxIter_ = new TGNumberEntry(hf, nMaxIter_, 6,999, TGNumberFormat::kNESInteger,
                           TGNumberFormat::kNEANonNegative,
                           TGNumberFormat::kNELLimitMinMax,
@@ -1229,26 +1261,26 @@ void EventDisplay::makeGui() {
     lbl = new TGLabel(hf, "Maximum nr of iterations");
     hf->AddFrame(lbl);
   }
-  frmMain->AddFrame(hf);
+  frmMain2->AddFrame(hf);
 
 
-  hf = new TGHorizontalFrame(frmMain); {
+  hf = new TGHorizontalFrame(frmMain2); {
     guiResort_ =  new TGCheckButton(hf, "Resort track");
     if(resort_) guiResort_->Toggle();
     hf->AddFrame(guiResort_);
     guiResort_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
   }
-  frmMain->AddFrame(hf);
+  frmMain2->AddFrame(hf);
 
 
 
 
-  frmMain->MapSubwindows();
-  frmMain->Resize();
-  frmMain->MapWindow();
+  frmMain2->MapSubwindows();
+  frmMain2->Resize();
+  frmMain2->MapWindow();
 
   browser->StopEmbedding();
-  browser->SetTabTitle("Event Control", 0);
+  browser->SetTabTitle("Refit Control", 0);
 }
 
 
