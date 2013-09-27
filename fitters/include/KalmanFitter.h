@@ -26,7 +26,7 @@
 #include "AbsKalmanFitter.h"
 
 #ifndef __CINT__
-#include "boost/scoped_ptr.hpp"
+#include <boost/scoped_ptr.hpp>
 #endif
 
 

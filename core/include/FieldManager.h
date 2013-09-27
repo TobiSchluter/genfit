@@ -25,9 +25,11 @@
 #define genfit_FieldManager_h
 
 #include "AbsBField.h"
+
 #include <iostream>
 #include <stdexcept>
 #include <string>
+
 
 namespace genfit {
 

@@ -20,12 +20,11 @@
 * @{
 */
 
+#ifndef genfit_EventDisplay_h
+#define genfit_EventDisplay_h
 
-#ifndef Display_H
-#define Display_H
-
-#include <Track.h>
-#include <AbsKalmanFitter.h>
+#include "Track.h"
+#include "AbsKalmanFitter.h"
 
 #include <TEveBox.h>
 #include <TVector3.h>
@@ -231,5 +230,5 @@ class EventDisplay : public TNamed {
 } /* End of namespace genfit */
 /** @} */
 
-#endif
+#endif // genfit_EventDisplay_h
 

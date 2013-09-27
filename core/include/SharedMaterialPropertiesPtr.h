@@ -24,11 +24,12 @@
 #ifndef genfit_SharedMaterialPropertiesPtr_h
 #define genfit_SharedMaterialPropertiesPtr_h
 
+#include "MaterialProperties.h"
+
 #ifndef __CINT__
-#include "boost/shared_ptr.hpp"
+#include <boost/shared_ptr.hpp>
 #endif
 
-#include "MaterialProperties.h"
 
 
 namespace genfit {

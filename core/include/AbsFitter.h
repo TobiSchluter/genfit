@@ -23,6 +23,7 @@
 #ifndef genfit_AbsFitter_h
 #define genfit_AbsFitter_h
 
+
 namespace genfit {
 
 class Track;

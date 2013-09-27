@@ -24,10 +24,10 @@
 #ifndef genfit_AbsFitterInfo_h
 #define genfit_AbsFitterInfo_h
 
+#include "MeasurementOnPlane.h"
+
 #include <TObject.h>
 #include <TVectorD.h>
-
-#include "MeasurementOnPlane.h"
 
 
 namespace genfit {

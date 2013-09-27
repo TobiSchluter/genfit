@@ -24,7 +24,7 @@
 #ifndef genfit_MaterialProperties_h
 #define genfit_MaterialProperties_h
 
-#include "TObject.h"
+#include <TObject.h>
 
 
 namespace genfit {

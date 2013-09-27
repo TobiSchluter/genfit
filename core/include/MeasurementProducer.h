@@ -24,10 +24,11 @@
 #ifndef genfit_MeasurementProducer_h
 #define genfit_MeasurementProducer_h
 
-#include <assert.h>
-#include <TClonesArray.h>
 #include "Exception.h"
 #include "TrackCand.h"
+
+#include <assert.h>
+#include <TClonesArray.h>
 
 
 namespace genfit {

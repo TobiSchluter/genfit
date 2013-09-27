@@ -22,6 +22,7 @@
 
 #include <TObject.h>
 
+
 namespace genfit {
 
 /** @brief Example class for a spacepoint detector hit.

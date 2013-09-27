@@ -24,11 +24,11 @@
 #ifndef genfit_SharedPlanePtr_h
 #define genfit_SharedPlanePtr_h
 
-#ifndef __CINT__
-#include "boost/shared_ptr.hpp"
-#endif
-
 #include "DetPlane.h"
+
+#ifndef __CINT__
+#include <boost/shared_ptr.hpp>
+#endif
 
 
 namespace genfit {

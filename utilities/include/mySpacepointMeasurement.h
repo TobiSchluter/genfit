@@ -20,9 +20,8 @@
 #ifndef genfit_mySpacepointMeasurement_h
 #define genfit_mySpacepointMeasurement_h
 
-#include <SpacepointMeasurement.h>
-#include <TrackCandHit.h>
-
+#include "SpacepointMeasurement.h"
+#include "TrackCandHit.h"
 #include "mySpacepointDetectorHit.h"
 
 

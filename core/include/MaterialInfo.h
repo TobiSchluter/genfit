@@ -27,7 +27,8 @@
 #include "SharedPlanePtr.h"
 #include "SharedMaterialPropertiesPtr.h"
 
-#include "TObject.h"
+#include <TObject.h>
+
 
 namespace genfit {
 

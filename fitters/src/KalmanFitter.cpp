@@ -174,9 +174,9 @@ void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHi
       else {
         oldPvalBW = PvalBW;
         if (debugLvl_ > 0) {
-        oldChi2BW = chi2BW;
-        oldChi2FW = chi2FW;
-        oldPvalFW = PvalFW;
+          oldChi2BW = chi2BW;
+          oldChi2FW = chi2FW;
+          oldPvalFW = PvalFW;
         }
         currentState_->blowUpCov(blowUpFactor_);  // blow up cov
       }

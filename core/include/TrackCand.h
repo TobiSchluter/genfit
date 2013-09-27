@@ -22,6 +22,8 @@
 #ifndef genfit_TrackCand_h
 #define genfit_TrackCand_h
 
+#include "TrackCandHit.h"
+
 #include <vector>
 #include <set>
 #include <assert.h>
@@ -34,8 +36,6 @@
 #include <TDatabasePDG.h>
 
 #include <cmath>
-
-#include "TrackCandHit.h"
 
 
 namespace genfit {

@@ -28,7 +28,7 @@
 #ifndef GFRAVEMAGNETICFIELD_H
 #define GFRAVEMAGNETICFIELD_H
 
-#include "rave/MagneticField.h"
+#include <rave/MagneticField.h>
 
 
 namespace genfit {

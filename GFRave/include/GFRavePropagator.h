@@ -30,13 +30,12 @@
 #define GFRAVEPROPAGATOR_H
 
 #include "GFRaveVertexFactory.h"
-
-#include "rave/Propagator.h"
-#include "rave/Track.h"
-#include "rave/Plane.h"
-#include "rave/Cylinder.h"
-
 #include "AbsTrackRep.h"
+
+#include <rave/Propagator.h>
+#include <rave/Track.h>
+#include <rave/Plane.h>
+#include <rave/Cylinder.h>
 
 #include <map>
 

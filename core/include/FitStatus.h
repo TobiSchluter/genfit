@@ -16,7 +16,6 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 /** @addtogroup genfit
  * @{
  */
@@ -26,6 +25,7 @@
 
 #include <Rtypes.h>
 #include <Math/ProbFuncMathCore.h>
+
 
 namespace genfit {
 

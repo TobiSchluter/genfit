@@ -25,6 +25,7 @@
 
 #include "AbsKalmanFitter.h"
 
+
 namespace genfit {
 
 class KalmanFitterInfo;

@@ -24,7 +24,6 @@
  *
  */
 
-
 /** @addtogroup genfit
  * @{
  */
@@ -32,14 +31,15 @@
 #ifndef genfit_DetPlane_h
 #define genfit_DetPlane_h
 
+#include "AbsFinitePlane.h"
+
 #include <TObject.h>
 #include <TVector3.h>
 
 #ifndef __CINT__
-#include "boost/scoped_ptr.hpp"
+#include <boost/scoped_ptr.hpp>
 #endif
 
-#include "AbsFinitePlane.h"
 
 namespace genfit {
 

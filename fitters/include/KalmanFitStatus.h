@@ -16,7 +16,6 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 /** @addtogroup genfit
  * @{
  */
@@ -25,7 +24,9 @@
 #define genfit_KalmanFitStatus_h
 
 #include "FitStatus.h"
+
 #include <Math/ProbFunc.h>
+
 
 namespace genfit {
 

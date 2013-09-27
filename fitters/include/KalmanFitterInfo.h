@@ -23,18 +23,18 @@
 #ifndef genfit_KalmanFitterInfo_h
 #define genfit_KalmanFitterInfo_h
 
-#include <vector>
-
-#ifndef __CINT__
-#include "boost/scoped_ptr.hpp"
-#endif
-
 #include "AbsFitterInfo.h"
 #include "KalmanFittedStateOnPlane.h"
 #include "MeasuredStateOnPlane.h"
 #include "MeasurementOnPlane.h"
 #include "ReferenceStateOnPlane.h"
 #include "StateOnPlane.h"
+
+#include <vector>
+
+#ifndef __CINT__
+#include <boost/scoped_ptr.hpp>
+#endif
 
 
 namespace genfit {

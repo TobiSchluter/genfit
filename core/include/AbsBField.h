@@ -20,11 +20,11 @@
  * @{
  */
 
-
 #ifndef genfit_AbsBField_h
 #define genfit_AbsBField_h
 
-#include "TVector3.h"
+#include <TVector3.h>
+
 
 namespace genfit {
 

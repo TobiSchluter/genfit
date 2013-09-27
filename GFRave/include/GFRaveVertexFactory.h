@@ -30,11 +30,11 @@
 #ifndef GFRAVEVERTEXFACTORY_H
 #define GFRAVEVERTEXFACTORY_H
 
+#include "GFRaveVertex.h"
+#include "Track.h"
+
 #include <vector>
 
-#include "GFRaveVertex.h"
-
-#include "Track.h"
 
 namespace rave {
   class VertexFactory;

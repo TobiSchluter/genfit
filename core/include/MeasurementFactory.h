@@ -25,16 +25,16 @@
 #ifndef genfit_MeasurementFactory_h
 #define genfit_MeasurementFactory_h
 
-#include <vector>
-#include <map>
-
 #include "MeasurementProducer.h"
 #include "TrackCand.h"
 
-class AbsMeasurement;
+#include <vector>
+#include <map>
 
 
 namespace genfit {
+
+class AbsMeasurement;
 
 /** @brief Factory object to create AbsMeasurement objects from digitized and clustered data
  *

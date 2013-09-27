@@ -29,7 +29,6 @@
 
 namespace genfit {
 
-
 /**
  * @brief #StateOnPlane with linearized transport to that #ReferenceStateOnPlane from previous and next #ReferenceStateOnPlane
  *

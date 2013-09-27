@@ -24,11 +24,11 @@
 #ifndef genfit_StateOnPlane_h
 #define genfit_StateOnPlane_h
 
-#include <TObject.h>
-#include <TVectorD.h>
-
 #include "SharedPlanePtr.h"
 #include "AbsTrackRep.h"
+
+#include <TObject.h>
+#include <TVectorD.h>
 
 
 namespace genfit {
