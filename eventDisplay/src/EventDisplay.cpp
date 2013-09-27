@@ -154,7 +154,7 @@ void EventDisplay::reset() {
   events_.clear();
 }
 
-void EventDisplay::addEvent(std::vector<Track*>& tracks) {
+void EventDisplay::addEvent(std::vector<const Track*>& tracks) {
 
   std::vector<Track*>* vec = new std::vector<Track*>;
 
@@ -168,7 +168,7 @@ void EventDisplay::addEvent(std::vector<Track*>& tracks) {
 
 }
 
-void EventDisplay::addEvent(Track* tr) {
+void EventDisplay::addEvent(const Track* tr) {
 
   std::vector<Track*>* vec = new std::vector<Track*>;
   vec->push_back(new Track(*tr));
