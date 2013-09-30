@@ -13,7 +13,9 @@
 #include "GblPoint.h"
 #include "BorderedBandMatrix.h"
 #include "MilleBinary.h"
-#include "TMatrixDSymEigen.h"
+
+#include <TMatrixDSymEigen.h>
+
 
 //! Namespace for the general broken lines package
 namespace gbl {

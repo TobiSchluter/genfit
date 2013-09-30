@@ -121,15 +121,15 @@ LINK_DIRECTORIES(${ROOT_LIBRARY_DIR})
 
 
 # add the list of source code files -- careful, when a new file is added!
-AUX_SOURCE_DIRECTORY( ./core/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./core/src          library_sources )
 AUX_SOURCE_DIRECTORY( ./eventDisplay/src  library_sources )
-AUX_SOURCE_DIRECTORY( ./fields/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./fields/src        library_sources )
 AUX_SOURCE_DIRECTORY( ./finitePlanes/src  library_sources )
-AUX_SOURCE_DIRECTORY( ./fitters/src  library_sources )
-AUX_SOURCE_DIRECTORY( ./GBL/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./fitters/src       library_sources )
+AUX_SOURCE_DIRECTORY( ./GBL/src           library_sources )
 AUX_SOURCE_DIRECTORY( ./measurements/src  library_sources )
-AUX_SOURCE_DIRECTORY( ./trackReps/src  library_sources )
-AUX_SOURCE_DIRECTORY( ./utilities/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./trackReps/src     library_sources )
+AUX_SOURCE_DIRECTORY( ./utilities/src     library_sources )
 
 
 # Dictionary generation.  For the time being, we list classes one-by-one.
@@ -200,6 +200,15 @@ ROOT_GENERATE_DICTIONARY("${FITTERS_DICTIONARY_SOURCES}"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/fitters/src/fittersLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cpp")
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/fittersRootDict.cpp" "${library_sources}")
+
+SET(GBL_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/GBL/include/GFGbl.h
+)
+ROOT_GENERATE_DICTIONARY("${GBL_DICTIONARY_SOURCES}"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/GBL/include"
+			 "${CMAKE_CURRENT_SOURCE_DIR}/GBL/src/GBLLinkDef.h"
+			 "${CMAKE_CURRENT_BINARY_DIR}/GBLRootDict.cpp")
+SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/GBLRootDict.cpp" "${library_sources}")
 
 SET(MEASUREMENTS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixU.h
