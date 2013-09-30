@@ -23,21 +23,22 @@
 #ifndef GFGBL_H
 #define GFGBL_H
 
-#include <map>
-#include <iostream>
-
-#include "TMatrixD.h"
-#include "assert.h"
-#include <sstream>
-
-#include "TMath.h"
-
 #include "GblTrajectory.h"
 #include "Track.h"
 #include "AbsTrackRep.h"
 #include "AbsFitter.h"
 #include "AbsMeasurement.h"
-#include "TVector3.h"
+
+#include <map>
+#include <iostream>
+
+#include <TMatrixD.h>
+#include <assert.h>
+#include <sstream>
+
+#include <TMath.h>
+#include <TVector3.h>
+
 
 namespace genfit {
 
@@ -69,7 +70,7 @@ namespace genfit {
      * Performs fit on a Track.
      * Hit resorting currently NOT supported.
      */
-    void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits);
+    void processTrack(Track* trk, const AbsTrackRep* rep, bool resortHits);
 
     ClassDef(GFGbl, 1)
 

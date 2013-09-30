@@ -22,8 +22,9 @@
 #include "GblPoint.h"
 #include "KalmanFitterInfo.h"
 #include "KalmanFitStatus.h"
-#include <KalmanFittedStateOnPlane.h>
+#include "KalmanFittedStateOnPlane.h"
 #include "MyDebugTools.h"
+
 #include <TGeoManager.h>
 #include <string>
 #include <list>
@@ -284,7 +285,7 @@ TMatrixD projCurv2Meas(SharedPlanePtr plane, TVector3 mom) {
   return p;
 }
 
-void GFGbl::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
+void GFGbl::processTrack(Track* trk, const AbsTrackRep* rep, bool resortHits) {
   //TGeoManager *gGeoManager;
 
   // flag for checking if desired sensor for alignment has been hitted
@@ -342,9 +343,9 @@ void GFGbl::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
     // Covariance matrix of measurements
     const TMatrixDSym& raw_cov = raw_meas->getRawHitCov();
     // Projection matrix from repository state to measurement coords
-    TMatrixD HitHMatrix = raw_meas->getHMatrix(rep);
+    boost::scoped_ptr<const AbsHMatrix> HitHMatrix(raw_meas->constructHMatrix(rep));
     // Residual between measured position and reference track position
-    TVectorD residual = raw_coor - (HitHMatrix*state);
+    TVectorD residual = raw_coor - HitHMatrix->Hv(state);
 
     // Extrapolate to middle of the sensor
     rep->extrapolateToPlane(*reference, plane, false, false);
@@ -437,8 +438,8 @@ void GFGbl::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
       TMatrixD proM2L(2,2);
       proM2L.Zero();
       proM2L.Zero();
-      proM2L[0][0] = HitHMatrix[0][3];
-      proM2L[1][1] = HitHMatrix[1][4];
+      proM2L(0,0) = HitHMatrix->getMatrix()(0,3);
+      proM2L(1,1) = HitHMatrix->getMatrix()(1,4);
       proL2m = proM2L.Invert();
     }
 

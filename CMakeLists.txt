@@ -50,6 +50,7 @@ SET(GF_INC_DIRS
 	./fields/include/
 	./finitePlanes/include/ 
 	./fitters/include/
+	./GBL/include/
 	./measurements/include/ 
 	./trackReps/include/
 	./utilities/include/
@@ -125,6 +126,7 @@ AUX_SOURCE_DIRECTORY( ./eventDisplay/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./fields/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./finitePlanes/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./fitters/src  library_sources )
+AUX_SOURCE_DIRECTORY( ./GBL/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./measurements/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./trackReps/src  library_sources )
 AUX_SOURCE_DIRECTORY( ./utilities/src  library_sources )
