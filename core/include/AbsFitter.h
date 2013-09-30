@@ -38,14 +38,14 @@ class AbsFitter {
   virtual ~AbsFitter() {}
 
   /**
-   * Process rep. Optionally resort the hits if necessary (and supported by the fitter)
+   * Process Track with one AbsTrackRep of the Track. Optionally resort the hits if necessary (and supported by the fitter)
    */
-  virtual void processTrack(Track*, const AbsTrackRep*, bool resortHits = false) = 0;
+  virtual void processTrackWithRep(Track*, const AbsTrackRep*, bool resortHits = false) = 0;
 
   /**
    * Process all reps. Start with the cardinalRep and resort the hits if necessary (and supported by the fitter)
    */
-  virtual void processTrack(Track*, bool resortHits = true);
+  void processTrack(Track*, bool resortHits = true);
 
   void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
 

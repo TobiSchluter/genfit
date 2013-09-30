@@ -99,7 +99,7 @@ TrackPoint* KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, do
 }
 
 
-void KalmanFitterRefTrack::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits)
+void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits)
 {
 
   if (tr->getFitStatus(rep) != NULL && tr->getFitStatus(rep)->isTrackPruned()) {

@@ -38,7 +38,9 @@ class AbsHMatrix : public TObject {
 
  public:
 
- AbsHMatrix() {;}
+  AbsHMatrix() {;}
+
+  virtual ~AbsHMatrix() {;}
 
   //! Get the actual matrix representation
   virtual const TMatrixD& getMatrix() const = 0;

@@ -17,13 +17,17 @@
    You should have received a copy of the GNU Lesser General Public License
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include "GFGbl.h"
 #include "GblTrajectory.h"
 #include "GblPoint.h"
+
+#include "AbsMeasurement.h"
 #include "KalmanFitterInfo.h"
 #include "KalmanFitStatus.h"
 #include "KalmanFittedStateOnPlane.h"
 #include "MyDebugTools.h"
+#include "Track.h"
 
 #include <TGeoManager.h>
 #include <string>
@@ -48,12 +52,10 @@ using namespace gbl;
 using namespace std;
 using namespace genfit;
 
-GFGbl::GFGbl() {
+GFGbl::GFGbl() :
+  AbsFitter()
+{
   milleFile = new MilleBinary("vxd.dat");
-}
-
-GFGbl::~GFGbl() {
-  ;
 }
 
 /**
@@ -285,7 +287,8 @@ TMatrixD projCurv2Meas(SharedPlanePtr plane, TVector3 mom) {
   return p;
 }
 
-void GFGbl::processTrack(Track* trk, const AbsTrackRep* rep, bool resortHits) {
+
+void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortHits) {
   //TGeoManager *gGeoManager;
 
   // flag for checking if desired sensor for alignment has been hitted

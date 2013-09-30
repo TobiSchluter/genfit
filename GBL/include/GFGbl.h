@@ -24,10 +24,7 @@
 #define GFGBL_H
 
 #include "GblTrajectory.h"
-#include "Track.h"
-#include "AbsTrackRep.h"
 #include "AbsFitter.h"
-#include "AbsMeasurement.h"
 
 #include <map>
 #include <iostream>
@@ -42,40 +39,44 @@
 
 namespace genfit {
 
-  class AbsTrackRep;
-  class Track;
 
-  /** @brief Generic GBL implementation
-   * 
-   * The interface class to GBL track fit
-   *
+/** @brief Generic GBL implementation
+ *
+ * The interface class to GBL track fit
+ *
+ */
+class GFGbl : public AbsFitter {
+
+ private:
+  GFGbl(const GFGbl&);
+  GFGbl& operator=(GFGbl const&);
+
+ public:
+
+  /**
+   * Constructor
    */
-  class GFGbl : public AbsFitter {
-    GFGbl(const GFGbl&);
-    GFGbl& operator=(GFGbl const&);
+  GFGbl();
 
-  public:
+  /**
+   * Destructor
+   */
+  virtual ~GFGbl() {;}
 
-    /**
-     * Constructor
-     */
-    GFGbl();
+  /**
+   * Performs fit on a Track.
+   * Hit resorting currently NOT supported.
+   */
+  void processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortHits = false);
 
-    /**
-     * Destructor
-     */
-    ~GFGbl();
-   
-    /**
-     * Performs fit on a Track.
-     * Hit resorting currently NOT supported.
-     */
-    void processTrack(Track* trk, const AbsTrackRep* rep, bool resortHits);
 
-    ClassDef(GFGbl, 1)
+ public:
 
-  };
-}
-#endif
+  ClassDef(GFGbl, 1)
 
+};
+
+}  /* End of namespace genfit */
 /** @} */
+
+#endif // GFGBL_H

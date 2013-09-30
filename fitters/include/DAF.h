@@ -67,7 +67,7 @@ class DAF : public AbsKalmanFitter {
   ~DAF() {};
 
   //! Process a track using the DAF.
-  void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits = false);
+  void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false);
 
   /** @brief Set the probability cut for the weight calculation for the hits.
    *

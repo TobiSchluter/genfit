@@ -44,9 +44,12 @@ enum eMultipleMeasurementHandling {
  * @brief Abstract base class for Kalman fitter and derived fitting algorithms
  */
 class AbsKalmanFitter : public AbsFitter {
+
  public:
+
   AbsKalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
-    : maxIterations_(maxIterations), deltaPval_(deltaPval), blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPrediction) {}
+    : AbsFitter(), maxIterations_(maxIterations), deltaPval_(deltaPval), blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPrediction) {}
+
   virtual ~AbsKalmanFitter() {;}
 
   //virtual void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction) = 0;

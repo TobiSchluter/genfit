@@ -54,6 +54,8 @@ class WirePointMeasurement : public WireMeasurement {
   WirePointMeasurement(int nDim = 8);
   WirePointMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
 
+  virtual ~WirePointMeasurement() {;}
+
   virtual AbsMeasurement* clone() const {return new WirePointMeasurement(*this);}
 
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const AbsTrackRep*, const SharedPlanePtr&) const;

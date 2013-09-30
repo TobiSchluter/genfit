@@ -38,7 +38,8 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
  public:
   KalmanFitterRefTrack(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
     : AbsKalmanFitter(maxIterations, deltaPval, blowUpFactor), refitAll_(false), deltaChi2Ref_(1) {}
-  ~KalmanFitterRefTrack() {}
+
+  virtual ~KalmanFitterRefTrack() {}
 
   /** @brief Fit the track.
    *
@@ -46,7 +47,7 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
    */
   TrackPoint* fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
 
-  void processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits = false);
+  void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false);
 
   /** @brief Prepare the track
    *

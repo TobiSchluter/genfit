@@ -55,6 +55,8 @@ class WireMeasurement : public AbsMeasurement {
   WireMeasurement(int nDim = 7);
   WireMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint);
 
+  virtual ~WireMeasurement() {;}
+
   virtual AbsMeasurement* clone() const {return new WireMeasurement(*this);}
 
   virtual SharedPlanePtr constructPlane(const StateOnPlane& state) const;

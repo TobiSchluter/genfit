@@ -82,7 +82,7 @@ void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
 }
 
 
-void KalmanFitter::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits)
+void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits)
 {
 
   if (tr->getFitStatus(rep) != NULL && tr->getFitStatus(rep)->isTrackPruned()) {

@@ -71,7 +71,7 @@ DAF::DAF(AbsKalmanFitter* kalman)
 }
 
 
-void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
+void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits) {
 
   if (debugLvl_ > 0) {
     std::cout<<"DAF::processTrack //////////////////////////////////////////////////////////////// \n";
@@ -86,7 +86,7 @@ void DAF::processTrack(Track* tr, const AbsTrackRep* rep, bool resortHits) {
       std::cout<<"DAF::processTrack, trackRep  " << rep << ", iteration " << iBeta+1 << ", beta = " << betas_.at(iBeta) << "\n";
     }
 
-    kalman_->processTrack(tr, rep, resortHits);
+    kalman_->processTrackWithRep(tr, rep, resortHits);
 
     status = static_cast<KalmanFitStatus*>(tr->getFitStatus(rep));
     status->setIsFittedWithDaf();
