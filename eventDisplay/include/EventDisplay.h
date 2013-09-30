@@ -71,16 +71,18 @@ class EventDisplay : public TNamed {
 		 *
 		 * Add a new event. An event is a collection of Tracks which are displayed at the
 		 * the same time.
+		 * The tracks are copied.
 		 *
 		 */
 		void addEvent(std::vector<genfit::Track*>& tracks);
+		void addEvent(std::vector<const genfit::Track*>& tracks);
 
     /** @brief Add new event
      *
      * Add a new event consisting of one track.
      *
      */
-    void addEvent(Track* tr);
+    void addEvent(const Track* tr);
 
 		/** @brief Go to the next event or step a certain number of events ahead.*/
 		void next(unsigned int stp = 1);

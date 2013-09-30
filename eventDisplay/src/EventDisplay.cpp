@@ -154,27 +154,38 @@ void EventDisplay::reset() {
   events_.clear();
 }
 
+
+void EventDisplay::addEvent(std::vector<Track*>& tracks) {
+
+  std::vector<Track*>* vec = new std::vector<Track*>;
+
+  for(unsigned int i = 0; i < tracks.size(); i++) {
+    vec->push_back(new Track(*(tracks[i])));
+  }
+
+  events_.push_back(vec);
+}
+
+
 void EventDisplay::addEvent(std::vector<const Track*>& tracks) {
 
   std::vector<Track*>* vec = new std::vector<Track*>;
 
   for(unsigned int i = 0; i < tracks.size(); i++) {
-
     vec->push_back(new Track(*(tracks[i])));
-
   }
 
   events_.push_back(vec);
-
 }
+
 
 void EventDisplay::addEvent(const Track* tr) {
 
   std::vector<Track*>* vec = new std::vector<Track*>;
   vec->push_back(new Track(*tr));
   events_.push_back(vec);
-
 }
+
 
 void EventDisplay::next(unsigned int stp) {
 
