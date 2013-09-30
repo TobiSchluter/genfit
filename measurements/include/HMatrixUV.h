@@ -43,6 +43,8 @@ class HMatrixUV : public AbsHMatrix {
 
   HMatrixUV() {;}
 
+  const TMatrixD& getMatrix() const;
+
   TVectorD Hv(const TVectorD& v) const;
 
   TMatrixD MHt(const TMatrixDSym& M) const;

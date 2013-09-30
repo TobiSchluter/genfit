@@ -27,6 +27,16 @@ namespace genfit {
 // 0, 0, 0, 1, 0
 // 0, 0, 0, 0, 1
 
+const TMatrixD& HMatrixUV::getMatrix() const {
+  static const double HMatrixContent[2*5] = {0, 0, 0, 1, 0,
+                                             0, 0, 0, 0, 1};
+
+  static const TMatrixD HMatrix(2,5, HMatrixContent);
+
+  return HMatrix;
+}
+
+
 TVectorD HMatrixUV::Hv(const TVectorD& v) const {
   assert (v.GetNrows() == 5);
 

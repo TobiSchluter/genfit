@@ -40,15 +40,18 @@ class AbsHMatrix : public TObject {
 
  AbsHMatrix() {;}
 
+  //! Get the actual matrix representation
+  virtual const TMatrixD& getMatrix() const = 0;
+
   //! H*v
-  virtual TVectorD Hv(const TVectorD& v) const = 0;
+  virtual TVectorD Hv(const TVectorD& v) const {return getMatrix()*v;}
 
   //! M*H^t
-  virtual TMatrixD MHt(const TMatrixDSym& M) const = 0;
-  virtual TMatrixD MHt(const TMatrixD& M) const = 0;
+  virtual TMatrixD MHt(const TMatrixDSym& M) const {return TMatrixD(M, TMatrixD::kMultTranspose, getMatrix());}
+  virtual TMatrixD MHt(const TMatrixD& M) const {return TMatrixD(M, TMatrixD::kMultTranspose, getMatrix());}
 
   //! similarity: H*M*H^t
-  virtual void HMHt(TMatrixDSym& M) const = 0;
+  virtual void HMHt(TMatrixDSym& M) const {M.Similarity(getMatrix());}
 
   virtual AbsHMatrix* clone() const = 0;
 

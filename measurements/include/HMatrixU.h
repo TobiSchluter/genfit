@@ -40,6 +40,8 @@ class HMatrixU : public AbsHMatrix {
 
   HMatrixU() {;}
 
+  const TMatrixD& getMatrix() const;
+
   TVectorD Hv(const TVectorD& v) const;
 
   TMatrixD MHt(const TMatrixDSym& M) const;
