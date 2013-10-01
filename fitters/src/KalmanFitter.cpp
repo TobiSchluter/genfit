@@ -154,7 +154,8 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool r
         std::cout << "\033[0m";
 
         std::cout << "old chi2s: " << oldChi2BW << ", " << oldChi2FW
-            << " new chi2s: " << chi2BW << ", " << chi2FW << std::endl;
+		  << " new chi2s: " << chi2BW << ", " << chi2FW
+		  << " oldPvals " << oldPvalFW << ", " << oldPvalBW << std::endl;
       }
 
       ++nIt;
