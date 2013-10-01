@@ -625,13 +625,12 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
     // Free memory on the heap
     delete reference;
   }
-  bool fitted = false;
   if (flag && kfs->getBackwardNdf() == 7) {
     //if (n_gbl_points >= 2 && flag) {
-    GblTrajectory * traj;
+    GblTrajectory * traj = 0;
     try {
       traj = new GblTrajectory(listOfPoints, seedLabel, clSeed);
-      fitted = traj->fit(Chi2, Ndf, lostWeight);
+      traj->fit(Chi2, Ndf, lostWeight);
     } catch(...) {
       // Gbl failed critically (usually GblPoint::getDerivatives ... singular matrix inversion)
       delete traj;
