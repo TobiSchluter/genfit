@@ -1243,10 +1243,15 @@ void Track::fillPointsWithMeasurement() {
     }
   }
 }
-
+}
+#include <TDirectory.h>
+#include <TFile.h>
+#include <TVirtualStreamerInfo.h>
+namespace genfit{
 
 void Track::Streamer(TBuffer &R__b)
 {
+  R__b.GetInfo()->Print();
    // Stream an object of class genfit::Track.
   const bool streamTrackPoints = true; // debugging option
    //This works around a msvc bug and should be harmless on other platforms

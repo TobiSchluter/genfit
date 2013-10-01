@@ -878,7 +878,7 @@ void GblTrajectory::prepare() {
 		std::pair<std::vector<unsigned int>, TMatrixD> indexAndJacobian =
 				getJacobian(externalPoint);
 		externalIndex = indexAndJacobian.first;
-		std::vector<double> externalDerivatives(externalIndex.size());
+		std::vector<double> vExternalDerivatives(externalIndex.size());
 		const TMatrixDSymEigen externalEigen(externalSeed);
 		const TVectorD valEigen = externalEigen.GetEigenValues();
 		TMatrixD vecEigen = externalEigen.GetEigenVectors();
@@ -886,10 +886,10 @@ void GblTrajectory::prepare() {
 		for (int i = 0; i < externalSeed.GetNrows(); ++i) {
 			if (valEigen(i) > 0.) {
 				for (int j = 0; j < externalSeed.GetNcols(); ++j) {
-					externalDerivatives[j] = vecEigen(i, j);
+					vExternalDerivatives[j] = vecEigen(i, j);
 				}
 				GblData aData(externalPoint, 0., valEigen(i));
-				aData.addDerivatives(externalIndex, externalDerivatives);
+				aData.addDerivatives(externalIndex, vExternalDerivatives);
 				theData.push_back(aData);
 				nData++;
 			}

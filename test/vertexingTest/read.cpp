@@ -33,6 +33,12 @@ int main() {
     std::cerr << "Couldn't find tree 'tree' in file 'tracks.root'." << std::endl;
     return -1;
   }
+  TObject *obj = 0;
+  TBranch* br = tree->GetBranch("trackBranch");
+  br->SetAddress(&obj);
+  br->GetEntry();
+
+
   TClonesArray* trackArray = new TClonesArray("genfit::Track");
   tree->SetBranchAddress("trackBranch", &trackArray);
 
@@ -40,7 +46,6 @@ int main() {
 
   TClonesArray* vertexArray = new TClonesArray("genfit::GFRaveVertex");
   tree->SetBranchAddress("vertexBranch", &vertexArray);
-
 
   for (Long_t i = 0; i < tree->GetEntries(); ++i) {
     tree->GetEntry(i);
