@@ -343,19 +343,19 @@ unsigned int VSymMatrix::invert() {
 		int k = 0;
 		double vkk = 0.0;
 
-		int j = first;
+		int jCandidate = first;
 		int previous = 0;
 		int last = previous;
 		// look for pivot
-		while (j > 0) {
-			int jj = (j * j + j) / 2 - 1;
-			if (fabs(theVec[jj]) > std::max(fabs(vkk), eps * diag[j - 1])) {
+		while (jCandidate > 0) {
+			int jj = (jCandidate * jCandidate + jCandidate) / 2 - 1;
+			if (fabs(theVec[jj]) > std::max(fabs(vkk), eps * diag[jCandidate - 1])) {
 				vkk = theVec[jj];
-				k = j;
+				k = jCandidate;
 				last = previous;
 			}
-			previous = j;
-			j = next[j - 1];
+			previous = jCandidate;
+			jCandidate = next[jCandidate - 1];
 		}
 		// pivot found
 		if (k > 0) {
@@ -409,12 +409,12 @@ unsigned int VSymMatrix::invert() {
 				}
 			}
 		} else {
-			for (int k = 1; k <= nSize; ++k) {
-				if (next[k - 1] >= 0) {
-					int kk = (k * k - k) / 2 - 1;
+			for (int n = 1; n <= nSize; ++n) {
+				if (next[n - 1] >= 0) {
+					int nn = (n * n - n) / 2 - 1;
 					for (int j = 1; j <= nSize; ++j) {
 						if (next[j - 1] >= 0) {
-							theVec[kk + j] = 0.0; // clear matrix row/col
+							theVec[nn + j] = 0.0; // clear matrix row/col
 						}
 					}
 				}
