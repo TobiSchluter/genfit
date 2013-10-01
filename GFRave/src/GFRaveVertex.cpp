@@ -84,24 +84,20 @@ GFRaveVertex::GFRaveVertex(const GFRaveVertex & vertex) :
 }
 
 
-GFRaveVertex& GFRaveVertex::operator=(const GFRaveVertex & vertex) {
-  pos_ = vertex.pos_;
-  cov_ = vertex.cov_;
-  ndf_ = vertex.ndf_;
-  chi2_ = vertex.chi2_;
-  id_ = vertex.id_;
-
-  unsigned int nPar =  smoothedTracks_.size();
-  for (unsigned int i=0; i<nPar; ++i) {
-    delete smoothedTracks_[i];
-  }
-  nPar =  vertex.smoothedTracks_.size();
-  smoothedTracks_.reserve(nPar);
-  for (unsigned int i=0; i<nPar; ++i) {
-    smoothedTracks_.push_back(new GFRaveTrackParameters(*(vertex.smoothedTracks_[i])));
-  }
-
+GFRaveVertex& GFRaveVertex::operator=(GFRaveVertex other) {
+  swap(other);
   return *this;
+}
+
+
+void GFRaveVertex::swap(GFRaveVertex& other) {
+  std::swap(this->pos_, other.pos_);
+  this->cov_.ResizeTo(other.cov_);
+  std::swap(this->cov_, other.cov_);
+  std::swap(this->ndf_, other.ndf_);
+  std::swap(this->chi2_, other.chi2_);
+  std::swap(this->id_, other.id_);
+  std::swap(this->smoothedTracks_, other.smoothedTracks_);
 }
 
 

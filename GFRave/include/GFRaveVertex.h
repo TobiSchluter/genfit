@@ -56,7 +56,8 @@ class GFRaveVertex : public TObject {
 
     GFRaveVertex(const GFRaveVertex &);
 
-    GFRaveVertex& operator=(const GFRaveVertex &);
+    GFRaveVertex& operator=(GFRaveVertex);
+    void swap(GFRaveVertex&);
 
     ~GFRaveVertex();
 
