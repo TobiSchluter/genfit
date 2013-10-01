@@ -101,9 +101,10 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool r
     if (debugLvl_ > 0)
       std::cout << "take smoothed state of cardinal rep fit as seed \n";
     TVector3 pos, mom;
+    TMatrixDSym cov;
     const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
-    tr->getCardinalRep()->getPosMom(fittedState, pos, mom);
-    rep->setPosMom(*currentState_, pos, mom);
+    tr->getCardinalRep()->getPosMomCov(fittedState, pos, mom, cov);
+    rep->setPosMomCov(*currentState_, pos, mom, cov);
     rep->setQop(*currentState_, tr->getCardinalRep()->getQop(fittedState));
   }
   else {
