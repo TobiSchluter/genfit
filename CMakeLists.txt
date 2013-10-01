@@ -75,7 +75,7 @@ ENDIF()
 
 
 # require proper c++, standard is C++03, flag reads: c++98
-ADD_DEFINITIONS( " -Wall -O3 -g3 -ansi -pedantic -Wno-long-long -Wshadow "   )
+ADD_DEFINITIONS( " -Wall -g3 -ansi -pedantic -Wno-long-long -Wshadow "   )
 
 # uncomment for coverage analysis.
 #ADD_DEFINITIONS( "--coverage")

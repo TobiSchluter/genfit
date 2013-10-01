@@ -23,7 +23,6 @@
 #ifndef genfit_FitStatus_h
 #define genfit_FitStatus_h
 
-#include <TObject.h>
 #include <Rtypes.h>
 #include <Math/ProbFuncMathCore.h>
 
@@ -34,7 +33,7 @@ namespace genfit {
  *
  *  @author Johannes Rauch (Technische Universit&auml;t M&uuml;nchen, original author)
  */
-  class FitStatus : public TObject {
+class FitStatus {
 
  public:
 
@@ -95,8 +94,6 @@ namespace genfit {
   //! For the Kalman-derived fitters in particular, this corresponds to the backwards fit.
   double chi2_;
   double ndf_;
-
-  ClassDef(FitStatus, 1);
 };
 
 } /* End of namespace genfit */

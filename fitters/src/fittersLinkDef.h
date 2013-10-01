@@ -6,7 +6,7 @@
 
 // these need no special tratment
 #pragma link C++ class genfit::AbsKalmanFitter+;
-#pragma link C++ class genfit::KalmanFitStatus;
+#pragma link C++ class genfit::KalmanFitStatus+;
 #pragma link C++ class genfit::KalmanFitterRefTrack+;
 
 // these inherit from classes that need custom streamers
