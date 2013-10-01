@@ -31,12 +31,16 @@ MeasurementOnPlane::MeasurementOnPlane(const MeasurementOnPlane& other) :
 }
 
 
-MeasurementOnPlane& MeasurementOnPlane::operator=(const MeasurementOnPlane& other) {
-  MeasuredStateOnPlane::operator=(other);
-  weight_ = other.weight_;
-  hMatrix_.reset(other.hMatrix_->clone());
-
+MeasurementOnPlane& MeasurementOnPlane::operator=(MeasurementOnPlane other) {
+  swap(other);
   return *this;
+}
+
+
+void MeasurementOnPlane::swap(MeasurementOnPlane& other) {
+  MeasuredStateOnPlane::swap(other);
+  this->hMatrix_.swap(other.hMatrix_);
+  std::swap(this->weight_, other.weight_);
 }
 
 

@@ -53,7 +53,8 @@ class MeasurementOnPlane : public MeasuredStateOnPlane {
   //! copy constructor
   MeasurementOnPlane(const MeasurementOnPlane& other);
   //! assignment operator
-  MeasurementOnPlane& operator=(const MeasurementOnPlane& other);
+  MeasurementOnPlane& operator=(MeasurementOnPlane other);
+  void swap(MeasurementOnPlane& other);
 
   virtual ~MeasurementOnPlane() {}
 

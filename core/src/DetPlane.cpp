@@ -73,21 +73,19 @@ DetPlane::DetPlane(const DetPlane& rhs) :
 }
 
 
-DetPlane& DetPlane::operator=(const DetPlane& rhs) {
-  if (this == &rhs)
-    return *this;
-
-  if(rhs.finitePlane_ != NULL){
-    finitePlane_.reset(rhs.finitePlane_->clone());
-  }
-  else{
-    finitePlane_.reset();
-  }
-  o_ = rhs.o_;
-  u_ = rhs.u_;
-  v_ = rhs.v_;
-
+DetPlane& DetPlane::operator=(DetPlane other) {
+  swap(other);
   return *this;
+}
+
+
+void DetPlane::swap(DetPlane& other) {
+  // by swapping the members of two classes,
+  // the two classes are effectively swapped
+  std::swap(this->o_, other.o_);
+  std::swap(this->u_, other.u_);
+  std::swap(this->v_, other.v_);
+  this->finitePlane_.swap(other.finitePlane_);
 }
 
 

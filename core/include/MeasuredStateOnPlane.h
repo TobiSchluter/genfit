@@ -45,7 +45,8 @@ class MeasuredStateOnPlane : public StateOnPlane {
   MeasuredStateOnPlane(const MeasuredStateOnPlane& o);
   MeasuredStateOnPlane(const StateOnPlane& state, const TMatrixDSym& cov);
 
-  MeasuredStateOnPlane& operator= (const MeasuredStateOnPlane& other);
+  MeasuredStateOnPlane& operator=(MeasuredStateOnPlane other);
+  void swap(MeasuredStateOnPlane& other); // nothrow
 
   virtual ~MeasuredStateOnPlane() {}
 
@@ -86,6 +87,12 @@ class MeasuredStateOnPlane : public StateOnPlane {
 MeasuredStateOnPlane calcAverageState(const MeasuredStateOnPlane& forwardState, const MeasuredStateOnPlane& backwardState);
 
 
+inline void MeasuredStateOnPlane::swap(MeasuredStateOnPlane& other) {
+  StateOnPlane::swap(other);
+  this->cov_.ResizeTo(other.cov_);
+  std::swap(this->cov_, other.cov_);
+}
+
 inline MeasuredStateOnPlane::MeasuredStateOnPlane(const AbsTrackRep* rep) :
   StateOnPlane(rep), cov_(0,0)
 {
@@ -119,15 +126,8 @@ inline MeasuredStateOnPlane::MeasuredStateOnPlane(const StateOnPlane& state, con
   //assert(cov_.GetNcols() == (signed)getRep()->getDim());
 }
 
-inline MeasuredStateOnPlane& MeasuredStateOnPlane::operator= (const MeasuredStateOnPlane& other) {
-  if (this == &other)
-    return *this;
-
-  StateOnPlane::operator=(other);
-
-  cov_.ResizeTo(other.cov_);
-  cov_ = other.cov_;
-
+inline MeasuredStateOnPlane& MeasuredStateOnPlane::operator=(MeasuredStateOnPlane other) {
+  swap(other);
   return *this;
 }
 

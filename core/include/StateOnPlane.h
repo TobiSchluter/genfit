@@ -46,11 +46,13 @@ class StateOnPlane : public TObject {
 
  public:
 
+
   StateOnPlane(const AbsTrackRep* rep = NULL);
   StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep);
   StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo);
 
-  StateOnPlane& operator= (const StateOnPlane& other);
+  StateOnPlane& operator=(StateOnPlane other);
+  void swap(StateOnPlane& other); // nothrow
 
   virtual ~StateOnPlane() {}
 
@@ -146,18 +148,18 @@ inline StateOnPlane::StateOnPlane(const TVectorD& state, const SharedPlanePtr& p
   //assert(state_.GetNrows() == (signed)rep->getDim());
 }
 
-inline StateOnPlane& StateOnPlane::operator= (const StateOnPlane& other) {
-  state_.ResizeTo(other.state_);
-  state_ = other.state_;
-
-  auxInfo_.ResizeTo(other.auxInfo_);
-  auxInfo_ = other.auxInfo_;
-
-  sharedPlane_ = other.sharedPlane_;
-
-  rep_ = other.rep_;
-
+inline StateOnPlane& StateOnPlane::operator=(StateOnPlane other) {
+  swap(other);
   return *this;
+}
+
+inline void StateOnPlane::swap(StateOnPlane& other) {
+  this->state_.ResizeTo(other.state_);
+  std::swap(this->state_, other.state_);
+  this->auxInfo_.ResizeTo(other.auxInfo_);
+  std::swap(this->auxInfo_, other.auxInfo_);
+  this->sharedPlane_.swap(other.sharedPlane_);
+  std::swap(this->rep_, other.rep_);
 }
 
 } /* End of namespace genfit */

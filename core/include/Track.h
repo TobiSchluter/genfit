@@ -94,6 +94,8 @@ class Track : public TObject {
   Track(AbsTrackRep* trackRep, const TVectorD& stateSeed, const TMatrixDSym& covSeed);
 
   Track(const Track&); // copy constructor
+  Track& operator=(Track); // assignment operator
+  void swap(Track& other); // nothrow
 
   virtual ~Track();
   virtual void Clear(Option_t* = "");
@@ -219,8 +221,6 @@ class Track : public TObject {
  private:
 
   void trackHasChanged();
-
-  Track& operator=(const Track&); // assignment operator  // delete until properly implemented
 
   void fillPointsWithMeasurement();
 

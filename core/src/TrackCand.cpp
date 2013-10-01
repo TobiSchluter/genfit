@@ -27,6 +27,7 @@
 
 namespace genfit {
 
+
 TrackCand::TrackCand() :
   mcTrackId_(-1),
   pdg_(0),
@@ -57,28 +58,20 @@ TrackCand::TrackCand( const TrackCand& other ) :
   }
 }
 
-TrackCand& TrackCand::operator=( const TrackCand& other ){
-
-  // TODO: use copy-and-swap idiom (also in all other classes defining assignment operators)
-
-  if (&other == this)
-    return *this;
-
-  mcTrackId_ = other.mcTrackId_;
-  pdg_ = other.pdg_;
-  state6D_ = other.state6D_;
-  q_ = other.q_;
-
-  for (unsigned int i=0; i<hits_.size(); ++i) {
-    delete hits_[i];
-  }
-  hits_.clear();
-  hits_.reserve(other.hits_.size());
-  for (unsigned int i=0; i<other.hits_.size(); ++i) {
-    hits_.push_back( (other.hits_[i])->clone() );
-  }
-
+TrackCand& TrackCand::operator=(TrackCand other) {
+  swap(other);
   return *this;
+}
+
+
+void TrackCand::swap(TrackCand& other) {
+  // by swapping the members of two classes,
+  // the two classes are effectively swapped
+  std::swap(this->hits_, other.hits_);
+  std::swap(this->mcTrackId_, other.mcTrackId_);
+  std::swap(this->pdg_, other.pdg_);
+  std::swap(this->state6D_, other.state6D_);
+  std::swap(this->q_, other.q_);
 }
 
 

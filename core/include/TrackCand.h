@@ -71,6 +71,7 @@ class TrackCand : public TObject {
 
  public:
 
+
   // Constructors/Destructors ---------
   TrackCand();
   ~TrackCand();
@@ -78,7 +79,8 @@ class TrackCand : public TObject {
   //! copy constructor
   TrackCand( const TrackCand& other );
   //! assignment operator
-  TrackCand& operator=( const TrackCand& other );
+  TrackCand& operator=(TrackCand other);
+  void swap(TrackCand& other); // nothrow
 
   //! == operator checks equality of TrackCandHits. Does not check for sorting parameters.
   friend bool operator== (const TrackCand& lhs, const TrackCand& rhs);

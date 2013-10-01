@@ -62,6 +62,7 @@ class DetPlane : public TObject {
 
  public:
 
+
   // Constructors/Destructors ---------
   DetPlane(AbsFinitePlane* finite = NULL);
 
@@ -77,7 +78,8 @@ class DetPlane : public TObject {
   virtual ~DetPlane();
 
   DetPlane(const DetPlane&);
-  DetPlane& operator=(const DetPlane&);
+  DetPlane& operator=(DetPlane);
+  void swap(DetPlane& other); // nothrow
 
   // Accessors -----------------------
   const TVector3& getO() const {return o_;}

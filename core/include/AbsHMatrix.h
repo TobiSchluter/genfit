@@ -64,7 +64,7 @@ class AbsHMatrix : public TObject {
 
  protected:
   // protect from calling copy c'tor or assignment operator from outside the class. Use #clone() if you want a copy!
- AbsHMatrix(const AbsHMatrix& o) : TObject(o) {;}
+  AbsHMatrix(const AbsHMatrix& o) : TObject(o) {;}
   AbsHMatrix& operator=(const AbsHMatrix&);
 
  public:

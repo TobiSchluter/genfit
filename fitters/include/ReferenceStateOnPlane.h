@@ -54,6 +54,9 @@ class ReferenceStateOnPlane : public StateOnPlane {
       const TVectorD& auxInfo);
   ReferenceStateOnPlane(const StateOnPlane& state);
 
+  StateOnPlane& operator=(ReferenceStateOnPlane other);
+  void swap(ReferenceStateOnPlane& other); // nothrow
+
   virtual ~ReferenceStateOnPlane() {}
 
   void setForwardSegmentLength(double len) {forwardSegmentLength_ = len;}

@@ -133,37 +133,29 @@ Track::Track(const Track& rhs)
   assert(checkConsistency());
 }
 
-/*Track& Track::operator=(const Track& rhs) {
-  for (TrackPoint* point : trackPoints_) {
-    if (point != nullptr)
-      delete point;
-  }
-  trackPoints_.clear();
+Track& Track::operator=(Track other) {
+  swap(other);
 
-  for (TrackPoint* rhsPoint : rhs.trackPoints_) {
-    trackPoints_.push_back(new TrackPoint(*rhsPoint));
+  for (std::vector<TrackPoint*>::const_iterator it=trackPoints_.begin(); it!=trackPoints_.end(); ++it) {
+    trackPoints_.back()->setTrack(this);
   }
 
-  for (AbsTrackRep* rep : trackReps_) {
-    if (rep != nullptr)
-      delete rep;
-  }
-  trackReps_.clear();
+  fillPointsWithMeasurement();
 
-  for (AbsTrackRep* rhsRep : rhs.trackReps_) {
-    trackReps_.push_back(rhsRep->clone());
-  }
-
-  cardinalRep_ = rhs.cardinalRep_;
-
-  stateSeed_.ResizeTo(rhs.stateSeed_);
-  stateSeed_ = rhs.stateSeed_;
-
+  // self test
   assert(checkConsistency());
 
   return *this;
-}*/
+}
 
+void Track::swap(Track& other) {
+  std::swap(this->trackReps_, other.trackReps_);
+  std::swap(this->cardinalRep_, other.cardinalRep_);
+  std::swap(this->trackPoints_, other.trackPoints_);
+  std::swap(this->fitStatuses_, other.fitStatuses_);
+  std::swap(this->stateSeed_, other.stateSeed_);
+  std::swap(this->covSeed_, other.covSeed_);
+}
 
 Track::~Track() {
   this->Clear();

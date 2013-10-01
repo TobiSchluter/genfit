@@ -88,6 +88,30 @@ ReferenceStateOnPlane::ReferenceStateOnPlane(const StateOnPlane& state) :
 }
 
 
+StateOnPlane& ReferenceStateOnPlane::operator=(ReferenceStateOnPlane other) {
+  swap(other);
+  return *this;
+}
+
+void ReferenceStateOnPlane::swap(ReferenceStateOnPlane& other) {
+  StateOnPlane::swap(other);
+  std::swap(this->forwardSegmentLength_, other.forwardSegmentLength_);
+  std::swap(this->backwardSegmentLength_, other.backwardSegmentLength_);
+  this->forwardTransportMatrix_.ResizeTo(other.forwardTransportMatrix_);
+  std::swap(this->forwardTransportMatrix_, other.forwardTransportMatrix_);
+  this->backwardTransportMatrix_.ResizeTo(other.backwardTransportMatrix_);
+  std::swap(this->backwardTransportMatrix_, other.backwardTransportMatrix_);
+  this->forwardNoiseMatrix_.ResizeTo(other.forwardNoiseMatrix_);
+  std::swap(this->forwardNoiseMatrix_, other.forwardNoiseMatrix_);
+  this->backwardNoiseMatrix_.ResizeTo(other.backwardNoiseMatrix_);
+  std::swap(this->backwardNoiseMatrix_, other.backwardNoiseMatrix_);
+  this->forwardDeltaState_.ResizeTo(other.forwardDeltaState_);
+  std::swap(this->forwardDeltaState_, other.forwardDeltaState_);
+  this->backwardDeltaState_.ResizeTo(other.backwardDeltaState_);
+  std::swap(this->backwardDeltaState_, other.backwardDeltaState_);
+}
+
+
 void ReferenceStateOnPlane::resetForward() {
   forwardSegmentLength_ = 0;
   forwardTransportMatrix_.UnitMatrix();

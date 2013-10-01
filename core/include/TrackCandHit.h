@@ -69,7 +69,15 @@ class TrackCandHit : public TObject {
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
 
  protected:
-  // Private Data Members ------------
+
+  //! protect from calling copy c'tor from outside the class. Use #clone() if you want a copy!
+  TrackCandHit(const TrackCandHit& other) :
+    detId_(other.detId_), hitId_(other.hitId_), planeId_(other.planeId_), sortingParameter_(other.sortingParameter_) {;}
+  //! protect from calling assignment operator from outside the class. Use #clone() instead!
+  TrackCandHit& operator=(const TrackCandHit&);
+
+
+  // Data Members ------------
   int    detId_; // detId id is -1 per default
   int    hitId_; // hitId id is -1 per default
   int    planeId_; // planeId id is -1 per default

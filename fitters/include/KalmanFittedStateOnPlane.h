@@ -41,6 +41,9 @@ class KalmanFittedStateOnPlane : public MeasuredStateOnPlane {
   KalmanFittedStateOnPlane(const TVectorD& state, const TMatrixDSym& cov, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo, double chiSquareIncrement, double ndf);
   KalmanFittedStateOnPlane(const MeasuredStateOnPlane& state, double chiSquareIncrement, double ndf);
 
+  KalmanFittedStateOnPlane& operator=(KalmanFittedStateOnPlane other);
+  void swap(KalmanFittedStateOnPlane& other); // nothrow
+
   virtual ~KalmanFittedStateOnPlane() {}
 
   double getChiSquareIncrement() const {return chiSquareIncrement_;}
@@ -87,6 +90,17 @@ inline KalmanFittedStateOnPlane::KalmanFittedStateOnPlane(const MeasuredStateOnP
   MeasuredStateOnPlane(state), chiSquareIncrement_(chiSquareIncrement), ndf_(ndf)
 {
   ;
+}
+
+inline KalmanFittedStateOnPlane& KalmanFittedStateOnPlane::operator=(KalmanFittedStateOnPlane other) {
+  swap(other);
+  return *this;
+}
+
+inline void KalmanFittedStateOnPlane::swap(KalmanFittedStateOnPlane& other) {
+  MeasuredStateOnPlane::swap(other);
+  std::swap(this->chiSquareIncrement_, other.chiSquareIncrement_);
+  std::swap(this->ndf_, other.ndf_);
 }
 
 } /* End of namespace genfit */
