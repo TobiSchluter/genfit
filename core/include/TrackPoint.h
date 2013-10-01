@@ -25,13 +25,17 @@
 
 #include "AbsMeasurement.h"
 #include "AbsFitterInfo.h"
-//#include "MaterialInfo.h"
+#include "ThinScatterer.h"
 
 #include <TObject.h>
 
 #include <map>
 #include <vector>
 #include <memory>
+
+#ifndef __CINT__
+#include <boost/scoped_ptr.hpp>
+#endif
 
 
 namespace genfit {
@@ -66,7 +70,8 @@ class TrackPoint : public TObject {
   TrackPoint(genfit::AbsMeasurement* rawMeasurement, Track* track);
 
   TrackPoint(const TrackPoint&); // copy constructor
-  TrackPoint& operator=(const TrackPoint&); // assignment operator
+  TrackPoint& operator=(TrackPoint); // assignment operator
+  void swap(TrackPoint& other);
 
   /**
    * custom copy constructor where all TrackRep pointers are exchanged according to the map.
@@ -96,8 +101,8 @@ class TrackPoint : public TObject {
     return (fitterInfos_.find(rep) != fitterInfos_.end());
   }
 
-  //MaterialInfo* getMaterialInfo() {return material_;}
-  //bool hasMaterialInfo() {return material_ != nullptr;}
+  ThinScatterer* getMaterialInfo() {return thinScatterer_.get();}
+  bool hasThinScatterer() {return thinScatterer_.get() != NULL;}
 
 
   void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
@@ -108,7 +113,7 @@ class TrackPoint : public TObject {
   void setFitterInfo(genfit::AbsFitterInfo* fitterInfo);
   void deleteFitterInfo(const AbsTrackRep* rep) {delete fitterInfos_[rep]; fitterInfos_.erase(rep);}
 
-  //void setMaterial(MaterialInfo* material);
+  void setScatterer(ThinScatterer* scatterer) {thinScatterer_.reset(scatterer);}
 
   void Print(const Option_t* = "") const;
 
@@ -140,7 +145,11 @@ class TrackPoint : public TObject {
    */
   std::vector< AbsFitterInfo* > vFitterInfos_; //!
 
-  //MaterialInfo* material_; // Ownership
+#ifndef __CINT__
+  boost::scoped_ptr<ThinScatterer> thinScatterer_; // Ownership
+#else
+  class ThinScatterer* thinScatterer_;
+#endif
 
  public:
 

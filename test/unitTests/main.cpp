@@ -13,7 +13,6 @@
 #include <FieldManager.h>
 #include <KalmanFittedStateOnPlane.h>
 #include <KalmanFitterInfo.h>
-#include <MaterialInfo.h>
 #include <MeasuredStateOnPlane.h>
 #include <MeasurementOnPlane.h>
 #include <PlanarMeasurement.h>

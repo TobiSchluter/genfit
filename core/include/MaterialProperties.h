@@ -33,7 +33,7 @@ namespace genfit {
 /**
  * @brief Material properties needed e.g. for material effects calculation.
  */
-class MaterialProperties {
+class MaterialProperties : public TObject {
 
  public:
 
@@ -82,6 +82,10 @@ class MaterialProperties {
   double radiationLength_;
   //! mean excitation energy [eV]
   double mEE_;
+
+
+ public:
+  ClassDef(MaterialProperties, 1)
 
 };
 

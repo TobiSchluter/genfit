@@ -9,6 +9,7 @@
 #pragma link C++ class genfit::AbsHMatrix+;
 #pragma link C++ class genfit::RectangularFinitePlane+;
 #pragma link C++ class genfit::FitStatus+;
+#pragma link C++ class genfit::MaterialProperties+;
 #pragma link C++ class genfit::TrackCand+;
 #pragma link C++ class genfit::TrackCandHit+;
 
@@ -26,6 +27,7 @@
 #pragma link C++ class genfit::DetPlane-;  // scoped_ptr<> finitePlane_
 #pragma link C++ class genfit::MeasurementOnPlane-; // scoped_ptr<> hMatrix_
 #pragma link C++ class genfit::StateOnPlane-;  // rep_, sharedPlanePtr
+#pragma link C++ class genfit::ThinScatterer-; // sharedPlanePtr
 #pragma link C++ class genfit::Track-;
 #pragma link C++ class genfit::TrackPoint-; // track_, fixup the map
 

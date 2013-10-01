@@ -29,19 +29,19 @@
 namespace genfit {
 
 TrackPoint::TrackPoint() :
-  sortingParameter_(0), track_(NULL)//, material_(nullptr)
+  sortingParameter_(0), track_(NULL), thinScatterer_(NULL)
 {
   ;
 }
 
 TrackPoint::TrackPoint(Track* track) :
-  sortingParameter_(0), track_(track)//, material_(nullptr)
+  sortingParameter_(0), track_(track), thinScatterer_(NULL)
 {
   ;
 }
 
 TrackPoint::TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurements, Track* track) :
-  sortingParameter_(0), track_(track)//, material_(nullptr)
+  sortingParameter_(0), track_(track), thinScatterer_(NULL)
 {
   rawMeasurements_.reserve(rawMeasurements.size());
 
@@ -51,14 +51,14 @@ TrackPoint::TrackPoint(const std::vector< genfit::AbsMeasurement* >& rawMeasurem
 }
 
 TrackPoint::TrackPoint(AbsMeasurement* rawMeasurement, Track* track) :
-  sortingParameter_(0), track_(track)//, material_(nullptr)
+  sortingParameter_(0), track_(track), thinScatterer_(NULL)
 {
   addRawMeasurement(rawMeasurement);
 }
 
 
 TrackPoint::TrackPoint(const TrackPoint& rhs) :
-  sortingParameter_(rhs.sortingParameter_), track_(rhs.track_)
+  sortingParameter_(rhs.sortingParameter_), track_(rhs.track_), thinScatterer_(NULL)
 {
   // clone rawMeasurements
   for (std::vector<AbsMeasurement*>::const_iterator it = rhs.rawMeasurements_.begin(); it != rhs.rawMeasurements_.end(); ++it) {
@@ -72,12 +72,15 @@ TrackPoint::TrackPoint(const TrackPoint& rhs) :
     fi->setTrackPoint(this);
     setFitterInfo(fi);
   }
+
+  if (rhs.thinScatterer_ != NULL)
+    thinScatterer_.reset(new ThinScatterer(*(rhs.thinScatterer_)));
 }
 
 TrackPoint::TrackPoint(const TrackPoint& rhs,
     const std::map<const AbsTrackRep*, AbsTrackRep*>& map,
     const std::vector<const genfit::AbsTrackRep*> * repsToIgnore) :
-  sortingParameter_(rhs.sortingParameter_), track_(rhs.track_)
+  sortingParameter_(rhs.sortingParameter_), track_(rhs.track_), thinScatterer_(NULL)
 {
   // clone rawMeasurements
   for (std::vector<AbsMeasurement*>::const_iterator it = rhs.rawMeasurements_.begin(); it!=rhs.rawMeasurements_.end(); ++it) {
@@ -96,31 +99,33 @@ TrackPoint::TrackPoint(const TrackPoint& rhs,
     fi->setTrackPoint(this);
     setFitterInfo(fi);
   }
+
+  if (rhs.thinScatterer_ != NULL)
+    thinScatterer_.reset(new ThinScatterer(*(rhs.thinScatterer_)));
 }
 
 
-TrackPoint& TrackPoint::operator=(const TrackPoint& rhs) {
+TrackPoint& TrackPoint::operator=(TrackPoint rhs) {
+  swap(rhs);
 
-  sortingParameter_ = rhs.sortingParameter_;
-  track_ = rhs.track_;
-
-  rawMeasurements_.clear();
-  fitterInfos_.clear();
-
-  // clone rawMeasurements
-  for (std::vector<AbsMeasurement*>::const_iterator it = rhs.rawMeasurements_.begin(); it!=rhs.rawMeasurements_.end(); ++it) {
-    AbsMeasurement* tp = (*it)->clone();
-    addRawMeasurement(tp);
+  for (std::vector<AbsMeasurement*>::const_iterator it = rawMeasurements_.begin(); it!=rawMeasurements_.end(); ++it) {
+    (*it)->setTrackPoint(this);
   }
 
-  // copy fitterInfos
-  for (std::map<const AbsTrackRep*, AbsFitterInfo* >::const_iterator it = rhs.fitterInfos_.begin(); it != rhs.fitterInfos_.end();  ++it ) {
-    AbsFitterInfo* fi = it->second->clone();
-    fi->setTrackPoint(this);
-    setFitterInfo(fi);
+  for (std::map<const AbsTrackRep*, AbsFitterInfo* >::const_iterator it = fitterInfos_.begin(); it != fitterInfos_.end();  ++it ) {
+    it->second->setTrackPoint(this);
   }
 
   return *this;
+}
+
+
+void TrackPoint::swap(TrackPoint& other) {
+  std::swap(this->sortingParameter_, other.sortingParameter_);
+  std::swap(this->track_, other.track_);
+  std::swap(this->rawMeasurements_, other.rawMeasurements_);
+  std::swap(this->fitterInfos_, other.fitterInfos_);
+  this->thinScatterer_.swap(other.thinScatterer_);
 }
 
 
@@ -136,13 +141,6 @@ TrackPoint::~TrackPoint() {
   for (it = fitterInfos_.begin(); it != fitterInfos_.end(); ++it)
     delete it->second;
 }
-
-
-/*void TrackPoint::setMaterial(MaterialInfo* material) {
-  if (material_ != nullptr)
-    delete material_;
-  material_ = material;
-}*/
 
 
 AbsMeasurement* TrackPoint::getRawMeasurement(int i) const {
@@ -218,70 +216,70 @@ void TrackPoint::Streamer(TBuffer &R__b)
       //TObject::Streamer(R__b);
       R__b >> sortingParameter_;
       {
-	std::vector<genfit::AbsMeasurement*,std::allocator<genfit::AbsMeasurement*> > &R__stl =  rawMeasurements_;
-         R__stl.clear();
-         TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsMeasurement));
-         if (R__tcl1==0) {
-            Error("rawMeasurements_ streamer","Missing the TClass object for genfit::AbsMeasurement!");
-            return;
-         }
-         int R__i, R__n;
-         R__b >> R__n;
-         R__stl.reserve(R__n);
-         for (R__i = 0; R__i < R__n; R__i++) {
-            genfit::AbsMeasurement* R__t;
-            R__t = (genfit::AbsMeasurement*)R__b.ReadObjectAny(R__tcl1);
-            R__stl.push_back(R__t);
-         }
+        std::vector<genfit::AbsMeasurement*,std::allocator<genfit::AbsMeasurement*> > &R__stl =  rawMeasurements_;
+        R__stl.clear();
+        TClass *R__tcl1 = TBuffer::GetClass(typeid(genfit::AbsMeasurement));
+        if (R__tcl1==0) {
+          Error("rawMeasurements_ streamer","Missing the TClass object for genfit::AbsMeasurement!");
+          return;
+        }
+        int R__i, R__n;
+        R__b >> R__n;
+        R__stl.reserve(R__n);
+        for (R__i = 0; R__i < R__n; R__i++) {
+          genfit::AbsMeasurement* R__t;
+          R__t = (genfit::AbsMeasurement*)R__b.ReadObjectAny(R__tcl1);
+          R__stl.push_back(R__t);
+        }
       }
       track_ = NULL;
       size_t nTrackReps;
       R__b >> nTrackReps;
       vFitterInfos_.resize(nTrackReps);
       for (size_t i = 0; i < nTrackReps; ++i)
-	{
-	  int id;
-	  R__b >> id;
-	  AbsFitterInfo* p = 0;
-	  R__b >> p;
-	  vFitterInfos_[id] = p;
-	}
+      {
+        int id;
+        R__b >> id;
+        AbsFitterInfo* p = 0;
+        R__b >> p;
+        vFitterInfos_[id] = p;
+      }
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
 
       // Fixup ownerships.
       for (size_t i = 0; i < rawMeasurements_.size(); ++i)
-	{
-	  rawMeasurements_[i]->setTrackPoint(this);
-	}
+      {
+        rawMeasurements_[i]->setTrackPoint(this);
+      }
       for (size_t i = 0; i < vFitterInfos_.size(); ++i)
-	{
-	  // May not have FitterInfos for all reps.
-	  if (vFitterInfos_[i])
-	    vFitterInfos_[i]->setTrackPoint(this);
-	}
+      {
+        // May not have FitterInfos for all reps.
+        if (vFitterInfos_[i])
+          vFitterInfos_[i]->setTrackPoint(this);
+      }
    } else {
       R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
       //TObject::Streamer(R__b);
       R__b << sortingParameter_;
       {
-	std::vector<genfit::AbsMeasurement*,std::allocator<genfit::AbsMeasurement*> > &R__stl =  rawMeasurements_;
-         int R__n=(&R__stl) ? int(R__stl.size()) : 0;
-         R__b << R__n;
-         if(R__n) {
-	   std::vector<genfit::AbsMeasurement*,std::allocator<genfit::AbsMeasurement*> >::iterator R__k;
-            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
+        std::vector<genfit::AbsMeasurement*,std::allocator<genfit::AbsMeasurement*> > &R__stl =  rawMeasurements_;
+        int R__n=(&R__stl) ? int(R__stl.size()) : 0;
+        R__b << R__n;
+        if(R__n) {
+          std::vector<genfit::AbsMeasurement*,std::allocator<genfit::AbsMeasurement*> >::iterator R__k;
+          for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {
             R__b << (*R__k);
-            }
-         }
+          }
+        }
       }
       R__b << fitterInfos_.size();
       for (std::map<const AbsTrackRep*, AbsFitterInfo*>::const_iterator it = fitterInfos_.begin();
-	   it != fitterInfos_.end(); ++it)
-	{
-	  int id = track_->getIdForRep(it->first);
-	  R__b << id;
-	  R__b << it->second;
-	}
+          it != fitterInfos_.end(); ++it)
+      {
+        int id = track_->getIdForRep(it->first);
+        R__b << id;
+        R__b << it->second;
+      }
       R__b.SetByteCount(R__c, kTRUE);
    }
 }

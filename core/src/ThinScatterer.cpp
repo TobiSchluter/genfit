@@ -17,28 +17,39 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "MaterialInfo.h"
+#include "ThinScatterer.h"
+
 
 namespace genfit {
 
-MaterialInfo::MaterialInfo() :
-  sharedPlane_(),
-  materialBefore_(),
-  materialAfter_()
+//
+// This is modified from the auto-generated Streamer.
+//
+void ThinScatterer::Streamer(TBuffer &R__b)
 {
-  ;
+  // Stream an object of class genfit::ThinScatterer.
+
+  // TODO: test
+
+  //This works around a msvc bug and should be harmless on other platforms
+  typedef ::genfit::ThinScatterer thisClass;
+  UInt_t R__s, R__c;
+  if (R__b.IsReading()) {
+     Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+     //TObject::Streamer(R__b);
+     sharedPlane_.reset(new DetPlane());
+     sharedPlane_->Streamer(R__b);
+     material_.Streamer(R__b);
+     R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+  } else {
+     R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+     //TObject::Streamer(R__b);
+     sharedPlane_->Streamer(R__b);
+     material_.Streamer(R__b);
+     R__b.SetByteCount(R__c, kTRUE);
+  }
 }
 
-
-MaterialInfo::MaterialInfo(const SharedPlanePtr& sharedPlane,
-                           const SharedMaterialPropertiesPtr& materialBefore,
-                           const SharedMaterialPropertiesPtr& materialAfter) :
-  sharedPlane_(sharedPlane),
-  materialBefore_(materialBefore),
-  materialAfter_(materialAfter)
-{
-  ;
-}
 
 
 } /* End of namespace genfit */

@@ -21,11 +21,11 @@
  * @{
  */
 
-#ifndef genfit_MaterialInfo_h
-#define genfit_MaterialInfo_h
+#ifndef genfit_ThinScatterer_h
+#define genfit_ThinScatterer_h
 
 #include "SharedPlanePtr.h"
-#include "SharedMaterialPropertiesPtr.h"
+#include "MaterialProperties.h"
 
 #include <TObject.h>
 
@@ -35,29 +35,30 @@ namespace genfit {
 /**
  * @brief Thin or thick scatterer
  */
-class MaterialInfo : public TObject {
+class ThinScatterer : public TObject {
 
  public:
 
-  MaterialInfo();
-  MaterialInfo(const SharedPlanePtr& sharedPlane,
-               const SharedMaterialPropertiesPtr& materialBefore,
-               const SharedMaterialPropertiesPtr& materialAfter);
+  ThinScatterer() :
+    TObject(), sharedPlane_(), material_() {;}
+  ThinScatterer(const SharedPlanePtr& sharedPlane, const MaterialProperties& material) :
+    TObject(), sharedPlane_(sharedPlane), material_(material) {;}
 
   SharedPlanePtr getPlane() const {return sharedPlane_;}
-  SharedMaterialPropertiesPtr getMaterialBefore() const {return materialBefore_;}
-  SharedMaterialPropertiesPtr getMaterialAfter() const {return materialAfter_;}
+  const MaterialProperties& getMaterial() const {return material_;}
 
  private:
 
   SharedPlanePtr sharedPlane_; // Material boundary
-  SharedMaterialPropertiesPtr materialBefore_; // Material properties before the boundary
-  SharedMaterialPropertiesPtr materialAfter_; // Material properties after the boundary
-  //sharedMaterialPropertiesPtr materialAt_; // Material properties at the boundary (thin scatterer)
+  MaterialProperties material_; // Material properties
+
+
+ public:
+  ClassDef(ThinScatterer, 1)
 
 };
 
 } /* End of namespace genfit */
 /** @} */
 
-#endif // genfit_MaterialInfo_h
+#endif // genfit_ThinScatterer_h

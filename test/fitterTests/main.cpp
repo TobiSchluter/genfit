@@ -18,7 +18,7 @@
 #include <KalmanFitterInfo.h>
 #include <KalmanFitStatus.h>
 #include <DAF.h>
-#include <MaterialInfo.h>
+#include <GFGbl.h>
 #include <MeasuredStateOnPlane.h>
 #include <MeasurementOnPlane.h>
 #include <PlanarMeasurement.h>
@@ -479,7 +479,7 @@ int main() {
         if (prefit) {
           genfit::KalmanFitter prefitter(1, dPVal);
           prefitter.setMultipleMeasurementHandling(genfit::weightedClosestToPrediction);
-          prefitter.processTrack(fitTrack, fitTrack->getCardinalRep());
+          prefitter.processTrackWithRep(fitTrack, fitTrack->getCardinalRep());
         }
 
         fitter->processTrack(fitTrack, resort);
@@ -531,8 +531,11 @@ int main() {
       assert(secondTrack->checkConsistency());
 
 #ifndef VALGRIND
-      if ((!onlyDisplayFailed && iEvent < 1000) ||
-          (onlyDisplayFailed && ! fitTrack->getFitStatus(rep)->isFitConverged())) {
+      if (!onlyDisplayFailed && iEvent < 1000)
+        display->addEvent(fitTrack);
+      else if (onlyDisplayFailed &&
+               (!fitTrack->getFitStatus(rep)->isFitConverged() ||
+                fitTrack->getFitStatus(rep)->getPVal() < 0.01)) {
         // add track to event display
         display->addEvent(fitTrack);
       }
@@ -713,6 +716,14 @@ int main() {
   std::cout<<"avg nr iterations of converged fits =   " << (double)(nTotalIterConverged)/(double)(nConvergedFits) << std::endl;
   std::cout<<"avg nr iterations of UNconverged fits = " << (double)(nTotalIterNotConverged)/(double)(nUNConvergedFits) << std::endl;
   std::cout<<"fit efficiency =                        " << (double)nConvergedFits/nEvents << std::endl;
+
+  if (twoReps) {
+    std::cout<<"second rep: \navg nr iterations =                     " << (double)(nTotalIterSecondConverged + nTotalIterSecondNotConverged)/(double)(nConvergedFitsSecond + nUNConvergedFitsSecond) << std::endl;
+    std::cout<<"avg nr iterations of converged fits =   " << (double)(nTotalIterSecondConverged)/(double)(nConvergedFitsSecond) << std::endl;
+    std::cout<<"avg nr iterations of UNconverged fits = " << (double)(nTotalIterSecondNotConverged)/(double)(nUNConvergedFitsSecond) << std::endl;
+    std::cout<<"fit efficiency =                        " << (double)nConvergedFitsSecond/nEvents << std::endl;
+  }
+
 
   //std::cout<<"avg nr iterations (2nd rep) = " << (double)nTotalIterSecond/nSuccessfullFitsSecond << std::endl;
   //std::cout<<"fit efficiency (2nd rep) = " << (double)nConvergedFitsSecond/nEvents << std::endl;

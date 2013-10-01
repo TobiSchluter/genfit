@@ -318,6 +318,7 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
 
   for (int ipoint_meas = 0; ipoint_meas < npoints_meas; ipoint_meas++) {
     point_meas = trk->getPointWithMeasurement(ipoint_meas);
+
     KalmanFitterInfo* fi = static_cast<KalmanFitterInfo*>(point_meas->getFitterInfo(rep));
     // Current detector plane
     SharedPlanePtr plane = fi->getPlane();
@@ -333,7 +334,6 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
     double radLength = gGeoManager->GetCurrentNode()->GetMedium()->GetMaterial()->GetRadLen();
 
     cout << "sensorId: " << sensorId << endl;
-
     raw_meas = point_meas->getRawMeasurement();
     TVectorD raw_coor = raw_meas->getRawHitCoords();
 
@@ -424,8 +424,8 @@ void GFGbl::processTrackWithRep(Track* trk, const AbsTrackRep* rep, bool resortH
     GblPoint point(jacPointToPoint);
 
     // Measurement precision = inverse covariance matrix (of sensor measurements)
-    measPrec[0] = 1.0 / raw_cov[0][0];
-    measPrec[1] = 1.0 / raw_cov[1][1];
+    measPrec[0] = 1.0 / raw_cov(0,0);
+    measPrec[1] = 1.0 / raw_cov(1,1);
 
     // Projection from local track coordinates (co-moving frame) to measurement coordinates
     TMatrixD proL2m(2, 2);

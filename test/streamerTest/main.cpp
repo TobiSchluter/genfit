@@ -22,7 +22,6 @@
 #include <KalmanFitterRefTrack.h>
 #include <KalmanFitStatus.h>
 #include <DAF.h>
-#include <MaterialInfo.h>
 #include <MeasuredStateOnPlane.h>
 #include <MeasurementOnPlane.h>
 #include <PlanarMeasurement.h>
