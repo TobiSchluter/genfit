@@ -47,7 +47,7 @@ class ThinScatterer : public TObject {
   SharedPlanePtr getPlane() const {return sharedPlane_;}
   const MaterialProperties& getMaterial() const {return material_;}
 
-  void Print(const Option_t* = "");
+  void Print(const Option_t* = "") const;
 
  private:
 

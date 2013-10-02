@@ -23,7 +23,7 @@
 namespace genfit {
 
 
-void ThinScatterer::Print(const Option_t*) {
+void ThinScatterer::Print(const Option_t*) const {
   std::cout << "ThinScatterer, defined in plane: ";
   sharedPlane_->Print();
   std::cout << "Material properties: ";
