@@ -198,6 +198,8 @@ void TrackPoint::Print(const Option_t*) const {
     std::cout << "............\n";
   }
 
+  if (thinScatterer_)
+    thinScatterer_->Print();
 
 }
 
@@ -236,23 +238,29 @@ void TrackPoint::Streamer(TBuffer &R__b)
       size_t nTrackReps;
       R__b >> nTrackReps;
       vFitterInfos_.resize(nTrackReps);
-      for (size_t i = 0; i < nTrackReps; ++i)
-      {
+      for (size_t i = 0; i < nTrackReps; ++i)  {
         int id;
         R__b >> id;
         AbsFitterInfo* p = 0;
         R__b >> p;
         vFitterInfos_[id] = p;
       }
+      thinScatterer_.reset();
+      char flag;
+      R__b >> flag;
+      if (flag) {
+        ThinScatterer *scatterer = 0;
+        R__b >> scatterer;
+        thinScatterer_.reset(new ThinScatterer(*scatterer));
+      }
       R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
 
+
       // Fixup ownerships.
-      for (size_t i = 0; i < rawMeasurements_.size(); ++i)
-      {
+      for (size_t i = 0; i < rawMeasurements_.size(); ++i) {
         rawMeasurements_[i]->setTrackPoint(this);
       }
-      for (size_t i = 0; i < vFitterInfos_.size(); ++i)
-      {
+      for (size_t i = 0; i < vFitterInfos_.size(); ++i) {
         // May not have FitterInfos for all reps.
         if (vFitterInfos_[i])
           vFitterInfos_[i]->setTrackPoint(this);
@@ -280,9 +288,18 @@ void TrackPoint::Streamer(TBuffer &R__b)
         R__b << id;
         R__b << it->second;
       }
+      if (thinScatterer_) {
+        R__b << (char)1;
+        ThinScatterer *scatterer = new ThinScatterer(*thinScatterer_);
+        R__b << scatterer;
+        delete scatterer;
+      } else {
+        R__b << (char)0;
+      }
       R__b.SetByteCount(R__c, kTRUE);
    }
 }
+
 
 void TrackPoint::fixupRepsForReading()
 {

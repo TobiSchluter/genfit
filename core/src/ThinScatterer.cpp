@@ -22,9 +22,15 @@
 
 namespace genfit {
 
-//
-// This is modified from the auto-generated Streamer.
-//
+
+void ThinScatterer::Print(const Option_t*) {
+  std::cout << "ThinScatterer, defined in plane: ";
+  sharedPlane_->Print();
+  std::cout << "Material properties: ";
+  material_.Print();
+}
+
+
 void ThinScatterer::Streamer(TBuffer &R__b)
 {
   // Stream an object of class genfit::ThinScatterer.

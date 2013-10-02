@@ -128,21 +128,14 @@ int main() {
     catch(genfit::Exception& e){
       std::cerr<<"Exception, next track"<<std::endl;
       std::cerr << e.what();
-      continue; // here is a memleak!
+      continue;
     }
 
     //check
     assert(fitTrack.checkConsistency());
 
     // do the fit
-    try{
-      fitter->processTrack(&fitTrack);
-    }
-    catch(genfit::Exception& e){
-      std::cerr << e.what();
-      std::cerr << "Exception, next track" << std::endl;
-      continue;
-    }
+    fitter->processTrack(&fitTrack);
 
     //check
     assert(fitTrack.checkConsistency());

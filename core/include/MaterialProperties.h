@@ -46,8 +46,7 @@ class MaterialProperties : public TObject {
                      const double& Z,
                      const double& A,
                      const double& radiationLength,
-                     const double& mEE,
-                     const double& segmentLength);
+                     const double& mEE);
 
   double getDensity() const {return density_;}
   double getZ() const {return Z_;}
@@ -104,8 +103,7 @@ inline MaterialProperties::MaterialProperties(const double& density,
                    const double& Z,
                    const double& A,
                    const double& radiationLength,
-                   const double& mEE,
-                   const double& segmentLength) :
+                   const double& mEE) :
   density_(density),
   Z_(Z),
   A_(A),
