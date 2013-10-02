@@ -172,9 +172,9 @@ int main() {
         genfit::AbsMeasurement* measurement = measurementCreator.create(measurementTypes[i], i*5.);
         genfit::TrackPoint* tp = new genfit::TrackPoint(measurement, fitTrack);
         // test scatterers
-        /*genfit::ThinScatterer* sc = new genfit::ThinScatterer(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(1,1,1), TVector3(1,1,1))),
+        genfit::ThinScatterer* sc = new genfit::ThinScatterer(genfit::SharedPlanePtr(new genfit::DetPlane(TVector3(1,1,1), TVector3(1,1,1))),
                                                               genfit::MaterialProperties(1,2,3,4,5));
-        tp->setScatterer(sc);*/
+        tp->setScatterer(sc);
 
         fitTrack->insertPoint(tp);
       }
