@@ -20,7 +20,6 @@
 #include "Track.h"
 
 #include "TrackPoint.h"
-
 #include "Exception.h"
 
 #include <iostream>
@@ -229,8 +228,8 @@ void TrackPoint::Streamer(TBuffer &R__b)
         R__b >> R__n;
         R__stl.reserve(R__n);
         for (R__i = 0; R__i < R__n; R__i++) {
-          genfit::AbsMeasurement* R__t;
-          R__t = (genfit::AbsMeasurement*)R__b.ReadObjectAny(R__tcl1);
+          genfit::AbsMeasurement* R__t = 0;
+          R__b >> R__t;
           R__stl.push_back(R__t);
         }
       }
@@ -249,7 +248,7 @@ void TrackPoint::Streamer(TBuffer &R__b)
       char flag;
       R__b >> flag;
       if (flag) {
-        ThinScatterer *scatterer = 0;
+        genfit::ThinScatterer *scatterer = 0;
         R__b >> scatterer;
         thinScatterer_.reset(new ThinScatterer(*scatterer));
       }
@@ -290,9 +289,7 @@ void TrackPoint::Streamer(TBuffer &R__b)
       }
       if (thinScatterer_) {
         R__b << (char)1;
-        ThinScatterer *scatterer = new ThinScatterer(*thinScatterer_);
-        R__b << scatterer;
-        delete scatterer;
+        R__b << thinScatterer_.get();
       } else {
         R__b << (char)0;
       }

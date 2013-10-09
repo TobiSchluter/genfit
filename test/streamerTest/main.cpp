@@ -99,7 +99,7 @@ int main() {
   genfit::AbsKalmanFitter* fitter = new genfit::KalmanFitterRefTrack();
 
   // main loop
-  for (unsigned int iEvent=0; iEvent<100; ++iEvent){
+  for (unsigned int iEvent=0; iEvent<1; ++iEvent){
 
     // true start values
     TVector3 pos(0, 0, 0);
