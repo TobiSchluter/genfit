@@ -211,6 +211,38 @@ bool tools::transposedForwardSubstitution(const TMatrixD& R, TVectorD& b)
   return true;
 }
 
+// Same, but for one column of the matrix b.  Used by transposedInvert below
+bool tools::transposedForwardSubstitution(const TMatrixD& R, TMatrixD& b, int nCol)
+{
+  size_t n = R.GetNrows();
+  for (unsigned int i = 0; i < n; ++i) {
+    double sum = b(i, nCol);
+    for (unsigned int j = 0; j < i; ++j) {
+      sum -= b(j, nCol)*R(j,i);  // already replaced previous elements in b.
+    }
+    if (R(i,i) == 0)
+      return false;
+    b(i, nCol) = sum / R(i,i);
+  }
+  return true;
+}
+
+// inv will be the inverse of the transposed of the upper-right matrix R
+bool tools::transposedInvert(const TMatrixD& R, TMatrixD& inv)
+{
+  bool result = true;
+
+  inv.ResizeTo(R);
+  for (int i = 0; i < inv.GetNrows(); ++i)
+    for (int j = 0; j < inv.GetNcols(); ++j)
+      inv(i, j) = (i == j);
+
+  for (int i = 0; i < inv.GetNcols(); ++i)
+    result = result && transposedForwardSubstitution(R, inv, i);
+
+  return result;
+}
+
 // This replaces A with an upper right matrix connected to A by a
 // orthogonal transformation.  I.e., it computes the R from a QR
 // decomposition of A replacing A.
@@ -265,4 +297,57 @@ void tools::QR(TMatrixD& A)
       ak[i*nCols + j] = 0.;
 }
 
+// This averages the covariance matrices C1, C2 in a numerically
+// stable way by using matrix square roots.  No optimizations
+// performed, so use with care.
+void tools::safeAverage(const TMatrixDSym& C1, const TMatrixDSym& C2,
+			TMatrixDSym& result)
+{
+  /*
+    The algorithm proceeds as follows:
+    write C1 = S1 S1' (prime for transpose),
+          C2 = S2 S2'
+    Then the inverse of the average can be written as ("." for matrix
+    multiplication)
+         C^-1 = ((S1'^-1, S2'^-1) . (S1'^-1) )
+                (                   (S2'^-1) )
+    Inserting an orthogonal matrix T in the middle:
+         C^-1 = ((S1'^-1, S2'^-1) . T . T' . (S1'^-1) )
+                (                            (S2'^-1) )
+    doesn't change this because T.T' = 1.
+    Now choose T s.t. T'.(S1'^-1, S2'^-1)' is an upper right matrix.  We
+    use Tools::QR for the purpose, as we don't actually need T.
+
+    Then the inverse needed to obtain the covariance matrix can be
+    obtained by inverting the upper right matrix, which is squared to
+    obtained the new covariance matrix.  */
+  TDecompChol dec1(C1);
+  dec1.Decompose();
+  TDecompChol dec2(C2);
+  dec2.Decompose();
+
+  const TMatrixD& S1 = dec1.GetU();
+  const TMatrixD& S2 = dec2.GetU();
+
+  TMatrixD S1inv, S2inv;
+  transposedInvert(S1, S1inv);
+  transposedInvert(S2, S2inv);
+
+  TMatrixD A(2 * S1.GetNrows(), S1.GetNcols());
+  for (int i = 0; i < S1.GetNrows(); ++i) {
+    for (int j = 0; j < S2.GetNcols(); ++j) {
+      A(i, j) = S1inv(i, j);
+      A(i + S1.GetNrows(), j) = S2inv(i, j);
+    }
+  }
+
+  QR(A);
+  A.ResizeTo(S1.GetNrows(), S1.GetNrows());
+
+  TMatrixD inv;
+  transposedInvert(A, inv);
+
+  result.ResizeTo(inv.GetNcols(), inv.GetNcols());
+  result = TMatrixDSym(TMatrixDSym::kAtA, inv);
+}
 } /* End of namespace genfit */
