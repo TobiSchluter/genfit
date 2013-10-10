@@ -1872,7 +1872,17 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   double fieldCurvLimit(limits.getLowestLimitSignedVal()); // signed
   std::pair<double, double> distVsStep (9.E99, 9.E99); // first: smallest straight line distances to plane; second: RK steps
 
+  static const unsigned int maxNumIt = 10;
+  unsigned int counter(0);
+
   while (fabs(fieldCurvLimit) > MINSTEP) {
+
+    if(++counter > maxNumIt){
+      // if max iterations are reached, take a (hopefully) safe value and break.
+      fieldCurvLimit *= 0.5;
+      break;
+    }
+
     M1x7 state7_temp = { state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] }; // invalid: M1x7 state7_temp(state7);
     M1x3 SA;
 
