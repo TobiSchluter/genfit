@@ -1878,7 +1878,9 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   while (fabs(fieldCurvLimit) > MINSTEP) {
 
     if(++counter > maxNumIt){
-      // if max iterations are reached, take a (hopefully) safe value and break.
+      // if max iterations are reached, take a safe value
+      // (in previous iteration, fieldCurvLimit has been not more than doubled)
+      // and break.
       fieldCurvLimit *= 0.5;
       break;
     }
