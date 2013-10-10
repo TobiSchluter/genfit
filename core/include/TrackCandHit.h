@@ -72,7 +72,7 @@ class TrackCandHit : public TObject {
 
   //! protect from calling copy c'tor from outside the class. Use #clone() if you want a copy!
   TrackCandHit(const TrackCandHit& other) :
-    detId_(other.detId_), hitId_(other.hitId_), planeId_(other.planeId_), sortingParameter_(other.sortingParameter_) {;}
+    TObject(other), detId_(other.detId_), hitId_(other.hitId_), planeId_(other.planeId_), sortingParameter_(other.sortingParameter_) {;}
   //! protect from calling assignment operator from outside the class. Use #clone() instead!
   TrackCandHit& operator=(const TrackCandHit&);
 
