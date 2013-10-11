@@ -552,7 +552,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
             TEveBox* hit_box;
             TVector3 stripDir3 = stripDir.X()*u + stripDir.Y()*v;
             TVector3 stripDir3perp = stripDir.Y()*u - stripDir.X()*v;
-            TVector3 move = stripDir3*(stripDir3*(track_pos-o));
+            TVector3 move = stripDir3perp*(stripDir3perp*(track_pos-o));
             hit_box = boxCreator((o + move + hit_u*stripDir3), stripDir3, stripDir3perp, errorScale_*std::sqrt(hit_cov(0,0)), plane_size, 0.0105);
             hit_box->SetMainColor(kYellow);
             hit_box->SetMainTransparency(0);
