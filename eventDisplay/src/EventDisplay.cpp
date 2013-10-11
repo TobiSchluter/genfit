@@ -1215,12 +1215,12 @@ void EventDisplay::makeGui() {
     // evt number entry
     lbl = new TGLabel(hf, "Go to event: ");
     hf->AddFrame(lbl);
-    guiEvent = new TGNumberEntry(hf, 0, 9,999, TGNumberFormat::kNESInteger,
+    guiEvent2 = new TGNumberEntry(hf, 0, 9,999, TGNumberFormat::kNESInteger,
                           TGNumberFormat::kNEANonNegative,
                           TGNumberFormat::kNELLimitMinMax,
                           0, 99999);
-    hf->AddFrame(guiEvent);
-    guiEvent->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiGoto()");
+    hf->AddFrame(guiEvent2);
+    guiEvent2->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiGoto2()");
 
     // redraw button
     tb = new TGTextButton(hf, "Redraw Event");
@@ -1330,6 +1330,13 @@ void EventDisplay::makeGui() {
 
 void EventDisplay::guiGoto(){
   Long_t n = guiEvent->GetNumberEntry()->GetIntNumber();
+  guiEvent2->SetIntNumber(n);
+  gotoEvent(n);
+}
+
+void EventDisplay::guiGoto2(){
+  Long_t n = guiEvent2->GetNumberEntry()->GetIntNumber();
+  guiEvent->SetIntNumber(n);
   gotoEvent(n);
 }
 

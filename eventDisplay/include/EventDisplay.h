@@ -144,6 +144,7 @@ class EventDisplay : public TNamed {
 		void open();
 	
 	  void guiGoto();
+	  void guiGoto2();
 		void guiSetDrawParams();
 		void guiSelectFitterId(int val);
 		void guiSelectMmHandling(int val);
@@ -171,6 +172,7 @@ class EventDisplay : public TNamed {
 
 
     TGNumberEntry* guiEvent;
+    TGNumberEntry* guiEvent2;
 
     TGCheckButton* guiDrawGeometry_;
     bool drawGeometry_;
