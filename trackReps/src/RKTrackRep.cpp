@@ -47,6 +47,7 @@ namespace genfit {
 RKTrackRep::RKTrackRep() :
   AbsTrackRep(),
   lastStartState_(this),
+  lastEndState_(this),
   RKStepsFXStart_(0),
   RKStepsFXStop_(0),
   fJacobian_(5,5),
@@ -61,6 +62,7 @@ RKTrackRep::RKTrackRep() :
 RKTrackRep::RKTrackRep(int pdgCode, char propDir) :
   AbsTrackRep(pdgCode, propDir),
   lastStartState_(this),
+  lastEndState_(this),
   RKStepsFXStart_(0),
   RKStepsFXStop_(0),
   fJacobian_(5,5),
@@ -197,6 +199,10 @@ std::cout << "RKTrackRep::extrapolateToLine()\n";
   }
 
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
+    // make use of the cache
+    lastEndState_.setPlane(plane);
+    getState5(lastEndState_, state7);
+
     tracklength = extrapolateToPlane(state, plane);
   }
   else {
@@ -279,6 +285,10 @@ std::cout << "RKTrackRep::extrapolateToPoint()\n";
   }
 
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
+    // make use of the cache
+    lastEndState_.setPlane(plane);
+    getState5(lastEndState_, state7);
+
     tracklength = extrapolateToPlane(state, plane);
   }
   else {
@@ -392,6 +402,10 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
   }
 
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
+    // make use of the cache
+    lastEndState_.setPlane(plane);
+    getState5(lastEndState_, state7);
+
     tracklength = extrapolateToPlane(state, plane);
   }
   else {
@@ -486,6 +500,10 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
   }
 
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) { // now do the full extrapolation with covariance matrix
+    // make use of the cache
+    lastEndState_.setPlane(plane);
+    getState5(lastEndState_, state7);
+
     tracklength = extrapolateToPlane(state, plane);
   }
   else {
@@ -1199,6 +1217,9 @@ void RKTrackRep::initArrays() const {
 
   RKSteps_.reserve(100);
   ExtrapSteps_.reserve(100);
+
+  lastStartState_.getAuxInfo().ResizeTo(1);
+  lastEndState_.getAuxInfo().ResizeTo(1);
 }
 
 
@@ -2287,6 +2308,8 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
 
 
   if (plane != NULL &&
+      lastStartState_.getPlane().get() != NULL &&
+      lastEndState_.getPlane().get() != NULL &&
       state.getPlane() == lastStartState_.getPlane() &&
       state.getState() == lastStartState_.getState() &&
       (*plane)->distance(getPos(lastEndState_)) <= MINSTEP) {

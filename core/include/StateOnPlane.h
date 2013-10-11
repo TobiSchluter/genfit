@@ -138,14 +138,14 @@ inline StateOnPlane::StateOnPlane(const TVectorD& state, const SharedPlanePtr& p
   state_(state), auxInfo_(0), sharedPlane_(plane), rep_(rep)
 {
   assert(rep != NULL);
-  //assert(state_.GetNrows() == (signed)rep->getDim());
+  assert(sharedPlane_.get() != NULL);
 }
 
 inline StateOnPlane::StateOnPlane(const TVectorD& state, const SharedPlanePtr& plane, const AbsTrackRep* rep, const TVectorD& auxInfo) :
   state_(state), auxInfo_(auxInfo), sharedPlane_(plane), rep_(rep)
 {
   assert(rep != NULL);
-  //assert(state_.GetNrows() == (signed)rep->getDim());
+  assert(sharedPlane_.get() != NULL);
 }
 
 inline StateOnPlane& StateOnPlane::operator=(StateOnPlane other) {
