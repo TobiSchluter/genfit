@@ -44,6 +44,7 @@ enum eMeasurementType { Pixel = 0,
         ProlateSpacepoint,
         StripU,
         StripV,
+        StripUV,
         Wire,
         WirePoint };
 
@@ -79,8 +80,8 @@ class MeasurementCreator : public TObject {
   void setDebug(bool debug) {debug_ = debug;}
 
 
-  AbsMeasurement* create(eMeasurementType, double tracklength, bool& outlier, int& lr);
-  AbsMeasurement* create(eMeasurementType type, double tracklength) {
+  std::vector<genfit::AbsMeasurement*> create(eMeasurementType, double tracklength, bool& outlier, int& lr);
+  std::vector<genfit::AbsMeasurement*> create(eMeasurementType type, double tracklength) {
     bool dummy1;
     int dummy2;
     return create(type, tracklength, dummy1, dummy2);

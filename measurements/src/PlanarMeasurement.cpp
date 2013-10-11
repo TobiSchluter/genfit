@@ -22,6 +22,7 @@
 #include <Exception.h>
 #include <RKTrackRep.h>
 #include <HMatrixU.h>
+#include <HMatrixV.h>
 #include <HMatrixUV.h>
 
 #include <cassert>
@@ -30,13 +31,13 @@
 namespace genfit {
 
 PlanarMeasurement::PlanarMeasurement(int nDim)
-  : AbsMeasurement(nDim), physicalPlane_(), planeId_(-1)
+  : AbsMeasurement(nDim), physicalPlane_(), planeId_(-1), stripV_(false)
 {
   assert(nDim >= 1);
 }
 
 PlanarMeasurement::PlanarMeasurement(const TVectorD& rawHitCoords, const TMatrixDSym& rawHitCov, int detId, int hitId, TrackPoint* trackPoint)
-  : AbsMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint), physicalPlane_(), planeId_(-1)
+  : AbsMeasurement(rawHitCoords, rawHitCov, detId, hitId, trackPoint), physicalPlane_(), planeId_(-1), stripV_(false)
 {
   assert(rawHitCoords_.GetNrows() >= 1);
 }
@@ -72,6 +73,8 @@ const AbsHMatrix* PlanarMeasurement::constructHMatrix(const AbsTrackRep* rep) co
 
   switch(rawHitCoords_.GetNrows()) {
   case 1:
+    if (stripV_)
+      return new HMatrixV();
     return new HMatrixU();
 
   case 2:

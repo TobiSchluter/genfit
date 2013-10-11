@@ -61,10 +61,18 @@ class PlanarMeasurement : public AbsMeasurement {
 
   virtual void setPlane(const SharedPlanePtr& physicalPlane, int planeId = -1) {physicalPlane_ = physicalPlane; planeId_ = planeId;}
 
+  /** @brief Use if the coordinate for 1D hits measured in V direction.
+   *
+   * Per default for 1D planar hits, the coordinate is measured in U direction.
+   * With this function you can set it to be measured in V direction.
+   * This affects the outcoe of constructHMatrix().
+   */
+  void setStripV(bool v = true) {stripV_ = v;}
+
  protected:
   SharedPlanePtr physicalPlane_;
   int planeId_; // planeId id is -1 per default
-
+  bool stripV_;
 
  public:
 

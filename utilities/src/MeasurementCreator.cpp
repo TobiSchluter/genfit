@@ -58,10 +58,11 @@ MeasurementCreator::MeasurementCreator() :
 }
 
 
-AbsMeasurement* MeasurementCreator::create(eMeasurementType type, double tracklength, bool& outlier, int& lr) {
+std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType type, double tracklength, bool& outlier, int& lr) {
 
   outlier = false;
   lr = 0;
+  std::vector<AbsMeasurement*> retVal;
   genfit::AbsMeasurement* measurement;
 
   TVector3 point, dir;
@@ -129,6 +130,7 @@ AbsMeasurement* MeasurementCreator::create(eMeasurementType type, double trackle
 
       measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
       static_cast<genfit::PlanarMeasurement*>(measurement)->setPlane(plane, measurementCounter_);
+      retVal.push_back(measurement);
     }
     break;
 
@@ -153,6 +155,7 @@ AbsMeasurement* MeasurementCreator::create(eMeasurementType type, double trackle
       hitCov(2,2) = resolution_*resolution_;
 
       measurement = new genfit::SpacepointMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
+      retVal.push_back(measurement);
     }
     break;
 
@@ -205,22 +208,17 @@ AbsMeasurement* MeasurementCreator::create(eMeasurementType type, double trackle
       hitCov.Similarity(rot);
 
       measurement = new genfit::ProlateSpacepointMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
-
       static_cast<genfit::ProlateSpacepointMeasurement*>(measurement)->setLargestErrorDirection(currentWireDir);
+      retVal.push_back(measurement);
     }
     break;
 
-    case StripU: case StripV: {
+    case StripU: case StripV: case StripUV : {
       if (debug_) std::cerr << "create StripHit" << std::endl;
 
       TVector3 vU, vV;
-      if (type == StripU) {
-        vU = planeNorm.Cross(z);
-        vV = (planeNorm.Cross(z)).Cross(planeNorm);
-      } else {
-        vU = (planeNorm.Cross(z)).Cross(planeNorm);
-        vV = planeNorm.Cross(z);
-      }
+      vU = planeNorm.Cross(z);
+      vV = (planeNorm.Cross(z)).Cross(planeNorm);
       genfit::SharedPlanePtr plane(new genfit::DetPlane(point, vU, vV));
 
       TVectorD hitCoords(1);
@@ -234,6 +232,24 @@ AbsMeasurement* MeasurementCreator::create(eMeasurementType type, double trackle
 
       measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
       static_cast<genfit::PlanarMeasurement*>(measurement)->setPlane(plane, measurementCounter_);
+      if (type == StripV)
+        static_cast<genfit::PlanarMeasurement*>(measurement)->setStripV();
+      retVal.push_back(measurement);
+
+
+      if (type == StripUV) {
+        if (outlier)
+          hitCoords(0) = gRandom->Uniform(-outlierRange_, outlierRange_);
+        else
+          hitCoords(0) = gRandom->Gaus(0,resolution_);
+
+        hitCov(0,0) = resolution_*resolution_;
+
+        measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
+        static_cast<genfit::PlanarMeasurement*>(measurement)->setPlane(plane, measurementCounter_);
+        static_cast<genfit::PlanarMeasurement*>(measurement)->setStripV();
+        retVal.push_back(measurement);
+      }
     }
     break;
 
@@ -267,6 +283,7 @@ AbsMeasurement* MeasurementCreator::create(eMeasurementType type, double trackle
         static_cast<genfit::WireMeasurement*>(measurement)->setLeftRightResolution(lr);
       }
       ++wireCounter_;
+      retVal.push_back(measurement);
     }
     break;
 
@@ -305,6 +322,7 @@ AbsMeasurement* MeasurementCreator::create(eMeasurementType type, double trackle
         static_cast<genfit::WirePointMeasurement*>(measurement)->setLeftRightResolution(lr);
       }
       ++wireCounter_;
+      retVal.push_back(measurement);
     }
     break;
 
@@ -313,7 +331,7 @@ AbsMeasurement* MeasurementCreator::create(eMeasurementType type, double trackle
       exit(0);
   }
 
-  return measurement;
+  return retVal;
 
 }
 

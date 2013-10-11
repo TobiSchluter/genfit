@@ -153,14 +153,14 @@ int main() {
       // create random measurement types
       std::vector<genfit::eMeasurementType> measurementTypes;
       for (unsigned int i = 0; i < nMeasurements; ++i)
-        measurementTypes.push_back(genfit::eMeasurementType(gRandom->Uniform(7)));
+        measurementTypes.push_back(genfit::eMeasurementType(gRandom->Uniform(8)));
 
 
       // create smeared measurements and add to track
       try{
         for (unsigned int i=1; i<measurementTypes.size(); ++i){
-          genfit::AbsMeasurement* measurement = measurementCreator.create(measurementTypes[i], i*5.);
-          trackPtr->insertPoint(new genfit::TrackPoint(measurement, trackPtr));
+          std::vector<genfit::AbsMeasurement*> measurements = measurementCreator.create(measurementTypes[i], i*5.);
+          trackPtr->insertPoint(new genfit::TrackPoint(measurements, trackPtr));
         }
       }
       catch(genfit::Exception& e){

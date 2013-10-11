@@ -203,7 +203,7 @@ int main() {
   measurementTypes.push_back(genfit::Wire);
   measurementTypes.push_back(genfit::WirePoint);*/
   for (unsigned int i = 0; i < nMeasurements; ++i)
-    measurementTypes.push_back(genfit::eMeasurementType(gRandom->Uniform(7)));
+    measurementTypes.push_back(genfit::eMeasurementType(gRandom->Uniform(8)));
 
 
 
@@ -393,7 +393,7 @@ int main() {
       const genfit::StateOnPlane stateRefOrig(stateRef);
 
       // create smeared measurements
-      std::vector<genfit::AbsMeasurement*> measurements;
+      std::vector< std::vector<genfit::AbsMeasurement*> > measurements;
 
       std::vector<bool> outlierTrue;
       bool outlier;
@@ -443,12 +443,10 @@ int main() {
       for(unsigned int i=0; i<measurements.size(); ++i){
         if (splitTrack > 0 && i >= splitTrack)
           break;
-        std::vector<genfit::AbsMeasurement*> measVec;
-        measVec.push_back(measurements[i]);
         if (i>0 && hitSwitchProb > gRandom->Uniform(1.))
-          fitTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack), -2);
+          fitTrack->insertPoint(new genfit::TrackPoint(measurements[i], fitTrack), -2);
         else
-          fitTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack));
+          fitTrack->insertPoint(new genfit::TrackPoint(measurements[i], fitTrack));
 
         assert(fitTrack->checkConsistency());
         //if (debug) fitTrack->Print("C");
@@ -456,12 +454,10 @@ int main() {
 
       if (splitTrack > 0) {
         for(unsigned int i=splitTrack; i<measurements.size(); ++i){
-          std::vector<genfit::AbsMeasurement*> measVec;
-          measVec.push_back(measurements[i]);
           if (i>0 && hitSwitchProb > gRandom->Uniform(1.))
-            secondTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack), -2);
+            secondTrack->insertPoint(new genfit::TrackPoint(measurements[i], fitTrack), -2);
           else
-            secondTrack->insertPoint(new genfit::TrackPoint(measVec, fitTrack));
+            secondTrack->insertPoint(new genfit::TrackPoint(measurements[i], fitTrack));
 
           //if (debug) fitTrack->Print("C");
         }
