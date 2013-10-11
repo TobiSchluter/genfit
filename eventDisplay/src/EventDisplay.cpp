@@ -483,6 +483,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       // draw planes if corresponding option is set -----------------------------------------
       if(drawPlanes_ || (drawDetectors_ && planar_hit)) {
         TVector3 move(0,0,0);
+        if (planar_hit) move = track_pos-o;
         if (wire_hit) move = v*(v*(track_pos-o)); // move the plane along the wire until the track goes through it
         TEveBox* box = boxCreator(o + move, u, v, plane_size, plane_size, 0.01);
         if (drawDetectors_ && planar_hit) {
@@ -551,7 +552,8 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
             TEveBox* hit_box;
             TVector3 stripDir3 = stripDir.X()*u + stripDir.Y()*v;
             TVector3 stripDir3perp = stripDir.Y()*u - stripDir.X()*v;
-            hit_box = boxCreator((o + hit_u*stripDir3), stripDir3, stripDir3perp, errorScale_*std::sqrt(hit_cov(0,0)), plane_size, 0.0105);
+            TVector3 move = stripDir3*(stripDir3*(track_pos-o));
+            hit_box = boxCreator((o + move + hit_u*stripDir3), stripDir3, stripDir3perp, errorScale_*std::sqrt(hit_cov(0,0)), plane_size, 0.0105);
             hit_box->SetMainColor(kYellow);
             hit_box->SetMainTransparency(0);
             gEve->AddElement(hit_box);
