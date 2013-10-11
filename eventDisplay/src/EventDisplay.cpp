@@ -7,23 +7,23 @@
 #include <exception>
 #include <iostream>
 
-#include <AbsMeasurement.h>
-#include <PlanarMeasurement.h>
-#include <ProlateSpacepointMeasurement.h>
-#include <SpacepointMeasurement.h>
-#include <WireMeasurement.h>
-#include <WirePointMeasurement.h>
-#include <AbsTrackRep.h>
-#include <ConstField.h>
-#include <DetPlane.h>
-#include <Exception.h>
-#include <FieldManager.h>
-#include <Tools.h>
-#include <KalmanFitterInfo.h>
-
-#include <KalmanFitter.h>
-#include <DAF.h>
-#include <KalmanFitterRefTrack.h>
+#include "AbsMeasurement.h"
+#include "PlanarMeasurement.h"
+#include "ProlateSpacepointMeasurement.h"
+#include "SpacepointMeasurement.h"
+#include "WireMeasurement.h"
+#include "WirePointMeasurement.h"
+#include "AbsTrackRep.h"
+#include "ConstField.h"
+#include "DetPlane.h"
+#include "Exception.h"
+#include "FieldManager.h"
+#include "Tools.h"
+#include "KalmanFitterInfo.h"
+#include "KalmanFitter.h"
+#include "DAF.h"
+#include "KalmanFitterRefTrack.h"
+#include "RKTrackRep.h"
 
 #include <TApplication.h>
 #include <TEveBrowser.h>
@@ -443,12 +443,17 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       double_t hit_u = 0;
       double_t hit_v = 0;
       double_t plane_size = 4;
+      TVector2 stripDir(1,0);
 
       int hit_coords_dim = m->getDim();
 
       if(dynamic_cast<const PlanarMeasurement*>(m) != NULL) {
         planar_hit = true;
         if(hit_coords_dim == 1) {
+          if (dynamic_cast<RKTrackRep*>(rep) != NULL) {
+            const TMatrixD& H = mop->getHMatrix()->getMatrix();
+            stripDir.Set(H(0,3), H(0,4));
+          }
           hit_u = hit_coords(0);
         } else if(hit_coords_dim == 2) {
           planar_pixel_hit = true;
@@ -544,7 +549,9 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         if(planar_hit) {
           if(!planar_pixel_hit) {
             TEveBox* hit_box;
-            hit_box = boxCreator((o + hit_u*u), u, v, errorScale_*std::sqrt(hit_cov(0,0)), plane_size, 0.0105);
+            TVector3 stripDir3 = stripDir.X()*u + stripDir.Y()*v;
+            TVector3 stripDir3perp = stripDir.Y()*u - stripDir.X()*v;
+            hit_box = boxCreator((o + hit_u*stripDir3), stripDir3, stripDir3perp, errorScale_*std::sqrt(hit_cov(0,0)), plane_size, 0.0105);
             hit_box->SetMainColor(kYellow);
             hit_box->SetMainTransparency(0);
             gEve->AddElement(hit_box);
