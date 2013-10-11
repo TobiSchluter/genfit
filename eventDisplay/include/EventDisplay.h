@@ -208,6 +208,11 @@ class EventDisplay : public TNamed {
     TGNumberEntry* guiRepId_;
     unsigned int repId_;
 
+    TGCheckButton* guiDrawAllTracks_;
+    bool drawAllTracks_;
+    TGNumberEntry* guiTrackId_;
+    unsigned int trackId_;
+
     TGCheckButton* guiRefit_;
     bool refit_;
     TGNumberEntry* guiDebugLvl_;

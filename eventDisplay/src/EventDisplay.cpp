@@ -79,6 +79,8 @@ EventDisplay::EventDisplay() :
   drawSilent_(false),
   drawCardinalRep_(true),
   repId_(0),
+  drawAllTracks_(true),
+  trackId_(0),
   refit_(false),
   debugLvl_(0),
   fitterId_(SimpleKalman),
@@ -285,6 +287,9 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
 
   for(unsigned int i = 0; i < events_.at(id)->size(); i++) { // loop over all tracks in an event
+
+    if (!drawAllTracks_ && trackId_ != i)
+      continue;
 
     Track* track = events_[id]->at(i);
     if (! track->checkConsistency()){
@@ -1162,6 +1167,25 @@ void EventDisplay::makeGui() {
   }
   frmMain->AddFrame(hf);
 
+  hf = new TGHorizontalFrame(frmMain); {
+    guiDrawAllTracks_ =  new TGCheckButton(hf, "Draw all tracks");
+    if(drawAllTracks_) guiDrawAllTracks_->Toggle();
+    hf->AddFrame(guiDrawAllTracks_);
+    guiDrawAllTracks_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain); {
+    guiTrackId_ = new TGNumberEntry(hf, trackId_, 6,999, TGNumberFormat::kNESInteger,
+                          TGNumberFormat::kNEANonNegative,
+                          TGNumberFormat::kNELLimitMinMax,
+                          0, 99);
+    hf->AddFrame(guiTrackId_);
+    guiTrackId_->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+    lbl = new TGLabel(hf, "Else draw track nr. ");
+    hf->AddFrame(lbl);
+  }
+  frmMain->AddFrame(hf);
 
 
 
@@ -1322,6 +1346,9 @@ void EventDisplay::guiSetDrawParams(){
 
   drawCardinalRep_ = guiDrawCardinalRep_->IsOn();
   repId_ = guiRepId_->GetNumberEntry()->GetNumber();
+
+  drawAllTracks_ = guiDrawAllTracks_->IsOn();
+  trackId_ = guiTrackId_->GetNumberEntry()->GetNumber();
 
 
   refit_ = guiRefit_->IsOn();
