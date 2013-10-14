@@ -604,6 +604,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
 
       // get MeasurementsOnPlane
       std::vector<double> oldWeights = fitterInfo->getWeights();
+      bool oldWeightsFixed = fitterInfo->areWeightsFixed();
       const std::vector<AbsMeasurement*>& rawMeasurements = trackPoint->getRawMeasurements();
       for ( std::vector< genfit::AbsMeasurement* >::const_iterator measurement = rawMeasurements.begin(), lastMeasurement = rawMeasurements.end(); measurement != lastMeasurement; ++measurement) {
         assert((*measurement) != NULL);
@@ -614,6 +615,7 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       }
       if (oldWeights.size() == fitterInfo->getNumMeasurements()) {
         fitterInfo->setWeights(oldWeights);
+        fitterInfo->fixWeights(oldWeightsFixed);
       }
 
       changedSmthg = true;

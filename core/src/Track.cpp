@@ -828,6 +828,39 @@ double Track::getTOF(AbsTrackRep* rep, int startId, int endId) const {
 }
 
 
+void Track::fixWeights(AbsTrackRep* rep, int startId, int endId) {
+
+  if (startId < 0)
+    startId += trackPoints_.size();
+  if (endId < 0)
+    endId += trackPoints_.size();
+
+  assert(startId >= 0);
+  assert(startId <= endId);
+  assert(endId <= (int)trackPoints_.size());
+
+  std::vector< genfit::AbsFitterInfo* > fis;
+
+  for (std::vector<TrackPoint*>::iterator tp = trackPoints_.begin() + startId; tp != trackPoints_.begin() + endId; ++tp) {
+    fis.clear();
+    if (rep == NULL) {
+      fis = (*tp)->getFitterInfos();
+    }
+    else if ((*tp)->hasFitterInfo(rep)) {
+      fis.push_back((*tp)->getFitterInfo(rep));
+    }
+
+    for (std::vector< genfit::AbsFitterInfo* >::iterator fi = fis.begin(); fi != fis.end(); ++fi) {
+      KalmanFitterInfo* kfi = dynamic_cast<KalmanFitterInfo*>(*fi);
+      if (kfi == NULL)
+        continue;
+
+      kfi->fixWeights();
+    }
+  }
+}
+
+
 void Track::prune(const Option_t* option) {
 
   TString opt = option;

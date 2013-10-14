@@ -70,6 +70,8 @@ class KalmanFitterInfo : public AbsFitterInfo {
   unsigned int getNumMeasurements() const {return measurementsOnPlane_.size();}
   //! Get weights of measurements.
   std::vector<double> getWeights() const;
+  //! Are the weights fixed?
+  bool areWeightsFixed() const {return fixWeights_;}
   //! Get unbiased or biased (default) smoothed state.
   const MeasuredStateOnPlane& getFittedState(bool biased = true) const;
   //! Get unbiased (default) or biased residual from ith measurement.
@@ -95,6 +97,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void addMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane);
   //! Set weights of measurements.
   void setWeights(const std::vector<double>&);
+  void fixWeights(bool arg = true) {fixWeights_ = arg;}
   void setRep(const AbsTrackRep* rep);
 
   void deleteForwardInfo() {setForwardPrediction(NULL); setForwardUpdate(NULL);}
@@ -144,7 +147,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
 	*/
 
   std::vector<MeasurementOnPlane*> measurementsOnPlane_; // Ownership
-
+  bool fixWeights_; // weights should not be altered by fitters anymore
 
  public:
 

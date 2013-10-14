@@ -254,6 +254,14 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
       throw exc;
     }
     KalmanFitterInfo* kfi = static_cast<KalmanFitterInfo*>(fi);
+
+    if (kfi->areWeightsFixed()) {
+      if (debugLvl_ > 0) {
+        std::cout<<"weights are fixed, continue \n";
+      }
+      continue;
+    }
+
     unsigned int nMeas = kfi->getNumMeasurements();
 
     std::vector<double> phi(nMeas, 0.);

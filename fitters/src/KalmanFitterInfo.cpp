@@ -33,13 +33,13 @@
 namespace genfit {
 
 KalmanFitterInfo::KalmanFitterInfo() :
-  AbsFitterInfo()
+  AbsFitterInfo(), fixWeights_(false)
 {
   ;
 }
 
 KalmanFitterInfo::KalmanFitterInfo(const TrackPoint* trackPoint, const AbsTrackRep* rep)  :
-  AbsFitterInfo(trackPoint, rep)
+  AbsFitterInfo(trackPoint, rep), fixWeights_(false)
 {
   ;
 }
@@ -68,6 +68,8 @@ KalmanFitterInfo* KalmanFitterInfo::clone() const {
   for (std::vector<MeasurementOnPlane*>::const_iterator it = this->measurementsOnPlane_.begin(); it != this->measurementsOnPlane_.end(); ++it) {
     retVal->addMeasurementOnPlane(new MeasurementOnPlane(**it));
   }
+
+  retVal->fixWeights_ = this->fixWeights_;
 
   return retVal;
 }
@@ -352,6 +354,10 @@ void KalmanFitterInfo::setWeights(const std::vector<double>& weights) {
     throw e;
   }
 
+  if (fixWeights_) {
+    std::cerr << "KalmanFitterInfo::setWeights - WARNING: setting weights even though weights are fixed!" << std::endl;
+  }
+
   for (unsigned int i=0; i<getNumMeasurements(); ++i) {
     getMeasurementOnPlane(i)->setWeight(weights[i]);
   }
@@ -360,6 +366,9 @@ void KalmanFitterInfo::setWeights(const std::vector<double>& weights) {
 
 void KalmanFitterInfo::Print(const Option_t*) const {
   std::cout << "genfit::KalmanFitterInfo. Belongs to TrackPoint " << trackPoint_ << "; TrackRep " <<  rep_  << "\n";
+
+  if (fixWeights_)
+    std::cout << "Weights are fixed.\n";
 
   for (unsigned int i=0; i<measurementsOnPlane_.size(); ++i) {
     std::cout << "MeasurementOnPlane Nr " << i <<": "; measurementsOnPlane_[i]->Print();

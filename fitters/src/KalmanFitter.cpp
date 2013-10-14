@@ -224,6 +224,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
 
     // construct new MeasurementsOnPlane
     std::vector<double> oldWeights = fi->getWeights();
+    bool oldWeightsFixed = fi->areWeightsFixed();
     const std::vector< genfit::AbsMeasurement* >& rawMeasurements =  tp->getRawMeasurements();
     // construct plane with first measurement
     SharedPlanePtr plane = rawMeasurements[0]->constructPlane(*currentState_);
@@ -232,6 +233,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
     }
     if (oldWeights.size() == fi->getNumMeasurements()) {
       fi->setWeights(oldWeights);
+      fi->fixWeights(oldWeightsFixed);
     }
   }
   const SharedPlanePtr plane = fi->getPlane();

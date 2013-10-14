@@ -198,6 +198,10 @@ class Track : public TObject {
   //! get time of flight in ns between to trackPoints
   double getTOF(AbsTrackRep* rep, int startId = 0, int endId = -1) const;
 
+  //! Helper function: For all KalmanFitterInfos belonging to rep (if NULL, for all reps),
+  //! call the fixWeights() function, so that e.g. the DAF will not alter weights anymore.
+  void fixWeights(AbsTrackRep* rep = NULL, int startId = 0, int endId = -1);
+
   /**
    * @brief Delete unneeded information from the Track.
    *
