@@ -213,6 +213,7 @@ ROOT_GENERATE_DICTIONARY("${GBL_DICTIONARY_SOURCES}"
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/GBLRootDict.cpp" "${library_sources}")
 
 SET(MEASUREMENTS_DICTIONARY_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixPhi.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixU.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixV.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixUV.h

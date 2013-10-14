@@ -4,6 +4,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class genfit::HMatrixPhi-;
 #pragma link C++ class genfit::HMatrixU+;
 #pragma link C++ class genfit::HMatrixV+;
 #pragma link C++ class genfit::HMatrixUV+;
