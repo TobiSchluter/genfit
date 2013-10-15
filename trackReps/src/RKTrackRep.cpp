@@ -23,6 +23,7 @@
 #include <FieldManager.h>
 #include <MaterialEffects.h>
 #include <MeasuredStateOnPlane.h>
+#include <MeasurementOnPlane.h>
 
 #include <TDatabasePDG.h>
 #include <TDecompLU.h>
@@ -626,8 +627,14 @@ void RKTrackRep::getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, 
   transformPM6(state, *((M6x6*) cov.GetMatrixArray()));
 }
 
-double RKTrackRep::getCharge(const StateOnPlane& state) const
-{
+double RKTrackRep::getCharge(const StateOnPlane& state) const {
+
+  if (dynamic_cast<const MeasurementOnPlane*>(&state) != NULL) {
+    Exception exc("RKTrackRep::getCharge - cannot get charge from MeasurementOnPlane",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+
   TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(pdgCode_);
   assert(particle != NULL);
   double pdgCharge = particle->Charge()/(3.);
@@ -649,6 +656,13 @@ double RKTrackRep::getMomMag(const StateOnPlane& state) const {
 
 
 double RKTrackRep::getMomVar(const MeasuredStateOnPlane& state) const {
+
+  if (dynamic_cast<const MeasurementOnPlane*>(&state) != NULL) {
+    Exception exc("RKTrackRep::getMomVar - cannot get momVar from MeasurementOnPlane",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+
   // p(qop) = q/qop
   // dp/d(qop) = - q / (qop^2)
   // (delta p) = (delta qop) * |dp/d(qop)| = delta qop * |q / (qop^2)|
@@ -661,8 +675,14 @@ double RKTrackRep::getMomVar(const MeasuredStateOnPlane& state) const {
 }
 
 
-double RKTrackRep::getSpu(const StateOnPlane& state) const
-{
+double RKTrackRep::getSpu(const StateOnPlane& state) const {
+
+  if (dynamic_cast<const MeasurementOnPlane*>(&state) != NULL) {
+    Exception exc("RKTrackRep::getSpu - cannot get spu from MeasurementOnPlane",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+
   const TVectorD& auxInfo = state.getAuxInfo();
   if (auxInfo.GetNrows() == 1)
     return state.getAuxInfo()(0);
@@ -864,6 +884,12 @@ void RKTrackRep::setPosMom(StateOnPlane& state, const TVector3& pos, const TVect
     throw exc;
   }
 
+  if (dynamic_cast<MeasurementOnPlane*>(&state) != NULL) {
+    Exception exc("RKTrackRep::setPosMom - cannot set pos/mom of a MeasurementOnPlane",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+
   // init auxInfo if that has not yet happened
   TVectorD& auxInfo = state.getAuxInfo();
   if (auxInfo.GetNrows() != 1) {
@@ -1009,6 +1035,13 @@ void RKTrackRep::setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& state
 
 
 void RKTrackRep::setChargeSign(StateOnPlane& state, double charge) const {
+
+  if (dynamic_cast<MeasurementOnPlane*>(&state) != NULL) {
+    Exception exc("RKTrackRep::setChargeSign - cannot set charge of a MeasurementOnPlane",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+
   if (state.getState()(0) * charge < 0) {
     state.getState()(0) *= -1.;
   }
@@ -1225,11 +1258,18 @@ void RKTrackRep::initArrays() const {
 
 void RKTrackRep::getState7(const StateOnPlane& state, M1x7& state7) const {
 
+  if (dynamic_cast<const MeasurementOnPlane*>(&state) != NULL) {
+    Exception exc("RKTrackRep::getState7 - cannot get pos or mom from a MeasurementOnPlane",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+
   const TVector3& U(state.getPlane()->getU());
   const TVector3& V(state.getPlane()->getV());
   const TVector3& O(state.getPlane()->getO());
   const TVector3& W(state.getPlane()->getNormal());
 
+  assert(state.getState().GetNrows() == 5);
   const double* state5 = state.getState().GetMatrixArray();
 
   double spu = getSpu(state);
@@ -2297,6 +2337,13 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
 
   if (state.getRep() != this){
     Exception exc("RKTrackRep::checkCache ==> state is defined wrt. another TrackRep",__LINE__,__FILE__);
+    exc.setFatal();
+    throw exc;
+  }
+
+  if (dynamic_cast<const MeasurementOnPlane*>(&state) != NULL) {
+    Exception exc("RKTrackRep::checkCache - cannot extrapolate MeasurementOnPlane",__LINE__,__FILE__);
+    exc.setFatal();
     throw exc;
   }
 
