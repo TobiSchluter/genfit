@@ -58,6 +58,7 @@ class AbsHMatrix : public TObject {
   virtual AbsHMatrix* clone() const = 0;
 
   bool operator==(const AbsHMatrix& other) const {return this->isEqual(other);}
+  bool operator!=(const AbsHMatrix& other) const {return !(this->isEqual(other));}
   virtual bool isEqual(const AbsHMatrix& other) const = 0;
 
   virtual void Print(const Option_t* = "") const {;}

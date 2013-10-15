@@ -66,7 +66,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   //! @param ignoreWeights If set, the weights of the individual measurements will be ignored (they will be treated as if they all had weight 1)
   MeasurementOnPlane getAvgWeightedMeasurementOnPlane(bool ignoreWeights = false) const;
   //! Get measurements which is closest to state.
-  const MeasurementOnPlane* getClosestMeasurementOnPlane(const StateOnPlane*) const;
+  MeasurementOnPlane* getClosestMeasurementOnPlane(const StateOnPlane*) const;
   unsigned int getNumMeasurements() const {return measurementsOnPlane_.size();}
   //! Get weights of measurements.
   std::vector<double> getWeights() const;
@@ -100,9 +100,9 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void fixWeights(bool arg = true) {fixWeights_ = arg;}
   void setRep(const AbsTrackRep* rep);
 
-  void deleteForwardInfo() {setForwardPrediction(NULL); setForwardUpdate(NULL);}
-  void deleteBackwardInfo() {setBackwardPrediction(NULL); setBackwardUpdate(NULL);}
-  void deletePredictions() {setForwardPrediction(NULL); setBackwardPrediction(NULL);}
+  void deleteForwardInfo();
+  void deleteBackwardInfo();
+  void deletePredictions();
   void deleteReferenceInfo() {setReferenceState(NULL);}
   void deleteMeasurementInfo() {measurementsOnPlane_.clear();}
 

@@ -1103,37 +1103,39 @@ void Track::Print(const Option_t* option) const {
 
 bool Track::checkConsistency() const {
 
+  bool retVal(true);
+
   std::map<const AbsTrackRep*, const KalmanFitterInfo*> prevFis;
 
   // check if seed is 6D
   if (stateSeed_.GetNrows() != 6) {
     std::cerr << "Track::checkConsistency(): stateSeed_ dimension != 6" << std::endl;
-    return false;
+    retVal = false;
   }
 
   if (covSeed_.GetNrows() != 6) {
     std::cerr << "Track::checkConsistency(): covSeed_ dimension != 6" << std::endl;
-    return false;
+    retVal = false;
   }
 
   // check if cardinalRep_ is in range of trackReps_
   if (trackReps_.size() && cardinalRep_ >= trackReps_.size()) {
     std::cerr << "Track::checkConsistency(): cardinalRep id " << cardinalRep_ << " out of bounds" << std::endl;
-    return false;
+    retVal = false;
   }
 
   for (std::vector<AbsTrackRep*>::const_iterator rep = trackReps_.begin(); rep != trackReps_.end(); ++rep) {
     // check for NULL
     if ((*rep) == NULL) {
       std::cerr << "Track::checkConsistency(): TrackRep is NULL" << std::endl;
-      return false;
+      retVal = false;
     }
 
     // check for valid pdg code
     TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle((*rep)->getPDG());
     if (particle == NULL) {
       std::cerr << "Track::checkConsistency(): TrackRep pdg ID " << (*rep)->getPDG() << " is not valid" << std::endl;
-      return false;
+      retVal = false;
     }
 
   }
@@ -1143,12 +1145,12 @@ bool Track::checkConsistency() const {
     // check for NULL
     if ((*tp) == NULL) {
       std::cerr << "Track::checkConsistency(): TrackPoint is NULL" << std::endl;
-      return false;
+      retVal = false;
     }
     // check if trackPoint points back to this track
     if ((*tp)->getTrack() != this) {
       std::cerr << "Track::checkConsistency(): TrackPoint does not point back to this track" << std::endl;
-      return false;
+      retVal = false;
     }
 
     // check rawMeasurements
@@ -1157,12 +1159,12 @@ bool Track::checkConsistency() const {
       // check for NULL
       if ((*m) == NULL) {
         std::cerr << "Track::checkConsistency(): Measurement is NULL" << std::endl;
-        return false;
+        retVal = false;
       }
       // check if measurement points back to TrackPoint
       if ((*m)->getTrackPoint() != *tp) {
         std::cerr << "Track::checkConsistency(): Measurement does not point back to correct TrackPoint" << std::endl;
-        return false;
+        retVal = false;
       }
     }
 
@@ -1172,12 +1174,12 @@ bool Track::checkConsistency() const {
       // check for NULL
       if ((*fi) == NULL) {
         std::cerr << "Track::checkConsistency(): FitterInfo is NULL. TrackPoint: " << *tp << std::endl;
-        return false;
+        retVal = false;
       }
 
       if (!( (*fi)->checkConsistency() ) ) {
         std::cerr << "Track::checkConsistency(): FitterInfo not consistent. TrackPoint: " << *tp << std::endl;
-        return false;
+        retVal = false;
       }
 
       // check if fitterInfos point to valid TrackReps in trackReps_
@@ -1189,7 +1191,7 @@ bool Track::checkConsistency() const {
       }
       if (mycount ==  0) {
         std::cerr << "Track::checkConsistency(): fitterInfo points to TrackRep which is not in Track" << std::endl;
-        return false;
+        retVal = false;
       }
 
       if (dynamic_cast<KalmanFitterInfo*>(*fi) != NULL) {
@@ -1202,7 +1204,7 @@ bool Track::checkConsistency() const {
             std::cerr << "Track::checkConsistency(): segment lengths of reference states for rep " << (*fi)->getRep() << " (id " << getIdForRep((*fi)->getRep()) << ") at TrackPoint " << (*tp) << " don't match" << std::endl;
             std::cerr << prevLen << " + " << len << " = " << prevLen + len << std::endl;
             std::cerr << "TrackPoint " << *tp << ", FitterInfo " << *fi << ", rep " << getIdForRep((*fi)->getRep()) << std::endl;
-            return false;
+            retVal = false;
           }
         }
 
@@ -1227,7 +1229,7 @@ bool Track::checkConsistency() const {
 
   if (trackPointsWithMeasurement.size() != trackPointsWithMeasurement_.size()) {
     std::cerr << "Track::checkConsistency(): trackPointsWithMeasurement_ has incorrect size" << std::endl;
-    return false;
+    retVal = false;
   }
 
   for (unsigned int i = 0; i < trackPointsWithMeasurement.size(); ++i) {
@@ -1235,11 +1237,11 @@ bool Track::checkConsistency() const {
       std::cerr << "Track::checkConsistency(): trackPointsWithMeasurement_ is not correct" << std::endl;
       std::cerr << "has         id " << i << ", adress " << trackPointsWithMeasurement_[i] << std::endl;
       std::cerr << "should have id " << i << ", adress " << trackPointsWithMeasurement[i] << std::endl;
-      return false;
+      retVal = false;
     }
   }
 
-  return true;
+  return retVal;
 }
 
 
