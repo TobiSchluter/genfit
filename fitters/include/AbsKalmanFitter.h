@@ -67,11 +67,13 @@ class AbsKalmanFitter : public AbsFitter {
 
   bool isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const;
   bool isTrackFitted(const Track* tr, const AbsTrackRep* rep) const;
+  //! returns if the fitter can ignore the weights and handle the MeasurementOnPlanes as if they had weight 1.
+  bool canIgnoreWeights() const;
 
  protected:
 
-  //! get the measurementOnPlane taking the multipleMeasurementHandling_ into account
-  const MeasurementOnPlane getMeasurement(const KalmanFitterInfo* fi, int direction) const;
+  //! get the measurementsOnPlane taking the multipleMeasurementHandling_ into account
+  const std::vector<MeasurementOnPlane *> getMeasurements(const KalmanFitterInfo* fi, int direction) const;
 
   //! Maximum number of iterations to attempt.  Forward and backward are counted as one iteration.
   unsigned int maxIterations_;

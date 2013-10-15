@@ -589,9 +589,9 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       // create new reference state
       newRefState = true;
       referenceState = new ReferenceStateOnPlane(stateToExtrapolate->getState(),
-						 stateToExtrapolate->getPlane(),
-						 stateToExtrapolate->getRep(),
-						 stateToExtrapolate->getAuxInfo());
+             stateToExtrapolate->getPlane(),
+             stateToExtrapolate->getRep(),
+             stateToExtrapolate->getAuxInfo());
       referenceState->setForwardSegmentLength(segmentLen);
       referenceState->setForwardTransportMatrix(FTransportMatrix_);
       referenceState->setForwardNoiseMatrix(FNoiseMatrix_);
@@ -605,13 +605,11 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
       // get MeasurementsOnPlane
       std::vector<double> oldWeights = fitterInfo->getWeights();
       bool oldWeightsFixed = fitterInfo->areWeightsFixed();
+      fitterInfo->deleteMeasurementInfo();
       const std::vector<AbsMeasurement*>& rawMeasurements = trackPoint->getRawMeasurements();
       for ( std::vector< genfit::AbsMeasurement* >::const_iterator measurement = rawMeasurements.begin(), lastMeasurement = rawMeasurements.end(); measurement != lastMeasurement; ++measurement) {
         assert((*measurement) != NULL);
-        if (measurement == rawMeasurements.begin())
-          fitterInfo->setMeasurementsOnPlane((*measurement)->constructMeasurementsOnPlane(rep, plane));
-        else
-          fitterInfo->addMeasurementsOnPlane((*measurement)->constructMeasurementsOnPlane(rep, plane));
+        fitterInfo->addMeasurementsOnPlane((*measurement)->constructMeasurementsOnPlane(rep, plane));
       }
       if (oldWeights.size() == fitterInfo->getNumMeasurements()) {
         fitterInfo->setWeights(oldWeights);
@@ -867,92 +865,111 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
     std::cout << "\033[0m";
   }
 
-  // update
-  const MeasurementOnPlane& m = getMeasurement(fi, direction);
-  const AbsHMatrix* H(m.getHMatrix());
-
-  covSumInv_.ResizeTo(C_);
-  covSumInv_ = C_; // (V_k + H_k C_{k|k-1} H_k^T)^(-1)
-  H->HMHt(covSumInv_);
-  covSumInv_ += m.getCov();
-  tools::invertMatrix(covSumInv_);
-
-  const TMatrixD& CHt(H->MHt(C_));
-
-  res_.ResizeTo(m.getState());
-  res_ = m.getState();
-  res_ -= H->Hv(p_); // residual
-  if (debugLvl_ > 1) {
-    std::cout << "\033[34m";
-    std::cout << "m (measurement) "; m.getState().Print();
-    std::cout << "V (measurement covariance) "; m.getCov().Print();
-    std::cout << "residual        "; res_.Print();
-    std::cout << "\033[0m";
-  }
-  p_ +=  TMatrixD(CHt, TMatrixD::kMult, covSumInv_) * res_; // update
-  if (debugLvl_ > 1) {
-    std::cout << "\033[32m";
-    std::cout << " update"; (TMatrixD(CHt, TMatrixD::kMult, covSumInv_) * res_).Print();
-    std::cout << "\033[0m";
-  }
-
-  covSumInv_.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
-  C_ -= covSumInv_; // updated Cov
-
-  if (debugLvl_ > 1) {
-    //std::cout << " C update "; covSumInv_.Print();
-    std::cout << "\033[32m";
-    std::cout << " p_{k|k} (updated state)"; p_.Print();
-    std::cout << " C_{k|k} (updated covariance)"; C_.Print();
-    std::cout << "\033[0m";
-  }
-
-  // Calculate chi² increment.  At the first point chi2inc == 0 and
-  // the matrix will not be invertible.
+  // update(s)
   double chi2inc = 0;
-  res_ = m.getState();
-  res_ -= H->Hv(p_); // new residual
-  if (debugLvl_ > 1) {
-    std::cout << " resNew ";
-    res_.Print();
-  }
+  double ndfInc = 0;
+  const std::vector<MeasurementOnPlane *> measurements = getMeasurements(fi, direction);
+  for (std::vector<MeasurementOnPlane *>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
+    const MeasurementOnPlane& m = **it;
 
-  // only calculate chi2inc if res != NULL.
-  // If matrix inversion fails, chi2inc = 0
-  if (res_ != 0) {
-    Rinv_.ResizeTo(C_);
-    Rinv_ = C_;
-    H->HMHt(Rinv_);
-    Rinv_ -= m.getCov();
-    Rinv_ *= -1;
-
-    bool couldInvert(true);
-    try {
-      tools::invertMatrix(Rinv_);
-    }
-    catch (Exception& e) {
-      std::cerr << e.what();
-      couldInvert = false;
-    }
-
-    if (couldInvert) {
+    if (!canIgnoreWeights() && m.getWeight() <= 1.01E-10) {
       if (debugLvl_ > 1) {
-        std::cout << " Rinv ";
-        Rinv_.Print();
+        std::cout << "Weight of measurement is almost 0, continue ... /n";
       }
-      chi2inc = Rinv_.Similarity(res_);
+      continue;
     }
-  }
+
+    const AbsHMatrix* H(m.getHMatrix());
+    // (weighted) cov
+    const TMatrixDSym& V((!canIgnoreWeights() && m.getWeight() < 0.99999) ?
+                          1./m.getWeight() * m.getCov() :
+                          m.getCov());
+
+    covSumInv_.ResizeTo(C_);
+    covSumInv_ = C_; // (V_k + H_k C_{k|k-1} H_k^T)^(-1)
+    H->HMHt(covSumInv_);
+    covSumInv_ += V;
+
+    tools::invertMatrix(covSumInv_);
+
+    const TMatrixD& CHt(H->MHt(C_));
+
+    res_.ResizeTo(m.getState());
+    res_ = m.getState();
+    res_ -= H->Hv(p_); // residual
+    if (debugLvl_ > 1) {
+      std::cout << "\033[34m";
+      std::cout << "m (measurement) "; m.getState().Print();
+      std::cout << "V ((weighted) measurement covariance) "; (1./m.getWeight() * m.getCov()).Print();
+      std::cout << "residual        "; res_.Print();
+      std::cout << "\033[0m";
+    }
+    p_ +=  TMatrixD(CHt, TMatrixD::kMult, covSumInv_) * res_; // updated state
+    if (debugLvl_ > 1) {
+      std::cout << "\033[32m";
+      std::cout << " update"; (TMatrixD(CHt, TMatrixD::kMult, covSumInv_) * res_).Print();
+      std::cout << "\033[0m";
+    }
+
+    covSumInv_.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
+    C_ -= covSumInv_; // updated Cov
+
+    if (debugLvl_ > 1) {
+      //std::cout << " C update "; covSumInv_.Print();
+      std::cout << "\033[32m";
+      std::cout << " p_{k|k} (updated state)"; p_.Print();
+      std::cout << " C_{k|k} (updated covariance)"; C_.Print();
+      std::cout << "\033[0m";
+    }
+
+    // Calculate chi² increment.  At the first point chi2inc == 0 and
+    // the matrix will not be invertible.
+    res_ = m.getState();
+    res_ -= H->Hv(p_); // new residual
+    if (debugLvl_ > 1) {
+      std::cout << " resNew ";
+      res_.Print();
+    }
+
+    // only calculate chi2inc if res != NULL.
+    // If matrix inversion fails, chi2inc = 0
+    if (res_ != 0) {
+      Rinv_.ResizeTo(C_);
+      Rinv_ = C_;
+      H->HMHt(Rinv_);
+      Rinv_ -= V;
+      Rinv_ *= -1;
+
+      bool couldInvert(true);
+      try {
+        tools::invertMatrix(Rinv_);
+      }
+      catch (Exception& e) {
+        if (debugLvl_ > 1)
+          std::cerr << e.what();
+        couldInvert = false;
+      }
+
+      if (couldInvert) {
+        if (debugLvl_ > 1) {
+          std::cout << " Rinv ";
+          Rinv_.Print();
+        }
+        chi2inc += Rinv_.Similarity(res_);
+      }
+    }
+
+
+    if (!canIgnoreWeights()) {
+      ndfInc += m.getWeight() * m.getState().GetNrows();
+    }
+    else
+      ndfInc += m.getState().GetNrows();
+
+
+  } // end loop over measurements
 
   chi2 += chi2inc;
-
-
-  double ndfInc = m.getState().GetNrows();
-  if (multipleMeasurementHandling_ == weightedAverage) {
-    ndfInc *= m.getWeight();
-    //std::cout << "weight = " << m.getWeight() << "\n";
-  }
-
   ndf += ndfInc;
 
 

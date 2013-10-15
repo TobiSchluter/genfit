@@ -74,7 +74,7 @@ void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
       fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep));
 
     if (debugLvl_ > 0) {
-    std::cout << " process TrackPoint nr. " << i << "\n";
+    std::cout << " process TrackPoint nr. " << i << " (" << tp << ")\n";
     }
     processTrackPoint(tr, tp, fi, rep, chi2, ndf, direction);
 
@@ -209,18 +209,17 @@ void
 KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
     const AbsTrackRep* rep, double& chi2, double& ndf, int direction)
 {
+  assert(direction == -1 || direction == +1);
+
   if (!tp->hasRawMeasurements())
     return;
-
-  // Extrapolate to TrackPoint.
-  MeasuredStateOnPlane* state = new MeasuredStateOnPlane(*currentState_);
-  //state.Print();
 
   // construct measurementsOnPlane if forward fit
   if (direction == 1) {
     // delete outdated stuff
     fi->deleteForwardInfo();
     fi->deleteBackwardInfo();
+    fi->deleteMeasurementInfo();
 
     // construct new MeasurementsOnPlane
     std::vector<double> oldWeights = fi->getWeights();
@@ -229,12 +228,14 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
     // construct plane with first measurement
     SharedPlanePtr plane = rawMeasurements[0]->constructPlane(*currentState_);
     for (std::vector< genfit::AbsMeasurement* >::const_iterator it = rawMeasurements.begin(); it != rawMeasurements.end(); ++it) {
-      fi->setMeasurementsOnPlane((*it)->constructMeasurementsOnPlane(rep, plane));
+      fi->addMeasurementsOnPlane((*it)->constructMeasurementsOnPlane(rep, plane));
     }
     if (oldWeights.size() == fi->getNumMeasurements()) {
       fi->setWeights(oldWeights);
       fi->fixWeights(oldWeightsFixed);
     }
+    assert(fi->getPlane() == plane);
+    assert(fi->checkConsistency());
   }
   const SharedPlanePtr plane = fi->getPlane();
 
@@ -243,8 +244,9 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
         << " with normal pointing along (" << plane->getNormal().X() << ", " << plane->getNormal().Y() << ", " << plane->getNormal().Z() << ")" << std::endl;
   }
 
-  //state.Print();
 
+  // Extrapolate
+  MeasuredStateOnPlane* state = new MeasuredStateOnPlane(*currentState_);
   double extLen = rep->extrapolateToPlane(*state, plane);
 
   if (debugLvl_ > 0) {
@@ -254,182 +256,205 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   //state.Print();
 
   // unique_ptr takes care of disposing of the old prediction, takes ownership of state.
-  assert(direction == -1 || direction == +1);
   fi->setPrediction(state, direction);
 
   TVectorD stateVector(state->getState());
   TMatrixDSym cov(state->getCov());
-  const MeasurementOnPlane& mOnPlane = getMeasurement(fi, direction);
-  const TVectorD& measurement(mOnPlane.getState());
-  const TMatrixDSym& V(mOnPlane.getCov());
-  const AbsHMatrix* H(mOnPlane.getHMatrix());
-  if (debugLvl_ > 0) {
-    std::cout << "State prediction: "; stateVector.Print();
-    std::cout << "Cov prediction: "; state->getCov().Print();
-    //cov.Print();
-    //measurement.Print();
-  }
 
-  TVectorD res(measurement - H->Hv(stateVector));
-  if (debugLvl_ > 0) {
-    std::cout << "Residual = (" << res(0);
-    if (res.GetNrows() > 1)
-      std::cout << ", " << res(1);
-    std::cout << ")" << std::endl;
-  }
-  // If hit, do Kalman algebra.
+  // update(s)
+  double chi2inc = 0;
+  double ndfInc = 0;
+  const std::vector<MeasurementOnPlane *> measurements = getMeasurements(fi, direction);
+  for (std::vector<MeasurementOnPlane *>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
+    const MeasurementOnPlane& mOnPlane = **it;
 
-  if (squareRootFormalism_)
-    {
-      // Square Root formalism, Anderson & Moore, 6.5.12 gives the
-      // formalism for combined update and prediction in that
-      // sequence.  We need the opposite sequence.  Therefore, this is
-      // my own invention.
-      TMatrixD F;
-      TMatrixDSym noise;
-      TVectorD deltaState;
-      rep->getForwardJacobianAndNoise(F, noise, deltaState);
-      const TMatrixDSym& oldCov(currentState_->getCov());
-
-      // Square Roots:
-      //
-      // The noise matrix is only positive semi-definite, for instance
-      // no noise on q/p.  A Cholesky decomposition is therefore not
-      // possible.  Hence we pull out the eigenvalues, viz noise = z d
-      // z^T (with z orthogonal, d diagonal) and then construct the
-      // square root according to Q^T = sqrt(d) z where sqrt is
-      // applied element-wise and negative eigenvalues are forced to
-      // zero.  We then reduce the matrix such that the zero
-      // eigenvalues don't appear in the remainder of the calculation.
-      //
-      // FIXME
-      // Careful, this is not tested with actual noise.  Do I need the
-      // transpose???
-      TMatrixDSymEigen eig(noise);
-      TMatrixD Q(eig.GetEigenVectors());
-      const TVectorD& evs(eig.GetEigenValues());
-      // Multiplication with a diagonal matrix ... eigenvalues are
-      // sorted in descending order.
-      int iCol = 0;
-      for (; iCol < Q.GetNcols(); ++iCol) {
-        double ev = evs(iCol) > 0 ? sqrt(evs(iCol)) : 0;
-        //FIXME, see below we do no resizing as of now
-        if (ev == 0)
-	  break;
-        for (int j = 0; j < Q.GetNrows(); ++j)
-          Q(j,iCol) *= ev;
-      }
-      if (iCol < Q.GetNrows()) {
-        // Hit zero eigenvalue, resize matrix ...
-        Q.ResizeTo(iCol, Q.GetNcols());
-      }
-      // This gives the original matrix:
-      // TMatrixDSym(TMatrixDSym::kAtA,TMatrixD(TMatrixD::kTransposed,Q)).Print();
-      // i.e., we now have the transposed we need.
-
-      //std::cout << "cov root" << std::endl;
-      TDecompChol oldCovDecomp(oldCov);
-      oldCovDecomp.Decompose();
-      const TMatrixD& S(oldCovDecomp.GetU()); // this actually the transposed we want.
-
-      TDecompChol decompR(V);
-      decompR.Decompose();
-
-      TMatrixD pre(S.GetNrows() + Q.GetNrows() + V.GetNrows(),
-		   S.GetNcols() + V.GetNcols());
-      TMatrixD SFt(S, TMatrixD::kMultTranspose, F);
-      pre.SetSub(                        0,0,decompR.GetU()); /* upper right block is zero */
-      pre.SetSub(             V.GetNrows(),0,H->MHt(SFt)); pre.SetSub(V.GetNrows(),             V.GetNcols(),SFt);
-      if (Q.GetNrows() > 0) { // needed to suppress warnings when inserting an empty Q
-	pre.SetSub(S.GetNrows()+V.GetNrows(),0,H->MHt(Q));   pre.SetSub(S.GetNrows()+V.GetNrows(),V.GetNcols(),Q);
-      }
-				
-
-      tools::QR(pre);
-      const TMatrixD& r = pre;
-
-      TMatrixD R(r.GetSub(0, V.GetNrows()-1, 0, V.GetNcols()-1));
-      //R.Print();
-      TMatrixD K(TMatrixD::kTransposed, r.GetSub(0, V.GetNrows()-1, V.GetNcols(), pre.GetNcols()-1));
-      //K.Print();
-      //(K*R).Print();
-      TMatrixD Snew(r.GetSub(V.GetNrows(), V.GetNrows() + S.GetNrows() - 1,
-			     V.GetNcols(), pre.GetNcols()-1));
-      //Snew.Print();
-      // No need for matrix inversion.
-      TVectorD update(res);
-      tools::transposedForwardSubstitution(R, update);
-      update *= K;
-      stateVector += update;
-      cov = TMatrixDSym(TMatrixDSym::kAtA, Snew); // Note that this is transposed in just the right way.
-    }
-  else
-    {
-      // calculate kalman gain ------------------------------
-      // calculate covsum (V + HCH^T) and invert
-      TMatrixDSym covSumInv(cov);
-      H->HMHt(covSumInv);
-      covSumInv += V;
-      tools::invertMatrix(covSumInv);
-
-      TMatrixD CHt(H->MHt(cov));
-      TVectorD update(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
-      //TMatrixD(CHt, TMatrixD::kMult, covSumInv).Print();
-
+    if (!canIgnoreWeights() && mOnPlane.getWeight() <= 1.01E-10) {
       if (debugLvl_ > 0) {
-        //std::cout << "STATUS:" << std::endl;
-        //stateVector.Print();
-        std::cout << "Update: "; update.Print();
-        //cov.Print();
+        std::cout << "Weight of measurement is almost 0, continue ... \n";
       }
-
-      stateVector += update;
-      covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
-      cov -= covSumInv;
+      continue;
     }
 
-  if (debugLvl_ > 0) {
-    std::cout << "updated state: "; stateVector.Print();
-    std::cout << "updated cov: "; cov.Print();
-  }
+    const TVectorD& measurement(mOnPlane.getState());
+    const AbsHMatrix* H(mOnPlane.getHMatrix());
+    // (weighted) cov
+    const TMatrixDSym& V((!canIgnoreWeights() && mOnPlane.getWeight() < 0.99999) ?
+                          1./mOnPlane.getWeight() * mOnPlane.getCov() :
+                          mOnPlane.getCov());
+    if (debugLvl_ > 1) {
+      std::cout << "State prediction: "; stateVector.Print();
+      std::cout << "Cov prediction: "; state->getCov().Print();
+      //cov.Print();
+      //measurement.Print();
+    }
 
-  TVectorD resNew(measurement - H->Hv(stateVector));
-  if (debugLvl_ > 0) {
-    std::cout << "Residual New = (" << resNew(0);
+    TVectorD res(measurement - H->Hv(stateVector));
+    if (debugLvl_ > 1) {
+      std::cout << "Residual = (" << res(0);
+      if (res.GetNrows() > 1)
+        std::cout << ", " << res(1);
+      std::cout << ")" << std::endl;
+    }
+    // If hit, do Kalman algebra.
 
-    if (resNew.GetNrows() > 1)
-      std::cout << ", " << resNew(1);
-    std::cout << ")" << std::endl;
-  }
+    if (squareRootFormalism_)
+      {
+        // Square Root formalism, Anderson & Moore, 6.5.12 gives the
+        // formalism for combined update and prediction in that
+        // sequence.  We need the opposite sequence.  Therefore, this is
+        // my own invention.
+        TMatrixD F;
+        TMatrixDSym noise;
+        TVectorD deltaState;
+        rep->getForwardJacobianAndNoise(F, noise, deltaState);
+        const TMatrixDSym& oldCov(currentState_->getCov());
+
+        // Square Roots:
+        //
+        // The noise matrix is only positive semi-definite, for instance
+        // no noise on q/p.  A Cholesky decomposition is therefore not
+        // possible.  Hence we pull out the eigenvalues, viz noise = z d
+        // z^T (with z orthogonal, d diagonal) and then construct the
+        // square root according to Q^T = sqrt(d) z where sqrt is
+        // applied element-wise and negative eigenvalues are forced to
+        // zero.  We then reduce the matrix such that the zero
+        // eigenvalues don't appear in the remainder of the calculation.
+        //
+        // FIXME
+        // Careful, this is not tested with actual noise.  Do I need the
+        // transpose???
+        TMatrixDSymEigen eig(noise);
+        TMatrixD Q(eig.GetEigenVectors());
+        const TVectorD& evs(eig.GetEigenValues());
+        // Multiplication with a diagonal matrix ... eigenvalues are
+        // sorted in descending order.
+        int iCol = 0;
+        for (; iCol < Q.GetNcols(); ++iCol) {
+          double ev = evs(iCol) > 0 ? sqrt(evs(iCol)) : 0;
+          //FIXME, see below we do no resizing as of now
+          if (ev == 0)
+            break;
+          for (int j = 0; j < Q.GetNrows(); ++j)
+            Q(j,iCol) *= ev;
+        }
+        if (iCol < Q.GetNrows()) {
+          // Hit zero eigenvalue, resize matrix ...
+          Q.ResizeTo(iCol, Q.GetNcols());
+        }
+        // This gives the original matrix:
+        // TMatrixDSym(TMatrixDSym::kAtA,TMatrixD(TMatrixD::kTransposed,Q)).Print();
+        // i.e., we now have the transposed we need.
+
+        //std::cout << "cov root" << std::endl;
+        TDecompChol oldCovDecomp(oldCov);
+        oldCovDecomp.Decompose();
+        const TMatrixD& S(oldCovDecomp.GetU()); // this actually the transposed we want.
+
+        TDecompChol decompR(V);
+        decompR.Decompose();
+
+        TMatrixD pre(S.GetNrows() + Q.GetNrows() + V.GetNrows(),
+         S.GetNcols() + V.GetNcols());
+        TMatrixD SFt(S, TMatrixD::kMultTranspose, F);
+        pre.SetSub(                        0,0,decompR.GetU()); /* upper right block is zero */
+        pre.SetSub(             V.GetNrows(),0,H->MHt(SFt)); pre.SetSub(V.GetNrows(),             V.GetNcols(),SFt);
+        if (Q.GetNrows() > 0) { // needed to suppress warnings when inserting an empty Q
+          pre.SetSub(S.GetNrows()+V.GetNrows(),0,H->MHt(Q));   pre.SetSub(S.GetNrows()+V.GetNrows(),V.GetNcols(),Q);
+        }
+
+
+        tools::QR(pre);
+        const TMatrixD& r = pre;
+
+        TMatrixD R(r.GetSub(0, V.GetNrows()-1, 0, V.GetNcols()-1));
+        //R.Print();
+        TMatrixD K(TMatrixD::kTransposed, r.GetSub(0, V.GetNrows()-1, V.GetNcols(), pre.GetNcols()-1));
+        //K.Print();
+        //(K*R).Print();
+        TMatrixD Snew(r.GetSub(V.GetNrows(), V.GetNrows() + S.GetNrows() - 1,
+             V.GetNcols(), pre.GetNcols()-1));
+        //Snew.Print();
+        // No need for matrix inversion.
+        TVectorD update(res);
+        tools::transposedForwardSubstitution(R, update);
+        update *= K;
+        stateVector += update;
+        cov = TMatrixDSym(TMatrixDSym::kAtA, Snew); // Note that this is transposed in just the right way.
+      }
+    else
+      {
+        // calculate kalman gain ------------------------------
+        // calculate covsum (V + HCH^T) and invert
+        TMatrixDSym covSumInv(cov);
+        H->HMHt(covSumInv);
+        covSumInv += V;
+        tools::invertMatrix(covSumInv);
+
+        TMatrixD CHt(H->MHt(cov));
+        TVectorD update(TMatrixD(CHt, TMatrixD::kMult, covSumInv) * res);
+        //TMatrixD(CHt, TMatrixD::kMult, covSumInv).Print();
+
+        if (debugLvl_ > 1) {
+          //std::cout << "STATUS:" << std::endl;
+          //stateVector.Print();
+          std::cout << "Update: "; update.Print();
+          //cov.Print();
+        }
+
+        stateVector += update;
+        covSumInv.Similarity(CHt); // with (C H^T)^T = H C^T = H C  (C is symmetric)
+        cov -= covSumInv;
+      }
+
+    if (debugLvl_ > 1) {
+      std::cout << "updated state: "; stateVector.Print();
+      std::cout << "updated cov: "; cov.Print();
+    }
+
+    TVectorD resNew(measurement - H->Hv(stateVector));
+    if (debugLvl_ > 1) {
+      std::cout << "Residual New = (" << resNew(0);
+
+      if (resNew.GetNrows() > 1)
+        std::cout << ", " << resNew(1);
+      std::cout << ")" << std::endl;
+    }
+
+    /*TDecompChol dec(cov);
+    TMatrixDSym mist(cov);
+    bool status = dec.Invert(mist);
+    if (!status) {
+      if (debugLvl_ > 0) {
+          std::cout << "new cov not pos. def." << std::endl;
+      }
+    }*/
+
+    // Calculate chi²
+    TMatrixDSym HCHt(cov);
+    H->HMHt(HCHt);
+    HCHt -= V;
+    HCHt *= -1;
+
+    tools::invertMatrix(HCHt);
+
+    chi2inc += HCHt.Similarity(resNew);
+
+    if (!canIgnoreWeights()) {
+      ndfInc += mOnPlane.getWeight() * mOnPlane.getState().GetNrows();
+    }
+    else
+      ndfInc += mOnPlane.getState().GetNrows();
+
+    if (debugLvl_ > 0) {
+      std::cout << "chi² increment = " << chi2inc << std::endl;
+    }
+  } // end loop over measurements
 
   currentState_->setStateCovPlane(stateVector, cov, plane);
   currentState_->setAuxInfo(state->getAuxInfo());
 
-  /*TDecompChol dec(cov);
-  TMatrixDSym mist(cov);
-  bool status = dec.Invert(mist);
-  if (!status) {
-    if (debugLvl_ > 0) {
-        std::cout << "new cov not pos. def." << std::endl;
-    }
-  }*/
-
-  // Calculate chi²
-  TMatrixDSym HCHt(cov);
-  H->HMHt(HCHt);
-  HCHt -= V;
-  HCHt *= -1;
-
-  tools::invertMatrix(HCHt);
-
-  double chi2inc = HCHt.Similarity(resNew);
   chi2 += chi2inc;
-
-  double ndfInc = measurement.GetNrows();
   ndf += ndfInc;
-  if (debugLvl_ > 0) {
-    std::cout << "chi² increment = " << chi2inc << std::endl;
-  }
 
   // set update
   KalmanFittedStateOnPlane* updatedSOP = new KalmanFittedStateOnPlane(*currentState_, chi2inc, ndfInc);

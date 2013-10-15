@@ -172,24 +172,14 @@ bool AbsKalmanFitter::isTrackFitted(const Track* tr, const AbsTrackRep* rep) con
 }
 
 
-const MeasurementOnPlane AbsKalmanFitter::getMeasurement(const KalmanFitterInfo* fi, int direction) const {
+const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const KalmanFitterInfo* fi, int direction) const {
+
   switch (multipleMeasurementHandling_) {
     case weightedAverage :
-      return fi->getAvgWeightedMeasurementOnPlane();
-
     case unweightedAverage :
-      return fi->getAvgWeightedMeasurementOnPlane(true);
+      return fi->getMeasurementsOnPlane();
 
     case weightedClosestToReference :
-    {
-      if (!fi->hasReferenceState()) {
-        Exception e("AbsKalmanFitter::getMeasurement: no ReferenceState.", __LINE__,__FILE__);
-        e.setFatal();
-        throw e;
-      }
-      return *(fi->getClosestMeasurementOnPlane(fi->getReferenceState()));
-    }
-
     case unweightedClosestToReference :
     {
       if (!fi->hasReferenceState()) {
@@ -197,21 +187,12 @@ const MeasurementOnPlane AbsKalmanFitter::getMeasurement(const KalmanFitterInfo*
         e.setFatal();
         throw e;
       }
-      MeasurementOnPlane retVal(*(fi->getClosestMeasurementOnPlane(fi->getReferenceState())));
-      retVal.setWeight(1.);
+      std::vector<MeasurementOnPlane *> retVal;
+      retVal.push_back(fi->getClosestMeasurementOnPlane(fi->getReferenceState()));
       return retVal;
     }
 
     case weightedClosestToPrediction :
-    {
-      if (!fi->hasPrediction(direction)) {
-        Exception e("AbsKalmanFitter::getMeasurement: no prediction.", __LINE__,__FILE__);
-        e.setFatal();
-        throw e;
-      }
-      return *(fi->getClosestMeasurementOnPlane(fi->getPrediction(direction)));
-    }
-
     case unweightedClosestToPrediction :
     {
       if (!fi->hasPrediction(direction)) {
@@ -219,14 +200,36 @@ const MeasurementOnPlane AbsKalmanFitter::getMeasurement(const KalmanFitterInfo*
         e.setFatal();
         throw e;
       }
-      MeasurementOnPlane retVal(*(fi->getClosestMeasurementOnPlane(fi->getPrediction(direction))));
-      retVal.setWeight(1.);
+      std::vector<MeasurementOnPlane *> retVal;
+      retVal.push_back(fi->getClosestMeasurementOnPlane(fi->getPrediction(direction)));
       return retVal;
     }
 
     default:
     {
       Exception e("AbsKalmanFitter::getMeasurement: choice not valid.", __LINE__,__FILE__);
+      e.setFatal();
+      throw e;
+    }
+  }
+}
+
+
+bool AbsKalmanFitter::canIgnoreWeights() const {
+  switch (multipleMeasurementHandling_) {
+    case unweightedAverage :
+    case unweightedClosestToReference :
+    case unweightedClosestToPrediction :
+      return true;
+
+    case weightedAverage :
+    case weightedClosestToReference :
+    case weightedClosestToPrediction :
+      return false;
+
+    default:
+    {
+      Exception e("AbsKalmanFitter::canIgnoreWeights: choice not valid.", __LINE__,__FILE__);
       e.setFatal();
       throw e;
     }
