@@ -164,6 +164,15 @@ std::vector< AbsFitterInfo* > TrackPoint::getFitterInfos() const {
 }
 
 
+AbsFitterInfo* TrackPoint::getFitterInfo(const AbsTrackRep* rep) const {
+  if (rep == NULL) {
+    return fitterInfos_.at(track_->getCardinalRep());
+  }
+  return fitterInfos_.at(rep);
+}
+
+
+
 void TrackPoint::deleteRawMeasurements() {
   for (size_t i = 0; i < rawMeasurements_.size(); ++i)
     delete rawMeasurements_[i];

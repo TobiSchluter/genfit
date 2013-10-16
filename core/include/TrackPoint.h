@@ -95,8 +95,8 @@ class TrackPoint : public TObject {
   bool hasRawMeasurements() const {return (rawMeasurements_.size() != 0);}
   //! Get list of all fitterInfos
   std::vector< genfit::AbsFitterInfo* > getFitterInfos() const;
-  //! Get fitterInfo for rep
-  AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep) const {return fitterInfos_.at(rep);}
+  //! Get fitterInfo for rep. Per default, use cardinal rep
+  AbsFitterInfo* getFitterInfo(const AbsTrackRep* rep = NULL) const;
   bool hasFitterInfo(const AbsTrackRep* rep) const {
     return (fitterInfos_.find(rep) != fitterInfos_.end());
   }
