@@ -215,8 +215,10 @@ SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/GBLRootDict.cpp" "${library_sou
 SET(MEASUREMENTS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixPhi.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixU.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixUnit.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixV.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixUV.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/FullMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/PlanarMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/ProlateSpacepointMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/SpacepointMeasurement.h
