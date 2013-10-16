@@ -142,7 +142,7 @@ class RKTrackRep : public AbsTrackRep {
   virtual void setChargeSign(StateOnPlane& state, double charge) const;
   virtual void setQop(StateOnPlane& state, double qop) const {state.getState()(0) = qop;}
 
-  void setSpu(StateOnPlane& state, double spu) const {(state.getAuxInfo())(0) = spu;}
+  void setSpu(StateOnPlane& state, double spu) const;
 
   //! The actual Runge Kutta propagation
   /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).

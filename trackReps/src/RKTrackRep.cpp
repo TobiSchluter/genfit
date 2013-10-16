@@ -1048,6 +1048,13 @@ void RKTrackRep::setChargeSign(StateOnPlane& state, double charge) const {
 }
 
 
+void RKTrackRep::setSpu(StateOnPlane& state, double spu) const {
+  state.getAuxInfo().ResizeTo(1);
+  (state.getAuxInfo())(0) = spu;
+}
+
+
+
 double RKTrackRep::RKPropagate(M1x7& state7,
                         M7x7* jacobianT,
                         M1x3& SA,

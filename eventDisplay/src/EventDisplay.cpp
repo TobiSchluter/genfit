@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "AbsMeasurement.h"
+#include "FullMeasurement.h"
 #include "PlanarMeasurement.h"
 #include "ProlateSpacepointMeasurement.h"
 #include "SpacepointMeasurement.h"
@@ -439,12 +440,16 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       double charge = rep->getCharge(*fittedState);
 
       // determine measurmenet type
+      bool full_hit = false;
       bool planar_hit = false;
       bool planar_pixel_hit = false;
       bool space_hit = false;
       bool wire_hit = false;
       bool wirepoint_hit = false;
-      if(dynamic_cast<const PlanarMeasurement*>(m) != NULL) {
+      if (dynamic_cast<const FullMeasurement*>(m) != NULL) {
+        full_hit = true;
+      }
+      else if(dynamic_cast<const PlanarMeasurement*>(m) != NULL) {
         planar_hit = true;
         if(hit_coords_dim == 2) {
           planar_pixel_hit = true;
@@ -532,9 +537,9 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
             }
           }
           if (drawForward_)
-            makeLines(prevFi->getForwardUpdate(), fi->getForwardPrediction(), rep, charge > 0 ? kMagenta : kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
+            makeLines(prevFi->getForwardUpdate(), fi->getForwardPrediction(), rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
           if (drawBackward_)
-            makeLines(prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, charge > 0 ? kYellow : kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
+            makeLines(prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
           // draw reference track if corresponding option is set ------------------------------------------
           if(drawRefTrack_ && fi->hasReferenceState() && prevFi->hasReferenceState())
             makeLines(prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers_, false, 3);
@@ -574,6 +579,21 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         if(drawHits_) {
 
           // draw planar hits, with distinction between strip and pixel hits ----------------
+          if (full_hit) {
+
+            StateOnPlane dummy;
+            MeasuredStateOnPlane sop = *(static_cast<const FullMeasurement*>(m)->constructMeasurementsOnPlane(rep, static_cast<const FullMeasurement*>(m)->constructPlane(dummy))[0]);
+            sop.getCov()*=errorScale_;
+
+            MeasuredStateOnPlane prevSop(sop);
+            prevSop.extrapolateBy(-3);
+            makeLines(&sop, &prevSop, rep, kYellow, 1, false, true, 0, 0);
+
+            prevSop = sop;
+            prevSop.extrapolateBy(3);
+            makeLines(&sop, &prevSop, rep, kYellow, 1, false, true, 0, 0);
+          }
+
           if(planar_hit) {
             if(!planar_pixel_hit) {
               TEveBox* hit_box;

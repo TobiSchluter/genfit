@@ -34,6 +34,7 @@ FullMeasurement::FullMeasurement(int nDim)
   assert(nDim >= 1);
 }
 
+
 FullMeasurement::FullMeasurement(const MeasuredStateOnPlane& state, int detId, int hitId, TrackPoint* trackPoint)
   : AbsMeasurement(state.getState(), state.getCov(), detId, hitId, trackPoint), plane_(state.getPlane())
 {

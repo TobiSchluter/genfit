@@ -43,7 +43,7 @@ class FullMeasurement : public AbsMeasurement {
 
  public:
   FullMeasurement(int nDim = 5);
-  FullMeasurement(const MeasuredStateOnPlane&, int detId, int hitId, TrackPoint* trackPoint);
+  FullMeasurement(const MeasuredStateOnPlane&, int detId = -1, int hitId = -1, TrackPoint* trackPoint = NULL);
 
   virtual ~FullMeasurement() {;}
 

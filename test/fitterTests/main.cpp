@@ -21,6 +21,7 @@
 #include <GFGbl.h>
 #include <MeasuredStateOnPlane.h>
 #include <MeasurementOnPlane.h>
+#include <FullMeasurement.h>
 #include <PlanarMeasurement.h>
 #include <ProlateSpacepointMeasurement.h>
 #include <RectangularFinitePlane.h>
@@ -134,8 +135,8 @@ int main() {
   gRandom->SetSeed(14);
 
 
-  const unsigned int nEvents = 1000;
-  const unsigned int nMeasurements = 11;
+  const unsigned int nEvents = 10;
+  const unsigned int nMeasurements = 15;
   const double BField = 15.;       // kGauss
   const double momentum = 0.4;     // GeV
   const double theta = 120;         // degree
@@ -153,35 +154,36 @@ int main() {
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
 
-  const double outlierProb = 0.1;
+  const double outlierProb = -0.1;
   const double outlierRange = 2;
 
-  const double hitSwitchProb = 0.1; // probability to give hits to fit in wrong order (flip two hits)
+  const double hitSwitchProb = -0.1; // probability to give hits to fit in wrong order (flip two hits)
 
-  const int splitTrack = 0; // for track merging testing:
+  const int splitTrack = 5; // for track merging testing.
+  const bool fullMeasurement = true; // put fit result of first tracklet as FullMeasurement into second tracklet, don't merge
 
   //const genfit::eFitterType fitterId = genfit::SimpleKalman;
   //const genfit::eFitterType fitterId = genfit::RefKalman;
   const genfit::eFitterType fitterId = genfit::DafRef;
   //const genfit::eFitterType fitterId = genfit::DafSimple;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
+  const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
-  const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToReference;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToPrediction;
   const int nIter = 20; // max number of iterations
   const double dPVal = 1.E-3; // convergence criterion
 
   const bool resort = true;
-  const bool prefit = true; // make a simple Kalman iteration before the actual fit
-  const bool refit  = true; // if fit did not converge, try to fit again
+  const bool prefit = false; // make a simple Kalman iteration before the actual fit
+  const bool refit  = false; // if fit did not converge, try to fit again
 
-  const bool twoReps = true; // test if everything works with more than one rep in the tracks
+  const bool twoReps = false; // test if everything works with more than one rep in the tracks
 
   const int pdg = 13;               // particle pdg code
 
   const bool smearPosMom = true;     // init the Reps with smeared pos and mom
-  const double chargeSwitchProb = 0.1; // probability to seed with wrong charge sign
+  const double chargeSwitchProb = -0.1; // probability to seed with wrong charge sign
   const double posSmear = 10*resolution;     // cm
   const double momSmear = 5. /180.*TMath::Pi();     // rad
   const double momMagSmear = 0.2;   // relative
@@ -191,20 +193,9 @@ int main() {
   const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
 
   const bool debug = false;
-  const bool onlyDisplayFailed = true; // only load non-converged tracks into the display
+  const bool onlyDisplayFailed = false; // only load non-converged tracks into the display
 
   std::vector<genfit::eMeasurementType> measurementTypes;
-
-  /*measurementTypes.push_back(genfit::Pixel);
-  measurementTypes.push_back(genfit::Spacepoint);
-  measurementTypes.push_back(genfit::ProlateSpacepoint);
-  measurementTypes.push_back(genfit::StripV);
-  measurementTypes.push_back(genfit::StripU);
-  measurementTypes.push_back(genfit::Wire);
-  measurementTypes.push_back(genfit::WirePoint);*/
-  for (unsigned int i = 0; i < nMeasurements; ++i)
-    measurementTypes.push_back(genfit::eMeasurementType(gRandom->Uniform(8)));
-
 
 
   signal(SIGSEGV, handler);   // install our handler
@@ -230,6 +221,8 @@ int main() {
       break;
   }
   fitter->setMaxIterations(nIter);
+  if (debug)
+    fitter->setDebugLvl(10);
 
   /*if (dynamic_cast<genfit::DAF*>(fitter) != NULL) {
     //static_cast<genfit::DAF*>(fitter)->setBetas(100, 50, 25, 12, 6, 3, 1, 0.5, 0.1);
@@ -317,6 +310,11 @@ int main() {
 
   // main loop
   for (unsigned int iEvent=0; iEvent<nEvents; ++iEvent){
+
+      measurementTypes.clear();
+      for (unsigned int i = 0; i < nMeasurements; ++i)
+        measurementTypes.push_back(genfit::eMeasurementType(gRandom->Uniform(8)));
+
 
       if (debug || (iEvent)%10==0)
         std::cout << "Event Nr. " << iEvent << " ";
@@ -441,7 +439,7 @@ int main() {
 
       // add measurements
       for(unsigned int i=0; i<measurements.size(); ++i){
-        if (splitTrack > 0 && i >= splitTrack)
+        if (splitTrack > 0 && (int)i >= splitTrack)
           break;
         if (i>0 && hitSwitchProb > gRandom->Uniform(1.))
           fitTrack->insertPoint(new genfit::TrackPoint(measurements[i], fitTrack), -2);
@@ -455,9 +453,9 @@ int main() {
       if (splitTrack > 0) {
         for(unsigned int i=splitTrack; i<measurements.size(); ++i){
           if (i>0 && hitSwitchProb > gRandom->Uniform(1.))
-            secondTrack->insertPoint(new genfit::TrackPoint(measurements[i], fitTrack), -2);
+            secondTrack->insertPoint(new genfit::TrackPoint(measurements[i], secondTrack), -2);
           else
-            secondTrack->insertPoint(new genfit::TrackPoint(measurements[i], fitTrack));
+            secondTrack->insertPoint(new genfit::TrackPoint(measurements[i], secondTrack));
 
           //if (debug) fitTrack->Print("C");
         }
@@ -494,7 +492,12 @@ int main() {
         if (debug) fitTrack->Print("C");
         if (debug) secondTrack->Print("C");
 
-        fitTrack->mergeTrack(secondTrack);
+        if (fullMeasurement) {
+          genfit::FullMeasurement* fullM = new genfit::FullMeasurement(secondTrack->getFittedState());
+          fitTrack->insertPoint(new genfit::TrackPoint(fullM, fitTrack));
+        }
+        else
+          fitTrack->mergeTrack(secondTrack);
 
         if (debug) fitTrack->Print("C");
 
@@ -627,7 +630,7 @@ int main() {
 
       // check l/r resolution and outlier rejection
       if (dynamic_cast<genfit::DAF*>(fitter) != NULL) {
-        for (unsigned int i=0; i<leftRightTrue.size(); ++i){
+        for (unsigned int i=0; i<fitTrack->getNumPointsWithMeasurement(); ++i){
 
           if (! fitTrack->getPointWithMeasurement(i)->hasFitterInfo(rep))
             continue;
@@ -668,7 +671,7 @@ int main() {
           if (weightCorrectSide>maxWeight) maxWeight = weightCorrectSide;
         }
 
-        for (unsigned int i=0; i<outlierTrue.size(); ++i){
+        for (unsigned int i=0; i<fitTrack->getNumPointsWithMeasurement(); ++i){
           if (! fitTrack->getPointWithMeasurement(i)->hasFitterInfo(rep))
             continue;
 
