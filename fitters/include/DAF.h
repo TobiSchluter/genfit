@@ -102,6 +102,8 @@ class DAF : public AbsKalmanFitter {
 
   AbsKalmanFitter* getKalman() const {return kalman_.get();}
 
+  virtual void setDebugLvl(unsigned int lvl = 1) {AbsFitter::setDebugLvl(lvl); if (lvl > 1) getKalman()->setDebugLvl(lvl-1);}
+
  private:
 
   /** @brief Calculate and set the weights for the next fitting pass.

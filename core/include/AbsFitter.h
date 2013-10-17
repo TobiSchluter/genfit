@@ -47,7 +47,7 @@ class AbsFitter {
    */
   void processTrack(Track*, bool resortHits = true);
 
-  void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
+  virtual void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
 
 
  protected:

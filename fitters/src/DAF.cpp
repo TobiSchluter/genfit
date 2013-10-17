@@ -326,8 +326,8 @@ bool DAF::calcWeights(Track* tr, const AbsTrackRep* rep, double beta) {
     }
 
     if (debugLvl_ > 0) {
-      std::cout << "\n";
-      std::cout << "maximum absolute weight change = " << maxAbsChange << "\n";
+      std::cout << "\t  ";
+      std::cout << "max abs weight change = " << maxAbsChange << "\n";
     }
 
   }
