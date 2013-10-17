@@ -309,29 +309,22 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         case SimpleKalman:
           fitter.reset(new KalmanFitter(nMaxIter_, dPVal_));
           fitter->setMultipleMeasurementHandling(mmHandling_);
-          fitter->setDebugLvl(debugLvl_);
           break;
 
         case RefKalman:
           fitter.reset(new KalmanFitterRefTrack(nMaxIter_, dPVal_));
           fitter->setMultipleMeasurementHandling(mmHandling_);
-          fitter->setDebugLvl(debugLvl_);
           break;
 
         case DafSimple:
           fitter.reset(new DAF(false));
-          if (debugLvl_ > 1)
-            (static_cast<DAF*>(fitter.get()))->getKalman()->setDebugLvl(debugLvl_-1);
-          fitter->setDebugLvl(debugLvl_);
           break;
         case DafRef:
           fitter.reset(new DAF());
-          if (debugLvl_ > 1)
-            (static_cast<DAF*>(fitter.get()))->getKalman()->setDebugLvl(debugLvl_-1);
-          fitter->setDebugLvl(debugLvl_);
           break;
 
       }
+      fitter->setDebugLvl(debugLvl_);
       fitter->setMaxIterations(nMaxIter_);
 
 
