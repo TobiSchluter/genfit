@@ -45,9 +45,7 @@ KalmanFitterInfo::KalmanFitterInfo(const TrackPoint* trackPoint, const AbsTrackR
 }
 
 KalmanFitterInfo::~KalmanFitterInfo() {
-  // FIXME: need smart pointers / smart containers here
-  for (size_t i = 0; i < measurementsOnPlane_.size(); ++i)
-    delete measurementsOnPlane_[i];
+  deleteMeasurementInfo();
 }
 
 
@@ -305,9 +303,7 @@ void KalmanFitterInfo::setBackwardUpdate(KalmanFittedStateOnPlane* backwardUpdat
 
 
 void KalmanFitterInfo::setMeasurementsOnPlane(const std::vector< genfit::MeasurementOnPlane* >& measurementsOnPlane) {
-  for (size_t i = 0; i < measurementsOnPlane_.size(); ++i)
-    delete measurementsOnPlane_[i];  
-  measurementsOnPlane_.clear();
+  deleteMeasurementInfo();
 
   for (std::vector<MeasurementOnPlane*>::const_iterator m = measurementsOnPlane.begin(), mend = measurementsOnPlane.end(); m < mend; ++m) {
     addMeasurementOnPlane(*m);
@@ -389,6 +385,14 @@ void KalmanFitterInfo::deletePredictions() {
   setBackwardPrediction(NULL);
   fittedStateUnbiased_.reset();
   fittedStateBiased_.reset();
+}
+
+void KalmanFitterInfo::deleteMeasurementInfo() {
+  // FIXME: need smart pointers / smart containers here
+  for (size_t i = 0; i < measurementsOnPlane_.size(); ++i)
+    delete measurementsOnPlane_[i];
+
+  measurementsOnPlane_.clear();
 }
 
 
@@ -596,11 +600,10 @@ void KalmanFitterInfo::Streamer(TBuffer &R__b)
       baseClass0::Streamer(R__b);
       int flag;
       R__b >> flag;
-      referenceState_.reset();
-      forwardPrediction_.reset();
-      forwardUpdate_.reset();  
-      backwardUpdate_.reset();
-      measurementsOnPlane_.clear();
+      deleteForwardInfo();
+      deleteBackwardInfo();
+      deleteReferenceInfo();
+      deleteMeasurementInfo();
       if (flag & 1) {
         referenceState_.reset(new ReferenceStateOnPlane());
         referenceState_->Streamer(R__b);

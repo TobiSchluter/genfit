@@ -83,6 +83,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   bool hasBackwardPrediction() const {return (backwardPrediction_.get() != NULL);}
   bool hasForwardUpdate() const {return (forwardUpdate_.get() != NULL);}
   bool hasBackwardUpdate() const {return (backwardUpdate_.get() != NULL);}
+  bool hasUpdate(int direction) const {if (direction < 0) return hasBackwardUpdate(); return hasForwardUpdate();}
   bool hasPredictionsAndUpdates() const {return (hasForwardPrediction() && hasBackwardPrediction() && hasForwardUpdate() && hasBackwardUpdate());}
 
   void setReferenceState(ReferenceStateOnPlane* referenceState) {referenceState_.reset(referenceState);}
@@ -104,7 +105,7 @@ class KalmanFitterInfo : public AbsFitterInfo {
   void deleteBackwardInfo();
   void deletePredictions();
   void deleteReferenceInfo() {setReferenceState(NULL);}
-  void deleteMeasurementInfo() {measurementsOnPlane_.clear();}
+  void deleteMeasurementInfo();
 
   virtual void Print(const Option_t* = "") const;
 
