@@ -40,31 +40,34 @@ using namespace genfit;
 
 void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
     double& chi2, double& ndf,
-    int direction)
+    int startId, int endId)
 {
 
-  if (multipleMeasurementHandling_ == unweightedClosestToReference) {
-    Exception exc("KalmanFitter::fitTrack ==> cannot use unweightedClosestToReference as multiple measurement handling.",__LINE__,__FILE__);
+  if (multipleMeasurementHandling_ == unweightedClosestToReference || multipleMeasurementHandling_ == weightedClosestToReference) {
+    Exception exc("KalmanFitter::fitTrack ==> cannot use (un)weightedClosestToReference as multiple measurement handling.",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
   }
+
+  if (startId < 0)
+    startId += tr->getNumPointsWithMeasurement();
+  if (endId < 0)
+    endId += tr->getNumPointsWithMeasurement();
+
+  int direction(1);
+  if (endId < startId)
+    direction = -1;
 
   chi2 = 0;
   ndf = -1. * rep->getDim();
 
   if (debugLvl_ > 0) {
-    std::cout << tr->getNumPoints() << " TrackPoints in this track." << std::endl;
+    std::cout << tr->getNumPointsWithMeasurement() << " TrackPoints w/ measurement in this track." << std::endl;
   }
-  for (size_t i = 0; i < tr->getNumPoints(); ++i) {
-    TrackPoint *tp = 0;
+  for (int i = startId; ; i+=direction) {
+    TrackPoint *tp = tr->getPointWithMeasurement(i);
     KalmanFitterInfo* fi;
     assert(direction == +1 || direction == -1);
-    if (direction == +1) {
-      tp = tr->getPoint(i);
-    }
-    else {
-      tp = tr->getPoint(-i-1);
-    }
 
     if (! tp->hasFitterInfo(rep)) {
       fi = new KalmanFitterInfo(tp, rep);
@@ -74,10 +77,12 @@ void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
       fi = static_cast<KalmanFitterInfo*>(tp->getFitterInfo(rep));
 
     if (debugLvl_ > 0) {
-    std::cout << " process TrackPoint nr. " << i << " (" << tp << ")\n";
+      std::cout << " process TrackPoint nr. " << i << " (" << tp << ")\n";
     }
     processTrackPoint(tr, tp, fi, rep, chi2, ndf, direction);
 
+    if (i == endId)
+      break;
   }
 }
 
@@ -90,10 +95,16 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool r
     throw exc;
   }
 
-  currentState_.reset(new MeasuredStateOnPlane(rep));
-
   TrackPoint* trackPoint = tr->getPointWithMeasurement(0);
 
+  if (trackPoint->hasFitterInfo(rep) &&
+      dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(rep)) != NULL &&
+      static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(rep))->hasUpdate(-1)) {
+    MeasuredStateOnPlane* update = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(rep))->getUpdate(-1);
+    currentState_.reset(new MeasuredStateOnPlane(*update));
+    if (debugLvl_ > 0)
+      std::cout << "take backward update of previous iteration as seed \n";
+  }
   if (rep != tr->getCardinalRep() &&
       trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
       dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
@@ -104,11 +115,15 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool r
     TMatrixDSym cov;
     const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
     tr->getCardinalRep()->getPosMomCov(fittedState, pos, mom, cov);
+    currentState_.reset(new MeasuredStateOnPlane(rep));
     rep->setPosMomCov(*currentState_, pos, mom, cov);
     rep->setQop(*currentState_, tr->getCardinalRep()->getQop(fittedState));
   }
   else {
+    currentState_.reset(new MeasuredStateOnPlane(rep));
     rep->setPosMomCov(*currentState_, tr->getStateSeed(), tr->getCovSeed());
+    if (debugLvl_ > 0)
+      std::cout << "take seed state of track as seed \n";
   }
 
   // Only after we have linearly propagated the error into the TrackRep can we
@@ -136,7 +151,7 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool r
         std::cout << "\033[0mfitting" << std::endl;
       }
 
-      fitTrack(tr, rep, chi2FW, ndfFW, +1);
+      fitTrack(tr, rep, chi2FW, ndfFW, 0, -1);
 
       if (debugLvl_ > 0) {
         std::cout << "\033[1;21mstate post forward" << std::endl;
@@ -147,7 +162,7 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool r
       // Backwards iteration:
       currentState_->blowUpCov(blowUpFactor_);  // blow up cov
 
-      fitTrack(tr, rep, chi2BW, ndfBW, -1);
+      fitTrack(tr, rep, chi2BW, ndfBW, -1, 0);
 
       if (debugLvl_ > 0) {
         std::cout << "\033[1;21mstate post backward" << std::endl;
@@ -206,6 +221,87 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool r
 
 
 void
+KalmanFitter::processTrackPartially(Track* tr, const AbsTrackRep* rep, int startId, int endId) {
+
+  if (tr->getFitStatus(rep) != NULL && tr->getFitStatus(rep)->isTrackPruned()) {
+    Exception exc("KalmanFitter::processTrack: Cannot process pruned track!", __LINE__,__FILE__);
+    throw exc;
+  }
+
+  if (startId < 0)
+    startId += tr->getNumPointsWithMeasurement();
+  if (endId < 0)
+    endId += tr->getNumPointsWithMeasurement();
+
+  int direction(1);
+  if (endId < startId)
+    direction = -1;
+
+
+  TrackPoint* trackPoint = tr->getPointWithMeasurement(startId);
+  TrackPoint* prevTrackPoint(NULL);
+
+
+  if (direction == 1 && startId > 0)
+    prevTrackPoint = tr->getPointWithMeasurement(startId - 1);
+  else if (direction == -1 && startId < (int)tr->getNumPointsWithMeasurement() - 1)
+    prevTrackPoint = tr->getPointWithMeasurement(startId + 1);
+
+
+  if (prevTrackPoint != NULL &&
+      prevTrackPoint->hasFitterInfo(rep) &&
+      dynamic_cast<KalmanFitterInfo*>(prevTrackPoint->getFitterInfo(rep)) != NULL &&
+      static_cast<KalmanFitterInfo*>(prevTrackPoint->getFitterInfo(rep))->hasUpdate(direction)) {
+    currentState_.reset(new MeasuredStateOnPlane(*(static_cast<KalmanFitterInfo*>(prevTrackPoint->getFitterInfo(rep))->getUpdate(direction))));
+    if (debugLvl_ > 0)
+      std::cout << "take update of previous fitter info as seed \n";
+  }
+  else if (rep != tr->getCardinalRep() &&
+      trackPoint->hasFitterInfo(tr->getCardinalRep()) &&
+      dynamic_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep())) != NULL &&
+      static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->hasPredictionsAndUpdates() ) {
+    if (debugLvl_ > 0)
+      std::cout << "take smoothed state of cardinal rep fit as seed \n";
+    TVector3 pos, mom;
+    TMatrixDSym cov;
+    const MeasuredStateOnPlane& fittedState = static_cast<KalmanFitterInfo*>(trackPoint->getFitterInfo(tr->getCardinalRep()))->getFittedState(true);
+    tr->getCardinalRep()->getPosMomCov(fittedState, pos, mom, cov);
+    currentState_.reset(new MeasuredStateOnPlane(rep));
+    rep->setPosMomCov(*currentState_, pos, mom, cov);
+    rep->setQop(*currentState_, tr->getCardinalRep()->getQop(fittedState));
+  }
+  else {
+    currentState_.reset(new MeasuredStateOnPlane(rep));
+    rep->setPosMomCov(*currentState_, tr->getStateSeed(), tr->getCovSeed());
+    if (debugLvl_ > 0)
+      std::cout << "take seed of track as seed \n";
+  }
+
+  // if at first or last hit, blow up
+  if (startId == 0 || startId == (int)tr->getNumPointsWithMeasurement() - 1) {
+    currentState_->blowUpCov(blowUpFactor_);
+    if (debugLvl_ > 0)
+      std::cout << "blow up seed \n";
+  }
+
+  try {
+    if (debugLvl_ > 0) {
+      std::cout << "\033[1;21mstate pre" << std::endl;
+      currentState_->Print();
+      std::cout << "\033[0mfitting" << std::endl;
+    }
+
+    double chi2, ndf;
+    fitTrack(tr, rep, chi2, ndf, startId, endId);
+  }
+  catch(Exception& e) {
+    std::cerr << e.what();
+    return;
+  }
+}
+
+
+void
 KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
     const AbsTrackRep* rep, double& chi2, double& ndf, int direction)
 {
@@ -216,14 +312,16 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
 
   // construct measurementsOnPlane if forward fit
   if (direction == 1) {
+    // remember old weights
+    std::vector<double> oldWeights = fi->getWeights();
+    bool oldWeightsFixed = fi->areWeightsFixed();
+
     // delete outdated stuff
     fi->deleteForwardInfo();
     fi->deleteBackwardInfo();
     fi->deleteMeasurementInfo();
 
     // construct new MeasurementsOnPlane
-    std::vector<double> oldWeights = fi->getWeights();
-    bool oldWeightsFixed = fi->areWeightsFixed();
     const std::vector< genfit::AbsMeasurement* >& rawMeasurements =  tp->getRawMeasurements();
     // construct plane with first measurement
     SharedPlanePtr plane = rawMeasurements[0]->constructPlane(*currentState_);
@@ -233,6 +331,9 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
     if (oldWeights.size() == fi->getNumMeasurements()) {
       fi->setWeights(oldWeights);
       fi->fixWeights(oldWeightsFixed);
+      if (debugLvl_ > 0) {
+        std::cout << "set old weights \n";
+      }
     }
     assert(fi->getPlane() == plane);
     assert(fi->checkConsistency());
@@ -267,8 +368,13 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   const std::vector<MeasurementOnPlane *> measurements = getMeasurements(fi, direction);
   for (std::vector<MeasurementOnPlane *>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
     const MeasurementOnPlane& mOnPlane = **it;
+    const double weight = mOnPlane.getWeight();
 
-    if (!canIgnoreWeights() && mOnPlane.getWeight() <= 1.01E-10) {
+    if (debugLvl_ > 0) {
+      std::cout << "Weight of measurement: " << weight << "\n";
+    }
+
+    if (!canIgnoreWeights() && weight <= 1.01E-10) {
       if (debugLvl_ > 0) {
         std::cout << "Weight of measurement is almost 0, continue ... \n";
       }
@@ -278,12 +384,17 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
     const TVectorD& measurement(mOnPlane.getState());
     const AbsHMatrix* H(mOnPlane.getHMatrix());
     // (weighted) cov
-    const TMatrixDSym& V((!canIgnoreWeights() && mOnPlane.getWeight() < 0.99999) ?
-                          1./mOnPlane.getWeight() * mOnPlane.getCov() :
+    const TMatrixDSym& V((!canIgnoreWeights() && weight < 0.99999) ?
+                          1./weight * mOnPlane.getCov() :
                           mOnPlane.getCov());
     if (debugLvl_ > 1) {
+      std::cout << "\033[31m";
       std::cout << "State prediction: "; stateVector.Print();
       std::cout << "Cov prediction: "; state->getCov().Print();
+      std::cout << "\033[0m";
+      std::cout << "\033[34m";
+      std::cout << "measurement: "; measurement.Print();
+      std::cout << "measurement covariance V: "; V.Print();
       //cov.Print();
       //measurement.Print();
     }
@@ -294,6 +405,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
       if (res.GetNrows() > 1)
         std::cout << ", " << res(1);
       std::cout << ")" << std::endl;
+      std::cout << "\033[0m";
     }
     // If hit, do Kalman algebra.
 
@@ -397,7 +509,9 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
         if (debugLvl_ > 1) {
           //std::cout << "STATUS:" << std::endl;
           //stateVector.Print();
+          std::cout << "\033[32m";
           std::cout << "Update: "; update.Print();
+          std::cout << "\033[0m";
           //cov.Print();
         }
 
@@ -407,6 +521,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
       }
 
     if (debugLvl_ > 1) {
+      std::cout << "\033[32m";
       std::cout << "updated state: "; stateVector.Print();
       std::cout << "updated cov: "; cov.Print();
     }
@@ -418,6 +533,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
       if (resNew.GetNrows() > 1)
         std::cout << ", " << resNew(1);
       std::cout << ")" << std::endl;
+      std::cout << "\033[0m";
     }
 
     /*TDecompChol dec(cov);
@@ -440,10 +556,10 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
     chi2inc += HCHt.Similarity(resNew);
 
     if (!canIgnoreWeights()) {
-      ndfInc += mOnPlane.getWeight() * mOnPlane.getState().GetNrows();
+      ndfInc += weight * measurement.GetNrows();
     }
     else
-      ndfInc += mOnPlane.getState().GetNrows();
+      ndfInc += measurement.GetNrows();
 
     if (debugLvl_ > 0) {
       std::cout << "chi² increment = " << chi2inc << std::endl;

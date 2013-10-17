@@ -376,6 +376,8 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
     for(unsigned int j = 0; j < numhits; j++) { // loop over all hits in the track
 
+      fittedState = NULL;
+
       TrackPoint* tp = track->getPointWithMeasurement(j);
       if (! tp->hasRawMeasurements()) {
         std::cerr<<"trackPoint has no raw measurements"<<std::endl;
@@ -400,8 +402,6 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
 
 
-
-
       // get the fitter infos ------------------------------------------------------------------
       if (! tp->hasFitterInfo(rep)) {
         std::cerr<<"trackPoint has no fitterInfo for rep"<<std::endl;
@@ -417,20 +417,49 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       }
       if (! fi->hasPredictionsAndUpdates()) {
         std::cerr<<"KalmanFitterInfo does not have all predictions and updates"<<std::endl;
-        continue;
+        //continue;
       }
-      try {
-        fittedState = &(fi->getFittedState(true));
+      else {
+        try {
+          fittedState = &(fi->getFittedState(true));
+        }
+        catch (Exception& e) {
+          std::cerr << e.what();
+          std::cerr<<"can not get fitted state"<<std::endl;
+          fittedState = NULL;
+          prevFi = fi;
+          prevFittedState = fittedState;
+          continue;
+        }
       }
-      catch (Exception& e) {
-        std::cerr << e.what();
-        std::cerr<<"can not get fitted state"<<std::endl;
+
+      if (fittedState == NULL) {
+        if (fi->hasForwardUpdate()) {
+          fittedState = fi->getForwardUpdate();
+        }
+        else if (fi->hasBackwardUpdate()) {
+          fittedState = fi->getBackwardUpdate();
+        }
+        else if (fi->hasForwardPrediction()) {
+          fittedState = fi->getForwardPrediction();
+        }
+        else if (fi->hasBackwardPrediction()) {
+          fittedState = fi->getBackwardPrediction();
+        }
+      }
+
+      if (fittedState == NULL) {
+        std::cout << "canot get any state from fitterInfo, continue.\n";
+        prevFi = fi;
+        prevFittedState = fittedState;
         continue;
       }
 
-      TVector3 track_pos = rep->getPos(*fittedState);
+      TVector3 track_pos = fittedState->getPos();
+      double charge = fittedState->getCharge();
 
-      double charge = rep->getCharge(*fittedState);
+      std::cout << "trackPos: "; track_pos.Print();
+
 
       // determine measurmenet type
       bool full_hit = false;

@@ -56,12 +56,15 @@ class KalmanFitter : public AbsKalmanFitter {
 
   ~KalmanFitter() {}
 
-  void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
-
   //! Hit resorting currently NOT supported.
   void processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits = false);
 
+  //! process only a part of the track. Can also be used to process the track only in backward direction.
+  //! Does not alter the FitStatus and does not do multiple iterations.
+  void processTrackPartially(Track* tr, const AbsTrackRep* rep, int startId = 0, int endId = -1);
+
  private:
+  void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int startId, int endId);
   void processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
       const AbsTrackRep* rep, double& chi2, double& ndf, int direction);
 
