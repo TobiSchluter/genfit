@@ -25,6 +25,7 @@
 
 #include "AbsFitter.h"
 #include "MeasurementOnPlane.h"
+#include "TrackPoint.h"
 
 
 namespace genfit {
@@ -37,7 +38,11 @@ enum eMultipleMeasurementHandling {
   weightedClosestToReference, /**<  closest to reference, weighted with its weight_ */
   unweightedClosestToReference, /**<  closest to reference, weighted with 1 */
   weightedClosestToPrediction, /**<  closest to prediction, weighted with its weight_ */
-  unweightedClosestToPrediction /**<  closest to prediction, weighted with 1. Recommended for KalmanFitter to 'resolve' l/r ambiguities etc. */
+  unweightedClosestToPrediction, /**<  closest to prediction, weighted with 1 */
+  weightedClosestToReferenceWire, /**<  if corresponding TrackPoint has one WireMeasurement, select closest to reference, weighted with its weight_. Otherwise use weightedAverage. */
+  unweightedClosestToReferenceWire, /**<  if corresponding TrackPoint has one WireMeasurement, select closest to reference, weighted with 1. Otherwise use unweightedAverage. */
+  weightedClosestToPredictionWire, /**<  if corresponding TrackPoint has one WireMeasurement, select closest to prediction, weighted with its weight_. Otherwise use weightedAverage. */
+  unweightedClosestToPredictionWire /**<  if corresponding TrackPoint has one WireMeasurement, select closest to prediction, weighted with 1. Otherwise use unweightedAverage. Recommended for KalmanFitter to 'resolve' l/r ambiguities */
 };
 
 /**
@@ -48,7 +53,7 @@ class AbsKalmanFitter : public AbsFitter {
  public:
 
   AbsKalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
-    : AbsFitter(), maxIterations_(maxIterations), deltaPval_(deltaPval), blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPrediction) {}
+    : AbsFitter(), maxIterations_(maxIterations), deltaPval_(deltaPval), blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPredictionWire) {}
 
   virtual ~AbsKalmanFitter() {;}
 
@@ -73,7 +78,7 @@ class AbsKalmanFitter : public AbsFitter {
  protected:
 
   //! get the measurementsOnPlane taking the multipleMeasurementHandling_ into account
-  const std::vector<MeasurementOnPlane *> getMeasurements(const KalmanFitterInfo* fi, int direction) const;
+  const std::vector<MeasurementOnPlane *> getMeasurements(const KalmanFitterInfo* fi, const TrackPoint* tp, int direction) const;
 
   //! Maximum number of iterations to attempt.  Forward and backward are counted as one iteration.
   unsigned int maxIterations_;

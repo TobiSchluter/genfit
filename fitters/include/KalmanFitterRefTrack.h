@@ -68,7 +68,7 @@ class KalmanFitterRefTrack : public AbsKalmanFitter {
   void setDeltaChi2Ref(double dChi2) {deltaChi2Ref_ = dChi2;}
 
  private:
-  void processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, double& ndf, int direction);
+  void processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, const TrackPoint* tp, double& chi2, double& ndf, int direction);
 
   /**
    * @brief Remove referenceStates if they are too far from smoothed states.

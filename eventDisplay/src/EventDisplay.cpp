@@ -1359,6 +1359,10 @@ void EventDisplay::makeGui() {
       new TGRadioButton(guiMmHandling_, "unweighted, closest to reference");
       new TGRadioButton(guiMmHandling_, "weighted, closest to prediction");
       new TGRadioButton(guiMmHandling_, "unweighted, closest to prediction");
+      new TGRadioButton(guiMmHandling_, "weighted, closest to reference for WireMeasurements, weighted average else");
+      new TGRadioButton(guiMmHandling_, "unweighted, closest to reference for WireMeasurements, unweighted average else");
+      new TGRadioButton(guiMmHandling_, "weighted, closest to prediction for WireMeasurements, weighted average else");
+      new TGRadioButton(guiMmHandling_, "unweighted, closest to prediction for WireMeasurements, unweighted average else");
       mmHandling_button->SetDown(true, false);
       guiMmHandling_->Show();
   }

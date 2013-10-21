@@ -365,7 +365,7 @@ KalmanFitter::processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
   // update(s)
   double chi2inc = 0;
   double ndfInc = 0;
-  const std::vector<MeasurementOnPlane *> measurements = getMeasurements(fi, direction);
+  const std::vector<MeasurementOnPlane *> measurements = getMeasurements(fi, tp, direction);
   for (std::vector<MeasurementOnPlane *>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
     const MeasurementOnPlane& mOnPlane = **it;
     const double weight = mOnPlane.getWeight();

@@ -25,6 +25,7 @@
 #include "TrackPoint.h"
 #include "Exception.h"
 #include "KalmanFitterInfo.h"
+#include "WireMeasurement.h"
 
 #include "AbsKalmanFitter.h"
 #include <Math/ProbFunc.h>
@@ -172,7 +173,7 @@ bool AbsKalmanFitter::isTrackFitted(const Track* tr, const AbsTrackRep* rep) con
 }
 
 
-const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const KalmanFitterInfo* fi, int direction) const {
+const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const KalmanFitterInfo* fi, const TrackPoint* tp, int direction) const {
 
   switch (multipleMeasurementHandling_) {
     case weightedAverage :
@@ -205,6 +206,42 @@ const std::vector<MeasurementOnPlane *> AbsKalmanFitter::getMeasurements(const K
       return retVal;
     }
 
+
+    case weightedClosestToReferenceWire :
+    case unweightedClosestToReferenceWire :
+    {
+      if (tp->getNumRawMeasurements() == 1 && dynamic_cast<WireMeasurement*>(tp->getRawMeasurement()) != NULL) {
+        if (!fi->hasReferenceState()) {
+          Exception e("AbsKalmanFitter::getMeasurement: no ReferenceState.", __LINE__,__FILE__);
+          e.setFatal();
+          throw e;
+        }
+        std::vector<MeasurementOnPlane *> retVal;
+        retVal.push_back(fi->getClosestMeasurementOnPlane(fi->getReferenceState()));
+        return retVal;
+      }
+      else
+        return fi->getMeasurementsOnPlane();
+    }
+
+    case weightedClosestToPredictionWire :
+    case unweightedClosestToPredictionWire :
+    {
+      if (tp->getNumRawMeasurements() == 1 && dynamic_cast<WireMeasurement*>(tp->getRawMeasurement()) != NULL) {
+        if (!fi->hasPrediction(direction)) {
+          Exception e("AbsKalmanFitter::getMeasurement: no prediction.", __LINE__,__FILE__);
+          e.setFatal();
+          throw e;
+        }
+        std::vector<MeasurementOnPlane *> retVal;
+        retVal.push_back(fi->getClosestMeasurementOnPlane(fi->getPrediction(direction)));
+        return retVal;
+      }
+      else
+        return fi->getMeasurementsOnPlane();
+    }
+
+
     default:
     {
       Exception e("AbsKalmanFitter::getMeasurement: choice not valid.", __LINE__,__FILE__);
@@ -220,11 +257,15 @@ bool AbsKalmanFitter::canIgnoreWeights() const {
     case unweightedAverage :
     case unweightedClosestToReference :
     case unweightedClosestToPrediction :
+    case unweightedClosestToReferenceWire :
+    case unweightedClosestToPredictionWire :
       return true;
 
     case weightedAverage :
     case weightedClosestToReference :
     case weightedClosestToPrediction :
+    case weightedClosestToReferenceWire :
+    case weightedClosestToPredictionWire :
       return false;
 
     default:

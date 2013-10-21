@@ -89,7 +89,7 @@ TrackPoint* KalmanFitterRefTrack::fitTrack(Track* tr, const AbsTrackRep* rep, do
 
       if (debugLvl_ > 0)
         std::cout << " process TrackPoint nr. " << i << "\n";
-      processTrackPoint(fi, prevFi, chi2, ndf, direction);
+      processTrackPoint(fi, prevFi, tp, chi2, ndf, direction);
       retVal = tp;
 
       prevFi = fi;
@@ -797,7 +797,7 @@ KalmanFitterRefTrack::removeForwardBackwardInfo(Track* tr, const AbsTrackRep* re
 
 
 void
-KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, double& chi2, double& ndf, int direction)
+KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitterInfo* prevFi, const TrackPoint* tp, double& chi2, double& ndf, int direction)
 {
   if (debugLvl_ > 0)
     std::cout << " KalmanFitterRefTrack::processTrackPoint " << fi->getTrackPoint() << "\n";
@@ -868,7 +868,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
   // update(s)
   double chi2inc = 0;
   double ndfInc = 0;
-  const std::vector<MeasurementOnPlane *> measurements = getMeasurements(fi, direction);
+  const std::vector<MeasurementOnPlane *> measurements = getMeasurements(fi, tp, direction);
   for (std::vector<MeasurementOnPlane *>::const_iterator it = measurements.begin(); it != measurements.end(); ++it) {
     const MeasurementOnPlane& m = **it;
 
