@@ -43,8 +43,11 @@ void KalmanFitter::fitTrack(Track* tr, const AbsTrackRep* rep,
     int startId, int endId)
 {
 
-  if (multipleMeasurementHandling_ == unweightedClosestToReference || multipleMeasurementHandling_ == weightedClosestToReference) {
-    Exception exc("KalmanFitter::fitTrack ==> cannot use (un)weightedClosestToReference as multiple measurement handling.",__LINE__,__FILE__);
+  if (multipleMeasurementHandling_ == unweightedClosestToReference ||
+      multipleMeasurementHandling_ == weightedClosestToReference ||
+      multipleMeasurementHandling_ == unweightedClosestToReferenceWire ||
+      multipleMeasurementHandling_ == weightedClosestToReferenceWire) {
+    Exception exc("KalmanFitter::fitTrack ==> cannot use (un)weightedClosestToReference(Wire) as multiple measurement handling.",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
   }

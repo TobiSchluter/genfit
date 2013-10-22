@@ -212,9 +212,9 @@ void KalmanFitterRefTrack::processTrackWithRep(Track* tr, const AbsTrackRep* rep
       bool converged(false);
       bool finished(false);
       if (nIt > 1 && fabs(oldPvalBW - PvalBW) < deltaPval_)  {
-        // if pVal ~ 0, check if chi2 has changed a lot
-        if (PvalBW == 0. &&
-            fabs(oldChi2BW / chi2BW) > 1.5) {
+        // if pVal ~ 0, check if chi2 has changed significantly
+        if (PvalBW < 0.01 &&
+            fabs(1 - fabs(oldChi2BW / chi2BW)) > 0.25) {
           finished = false;
         }
         else {

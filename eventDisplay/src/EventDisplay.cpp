@@ -458,7 +458,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       TVector3 track_pos = fittedState->getPos();
       double charge = fittedState->getCharge();
 
-      std::cout << "trackPos: "; track_pos.Print();
+      //std::cout << "trackPos: "; track_pos.Print();
 
 
       // determine measurmenet type
