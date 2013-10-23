@@ -53,7 +53,8 @@ class AbsKalmanFitter : public AbsFitter {
  public:
 
   AbsKalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
-    : AbsFitter(), maxIterations_(maxIterations), deltaPval_(deltaPval), blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPredictionWire) {}
+    : AbsFitter(), maxIterations_(maxIterations), deltaPval_(deltaPval), relChi2Change_(0.2),
+      blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPredictionWire) {}
 
   virtual ~AbsKalmanFitter() {;}
 
@@ -66,12 +67,34 @@ class AbsKalmanFitter : public AbsFitter {
   double getPVal(const Track* tr, const AbsTrackRep* rep, int direction = -1) const;
   eMultipleMeasurementHandling getMultipleMeasurementHandling() const {return multipleMeasurementHandling_;}
 
+  //! Set the maximum number of iterations
   virtual void setMaxIterations(unsigned int n) {maxIterations_ = n;}
+
+  /**
+   * @brief Set Convergence criterion
+   *
+   * if track total P-value changes less than this between consecutive iterations, consider the track converged.
+   * chi² from the backwards fit is used.
+   */
+  void setDeltaPval(double deltaPval) {deltaPval_ = deltaPval;}
+
+  /**
+   * @ brief Set Non-convergence criterion
+   *
+   * if the relative chi^2 between two iterations is larger than relChi2Change_, the fit is NOT converged and
+   * further iterations will be done, even if the deltaPval_ convergence criterium is met.
+   * This is especially useful for fits which have a p-value of almost 0 (possibly due to bad start values),
+   * where the p-value from one iteration to the next might not change much. However, a significant change in
+   * chi^2 tells us, that the fit might not yet be converged.
+   */
+  void setRelChi2Change(double relChi2Change) {relChi2Change_ = relChi2Change;}
+
   //! How should multiple measurements be handled?
   void setMultipleMeasurementHandling(eMultipleMeasurementHandling mmh) {multipleMeasurementHandling_ = mmh;}
 
   bool isTrackPrepared(const Track* tr, const AbsTrackRep* rep) const;
   bool isTrackFitted(const Track* tr, const AbsTrackRep* rep) const;
+
   //! returns if the fitter can ignore the weights and handle the MeasurementOnPlanes as if they had weight 1.
   bool canIgnoreWeights() const;
 
@@ -89,6 +112,16 @@ class AbsKalmanFitter : public AbsFitter {
    * chi² from the backwards fit is used.
    */
   double deltaPval_;
+  /**
+   * @ brief Non-convergence criterion
+   *
+   * if the relative chi^2 between two iterations is larger than relChi2Change_, the fit is NOT converged and
+   * further iterations will be done, even if the deltaPval_ convergence criterium is met.
+   * This is especially useful for fits which have a p-value of almost 0 (possibly due to bad start values),
+   * where the p-value from one iteration to the next might not change much. However, a significant change in
+   * chi^2 tells us, that the fit might not yet be converged.
+   */
+  double relChi2Change_;
   //! Blow up the covariance of the forward (backward) fit by this factor before seeding the backward (forward) fit.
   double blowUpFactor_;
 

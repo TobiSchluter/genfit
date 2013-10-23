@@ -186,22 +186,46 @@ void KalmanFitter::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool r
       // after the first iteration will be both very close to zero, so
       // we need to force at least two iterations here.  Convergence
       // doesn't make much sense before running twice anyway.
+      bool converged(false);
+      bool finished(false);
       if (nIt > 1 && fabs(oldPvalBW - PvalBW) < deltaPval_)  {
-        // Finished
-        status->setIsFitConverged();
+        // if pVal ~ 0, check if chi2 has changed significantly
+        if (PvalBW < 0.01 &&
+            fabs(1 - fabs(oldChi2BW / chi2BW)) > relChi2Change_) {
+          finished = false;
+        }
+        else {
+          finished = true;
+          converged = true;
+        }
+
+        if (PvalBW == 0.)
+          converged = false;
+      }
+
+      if (finished) {
+        if (debugLvl_ > 0) {
+          std::cout << "Fit is finished! ";
+          if(converged)
+            std::cout << "Fit is converged! ";
+          std::cout << "\n";
+        }
+        status->setIsFitConverged(converged);
         break;
       }
       else {
         oldPvalBW = PvalBW;
+        oldChi2BW = chi2BW;
         if (debugLvl_ > 0) {
-          oldChi2BW = chi2BW;
-          oldChi2FW = chi2FW;
           oldPvalFW = PvalFW;
+          oldChi2FW = chi2FW;
         }
         currentState_->blowUpCov(blowUpFactor_);  // blow up cov
       }
 
       if (nIt >= maxIterations_) {
+        if (debugLvl_ > 0)
+          std::cout << "KalmanFitter::number of max iterations reached!\n";
         break;
       }
     }
