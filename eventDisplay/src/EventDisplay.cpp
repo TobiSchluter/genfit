@@ -86,7 +86,9 @@ EventDisplay::EventDisplay() :
   debugLvl_(0),
   fitterId_(SimpleKalman),
   mmHandling_(weightedAverage),
+  squareRootFormalism_(false),
   dPVal_(1.E-3),
+  dRelChi2_(0.2),
   nMaxIter_(4),
   resort_(false)
 {
@@ -309,6 +311,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         case SimpleKalman:
           fitter.reset(new KalmanFitter(nMaxIter_, dPVal_));
           fitter->setMultipleMeasurementHandling(mmHandling_);
+          (static_cast<KalmanFitter*>(fitter.get()))->useSquareRootFormalism(squareRootFormalism_);
           break;
 
         case RefKalman:
@@ -318,6 +321,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
         case DafSimple:
           fitter.reset(new DAF(false));
+          ( static_cast<KalmanFitter*>( (static_cast<DAF*>(fitter.get()))->getKalman() ) )->useSquareRootFormalism(squareRootFormalism_);
           break;
         case DafRef:
           fitter.reset(new DAF());
@@ -326,6 +330,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       }
       fitter->setDebugLvl(debugLvl_);
       fitter->setMaxIterations(nMaxIter_);
+      fitter->setRelChi2Change(dRelChi2_);
 
 
       refittedTrack.reset(new Track(*track));
@@ -366,6 +371,14 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
     //track->Print();
     track->Print("C");
     track->getFitStatus(rep)->Print();
+
+    if (track->getFitStatus(rep)->isFitted()) {
+      std::cout << "fitted state: \n";
+      track->getFittedState().Print();
+    }
+
+
+    rep->setPropDir(0);
 
     unsigned int numhits = track->getNumPointsWithMeasurement();
 
@@ -1369,6 +1382,14 @@ void EventDisplay::makeGui() {
   frmMain2->AddFrame(hf);
 
   hf = new TGHorizontalFrame(frmMain2); {
+    guiSquareRootFormalism_ =  new TGCheckButton(hf, "Use square root formalism (simple Kalman/simple DAF)");
+    if(squareRootFormalism_) guiSquareRootFormalism_->Toggle();
+    hf->AddFrame(guiSquareRootFormalism_);
+    guiSquareRootFormalism_->Connect("Toggled(Bool_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+  }
+  frmMain2->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain2); {
     guiDPVal_ = new TGNumberEntry(hf, dPVal_, 6,999, TGNumberFormat::kNESReal,
                           TGNumberFormat::kNEANonNegative,
                           TGNumberFormat::kNELLimitMinMax,
@@ -1376,6 +1397,18 @@ void EventDisplay::makeGui() {
     hf->AddFrame(guiDPVal_);
     guiDPVal_->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
     lbl = new TGLabel(hf, "delta pVal (convergence criterium)");
+    hf->AddFrame(lbl);
+  }
+  frmMain2->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain2); {
+    guiRelChi2_ = new TGNumberEntry(hf, dRelChi2_, 6,999, TGNumberFormat::kNESReal,
+                          TGNumberFormat::kNEANonNegative,
+                          TGNumberFormat::kNELLimitMinMax,
+                          0, 999);
+    hf->AddFrame(guiRelChi2_);
+    guiRelChi2_->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+    lbl = new TGLabel(hf, "rel chi^2 change (non-convergence criterium)");
     hf->AddFrame(lbl);
   }
   frmMain2->AddFrame(hf);
@@ -1454,7 +1487,10 @@ void EventDisplay::guiSetDrawParams(){
 
   refit_ = guiRefit_->IsOn();
   debugLvl_ = guiDebugLvl_->GetNumberEntry()->GetNumber();
+
+  squareRootFormalism_ = guiSquareRootFormalism_->IsOn();
   dPVal_ = guiDPVal_->GetNumberEntry()->GetNumber();
+  dRelChi2_ = guiRelChi2_->GetNumberEntry()->GetNumber();
   nMaxIter_ = guiNMaxIter_->GetNumberEntry()->GetNumber();
   resort_ = guiResort_->IsOn();
 

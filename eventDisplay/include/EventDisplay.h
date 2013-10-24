@@ -223,8 +223,13 @@ class EventDisplay : public TNamed {
     eFitterType fitterId_;
     TGButtonGroup* guiMmHandling_;
     eMultipleMeasurementHandling mmHandling_;
+
+    TGCheckButton* guiSquareRootFormalism_;
+    bool squareRootFormalism_;
     TGNumberEntry* guiDPVal_;
     double dPVal_;
+    TGNumberEntry* guiRelChi2_;
+    double dRelChi2_;
     TGNumberEntry* guiNMaxIter_;
     unsigned int nMaxIter_;
     TGCheckButton* guiResort_;
