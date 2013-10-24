@@ -63,6 +63,8 @@ class KalmanFitter : public AbsKalmanFitter {
   //! Does not alter the FitStatus and does not do multiple iterations.
   void processTrackPartially(Track* tr, const AbsTrackRep* rep, int startId = 0, int endId = -1);
 
+  void useSquareRootFormalism(bool squareRootFormalism = true) {squareRootFormalism_ = squareRootFormalism;}
+
  private:
   void fitTrack(Track* tr, const AbsTrackRep* rep, double& chi2, double& ndf, int startId, int endId);
   void processTrackPoint(Track* tr, TrackPoint* tp, KalmanFitterInfo* fi,
