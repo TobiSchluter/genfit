@@ -474,7 +474,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       //std::cout << "trackPos: "; track_pos.Print();
 
 
-      // determine measurmenet type
+      // determine measurement type
       bool full_hit = false;
       bool planar_hit = false;
       bool planar_pixel_hit = false;
@@ -794,23 +794,17 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
             }
             // finished autoscaling -------------------------------------------------------
 
-            cov_shape->SetShape(new TGeoTube(std::max(0., (double)(hit_u - pseudo_res_0)), hit_u + pseudo_res_0, pseudo_res_1));
-            TVector3 norm = u.Cross(v);
+            TEveBox* hit_box;
+            TVector3 move = v*(v*(track_pos-o));
+            hit_box = boxCreator((o + move + hit_u*u), u, v, errorScale_*std::sqrt(hit_cov(0,0)), pseudo_res_1, 0.0105);
+            hit_box->SetMainColor(kYellow);
+            hit_box->SetMainTransparency(0);
+            gEve->AddElement(hit_box);
 
-            // rotate and translate -------------------------------------------------------
-            TGeoRotation det_rot("det_rot", (u.Theta()*180)/TMath::Pi(), (u.Phi()*180)/TMath::Pi(),
-                (norm.Theta()*180)/TMath::Pi(), (norm.Phi()*180)/TMath::Pi(),
-                (v.Theta()*180)/TMath::Pi(), (v.Phi()*180)/TMath::Pi());
-            TGeoCombiTrans det_trans(o(0) + hit_v*v.X(),
-                                     o(1) + hit_v*v.Y(),
-                                     o(2) + hit_v*v.Z(),
-                                     &det_rot);
-            cov_shape->SetTransMatrix(det_trans);
-            // finished rotating and translating ------------------------------------------
-
-            cov_shape->SetMainColor(kYellow);
-            cov_shape->SetMainTransparency(50);
-            gEve->AddElement(cov_shape);
+            hit_box = boxCreator((o + move - hit_u*u), u, v, errorScale_*std::sqrt(hit_cov(0,0)), pseudo_res_1, 0.0105);
+            hit_box->SetMainColor(kYellow);
+            hit_box->SetMainTransparency(0);
+            gEve->AddElement(hit_box);
           }
           // finished drawing wire hits -----------------------------------------------------
 
@@ -1390,7 +1384,7 @@ void EventDisplay::makeGui() {
   frmMain2->AddFrame(hf);
 
   hf = new TGHorizontalFrame(frmMain2); {
-    guiDPVal_ = new TGNumberEntry(hf, dPVal_, 6,999, TGNumberFormat::kNESReal,
+    guiDPVal_ = new TGNumberEntry(hf, dPVal_, 6,9999, TGNumberFormat::kNESReal,
                           TGNumberFormat::kNEANonNegative,
                           TGNumberFormat::kNELLimitMinMax,
                           0, 999);
@@ -1402,7 +1396,7 @@ void EventDisplay::makeGui() {
   frmMain2->AddFrame(hf);
 
   hf = new TGHorizontalFrame(frmMain2); {
-    guiRelChi2_ = new TGNumberEntry(hf, dRelChi2_, 6,999, TGNumberFormat::kNESReal,
+    guiRelChi2_ = new TGNumberEntry(hf, dRelChi2_, 6,9999, TGNumberFormat::kNESReal,
                           TGNumberFormat::kNEANonNegative,
                           TGNumberFormat::kNELLimitMinMax,
                           0, 999);
