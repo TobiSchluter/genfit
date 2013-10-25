@@ -25,6 +25,7 @@
 #define genfit_AbsMaterialInterface_h
 
 #include "RKTrackRep.h"
+#include "MaterialProperties.h"
 
 #include <TObject.h>
 #include <TVector3.h>
@@ -55,6 +56,8 @@ class AbsMaterialInterface : public TObject {
                                      double& radiationLength,
                                      double& mEE) = 0;
 
+  virtual void getMaterialParameters(MaterialProperties& parameters) = 0;
+
   /** @brief Make a step until maxStep or the next boundary is reached.
    *
    * After making a step to a boundary, the position has to be beyond the boundary,
@@ -62,7 +65,7 @@ class AbsMaterialInterface : public TObject {
    * The actual step made is returned.
    */
   virtual double findNextBoundary(const RKTrackRep* rep,
-                                  M1x7& state7,
+                                  const M1x7& state7,
                                   double sMax,
                                   bool varField = true) = 0;
 

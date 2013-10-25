@@ -74,6 +74,7 @@ public:
   void setNoiseCoulomb(bool opt = true) {noiseCoulomb_ = opt; noEffects_ = false;}
   void setEnergyLossBrems(bool opt = true) {energyLossBrems_ = opt; noEffects_ = false;}
   void setNoiseBrems(bool opt = true) {noiseBrems_ = opt; noEffects_ = false;}
+  void ignoreBoundariesBetweenEqualMaterials(bool opt = true) {ignoreBoundariesBetweenEqualMaterials_ = opt;}
 
   /** @brief Select the multiple scattering model that will be used during track fit.
    *
@@ -165,6 +166,8 @@ public:
   bool noiseCoulomb_;
   bool energyLossBrems_;
   bool noiseBrems_;
+
+  bool ignoreBoundariesBetweenEqualMaterials_;
 
   const double me_; // electron mass (GeV)
 

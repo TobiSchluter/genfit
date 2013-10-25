@@ -105,17 +105,31 @@ TGeoMaterialInterface::getMaterialParameters(double& density,
 }
 
 
+void
+TGeoMaterialInterface::getMaterialParameters(MaterialProperties& parameters) {
+
+  TGeoMaterial* mat = gGeoManager->GetCurrentVolume()->GetMedium()->GetMaterial();
+
+  parameters.setMaterialProperties(mat->GetDensity(),
+      mat->GetZ(),
+      mat->GetA(),
+      mat->GetRadLen(),
+      MeanExcEnergy_get(mat));
+
+}
+
+
 double
 TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
-                                          M1x7& state7,
+                                          const M1x7& stateOrig,
                                           double sMax, // signed
                                           bool varField){
 
   const double delta(1.E-2); // cm
   double s(0), safety(0), slDist(0);
   M1x3 SA;
-  M1x7 stateOrig;
-  memcpy(stateOrig, state7, sizeof(state7));
+  M1x7 state7;
+  memcpy(state7, stateOrig, sizeof(stateOrig));
 
   int stepSign(1);
   if (sMax < 0) stepSign = -1;

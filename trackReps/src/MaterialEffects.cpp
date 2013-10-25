@@ -43,6 +43,7 @@ MaterialEffects::MaterialEffects():
   energyLossBetheBloch_(true), noiseBetheBloch_(true),
   noiseCoulomb_(true),
   energyLossBrems_(true), noiseBrems_(true),
+  ignoreBoundariesBetweenEqualMaterials_(true),
   me_(0.510998910E-3),
   stepSize_(0),
   beta_(0),
@@ -119,6 +120,14 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
     std::cout << "     MaterialEffects::effects \n";
 #endif
 
+  /*std::cout << "noEffects_ " << noEffects_ << "\n";
+  std::cout << "energyLossBetheBloch_ " << energyLossBetheBloch_ << "\n";
+  std::cout << "noiseBetheBloch_ " << noiseBetheBloch_ << "\n";
+  std::cout << "noiseCoulomb_ " << noiseCoulomb_ << "\n";
+  std::cout << "energyLossBrems_ " << energyLossBrems_ << "\n";
+  std::cout << "noiseBrems_ " << noiseBrems_ << "\n";*/
+
+
   if (noEffects_) return 0.;
 
   if (materialInterface_ == nullptr) {
@@ -143,12 +152,13 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
     }
 
     #ifdef DEBUG
-    std::cout << "     calculate matFX ";
-    if (doNoise) std::cout << " and noise";
-    std::cout << " for ";
-    std::cout << "stepSize = " << it->stepSize_ << "\t";
-    it->materialProperties_.Print();
-#endif
+      std::cout << "     calculate matFX ";
+      if (doNoise) 
+        std::cout << " and noise";
+      std::cout << " for ";
+      std::cout << "stepSize = " << it->stepSize_ << "\t";
+      it->materialProperties_.Print();
+    #endif
 
     double stepSign(1.);
     if (realPath < 0)
@@ -234,9 +244,9 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   currentMaterial.setMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
 
 
-#ifdef DEBUG
+  #ifdef DEBUG
     std::cout << "     currentMaterial "; currentMaterial.Print();
-#endif
+  #endif
 
   // limit due to momloss
   double relMomLossPer_cm(0);
@@ -250,15 +260,58 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   double maxStepMomLoss = (maxRelMomLoss - relMomLoss) / relMomLossPer_cm;
   limits.setLimit(stp_momLoss, maxStepMomLoss);
 
-#ifdef DEBUG
+  #ifdef DEBUG
     std::cout << "     momLoss exceeded after a step of " <<  maxStepMomLoss << "\n";
-#endif
+  #endif
 
 
   // now look for boundaries
   sMax = limits.getLowestLimitSignedVal();
 
-  stepSize_ = limits.getStepSign() * minStep + materialInterface_->findNextBoundary(rep, state7, sMax, varField);
+  stepSize_ = limits.getStepSign() * minStep;
+  MaterialProperties materialAfter;
+  M1x3 SA;
+  double boundaryStep(sMax);
+
+  for (unsigned int i=0; i<100; ++i) {
+    #ifdef DEBUG
+      std::cout << "     find next boundary\n";
+    #endif
+    double step =  materialInterface_->findNextBoundary(rep, state7, boundaryStep, varField);
+    stepSize_ += step;
+    boundaryStep -= step;
+
+    #ifdef DEBUG
+      std::cout << "     made a step of " << step << "\n";
+    #endif
+
+    if (! ignoreBoundariesBetweenEqualMaterials_)
+      break;
+
+    if (fabs(stepSize_) >= fabs(sMax))
+      break;
+
+    // propagate with found step to boundary
+    rep->RKPropagate(state7, NULL, SA, step, varField);
+
+    // make minStep to cross boundary
+    state7[0] += limits.getStepSign() * minStep * state7[3];
+    state7[1] += limits.getStepSign() * minStep * state7[4];
+    state7[2] += limits.getStepSign() * minStep * state7[5];
+
+    materialInterface_->initTrack(state7[0], state7[1], state7[2],
+                                  limits.getStepSign() * state7[3], limits.getStepSign() * state7[4], limits.getStepSign() * state7[5]);
+
+    materialInterface_->getMaterialParameters(materialAfter);
+
+    #ifdef DEBUG
+      std::cout << "     material after step "; materialAfter.Print();
+    #endif
+
+    if (materialAfter != currentMaterial)
+      break;
+  }
+
   limits.setLimit(stp_boundary, stepSize_);
 
 
