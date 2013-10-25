@@ -28,19 +28,19 @@
 namespace genfit {
 
 AbsTrackRep::AbsTrackRep() :
-  pdgCode_(0), propDir_(0)
+  pdgCode_(0), propDir_(0), debugLvl_(0)
 {
   ;
 }
 
 AbsTrackRep::AbsTrackRep(int pdgCode, char propDir) :
-  pdgCode_(pdgCode), propDir_(propDir)
+  pdgCode_(pdgCode), propDir_(propDir), debugLvl_(0)
 {
   ;
 }
 
 AbsTrackRep::AbsTrackRep(const AbsTrackRep& rep) :
-  TObject(rep), pdgCode_(rep.pdgCode_), propDir_(rep.propDir_)
+  TObject(rep), pdgCode_(rep.pdgCode_), propDir_(rep.propDir_), debugLvl_(rep.debugLvl_)
 {
   ;
 }
