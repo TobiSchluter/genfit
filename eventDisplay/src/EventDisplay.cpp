@@ -89,6 +89,7 @@ EventDisplay::EventDisplay() :
   squareRootFormalism_(false),
   dPVal_(1.E-3),
   dRelChi2_(0.2),
+  nMinIter_(2),
   nMaxIter_(4),
   resort_(false)
 {
@@ -329,6 +330,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
       }
       fitter->setDebugLvl(debugLvl_);
+      fitter->setMinIterations(nMinIter_);
       fitter->setMaxIterations(nMaxIter_);
       fitter->setRelChi2Change(dRelChi2_);
 
@@ -1408,6 +1410,18 @@ void EventDisplay::makeGui() {
   frmMain2->AddFrame(hf);
 
   hf = new TGHorizontalFrame(frmMain2); {
+    guiNMinIter_ = new TGNumberEntry(hf, nMinIter_, 6,999, TGNumberFormat::kNESInteger,
+                          TGNumberFormat::kNEANonNegative,
+                          TGNumberFormat::kNELLimitMinMax,
+                          1, 100);
+    hf->AddFrame(guiNMinIter_);
+    guiNMinIter_->Connect("ValueSet(Long_t)", "genfit::EventDisplay", fh, "guiSetDrawParams()");
+    lbl = new TGLabel(hf, "Minimum nr of iterations");
+    hf->AddFrame(lbl);
+  }
+  frmMain2->AddFrame(hf);
+
+  hf = new TGHorizontalFrame(frmMain2); {
     guiNMaxIter_ = new TGNumberEntry(hf, nMaxIter_, 6,999, TGNumberFormat::kNESInteger,
                           TGNumberFormat::kNEANonNegative,
                           TGNumberFormat::kNELLimitMinMax,
@@ -1485,6 +1499,7 @@ void EventDisplay::guiSetDrawParams(){
   squareRootFormalism_ = guiSquareRootFormalism_->IsOn();
   dPVal_ = guiDPVal_->GetNumberEntry()->GetNumber();
   dRelChi2_ = guiRelChi2_->GetNumberEntry()->GetNumber();
+  nMinIter_ = guiNMinIter_->GetNumberEntry()->GetNumber();
   nMaxIter_ = guiNMaxIter_->GetNumberEntry()->GetNumber();
   resort_ = guiResort_->IsOn();
 
