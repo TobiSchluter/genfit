@@ -53,8 +53,11 @@ class AbsKalmanFitter : public AbsFitter {
  public:
 
   AbsKalmanFitter(unsigned int maxIterations = 4, double deltaPval = 1e-3, double blowUpFactor = 1e3)
-    : AbsFitter(), maxIterations_(maxIterations), deltaPval_(deltaPval), relChi2Change_(0.2),
-      blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPredictionWire) {}
+    : AbsFitter(), minIterations_(2), maxIterations_(maxIterations), deltaPval_(deltaPval), relChi2Change_(0.2),
+      blowUpFactor_(blowUpFactor), multipleMeasurementHandling_(unweightedClosestToPredictionWire) {
+    if (minIterations_ > maxIterations_)
+      minIterations_ = maxIterations_;
+  }
 
   virtual ~AbsKalmanFitter() {;}
 
@@ -67,8 +70,10 @@ class AbsKalmanFitter : public AbsFitter {
   double getPVal(const Track* tr, const AbsTrackRep* rep, int direction = -1) const;
   eMultipleMeasurementHandling getMultipleMeasurementHandling() const {return multipleMeasurementHandling_;}
 
+  //! Set the minimum number of iterations
+  virtual void setMinIterations(unsigned int n) {minIterations_ = std::max((unsigned int)1,n); if (maxIterations_ < minIterations_) maxIterations_ = minIterations_;}
   //! Set the maximum number of iterations
-  virtual void setMaxIterations(unsigned int n) {maxIterations_ = n;}
+  virtual void setMaxIterations(unsigned int n) {maxIterations_ = n; if (minIterations_ > maxIterations_) minIterations_ = maxIterations_;}
 
   /**
    * @brief Set Convergence criterion
@@ -102,6 +107,9 @@ class AbsKalmanFitter : public AbsFitter {
 
   //! get the measurementsOnPlane taking the multipleMeasurementHandling_ into account
   const std::vector<MeasurementOnPlane *> getMeasurements(const KalmanFitterInfo* fi, const TrackPoint* tp, int direction) const;
+
+  //! Minimum number of iterations to attempt.  Forward and backward are counted as one iteration.
+  unsigned int minIterations_;
 
   //! Maximum number of iterations to attempt.  Forward and backward are counted as one iteration.
   unsigned int maxIterations_;

@@ -135,7 +135,7 @@ void DAF::processTrackWithRep(Track* tr, const AbsTrackRep* rep, bool resortHits
     }
 
     // check if converged
-    if (iBeta > 0 && converged) {
+    if (iBeta >= minIterations_-1 && converged) {
       if (debugLvl_ > 0) {
       std::cout << "DAF::convergence reached in iteration " << iBeta+1 << " -> Do one last iteration with updated weights.\n";
       }
