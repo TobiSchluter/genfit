@@ -17,39 +17,30 @@
    along with GENFIT.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "TrackCandHit.h"
+#include "WireTrackCandHit.h"
 
 #include <iostream>
 
 namespace genfit {
 
-TrackCandHit::TrackCandHit(int detId,
+WireTrackCandHit::WireTrackCandHit(int detId,
                                int hitId,
                                int planeId,
-                               double sortingParameter)
-  : detId_(detId),
-    hitId_(hitId),
-    planeId_(planeId),
-    sortingParameter_(sortingParameter)
+                               double sortingParameter,
+                               char leftRight)
+  : TrackCandHit(detId, hitId, planeId, sortingParameter),
+    leftRight_(leftRight)
 {
   ;
 }
 
 
-void TrackCandHit::Print(Option_t* option) const {
-  std::cout << "  TrackCandHit. DetId = " << detId_
+void WireTrackCandHit::Print(Option_t* option) const {
+  std::cout << "  WireTrackCandHit. DetId = " << detId_
             << " \t HitId = " << hitId_
             << " \t PlaneId = " << planeId_
-            << " \t SortingParameter = " << sortingParameter_ << "\n";
-}
-
-
-bool operator== (const TrackCandHit& lhs, const TrackCandHit& rhs){
-  if(lhs.detId_ == rhs.detId_ &&
-     lhs.hitId_ == rhs.hitId_ &&
-     lhs.planeId_ == rhs.planeId_)
-    return true;
-  return false;
+            << " \t SortingParameter = " << sortingParameter_
+            << " \t leftRight = " << (int)leftRight_ << "\n";
 }
 
 } /* End of namespace genfit */

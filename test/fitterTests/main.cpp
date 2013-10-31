@@ -135,8 +135,8 @@ int main() {
   gRandom->SetSeed(14);
 
 
-  const unsigned int nEvents = 10;
-  const unsigned int nMeasurements = 15;
+  const unsigned int nEvents = 100;
+  const unsigned int nMeasurements = 56;
   const double BField = 15.;       // kGauss
   const double momentum = 0.4;     // GeV
   const double theta = 120;         // degree
@@ -149,7 +149,7 @@ int main() {
   const TVector3 wireDir(0,0,1);
   const double skewAngle(5);
   const bool useSkew = true;
-  const int nSuperLayer = 5;
+  const int nSuperLayer = 10;
   const double minDrift = 0.;
   const double maxDrift = 2;
   const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
@@ -159,18 +159,22 @@ int main() {
 
   const double hitSwitchProb = -0.1; // probability to give hits to fit in wrong order (flip two hits)
 
-  const int splitTrack = 5; // for track merging testing.
-  const bool fullMeasurement = true; // put fit result of first tracklet as FullMeasurement into second tracklet, don't merge
+  const int splitTrack = -5; // for track merging testing.
+  const bool fullMeasurement = false; // put fit result of first tracklet as FullMeasurement into second tracklet, don't merge
 
-  //const genfit::eFitterType fitterId = genfit::SimpleKalman;
+  const genfit::eFitterType fitterId = genfit::SimpleKalman;
   //const genfit::eFitterType fitterId = genfit::RefKalman;
-  const genfit::eFitterType fitterId = genfit::DafRef;
+  //const genfit::eFitterType fitterId = genfit::DafRef;
   //const genfit::eFitterType fitterId = genfit::DafSimple;
-  const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToReference;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToPrediction;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReferenceWire;
+  const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPredictionWire;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToReferenceWire;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToPredictionWire;
   const int nIter = 20; // max number of iterations
   const double dPVal = 1.E-3; // convergence criterion
 
@@ -193,9 +197,17 @@ int main() {
   const bool matFX = false;         // include material effects; can only be disabled for RKTrackRep!
 
   const bool debug = false;
-  const bool onlyDisplayFailed = false; // only load non-converged tracks into the display
+  const bool onlyDisplayFailed = true; // only load non-converged tracks into the display
 
   std::vector<genfit::eMeasurementType> measurementTypes;
+  measurementTypes.push_back(genfit::Pixel);
+  measurementTypes.push_back(genfit::Pixel);
+  measurementTypes.push_back(genfit::StripUV);
+  measurementTypes.push_back(genfit::StripUV);
+  measurementTypes.push_back(genfit::StripUV);
+  measurementTypes.push_back(genfit::StripUV);
+  for (unsigned int i = 0; i<50; ++i)
+    measurementTypes.push_back(genfit::Wire);
 
 
   signal(SIGSEGV, handler);   // install our handler
@@ -311,9 +323,9 @@ int main() {
   // main loop
   for (unsigned int iEvent=0; iEvent<nEvents; ++iEvent){
 
-      measurementTypes.clear();
+      /*measurementTypes.clear();
       for (unsigned int i = 0; i < nMeasurements; ++i)
-        measurementTypes.push_back(genfit::eMeasurementType(gRandom->Uniform(8)));
+        measurementTypes.push_back(genfit::eMeasurementType(gRandom->Uniform(8)));*/
 
 
       if (debug || (iEvent)%10==0)

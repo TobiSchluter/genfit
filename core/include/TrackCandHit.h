@@ -34,15 +34,27 @@ namespace genfit {
 class TrackCandHit : public TObject {
  public:
 
-  virtual TrackCandHit* clone() const {return new TrackCandHit(*this);}
-
   // Constructors/Destructors ---------
   TrackCandHit(int detId   = -1,
                int hitId   = -1,
                int planeId = -1,
                double sortingParameter  =  0.);
 
-  ~TrackCandHit();
+  virtual ~TrackCandHit() {;}
+
+  virtual TrackCandHit* clone() const {return new TrackCandHit(*this);}
+
+  // Accessors
+  int    getDetId() const {return detId_;}
+  int    getHitId() const {return hitId_;}
+  int    getPlaneId() const {return planeId_;}
+  double getSortingParameter() const {return sortingParameter_;}
+
+  // Modifiers
+  void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
+
+  virtual void Print(Option_t* option = "") const;
+
 
   /** @brief Equality operator. Does not check sortingParameter.
    */
@@ -56,17 +68,6 @@ class TrackCandHit : public TObject {
   friend bool operator< (const TrackCandHit& lhs, const TrackCandHit& rhs) {
     return (lhs.sortingParameter_ < rhs.sortingParameter_);
   }
-
-  // Accessors
-  int    getDetId() const {return detId_;}
-  int    getHitId() const {return hitId_;}
-  int    getPlaneId() const {return planeId_;}
-  double getSortingParameter() const {return sortingParameter_;}
-
-  virtual void Print(Option_t* option = "") const;
-
-  // Modifiers
-  void setSortingParameter(double sortingParameter) {sortingParameter_ = sortingParameter;}
 
  protected:
 

@@ -103,6 +103,7 @@ void MaterialEffects::setMscModel(const std::string& modelName)
     std::string errorMsg = std::string("There is no MSC model called \"") + modelName + "\". Maybe it is not implemented or you misspelled the model name";
     Exception exc(errorMsg, __LINE__, __FILE__);
     exc.setFatal();
+    std::cerr << exc.what();
     throw exc;
   }
 }

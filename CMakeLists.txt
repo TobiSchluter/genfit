@@ -224,6 +224,7 @@ SET(MEASUREMENTS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/SpacepointMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/WireMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/WirePointMeasurement.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/WireTrackCandHit.h
 )
 ROOT_GENERATE_DICTIONARY("${MEASUREMENTS_DICTIONARY_SOURCES}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/measurements/include"

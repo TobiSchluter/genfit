@@ -17,4 +17,6 @@
 #pragma link C++ class genfit::FullMeasurement-;
 #pragma link C++ class genfit::PlanarMeasurement-;
 
+#pragma link C++ class genfit::WireTrackCandHit+;
+
 #endif
