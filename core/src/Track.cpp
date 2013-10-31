@@ -62,7 +62,8 @@ Track::Track(const TrackCand& trackCand, const MeasurementFactory<genfit::AbsMea
 
     if (lastPlanarMeas != NULL && planarMeas != NULL &&
         lastPlanarMeas->getDetId() == planarMeas->getDetId() &&
-        lastPlanarMeas->getPlaneId() == planarMeas->getPlaneId()) {
+        planarMeas->getPlaneId() != -1 &&   // -1 is default plane id
+        lastPlanarMeas->getPlaneId() == planarMeas->getPlaneId() ) {
       trackPoints_.back()->addRawMeasurement(factoryHits[i]);
     }
     else
