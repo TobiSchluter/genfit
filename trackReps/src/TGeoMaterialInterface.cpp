@@ -146,21 +146,21 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
     }
 
     safety = gGeoManager->Safety(); // unsigned; distance to closest boundary
-    gGeoManager->FindNextBoundary();
-    slDist = gGeoManager->GetStep(); // unsigned; straight line distance to next boundary along step direction
-
 
 #ifdef DEBUG
     std::cout << "   TGeoMaterialInterface::findNextBoundary: Iteration " << it << ". Safety = " << safety << ". slDist = " << slDist << ". Step so far = " << s << "\n";
     std::cout << "   Material before step: " << gGeoManager->GetCurrentVolume()->GetMedium()->GetName() << "\n";
 #endif
 
-    if (fabs(s + stepSign*safety) > fabs(sMax)) { // next boundary is further away than sMax -> \return sMax
+    if (fabs(s + stepSign*safety) > fabs(sMax)) { // next boundary is further away than sMax
 #ifdef DEBUG
       std::cout << "   next boundary is further away than sMax \n";
 #endif
       return s + stepSign*safety;
     }
+
+    gGeoManager->FindNextBoundary();
+    slDist = gGeoManager->GetStep(); // unsigned; straight line distance to next boundary along step direction
 
     if (slDist < delta) { // very near the boundary
 #ifdef DEBUG
@@ -168,13 +168,6 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 #endif
       return s + stepSign*slDist;
     }
-    /*else if (safety < delta) {
-#ifdef DEBUG
-       std::cout << "   make straight line step \n";
-#endif
-      gGeoManager->FindNextBoundaryAndStep(delta); // make a minimum step of delta (delta must be unsigned here, remember we initialized geoManager with adjusted direction!)
-      s += stepSign*delta;
-    }*/
     else {
 #ifdef DEBUG
       std::cout << "   make RKutta step \n";
@@ -189,20 +182,24 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
       if (!safe) {
         memcpy(state7, stateOrig, sizeof(state7)); // propagate complete way from original start
         rep->RKPropagate(state7, NULL, SA, s+tryStep, varField);
+        // init for checking
         initTrack(stateOrig[0], stateOrig[1], stateOrig[2],
                   state7[0]-stateOrig[0], state7[1]-stateOrig[1], state7[2]-stateOrig[2]);
       }
+      // check: gGeoManager->GetStep() gives us the max sl step size from stateOrig to state7
       if (!safe && gGeoManager->GetStep() > fabs(tryStep)) {
         s += tryStep;
+        // init for next iteration
         initTrack(state7[0], state7[1], state7[2],  stepSign*state7[3], stepSign*state7[4], stepSign*state7[5]);
         #ifdef DEBUG
           std::cout << "   tried and its safe to make a step of  " << stepSign*tryStep << "\n";
         #endif
       }
-      else {
+      else { // step along safety
         s += stepSign*safety;
         memcpy(state7, stateOrig, sizeof(state7)); // propagate complete way from original start
         rep->RKPropagate(state7, NULL, SA, s, varField);
+        // init for next iteration
         initTrack(state7[0], state7[1], state7[2],  stepSign*state7[3], stepSign*state7[4], stepSign*state7[5]);
 #ifdef DEBUG
     std::cout << "   step along safety  " << stepSign*safety << "\n";
