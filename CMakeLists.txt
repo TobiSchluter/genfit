@@ -42,7 +42,6 @@ ELSE()
 ENDIF()
 
 
-
 # Set GENFIT include directories
 SET(GF_INC_DIRS
 	./core/include/ 
@@ -74,11 +73,14 @@ ELSE()
 ENDIF()
 
 
-# require proper c++, standard is C++03, flag reads: c++98
-ADD_DEFINITIONS( " -Wall -O3 -ansi -pedantic -Wno-long-long -Wshadow "   )
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
 
-# uncomment for coverage analysis.
-#ADD_DEFINITIONS( "--coverage")
+# Uncomment for coverage analysis.
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
 #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 #SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
 
@@ -92,6 +94,12 @@ elseif (HAS_STD_FLAG_ALTERNATIVE)
 else()
   message("Neither --std=c++03 nor -std=c++03 seem to work.  Moving on.")
 endif()
+
+# require proper c++, standard is C++03, flag reads: c++98
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ansi -pedantic -Wno-long-long -Wshadow "   )
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g3")
+SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -O3 -g3")
 
 
 # include directories 
