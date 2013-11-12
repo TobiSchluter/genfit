@@ -444,6 +444,8 @@ int main() {
         fitTrack->addTrackRep(secondRep);
         secondTrack->addTrackRep(secondRep->clone());
       }
+      else
+	delete secondRep;
       //if (debug) fitTrack->Print("C");
 
       assert(fitTrack->checkConsistency());
