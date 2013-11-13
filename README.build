@@ -21,3 +21,8 @@ To build the doxygen:
   
 To build the examples/tests (also see README in test/):
  make tests
+
+
+
+To build GFRave and the vertexing examples, you need an installation of Rave (https://rave.hepforge.org/), and the environment variable RAVEPATH set.
+ export RAVEPATH=<yourRaveDirectory>
