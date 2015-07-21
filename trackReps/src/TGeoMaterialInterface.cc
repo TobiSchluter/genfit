@@ -227,6 +227,144 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 }
 
 
+double
+TGeoMaterialInterface::findNextBoundary(const RKTrackRepPt* rep,
+                                          const M1x7& stateOrig,
+                                          double sMax, // signed
+                                          bool varField)
+{
+  const double delta(1.E-2); // cm, distance limit beneath which straight-line steps are taken.
+  const double epsilon(1.E-1); // cm, allowed upper bound on arch
+  // deviation from straight line
+
+  M1x3 SA;
+  M1x7 state7, oldState7;
+  memcpy(oldState7, stateOrig, sizeof(state7));
+
+  int stepSign(sMax < 0 ? -1 : 1);
+
+  double s = 0;  // trajectory length to boundary
+
+  const unsigned maxIt = 300;
+  unsigned it = 0;
+
+  // Initialize the geometry to the current location (set by caller).
+  gGeoManager->FindNextBoundary(fabs(sMax) - s);
+  double safety = gGeoManager->GetSafeDistance(); // >= 0
+  double slDist = gGeoManager->GetStep();
+
+  // this should not happen, but it happens sometimes.
+  // The reason are probably overlaps in the geometry.
+  // Without this "hack" many small steps with size of minStep will be made,
+  // until eventually the maximum number of iterations are exceeded and the extrapolation fails
+  if (slDist < safety) 
+    slDist = safety;
+  double step = slDist;
+
+  if (debugLvl_ > 0)
+    std::cout << "   safety = " << safety << "; step, slDist = " << step << "\n";
+
+  while (1) {
+    if (++it > maxIt){
+      Exception exc("TGeoMaterialInterface::findNextBoundary ==> maximum number of iterations exceeded",__LINE__,__FILE__);
+      exc.setFatal();
+      throw exc;
+    }
+
+    // No boundary in sight?
+    if (s + safety > fabs(sMax)) {
+      if (debugLvl_ > 0)
+        std::cout << "   next boundary is further away than sMax \n";
+      return stepSign*(s + safety); //sMax;
+    }
+
+    // Are we at the boundary?
+    if (slDist < delta) {
+      if (debugLvl_ > 0)
+        std::cout << "   very close to the boundary -> return"
+        << " stepSign*(s + slDist) = "
+        << stepSign << "*(" << s + slDist << ")\n";
+      return stepSign*(s + slDist);
+    }
+
+    // We have to find whether there's any boundary on our path.
+
+    // Follow curved arch, then see if we may have missed a boundary.
+    // Always propagate complete way from original start to avoid
+    // inconsistent extrapolations.
+    memcpy(state7, stateOrig, sizeof(state7));
+    rep->RKPropagate(state7, NULL, SA, stepSign*(s + step), varField);
+
+    // Straight line distance² between extrapolation finish and
+    // the end of the previously determined safe segment.
+    double dist2 = (pow(state7[0] - oldState7[0], 2)
+        + pow(state7[1] - oldState7[1], 2)
+        + pow(state7[2] - oldState7[2], 2));
+    // Maximal lateral deviation².
+    double maxDeviation2 = 0.25*(step*step - dist2);
+
+    if (step > safety
+        && maxDeviation2 > epsilon*epsilon) {
+      // Need to take a shorter step to reliably estimate material,
+      // but only if we didn't move by safety.  In order to avoid
+      // issues with roundoff we check 'step > safety' instead of
+      // 'step != safety'.  If we moved by safety, there couldn't have
+      // been a boundary that we missed along the path, but we could
+      // be on the boundary.
+
+      // Take a shorter step, but never shorter than safety.
+      step = std::max(step / 2, safety);
+    } else {
+      gGeoManager->PushPoint();
+      bool volChanged = initTrack(state7[0], state7[1], state7[2],
+          stepSign*state7[3], stepSign*state7[4],
+          stepSign*state7[5]);
+
+      if (volChanged) {
+        if (debugLvl_ > 0)
+          std::cout << "   volChanged\n";
+        // Move back to start.
+        gGeoManager->PopPoint();
+
+        // Extrapolation may not take the exact step length we asked
+        // for, so it can happen that a requested step < safety takes
+        // us across the boundary.  This is then the best estimate we
+        // can get of the distance to the boundary with the stepper.
+        if (step <= safety) {
+          if (debugLvl_ > 0)
+            std::cout << "   step <= safety, return stepSign*(s + step) = " << stepSign*(s + step) << "\n";
+          return stepSign*(s + step);
+        }
+
+        // Volume changed during the extrapolation.  Take a shorter
+        // step, but never shorter than safety.
+        step = std::max(step / 2, safety);
+      } else {
+        // we're in the new place, the step was safe, advance
+        s += step;
+
+        memcpy(oldState7, state7, sizeof(state7));
+        gGeoManager->PopDummy();  // Pop stack, but stay in place.
+
+        gGeoManager->FindNextBoundary(fabs(sMax) - s);
+        safety = gGeoManager->GetSafeDistance();
+        slDist = gGeoManager->GetStep();
+
+        // this should not happen, but it happens sometimes.
+        // The reason are probably overlaps in the geometry.
+        // Without this "hack" many small steps with size of minStep will be made,
+        // until eventually the maximum number of iterations are exceeded and the extrapolation fails
+        if (slDist < safety)
+          slDist = safety;
+        step = slDist;
+        if (debugLvl_ > 0)
+          std::cout << "   safety = " << safety << "; step, slDist = " << step << "\n";
+      }
+    }
+  }
+}
+
+
 /*
 Reference for elemental mean excitation energies at:
 http://physics.nist.gov/PhysRefData/XrayMassCoef/tab1.html

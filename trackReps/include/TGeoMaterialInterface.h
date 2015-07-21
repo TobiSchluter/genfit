@@ -65,6 +65,10 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
                           const M1x7& state7,
                           double sMax,
                           bool varField = true);
+  double findNextBoundary(const RKTrackRepPt* rep,
+                          const M1x7& state7,
+                          double sMax,
+                          bool varField = true);
 
   // ClassDef(TGeoMaterialInterface, 1);
 

@@ -25,6 +25,7 @@
 #define genfit_AbsMaterialInterface_h
 
 #include "RKTrackRep.h"
+#include "RKTrackRepPt.h"
 #include "MaterialProperties.h"
 
 #include <TObject.h>
@@ -65,6 +66,10 @@ class AbsMaterialInterface : public TObject {
    * The actual step made is returned.
    */
   virtual double findNextBoundary(const RKTrackRep* rep,
+                                  const M1x7& state7,
+                                  double sMax,
+                                  bool varField = true) = 0;
+  virtual double findNextBoundary(const RKTrackRepPt* rep,
                                   const M1x7& state7,
                                   double sMax,
                                   bool varField = true) = 0;
