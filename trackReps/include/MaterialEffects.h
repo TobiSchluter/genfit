@@ -177,8 +177,6 @@ public:
 
   bool ignoreBoundariesBetweenEqualMaterials_;
 
-  const double me_; // electron mass (GeV)
-
   double stepSize_; // stepsize
 
   // cached values for energy loss and noise calculations

@@ -27,21 +27,17 @@
 #include "RKTrackRep.h"
 #include "MaterialProperties.h"
 
-#include <TObject.h>
-#include <TVector3.h>
-
-
 namespace genfit {
 
 /**
  * @brief Abstract base class for geometry interfacing
  */
-class AbsMaterialInterface : public TObject {
+class AbsMaterialInterface {
 
  public:
 
-  AbsMaterialInterface() : debugLvl_(0) {;};
-  virtual ~AbsMaterialInterface(){;};
+  AbsMaterialInterface() : debugLvl_(0) {}
+  virtual ~AbsMaterialInterface() {}
 
   /** @brief Initialize the navigator at given position and with given direction.  Return true if volume changed.
    */

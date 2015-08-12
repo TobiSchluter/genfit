@@ -34,6 +34,10 @@
 #include <TFile.h>
 
 
+namespace {
+const double electronMass = 0.510998910E-3;
+}
+
 namespace genfit {
 
 MaterialEffects* MaterialEffects::instance_ = nullptr;
@@ -45,7 +49,6 @@ MaterialEffects::MaterialEffects():
   noiseCoulomb_(true),
   energyLossBrems_(true), noiseBrems_(true),
   ignoreBoundariesBetweenEqualMaterials_(true),
-  me_(0.510998910E-3),
   stepSize_(0),
   dEdx_(0),
   E_(0),
@@ -462,8 +465,8 @@ double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double g
 
   // calc dEdx_, also needed in noiseBetheBloch!
   double result( 0.307075 * matZ_ / matA_ * matDensity_ / betaSquare * charge_ * charge_ );
-  double massRatio( me_ / mass_ );
-  double argument( gammaSquare * betaSquare * me_ * 1.E3 * 2. / ((1.E-6 * mEE_) *
+  double massRatio( electronMass / mass_ );
+  double argument( gammaSquare * betaSquare * electronMass * 1.E3 * 2. / ((1.E-6 * mEE_) *
       sqrt(1. + 2. * gamma * massRatio + massRatio * massRatio)) );
   result *= log(argument) - betaSquare; // Bethe-Bloch [MeV/cm]
   result *= 1.E-3;  // in GeV/cm, hence 1.e-3
@@ -482,7 +485,7 @@ void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare
   // ENERGY LOSS FLUCTUATIONS; calculate sigma^2(E);
   double sigma2E ( 0. );
   double zeta  ( 153.4E3 * charge_ * charge_ / betaSquare * matZ_ / matA_ * matDensity_ * fabs(stepSize_) ); // eV
-  double Emax  ( 2.E9 * me_ * betaSquare * gammaSquare / (1. + 2.*gamma * me_ / mass_ + (me_ / mass_) * (me_ / mass_)) ); // eV
+  double Emax  ( 2.E9 * electronMass * betaSquare * gammaSquare / (1. + 2.*gamma * electronMass / mass_ + (electronMass / mass_) * (electronMass / mass_)) ); // eV
   double kappa ( zeta / Emax );
 
   if (kappa > 0.01) { // Vavilov-Gaussian regime
@@ -562,44 +565,45 @@ void MaterialEffects::noiseCoulomb(M7x7& noise,
   const M1x3& a = direction; // as an abbreviation
   // This calculates the MSC angular spread in the 7D global
   // coordinate system.  See PDG 2010, Sec. 27.3 for formulae.
-  noiseAfter[0 * 7 + 0] =  sigma2 * step2 / 3.0 * (1 - a[0]*a[0]);
-  noiseAfter[1 * 7 + 0] = -sigma2 * step2 / 3.0 * a[0]*a[1];
-  noiseAfter[2 * 7 + 0] = -sigma2 * step2 / 3.0 * a[0]*a[2];
-  noiseAfter[3 * 7 + 0] =  sigma2 * step * 0.5 * (1 - a[0]*a[0]);
-  noiseAfter[4 * 7 + 0] = -sigma2 * step * 0.5 * a[0]*a[1];
-  noiseAfter[5 * 7 + 0] = -sigma2 * step * 0.5 * a[0]*a[1];
-  noiseAfter[0 * 7 + 1] = noiseAfter[1 * 7 + 0];
-  noiseAfter[1 * 7 + 1] =  sigma2 * step2 / 3.0 * (1 - a[1]*a[1]);
-  noiseAfter[2 * 7 + 1] = -sigma2 * step2 / 3.0 * a[1]*a[2];
-  noiseAfter[3 * 7 + 1] = noiseAfter[4 * 7 + 0]; // Cov(x,a_y) = Cov(y,a_x)
-  noiseAfter[4 * 7 + 1] =  sigma2 * step * 0.5 * (1 - a[1] * a[1]);
-  noiseAfter[5 * 7 + 1] = -sigma2 * step * 0.5 * a[1]*a[2];
-  noiseAfter[0 * 7 + 2] = noiseAfter[2 * 7 + 0];
-  noiseAfter[1 * 7 + 2] = noiseAfter[2 * 7 + 1];
-  noiseAfter[2 * 7 + 2] =  sigma2 * step2 / 3.0 * (1 - a[2]*a[2]);
-  noiseAfter[3 * 7 + 2] = noiseAfter[5 * 7 + 0]; // Cov(z,a_x) = Cov(x,a_z)
-  noiseAfter[4 * 7 + 2] = noiseAfter[5 * 7 + 1]; // Cov(y,a_z) = Cov(z,a_y)
-  noiseAfter[5 * 7 + 2] =  sigma2 * step * 0.5 * (1 - a[2]*a[2]);
-  noiseAfter[0 * 7 + 3] = noiseAfter[3 * 7 + 0];
-  noiseAfter[1 * 7 + 3] = noiseAfter[3 * 7 + 1];
-  noiseAfter[2 * 7 + 3] = noiseAfter[3 * 7 + 2];
-  noiseAfter[3 * 7 + 3] =  sigma2 * (1 - a[0]*a[0]);
-  noiseAfter[4 * 7 + 3] = -sigma2 * a[0]*a[1];
-  noiseAfter[5 * 7 + 3] = -sigma2 * a[0]*a[2];
-  noiseAfter[0 * 7 + 4] = noiseAfter[4 * 7 + 0];
-  noiseAfter[1 * 7 + 4] = noiseAfter[4 * 7 + 1];
-  noiseAfter[2 * 7 + 4] = noiseAfter[4 * 7 + 2];
-  noiseAfter[3 * 7 + 4] = noiseAfter[4 * 7 + 3];
-  noiseAfter[4 * 7 + 4] =  sigma2 * (1 - a[1]*a[1]);
-  noiseAfter[5 * 7 + 4] = -sigma2 * a[1]*a[2];
-  noiseAfter[0 * 7 + 5] = noiseAfter[5 * 7 + 0];
-  noiseAfter[1 * 7 + 5] = noiseAfter[5 * 7 + 1];
-  noiseAfter[2 * 7 + 5] = noiseAfter[5 * 7 + 2];
-  noiseAfter[3 * 7 + 5] = noiseAfter[5 * 7 + 3];
-  noiseAfter[4 * 7 + 5] = noiseAfter[5 * 7 + 4];
-  noiseAfter[5 * 7 + 5] = sigma2 * (1 - a[2]*a[2]);
-//    std::cout << "new noise\n";
-//    RKTools::printDim(noiseAfter, 7,7);
+  noiseAfter(0, 0) =  sigma2 * step2 / 3.0 * (1 - a[0]*a[0]);
+  noiseAfter(1, 0) = -sigma2 * step2 / 3.0 * a[0]*a[1];
+  noiseAfter(2, 0) = -sigma2 * step2 / 3.0 * a[0]*a[2];
+  noiseAfter(3, 0) =  sigma2 * step * 0.5 * (1 - a[0]*a[0]);
+  noiseAfter(4, 0) = -sigma2 * step * 0.5 * a[0]*a[1];
+  noiseAfter(5, 0) = -sigma2 * step * 0.5 * a[0]*a[1];
+  noiseAfter(1, 1) =  sigma2 * step2 / 3.0 * (1 - a[1]*a[1]);
+  noiseAfter(2, 1) = -sigma2 * step2 / 3.0 * a[1]*a[2];
+  noiseAfter(3, 1) = noiseAfter(4, 0); // Cov(x,a_y) = Cov(y,a_x)
+  noiseAfter(4, 1) =  sigma2 * step * 0.5 * (1 - a[1] * a[1]);
+  noiseAfter(5, 1) = -sigma2 * step * 0.5 * a[1]*a[2];
+  noiseAfter(2, 2) =  sigma2 * step2 / 3.0 * (1 - a[2]*a[2]);
+  noiseAfter(3, 2) = noiseAfter(5, 0); // Cov(z,a_x) = Cov(x,a_z)
+  noiseAfter(4, 2) = noiseAfter(5, 1); // Cov(y,a_z) = Cov(z,a_y)
+  noiseAfter(5, 2) =  sigma2 * step * 0.5 * (1 - a[2]*a[2]);
+  noiseAfter(3, 3) =  sigma2 * (1 - a[0]*a[0]);
+  noiseAfter(4, 3) = -sigma2 * a[0]*a[1];
+  noiseAfter(5, 3) = -sigma2 * a[0]*a[2];
+  noiseAfter(4, 4) =  sigma2 * (1 - a[1]*a[1]);
+  noiseAfter(5, 4) = -sigma2 * a[1]*a[2];
+  noiseAfter(5, 5) = sigma2 * (1 - a[2]*a[2]);
+
+  // Symmetric part
+  noiseAfter(0, 1) = noiseAfter(1, 0);
+  noiseAfter(0, 2) = noiseAfter(2, 0);
+  noiseAfter(1, 2) = noiseAfter(2, 1);
+  noiseAfter(0, 3) = noiseAfter(3, 0);
+  noiseAfter(1, 3) = noiseAfter(3, 1);
+  noiseAfter(2, 3) = noiseAfter(3, 2);
+  noiseAfter(0, 4) = noiseAfter(4, 0);
+  noiseAfter(1, 4) = noiseAfter(4, 1);
+  noiseAfter(2, 4) = noiseAfter(4, 2);
+  noiseAfter(3, 4) = noiseAfter(4, 3);
+  noiseAfter(0, 5) = noiseAfter(5, 0);
+  noiseAfter(1, 5) = noiseAfter(5, 1);
+  noiseAfter(2, 5) = noiseAfter(5, 2);
+  noiseAfter(3, 5) = noiseAfter(5, 3);
+  noiseAfter(4, 5) = noiseAfter(5, 4);
+
   for (unsigned int i = 0; i < 7 * 7; ++i) {
     noise[i] += noiseAfter[i];
   }
@@ -643,10 +647,10 @@ double MaterialEffects::dEdxBrems(double mom) const
       kc = BCUT;
     }
 
-    double E = T + me_; // total electron energy
+    double E = T + electronMass; // total electron energy
     if (BCUT > T) kc = T;
 
-    double X = log(T / me_);
+    double X = log(T / electronMass);
     double Y = log(kc / (E * vl));
 
     double XX;
@@ -709,11 +713,11 @@ double MaterialEffects::dEdxBrems(double mom) const
       // We use exp(beta * log(...) here because pow(..., beta) is
       // REALLY slow and we don't need ultimate numerical precision
       // for this approximation.
-      double FAC = matZ_ * (matZ_ + xi) * E * E / (E + me_);
+      double FAC = matZ_ * (matZ_ + xi) * E * E / (E + electronMass);
       if (beta == 1.) {  // That is the #ifdef BETHE case
-  FAC *= kc * CORR / T;
+        FAC *= kc * CORR / T;
       } else {
-  FAC *= exp(beta * log(kc * CORR / T));
+        FAC *= exp(beta * log(kc * CORR / T));
       }
       if (FAC <= 0.) return 0.;
       dedxBrems = FAC * S;
