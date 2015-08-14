@@ -61,8 +61,7 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
    * current material has to be that beyond the boundary.  The actual
    * step made is returned.
    */
-  double findNextBoundary(const RKTrackRep* rep,
-                          const M1x7& state7,
+  double findNextBoundary(const AbsTrackRep::internalExtrapolator& extrap,
                           double sMax,
                           bool varField = true);
 

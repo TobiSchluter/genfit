@@ -307,6 +307,30 @@ class RKTrackRep : public AbsTrackRep {
   mutable M7x7 noiseArray_; //! noise matrix of the last extrapolation
   mutable M7x7 noiseProjection_; //!
   mutable M7x7 J_MMT_; //!
+public:
+  class propagator : public RKTrackRep::internalExtrapolator {
+  public:
+    propagator(const RKTrackRep* rep, const M1x7& state7) : rep_(rep), state7_(state7) {}
+    void getInitialState(double posInitial[3], double dirInitial[3]) const {
+      for(size_t i = 0; i < 3; ++i) {
+        posInitial[i] = state7_[i];
+        dirInitial[i] = state7_[i + 3];
+      }
+    }
+    double extrapolateBy(double S, double posFinal[3], double dirFinal[3]) const {
+      M1x3 SA;
+      M1x7 state(state7_);
+      double result = rep_->RKPropagate(state, 0, SA, S);
+      for(size_t i = 0; i < 3; ++i) {
+        posFinal[i] = state[i];
+        dirFinal[i] = state[i + 3];
+      }
+      return result;
+    }
+  private:
+    const RKTrackRep* rep_;
+    M1x7 state7_;
+  };
 
  public:
 

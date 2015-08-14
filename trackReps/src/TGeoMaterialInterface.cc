@@ -90,18 +90,13 @@ TGeoMaterialInterface::getMaterialParameters(MaterialProperties& parameters) {
 
 
 double
-TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
-                                          const M1x7& stateOrig,
-                                          double sMax, // signed
-                                          bool varField)
+TGeoMaterialInterface::findNextBoundary(const AbsTrackRep::internalExtrapolator& extrap,
+                                        double sMax, // signed
+                                        bool varField)
 {
   const double delta(1.E-2); // cm, distance limit beneath which straight-line steps are taken.
   const double epsilon(1.E-1); // cm, allowed upper bound on arch
   // deviation from straight line
-
-  M1x3 SA;
-  M1x7 state7, oldState7;
-  oldState7 = stateOrig;
 
   int stepSign(sMax < 0 ? -1 : 1);
 
@@ -109,6 +104,10 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
 
   const unsigned maxIt = 300;
   unsigned it = 0;
+
+  double posNow[3];
+  double dirNow[3];
+  extrap.getInitialState(posNow, dirNow);
 
   // Initialize the geometry to the current location (set by caller).
   gGeoManager->FindNextBoundary(fabs(sMax) - s);
@@ -154,14 +153,15 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
     // Follow curved arch, then see if we may have missed a boundary.
     // Always propagate complete way from original start to avoid
     // inconsistent extrapolations.
-    state7 = stateOrig;
-    rep->RKPropagate(state7, NULL, SA, stepSign*(s + step), varField);
+    double posNew[3];
+    double dirNew[3];
+    extrap.extrapolateBy(stepSign*(s + step), posNew, dirNew);
 
     // Straight line distance² between extrapolation finish and
     // the end of the previously determined safe segment.
-    double dist2 = (pow(state7[0] - oldState7[0], 2)
-        + pow(state7[1] - oldState7[1], 2)
-        + pow(state7[2] - oldState7[2], 2));
+    double dist2 = (pow(posNow[0] - posNew[0], 2)
+        + pow(posNow[1] - posNew[1], 2)
+        + pow(posNow[2] - posNew[2], 2));
     // Maximal lateral deviation².
     double maxDeviation2 = 0.25*(step*step - dist2);
 
@@ -178,9 +178,8 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
       step = std::max(step / 2, safety);
     } else {
       gGeoManager->PushPoint();
-      bool volChanged = initTrack(state7[0], state7[1], state7[2],
-          stepSign*state7[3], stepSign*state7[4],
-          stepSign*state7[5]);
+      bool volChanged = initTrack(posNew[0], posNew[1], posNew[2],
+          stepSign*dirNew[0], stepSign*dirNew[1], stepSign*dirNew[2]);
 
       if (volChanged) {
         if (debugLvl_ > 0)
@@ -205,7 +204,12 @@ TGeoMaterialInterface::findNextBoundary(const RKTrackRep* rep,
         // we're in the new place, the step was safe, advance
         s += step;
 
-        oldState7 = state7;
+        posNow[0] = posNew[0];
+        posNow[1] = posNew[1];
+        posNow[2] = posNew[2];
+        dirNow[0] = dirNew[0];
+        dirNow[1] = dirNew[1];
+        dirNow[2] = dirNew[2];
         gGeoManager->PopDummy();  // Pop stack, but stay in place.
 
         gGeoManager->FindNextBoundary(fabs(sMax) - s);

@@ -2309,9 +2309,8 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
     M1x7 state7_temp = {{ state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] }};
-
-    MaterialEffects::getInstance()->stepper(this,
-                                            state7_temp,
+    RKTrackRep::propagator extrap(this, state7_temp);
+    MaterialEffects::getInstance()->stepper(extrap,
                                             charge/state7[6], // |p|
                                             relMomLoss,
                                             pdgCode_,

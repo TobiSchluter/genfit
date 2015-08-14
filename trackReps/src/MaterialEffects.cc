@@ -206,8 +206,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
 }
 
 
-void MaterialEffects::stepper(const RKTrackRep* rep,
-                              M1x7& state7,
+void MaterialEffects::stepper(const AbsTrackRep::internalExtrapolator& extrap,
                               const double& mom, // momentum
                               double& relMomLoss, // relative momloss for the step will be added
                               const int& pdg,
@@ -250,19 +249,20 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
   if (fabs(sMax) < minStep)
     return;
 
-
-
   pdg_ = pdg;
   getParticleParameters();
 
+  double pos[3];
+  double dir[3];
+  extrap.getInitialState(pos, dir);
 
   // make minStep
-  state7[0] += limits.getStepSign() * minStep * state7[3];
-  state7[1] += limits.getStepSign() * minStep * state7[4];
-  state7[2] += limits.getStepSign() * minStep * state7[5];
+  pos[0] += limits.getStepSign() * minStep * dir[0];
+  pos[1] += limits.getStepSign() * minStep * dir[1];
+  pos[2] += limits.getStepSign() * minStep * dir[2];
 
-  materialInterface_->initTrack(state7[0], state7[1], state7[2],
-                                limits.getStepSign() * state7[3], limits.getStepSign() * state7[4], limits.getStepSign() * state7[5]);
+  materialInterface_->initTrack(pos[0], pos[1], pos[2],
+                                limits.getStepSign() * dir[0], limits.getStepSign() * dir[1], limits.getStepSign() * dir[2]);
 
   materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
   currentMaterial.setMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
@@ -294,14 +294,13 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
 
   stepSize_ = limits.getStepSign() * minStep;
   MaterialProperties materialAfter;
-  M1x3 SA;
   double boundaryStep(sMax);
 
   for (unsigned int i=0; i<100; ++i) {
     if (debugLvl_ > 0) {
       std::cout << "     find next boundary\n";
     }
-    double step =  materialInterface_->findNextBoundary(rep, state7, boundaryStep, varField);
+    double step =  materialInterface_->findNextBoundary(extrap, boundaryStep, varField);
 
     if (debugLvl_ > 0) {
       if (step == 0) {
@@ -323,12 +322,18 @@ void MaterialEffects::stepper(const RKTrackRep* rep,
       break;
 
     // propagate with found step to boundary
-    rep->RKPropagate(state7, NULL, SA, step, varField);
+    double posNow[3];
+    double dirNow[3];
+    extrap.extrapolateBy(stepSize_, posNow, dirNow);
 
     // make minStep to cross boundary
-    state7[0] += limits.getStepSign() * minStep * state7[3];
-    state7[1] += limits.getStepSign() * minStep * state7[4];
-    state7[2] += limits.getStepSign() * minStep * state7[5];
+    M1x7 state7; //FIXME do not really need this
+    state7[0] = posNow[0] + limits.getStepSign() * minStep * dirNow[0];
+    state7[1] = posNow[1] + limits.getStepSign() * minStep * dirNow[1];
+    state7[2] = posNow[2] + limits.getStepSign() * minStep * dirNow[2];
+    state7[3] = dirNow[0];
+    state7[4] = dirNow[1];
+    state7[5] = dirNow[2];
 
     materialInterface_->initTrack(state7[0], state7[1], state7[2],
                                   limits.getStepSign() * state7[3], limits.getStepSign() * state7[4], limits.getStepSign() * state7[5]);

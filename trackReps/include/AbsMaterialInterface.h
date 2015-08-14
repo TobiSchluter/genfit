@@ -24,7 +24,7 @@
 #ifndef genfit_AbsMaterialInterface_h
 #define genfit_AbsMaterialInterface_h
 
-#include "RKTrackRep.h"
+#include "AbsTrackRep.h"
 #include "MaterialProperties.h"
 
 namespace genfit {
@@ -60,8 +60,7 @@ class AbsMaterialInterface {
    * i.e. in the current material has to be that beyond the boundary.
    * The actual step made is returned.
    */
-  virtual double findNextBoundary(const RKTrackRep* rep,
-                                  const M1x7& state7,
+  virtual double findNextBoundary(const AbsTrackRep::internalExtrapolator& extrap,
                                   double sMax,
                                   bool varField = true) = 0;
 

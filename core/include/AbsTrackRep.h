@@ -352,6 +352,13 @@ class AbsTrackRep : public TObject {
 
   virtual void Print(const Option_t* = "") const;
 
+  class internalExtrapolator {
+  public:
+    virtual ~internalExtrapolator() {}
+    virtual void getInitialState(double posInitial[3], double dirInitial[3]) const = 0;
+    virtual double extrapolateBy(double S, double posFinal[3], double dirFinal[3]) const = 0;
+  };
+
  protected:
 
   //! protect from calling copy c'tor from outside the class. Use #clone() if you want a copy!
