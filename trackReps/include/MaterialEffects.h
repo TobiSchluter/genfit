@@ -97,7 +97,7 @@ public:
    * The stepper returns the maximum length that the particle may travel, so that a specified relative momentum loss will not be exceeded,
    * or the next material boundary is reached. The material crossed are stored together with their stepsizes.
   */
-  void stepper(const AbsTrackRep::internalExtrapolator& extrap,
+  void stepper(AbsTrackRep::internalExtrapolator& extrap,
                const double& mom, // momentum
                double& relMomLoss, // relative momloss for the step will be added
                const int& pdg,

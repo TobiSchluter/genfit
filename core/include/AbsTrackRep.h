@@ -357,6 +357,7 @@ class AbsTrackRep : public TObject {
     virtual ~internalExtrapolator() {}
     virtual void getInitialState(double posInitial[3], double dirInitial[3]) const = 0;
     virtual double extrapolateBy(double S, double posFinal[3], double dirFinal[3]) const = 0;
+    virtual void moveStart(double posNew[3]) = 0;
   };
 
  protected:

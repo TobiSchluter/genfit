@@ -206,7 +206,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
 }
 
 
-void MaterialEffects::stepper(const AbsTrackRep::internalExtrapolator& extrap,
+void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
                               const double& mom, // momentum
                               double& relMomLoss, // relative momloss for the step will be added
                               const int& pdg,
@@ -261,6 +261,8 @@ void MaterialEffects::stepper(const AbsTrackRep::internalExtrapolator& extrap,
   pos[1] += limits.getStepSign() * minStep * dir[1];
   pos[2] += limits.getStepSign() * minStep * dir[2];
 
+  extrap.moveStart(pos);
+
   materialInterface_->initTrack(pos[0], pos[1], pos[2],
                                 limits.getStepSign() * dir[0], limits.getStepSign() * dir[1], limits.getStepSign() * dir[2]);
 
@@ -300,7 +302,7 @@ void MaterialEffects::stepper(const AbsTrackRep::internalExtrapolator& extrap,
     if (debugLvl_ > 0) {
       std::cout << "     find next boundary\n";
     }
-    double step =  materialInterface_->findNextBoundary(extrap, boundaryStep, varField);
+    double step =  materialInterface_->findNextBoundary(extrap, sMax /*boundaryStep*/, varField);
 
     if (debugLvl_ > 0) {
       if (step == 0) {
@@ -339,6 +341,7 @@ void MaterialEffects::stepper(const AbsTrackRep::internalExtrapolator& extrap,
                                   limits.getStepSign() * state7[3], limits.getStepSign() * state7[4], limits.getStepSign() * state7[5]);
 
     materialInterface_->getMaterialParameters(materialAfter);
+    extrap.moveStart(state7.vals);
 
     if (debugLvl_ > 0) {
       std::cout << "     material after step: "; materialAfter.Print();
