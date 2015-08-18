@@ -142,8 +142,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
 
   bool doNoise(noise != nullptr);
 
-  pdg_ = pdg;
-  getParticleParameters();
+  getParticleParameters(pdg);
 
   double momLoss = 0.;
 
@@ -249,8 +248,7 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
   if (fabs(sMax) < minStep)
     return;
 
-  pdg_ = pdg;
-  getParticleParameters();
+  getParticleParameters(pdg);
 
   double pos[3];
   double dir[3];
@@ -358,8 +356,9 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
 }
 
 
-void MaterialEffects::getParticleParameters()
+void MaterialEffects::getParticleParameters(int pdg)
 {
+  pdg_ = pdg;
   TParticlePDG* part = TDatabasePDG::Instance()->GetParticle(pdg_);
   charge_ = int(part->Charge() / 3.);  // We only ever use the square
   mass_ = part->Mass(); // GeV

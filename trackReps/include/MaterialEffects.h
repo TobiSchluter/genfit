@@ -113,7 +113,7 @@ public:
  private:
 
   //! sets charge_, mass_
-  void getParticleParameters();
+  void getParticleParameters(int pdg);
 
   void getMomGammaBeta(double Energy,
                        double& mom, double& gammaSquare, double& gamma, double& betaSquare) const;
