@@ -302,6 +302,9 @@ public:
       }
       return result;
     }
+    void moveStart(double posNew[3]) {
+      std::copy(posNew, posNew + 3, state7_.vals);
+    }
   private:
     const RKTrackRepEnergy* rep_;
     M1x7 state7_;

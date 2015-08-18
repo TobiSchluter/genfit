@@ -812,7 +812,7 @@ void MaterialEffects::setDebugLvl(unsigned int lvl) {
 
 void MaterialEffects::drawdEdx(int pdg) {
   pdg_ = pdg;
-  this->getParticleParameters();
+  this->getParticleParameters(pdg);
 
   stepSize_ = 1;
 
