@@ -353,10 +353,11 @@ endif()
 
 
 # the examples, build with "make tests"
-ADD_CUSTOM_TARGET( tests DEPENDS ${PROJECT_NAME} )
+ADD_CUSTOM_TARGET( tests )
+ADD_DEPENDENCIES( tests ${PROJECT_NAME} )
 MACRO( ADD_GENFIT_TEST _testname )
    ADD_EXECUTABLE( ${_testname} EXCLUDE_FROM_ALL ${ARGN} )
-   ADD_DEPENDENCIES( tests  ${_testname} ${PROJECT_NAME}  )
+   ADD_DEPENDENCIES( tests  ${_testname} )
    TARGET_LINK_LIBRARIES( ${_testname} ${PROJECT_NAME}  ${ROOT_LIBS} -lGeom )
     #INSTALL( TARGETS ${_testname} DESTINATION ${EXECUTABLE_INSTALL_DIR})
 ENDMACRO( ADD_GENFIT_TEST )
