@@ -264,8 +264,7 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
   materialInterface_->initTrack(pos[0], pos[1], pos[2],
                                 limits.getStepSign() * dir[0], limits.getStepSign() * dir[1], limits.getStepSign() * dir[2]);
 
-  materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
-  currentMaterial.setMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
+  materialInterface_->getMaterialParameters(currentMaterial);
 
 
   if (debugLvl_ > 0) {

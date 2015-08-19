@@ -147,6 +147,14 @@ class RKTrackRepEnergy : public AbsTrackRep {
   void setSpu(StateOnPlane& state, double spu) const;
   void setTime(StateOnPlane& state, double time) const;
 
+
+  void derive(const double lambda, const double T[3],
+              const double E, const double dEdx, const double B[3],
+              double& dlambda, double dT[3]) const;
+
+  double RKstep(const M1x7& state7, const double S,
+                M1x7& newState7) const;
+
   //! The actual Runge Kutta propagation
   /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).
    *  This is a single Runge-Kutta step.

@@ -27,6 +27,7 @@
 
 #include <TDecompLU.h>
 #include <TMath.h>
+#include <TDatabasePDG.h>
 
 #include <algorithm>
 
@@ -865,10 +866,7 @@ double RKTrackRepEnergy::getCharge(const StateOnPlane& state) const {
   double pdgCharge( this->getPDGCharge() );
 
   // return pdgCharge with sign of q/p
-  if (state.getState()(0) * pdgCharge < 0)
-    return -pdgCharge;
-  else
-    return pdgCharge;
+  return copysign(pdgCharge, state.getState()(0));
 }
 
 
@@ -1266,6 +1264,119 @@ void RKTrackRepEnergy::setTime(StateOnPlane& state, double time) const {
 }
 
 
+void RKTrackRepEnergy::derive(const double lambda, const double T[3],
+                              const double E, const double dEdx, const double B[3],
+                              double& dlambda, double dT[3]) const
+{
+  // Assumes q^2 == 1
+  const double kappa = 0.000299792458;  // speed of light over 10^12
+
+  dlambda = - E*pow(lambda, 3) * dEdx /* *q^-2 omitted */;
+  dT[0] = kappa * lambda * (T[1]*B[2] - T[2]*B[1]);
+  dT[1] = kappa * lambda * (T[2]*B[0] - T[0]*B[2]);
+  dT[2] = kappa * lambda * (T[0]*B[1] - T[1]*B[0]);
+}
+
+
+double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
+                                M1x7& newState7) const
+{
+  const double m = TDatabasePDG::Instance()->GetParticle(getPDG())->Mass();
+  const double pdgCharge( this->getPDGCharge() );
+  // return pdgCharge with sign of q/p
+  const double charge = copysign(pdgCharge, state7[6]);
+
+  const double rStart[3] = { state7[0], state7[1], state7[2] };
+  const double TStart[3] = { state7[3], state7[4], state7[5] };
+
+  MaterialEffects::getInstance()->initTrack(state7[0], state7[1], state7[2],
+                                            state7[3], state7[4], state7[5]);
+  MaterialEffects::getInstance()->getParticleParameters(getPDG());
+
+  const double lambdaStart = state7[6];
+  const double EStart = hypot(m, charge / lambdaStart);
+  const double dEdxStart = MaterialEffects::getInstance()->dEdx(EStart);
+
+  double BStart[3];
+  FieldManager::getInstance()->getFieldVal(rStart, BStart);
+
+  double dLambda1;
+  double dT1[3];
+  derive(lambdaStart, TStart, EStart, dEdxStart, BStart,
+         dLambda1, dT1);
+
+  const double lambda2 = lambdaStart + S/2*dLambda1;
+  const double E2 = hypot(m, charge / lambda2);
+  const double dEdx2 = MaterialEffects::getInstance()->dEdx(E2);
+
+  const double T2[3] = { TStart[0] + S/2*dT1[0], TStart[1] + S/2*dT1[1], TStart[2] + S/2*dT1[2] };
+  const double rMiddle[3] = { rStart[0] + S/2*TStart[0] + S*S/8*dT1[0],
+                              rStart[1] + S/2*TStart[1] + S*S/8*dT1[1],
+                              rStart[2] + S/2*TStart[2] + S*S/8*dT1[2] };
+  double BMiddle[3];
+  FieldManager::getInstance()->getFieldVal(rMiddle, BMiddle);
+
+  double dLambda2;
+  double dT2[3];
+  derive(lambda2, T2, E2, dEdx2, BMiddle,
+         dLambda2, dT2);
+
+  const double lambda3 = lambdaStart + S/2*dLambda2;
+  const double E3 = hypot(m, charge / lambda3);
+  const double dEdx3 = MaterialEffects::getInstance()->dEdx(E3);
+
+  const double T3[3] = { TStart[0] + S/2*dT2[0], TStart[1] + S/2*dT2[1], TStart[2] + S/2*dT2[2] };
+
+  double dLambda3;
+  double dT3[3];
+  derive(lambda3, T3, E3, dEdx3, BMiddle,
+         dLambda3, dT3);
+
+  const double lambda4 = lambdaStart + S*dLambda3;
+  const double E4 = hypot(m, charge / lambda4);
+  const double dEdx4 = MaterialEffects::getInstance()->dEdx(E4);
+
+  const double T4[3] = { TStart[0] + S*dT3[0], TStart[1] + S*dT3[1], TStart[2] + S*dT3[2] };
+  const double rEnd[3] = { rStart[0] + S*TStart[0] + S*S/2*dT3[0],
+                           rStart[1] + S*TStart[1] + S*S/2*dT3[1],
+                           rStart[2] + S*TStart[2] + S*S/2*dT3[2] };
+  double BEnd[3];
+  FieldManager::getInstance()->getFieldVal(rEnd, BEnd);
+
+  double dLambda4;
+  double dT4[3];
+  derive(lambda4, T4, E4, dEdx4, BEnd,
+         dLambda4, dT4);
+
+  // Put it together ...
+  double rFinal[3];
+  for (size_t i = 0; i < 3; ++i)
+    rFinal[i] = rStart[i] + S*TStart[i] + S*S/6*(dT1[i] + dT2[i] + dT3[i]);
+  double TFinal[3];
+  for (size_t i = 0; i < 3; ++i)
+    TFinal[i] = TStart[i] + S/6 * (dT1[i] + 2*dT2[i] + 2*dT3[i] + dT4[i]);
+  const double norm = hypot(hypot(TFinal[0], TFinal[1]), TFinal[2]);
+  for (size_t i = 0; i < 3; ++i)
+    TFinal[i] /= norm;
+  const double lambdaFinal = lambdaStart + S/6 * (dLambda1 + 2*dLambda2 + 2*dLambda3 + dLambda4);
+
+  // ... and put it into the final result
+  for (size_t i = 0; i < 3; ++i) {
+    newState7[i] = rFinal[i];
+    newState7[i + 3] = TFinal[i];
+  }
+  newState7[6] = lambdaFinal;
+
+  double epsLambda = fabs(dLambda1 - dLambda2 - dLambda3 + dLambda4);
+  double epsT[3];
+  for (size_t i = 0; i < 3; ++i)
+    epsT[i] = fabs(dT1[i] - dT2[i] - dT3[i] + dT4[i]);
+  double eps = std::max(epsLambda,
+                        *std::max_element(epsT, epsT + 3));
+  return S*S*eps;
+}
+
+
 
 double RKTrackRepEnergy::RKPropagate(M1x7& state7,
                         M7x7* jacobianT,
@@ -1273,6 +1384,8 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
                         double S,
                         bool varField,
                         bool calcOnlyLastRowOfJ) const {
+  M1x7 newState7;
+  RKstep(state7, S, newState7);
   // The algorithm is
   //  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001
   //  "Track parameter propagation through the application of a new adaptive Runge-Kutta-Nyström method in the ATLAS experiment"
@@ -1460,6 +1573,9 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   if (debugLvl_ > 0) {
     std::cout << "    RKTrackRepEnergy::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
   }
+
+  state7.print();
+  newState7.print();
 
   // Prevent the step length increase from getting too large, this is
   // just the point where it becomes 10.

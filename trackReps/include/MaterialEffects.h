@@ -66,6 +66,13 @@ public:
   //! set the material interface here. Material interface classes must be derived from AbsMaterialInterface.
   void init(AbsMaterialInterface* matIfc);
   bool isInitialized() { return materialInterface_ != nullptr; }
+  bool initTrack(double posX, double posY, double posZ,
+                 double dirX, double dirY, double dirZ)
+  {
+    bool result = materialInterface_->initTrack(posX, posY, posZ, dirX, dirY, dirZ);
+    materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
+    return result;
+  }
 
   void setNoEffects(bool opt = true) {noEffects_ = opt;}
 
@@ -110,10 +117,15 @@ public:
 
   void drawdEdx(int pdg = 11);
 
- private:
+  //! Calculate dEdx for a given energy
+  double dEdx(double Energy) const;
+
 
   //! sets charge_, mass_
   void getParticleParameters(int pdg);
+
+private:
+
 
   void getMomGammaBeta(double Energy,
                        double& mom, double& gammaSquare, double& gamma, double& betaSquare) const;
@@ -123,10 +135,6 @@ public:
    * Also sets dEdx_ and E_.
    */
   double momentumLoss(double stepSign, double mom, bool linear);
-
-  //! Calculate dEdx for a given energy
-  double dEdx(double Energy) const;
-
 
   //! Uses Bethe Bloch formula to calculate dEdx.
   double dEdxBetheBloch(double betaSquare, double gamma, double gammasquare) const;
