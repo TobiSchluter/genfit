@@ -1385,7 +1385,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
                         bool varField,
                         bool calcOnlyLastRowOfJ) const {
   M1x7 newState7;
-  RKstep(state7, S, newState7);
+  double est = RKstep(state7, S, newState7);
   // The algorithm is
   //  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001
   //  "Track parameter propagation through the application of a new adaptive Runge-Kutta-Nyström method in the ATLAS experiment"
@@ -1554,6 +1554,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
 
   }
 
+#if 0
   //
   // Track parameters in last point
   //
@@ -1570,12 +1571,24 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   double EST ( fabs((A1+A6)-(A3+A4)) +
                fabs((B1+B6)-(B3+B4)) +
                fabs((C1+C6)-(C3+C4))  );  // EST = ||(ABC1+ABC6)-(ABC3+ABC4)||_1  =  ||(axzy x H0 + ABC5 x H2) - (ABC2 x H1 + ABC3 x H1)||_1
+#endif
+  double EST = est;
+
+  R[0] = newState7[0];
+  R[1] = newState7[1];
+  R[2] = newState7[2];
+
+  SA[0] = newState7[3] - A[0];
+  SA[1] = newState7[3] - A[1];
+  SA[2] = newState7[3] - A[1];
+
+  A[0] = newState7[3];
+  A[1] = newState7[4];
+  A[2] = newState7[5];
+
   if (debugLvl_ > 0) {
     std::cout << "    RKTrackRepEnergy::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
   }
-
-  state7.print();
-  newState7.print();
 
   // Prevent the step length increase from getting too large, this is
   // just the point where it becomes 10.
@@ -2570,6 +2583,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
                                                                fabs(charge/state7[6]), // momentum
                                                                pdgCode_,
                                                                noise);
+      momLoss = 0;
 
       RKStepsFXStart_ = RKStepsFXStop_;
 
