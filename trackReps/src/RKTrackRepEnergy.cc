@@ -2657,7 +2657,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
       }
 
       // do momLoss only for defined 1/momentum .ne.0
-      if(fabs(state7[6])>1.E-10) {
+      if(0 && fabs(state7[6])>1.E-10) {
 
         if (debugLvl_ > 0) {
           std::cout << "correct state7 with dx/dqop, dy/dqop ...\n";
