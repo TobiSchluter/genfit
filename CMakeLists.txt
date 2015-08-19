@@ -353,7 +353,7 @@ endif()
 
 
 # the examples, build with "make tests"
-ADD_CUSTOM_TARGET( tests )
+ADD_CUSTOM_TARGET( tests DEPENDS ${PROJECT_NAME} )
 MACRO( ADD_GENFIT_TEST _testname )
    ADD_EXECUTABLE( ${_testname} EXCLUDE_FROM_ALL ${ARGN} )
    ADD_DEPENDENCIES( tests  ${_testname} )
