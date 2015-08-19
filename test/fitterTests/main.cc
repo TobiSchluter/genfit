@@ -40,6 +40,7 @@
 #include <MaterialEffects.h>
 #include <RKTools.h>
 #include <RKTrackRep.h>
+#include <RKTrackRepEnergy.h>
 #include <StepLimits.h>
 #include <TGeoMaterialInterface.h>
 
@@ -67,6 +68,7 @@
 #include <TString.h>
 
 #include <memory>
+#include <getopt.h>
 
 
 void handler(int sig) {
@@ -130,12 +132,22 @@ int randomSign() {
 #define CALLGRIND_DUMP_STATS
 #endif
 
-int main() {
-  std::cout<<"main"<<std::endl;
+int main(int argc, char **argv) {
+  unsigned int nEvents = 1000;
+
+  char option;
+  while ((option = getopt(argc, argv, "n:")) != -1) {
+    switch (option) {
+    case 'n':
+      nEvents = atoi(optarg);
+      break;
+    }
+  }
+
+  std::cout<<"main, doing "<< nEvents << " events" << std::endl;
   gRandom->SetSeed(14);
 
 
-  const unsigned int nEvents = 1000;
   const unsigned int nMeasurements = 10;
   const double BField = 20.;       // kGauss
   const double momentum = 0.1;     // GeV
@@ -379,7 +391,7 @@ int main() {
       double sign(1.);
       if (chargeSwitchProb > gRandom->Uniform(1.))
         sign = -1.;
-      genfit::AbsTrackRep* rep = new genfit::RKTrackRep(sign*pdg);
+      genfit::AbsTrackRep* rep = new genfit::RKTrackRepEnergy(sign*pdg);
       sign = 1.;
       if (chargeSwitchProb > gRandom->Uniform(1.))
         sign = -1.;
