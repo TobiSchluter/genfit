@@ -65,6 +65,8 @@ class FieldManager {
     return field_->get(position);
   }
 
+  void getFieldVal(const double pos[3], double B[3]) { getFieldVal(pos[0], pos[1], pos[2], B[0], B[1], B[2]); }
+
 #ifdef CACHE
   void getFieldVal(const double& posX, const double& posY, const double& posZ, double& Bx, double& By, double& Bz);
 #else
