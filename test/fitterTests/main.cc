@@ -134,12 +134,16 @@ int randomSign() {
 
 int main(int argc, char **argv) {
   unsigned int nEvents = 1000;
+  bool useGUI = false;
 
   char option;
-  while ((option = getopt(argc, argv, "n:")) != -1) {
+  while ((option = getopt(argc, argv, "gn:")) != -1) {
     switch (option) {
     case 'n':
       nEvents = atoi(optarg);
+      break;
+    case 'g':
+      useGUI = true;
       break;
     }
   }
@@ -282,8 +286,11 @@ int main(int argc, char **argv) {
 
   // init event display
 #ifndef VALGRIND
-  genfit::EventDisplay* display = genfit::EventDisplay::getInstance();
-  display->reset();
+  genfit::EventDisplay* display = 0;
+  if (useGUI) {
+    display = genfit::EventDisplay::getInstance();
+    display->reset();
+  }
 #endif
 
 
@@ -552,18 +559,20 @@ int main(int argc, char **argv) {
       assert(secondTrack->checkConsistency());
 
 #ifndef VALGRIND
-      if (!onlyDisplayFailed && iEvent < 1000) {
-        std::vector<genfit::Track*> event;
-        event.push_back(fitTrack);
-        if (splitTrack > 0)
-          event.push_back(secondTrack);
-        display->addEvent(event);
-      }
-      else if (onlyDisplayFailed &&
-               (!fitTrack->getFitStatus(rep)->isFitConverged() ||
-                fitTrack->getFitStatus(rep)->getPVal() < 0.01)) {
-        // add track to event display
-        display->addEvent(fitTrack);
+      if (useGUI) {
+        if (!onlyDisplayFailed && iEvent < 1000) {
+          std::vector<genfit::Track*> event;
+          event.push_back(fitTrack);
+          if (splitTrack > 0)
+            event.push_back(secondTrack);
+          display->addEvent(event);
+        }
+        else if (onlyDisplayFailed &&
+                 (!fitTrack->getFitStatus(rep)->isFitConverged() ||
+                  fitTrack->getFitStatus(rep)->getPVal() < 0.01)) {
+          // add track to event display
+          display->addEvent(fitTrack);
+        }
       }
 #endif
 
@@ -822,83 +831,83 @@ int main(int argc, char **argv) {
 
 
 #ifndef VALGRIND
+  if (useGUI) {
+    if (debug) std::cout<<"Draw histograms ...";
+    // fit and draw histograms
+    TCanvas* c1 = new TCanvas();
+    c1->Divide(2,3);
 
-  if (debug) std::cout<<"Draw histograms ...";
-  // fit and draw histograms
-  TCanvas* c1 = new TCanvas();
-  c1->Divide(2,3);
+    c1->cd(1);
+    hmomRes->Fit("gaus");
+    hmomRes->Draw();
 
-  c1->cd(1);
-  hmomRes->Fit("gaus");
-  hmomRes->Draw();
+    c1->cd(2);
+    weights->Draw();
 
-  c1->cd(2);
-  weights->Draw();
+    c1->cd(3);
+    hupRes->Fit("gaus");
+    hupRes->Draw();
 
-  c1->cd(3);
-  hupRes->Fit("gaus");
-  hupRes->Draw();
+    c1->cd(4);
+    hvpRes->Fit("gaus");
+    hvpRes->Draw();
 
-  c1->cd(4);
-  hvpRes->Fit("gaus");
-  hvpRes->Draw();
+    c1->cd(5);
+    huRes->Fit("gaus");
+    huRes->Draw();
 
-  c1->cd(5);
-  huRes->Fit("gaus");
-  huRes->Draw();
+    c1->cd(6);
+    hvRes->Fit("gaus");
+    hvRes->Draw();
 
-  c1->cd(6);
-  hvRes->Fit("gaus");
-  hvRes->Draw();
+    c1->Write();
 
-  c1->Write();
+    TCanvas* c2 = new TCanvas();
+    c2->Divide(2,3);
 
-  TCanvas* c2 = new TCanvas();
-  c2->Divide(2,3);
+    c2->cd(1);
+    hqopPu->Fit("gaus");
+    hqopPu->Draw();
 
-  c2->cd(1);
-  hqopPu->Fit("gaus");
-  hqopPu->Draw();
+    c2->cd(2);
+    pVal->Fit("pol1");
+    pVal->Draw();
+    c2->cd(3);
+    hupPu->Fit("gaus");
+    hupPu->Draw();
 
-  c2->cd(2);
-  pVal->Fit("pol1");
-  pVal->Draw();
-  c2->cd(3);
-  hupPu->Fit("gaus");
-  hupPu->Draw();
+    c2->cd(4);
+    hvpPu->Fit("gaus");
+    hvpPu->Draw();
 
-  c2->cd(4);
-  hvpPu->Fit("gaus");
-  hvpPu->Draw();
+    c2->cd(5);
+    huPu->Fit("gaus");
+    huPu->Draw();
 
-  c2->cd(5);
-  huPu->Fit("gaus");
-  huPu->Draw();
+    c2->cd(6);
+    hvPu->Fit("gaus");
+    hvPu->Draw();
 
-  c2->cd(6);
-  hvPu->Fit("gaus");
-  hvPu->Draw();
-
-  c2->Write();
+    c2->Write();
 
 
 
-  TCanvas* c3 = new TCanvas();
-  //c3->Divide(2,3);
+    TCanvas* c3 = new TCanvas();
+    //c3->Divide(2,3);
 
-  c3->cd(1);
-  trackLenRes->Fit("gaus");
-  trackLenRes->Draw();
+    c3->cd(1);
+    trackLenRes->Fit("gaus");
+    trackLenRes->Draw();
 
-  c3->Write();
+    c3->Write();
 
-  if (debug) std::cout<<"... done"<<std::endl;
+    if (debug) std::cout<<"... done"<<std::endl;
 
-  // open event display
-  display->setOptions("ABDEFHMPT"); // G show geometry
-  if (matFX) display->setOptions("ABDEFGHMPT"); // G show geometry
-  display->open();
-
+    // open event display
+    display->setOptions("ABDEFHMPT"); // G show geometry
+    if (matFX) display->setOptions("ABDEFGHMPT"); // G show geometry
+    display->open();
+  }
 
 #endif
 
