@@ -1280,9 +1280,9 @@ void RKTrackRepEnergy::derive(const double lambda, const double T[3],
 
   if (pA) {
     RKMatrix<3, 4>& A = *pA;
-    A(0,0) = 0; A(0,1) =  lambda*H[2]; A(0,2) = -lambda*H[1]; A(0,3) = T[1]*B[2] - T[2]*B[1];
-    A(1,0) = -lambda*H[2]; A(0,1) = 0; A(1,2) =  lambda*H[0]; A(1,3) = T[2]*B[0] - T[0]*B[2];
-    A(2,0) =  lambda*H[1]; A(2,1) = -lambda*H[0]; A(2,2) = 0; A(2,3) = T[0]*B[1] - T[1]*B[0];    
+    A(0,0) = 0; A(0,1) =  lambda*H[2]; A(0,2) = -lambda*H[1]; A(0,3) = T[1]*H[2] - T[2]*H[1];
+    A(1,0) = -lambda*H[2]; A(0,1) = 0; A(1,2) =  lambda*H[0]; A(1,3) = T[2]*H[0] - T[0]*H[2];
+    A(2,0) =  lambda*H[1]; A(2,1) = -lambda*H[0]; A(2,2) = 0; A(2,3) = T[0]*H[1] - T[1]*H[0];
   }
 }
 
@@ -1641,8 +1641,10 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   if (jacobianT) {
     for (int i = 0; i < 7; ++i) {
       for (int j = 0; j < 7; ++j) {
+  //std::cout << (*jacobianT)(j, i) << " " << newJac(i, j) << " ";
         (*jacobianT)(j, i) = newJac(i, j);
       }
+      //  std::cout << std::endl;
     }
   }
 
