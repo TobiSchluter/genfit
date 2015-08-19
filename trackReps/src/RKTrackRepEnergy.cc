@@ -1384,6 +1384,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
                         double S,
                         bool varField,
                         bool calcOnlyLastRowOfJ) const {
+  M1x7 oldState7(state7);
   M1x7 newState7;
   double est = RKstep(state7, S, newState7);
   // The algorithm is
@@ -1554,7 +1555,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
 
   }
 
-#if 0
+#if 1
   //
   // Track parameters in last point
   //
@@ -1566,25 +1567,27 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   double CBA ( 1./sqrt(A[0]*A[0]+A[1]*A[1]+A[2]*A[2]) ); // 1/|A|
   A[0] *= CBA; A[1] *= CBA; A[2] *= CBA;
 
-
   // Test approximation quality on given step
   double EST ( fabs((A1+A6)-(A3+A4)) +
                fabs((B1+B6)-(B3+B4)) +
                fabs((C1+C6)-(C3+C4))  );  // EST = ||(ABC1+ABC6)-(ABC3+ABC4)||_1  =  ||(axzy x H0 + ABC5 x H2) - (ABC2 x H1 + ABC3 x H1)||_1
 #endif
-  double EST = est;
 
+  EST = est / S; // FIXME : why over S?
+
+#if 1
   R[0] = newState7[0];
   R[1] = newState7[1];
   R[2] = newState7[2];
 
-  SA[0] = newState7[3] - A[0];
-  SA[1] = newState7[3] - A[1];
-  SA[2] = newState7[3] - A[1];
+  SA[0] = newState7[3] - oldState7[3];
+  SA[1] = newState7[4] - oldState7[4];
+  SA[2] = newState7[5] - oldState7[5];
 
   A[0] = newState7[3];
   A[1] = newState7[4];
   A[2] = newState7[5];
+#endif
 
   if (debugLvl_ > 0) {
     std::cout << "    RKTrackRepEnergy::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
