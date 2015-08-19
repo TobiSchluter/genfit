@@ -150,10 +150,10 @@ class RKTrackRepEnergy : public AbsTrackRep {
 
   void derive(const double lambda, const double T[3],
               const double E, const double dEdx, const double B[3],
-              double& dlambda, double dT[3]) const;
+              double& dlambda, double dT[3], RKMatrix<3,4>* pA) const;
 
   double RKstep(const M1x7& state7, const double S,
-                M1x7& newState7) const;
+                M1x7& newState7, RKMatrix<7, 7>* pJ) const;
 
   //! The actual Runge Kutta propagation
   /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).

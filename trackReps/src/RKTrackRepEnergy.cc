@@ -1266,25 +1266,41 @@ void RKTrackRepEnergy::setTime(StateOnPlane& state, double time) const {
 
 void RKTrackRepEnergy::derive(const double lambda, const double T[3],
                               const double E, const double dEdx, const double B[3],
-                              double& dlambda, double dT[3]) const
+                              double& dlambda, double dT[3],
+                              RKMatrix<3, 4>* pA = 0) const
 {
   // Assumes q^2 == 1
   const double kappa = 0.000299792458;  // speed of light over 10^12
+  double H[3] = { kappa*B[0], kappa*B[1], kappa*B[2] };
 
   dlambda = - E*pow(lambda, 3) * dEdx /* *q^-2 omitted */;
-  dT[0] = kappa * lambda * (T[1]*B[2] - T[2]*B[1]);
-  dT[1] = kappa * lambda * (T[2]*B[0] - T[0]*B[2]);
-  dT[2] = kappa * lambda * (T[0]*B[1] - T[1]*B[0]);
+  dT[0] = lambda * (T[1]*H[2] - T[2]*H[1]);
+  dT[1] = lambda * (T[2]*H[0] - T[0]*H[2]);
+  dT[2] = lambda * (T[0]*H[1] - T[1]*H[0]);
+
+  if (pA) {
+    RKMatrix<3, 4>& A = *pA;
+    A(0,0) = 0; A(0,1) =  lambda*H[2]; A(0,2) = -lambda*H[1]; A(0,3) = T[1]*B[2] - T[2]*B[1];
+    A(1,0) = -lambda*H[2]; A(0,1) = 0; A(1,2) =  lambda*H[0]; A(1,3) = T[2]*B[0] - T[0]*B[2];
+    A(2,0) =  lambda*H[1]; A(2,1) = -lambda*H[0]; A(2,2) = 0; A(2,3) = T[0]*B[1] - T[1]*B[0];    
+  }
 }
 
 
 double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
-                                M1x7& newState7) const
+                                M1x7& newState7,
+                                RKMatrix<7, 7>* pJ = 0) const
 {
   const double m = TDatabasePDG::Instance()->GetParticle(getPDG())->Mass();
   const double pdgCharge( this->getPDGCharge() );
   // return pdgCharge with sign of q/p
   const double charge = copysign(pdgCharge, state7[6]);
+
+  RKMatrix<3, 4> *pA1 = 0, *pA2 = 0, *pA3 = 0, *pA4 = 0;
+  RKMatrix<3, 4> A1, A2, A3, A4;
+  if (pJ) {
+    pA1 = &A1; pA2 = &A2, pA3 = &A3, pA4 = &A4;
+  }
 
   const double rStart[3] = { state7[0], state7[1], state7[2] };
   const double TStart[3] = { state7[3], state7[4], state7[5] };
@@ -1303,7 +1319,7 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
   double dLambda1;
   double dT1[3];
   derive(lambdaStart, TStart, EStart, dEdxStart, BStart,
-         dLambda1, dT1);
+         dLambda1, dT1, pA1);
 
   const double lambda2 = lambdaStart + S/2*dLambda1;
   const double E2 = hypot(m, charge / lambda2);
@@ -1319,7 +1335,7 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
   double dLambda2;
   double dT2[3];
   derive(lambda2, T2, E2, dEdx2, BMiddle,
-         dLambda2, dT2);
+         dLambda2, dT2, pA2);
 
   const double lambda3 = lambdaStart + S/2*dLambda2;
   const double E3 = hypot(m, charge / lambda3);
@@ -1330,7 +1346,7 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
   double dLambda3;
   double dT3[3];
   derive(lambda3, T3, E3, dEdx3, BMiddle,
-         dLambda3, dT3);
+         dLambda3, dT3, pA3);
 
   const double lambda4 = lambdaStart + S*dLambda3;
   const double E4 = hypot(m, charge / lambda4);
@@ -1346,7 +1362,7 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
   double dLambda4;
   double dT4[3];
   derive(lambda4, T4, E4, dEdx4, BEnd,
-         dLambda4, dT4);
+         dLambda4, dT4, pA4);
 
   // Put it together ...
   double rFinal[3];
@@ -1373,6 +1389,20 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
     epsT[i] = fabs(dT1[i] - dT2[i] - dT3[i] + dT4[i]);
   double eps = std::max(epsLambda,
                         *std::max_element(epsT, epsT + 3));
+
+  if (pJ) {
+    RKMatrix<7, 7>& J = *pJ;
+    std::fill(J.vals, J.vals + 49, 0);
+    for (int i = 0; i < 7; ++i)
+      J(i, i) = 1;  // upper entries overwritten below.
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 4; ++j) {
+        J(i, j + 3) = S * (i == j) + S*S/6*(A1(i, j) + A2(i, j) + A3(i, j));
+        J(i + 3, j + 3) = (i == j) + S/6*(A1(i, j) + 2*A2(i, j) + 2*A3(i, j) + A4(i, j));
+      }
+    }
+  }
+
   return S*S*eps;
 }
 
@@ -1386,7 +1416,26 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
                         bool calcOnlyLastRowOfJ) const {
   M1x7 oldState7(state7);
   M1x7 newState7;
-  double est = RKstep(state7, S, newState7);
+  M7x7 oldJac;
+  if (jacobianT) {
+    for (int i = 0; i < 7; ++i)
+      for (int j = 0; j < 7; ++j)
+        oldJac(i, j) = (*jacobianT)(j, i);
+  }
+  M7x7 propJac;
+  double est = RKstep(state7, S, newState7, &propJac);
+  M7x7 newJac;
+  if (jacobianT) {
+    for (int i = 0; i < 7; ++i) {
+      for (int j = 0; j < 7; ++j) {
+        double sum = 0;
+        for (int k = 0; k < 7; ++k) {
+          sum += propJac(i, k) * oldJac(k, j);
+        }
+        newJac(i, j) = sum;
+      }
+    }
+  }
   // The algorithm is
   //  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001
   //  "Track parameter propagation through the application of a new adaptive Runge-Kutta-Nyström method in the ATLAS experiment"
@@ -1588,6 +1637,14 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   A[1] = newState7[4];
   A[2] = newState7[5];
 #endif
+
+  if (jacobianT) {
+    for (int i = 0; i < 7; ++i) {
+      for (int j = 0; j < 7; ++j) {
+        (*jacobianT)(j, i) = newJac(i, j);
+      }
+    }
+  }
 
   if (debugLvl_ > 0) {
     std::cout << "    RKTrackRepEnergy::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
