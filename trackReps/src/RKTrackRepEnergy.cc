@@ -124,7 +124,6 @@ double RKTrackRepEnergy::extrapolateToPlane(StateOnPlane& state,
   // back to 5D
   getState5(state, state7);
   setTime(state, getTime(state) + flightTime);
-
   lastEndState_ = state;
 
   return coveredDistance;
@@ -1269,11 +1268,12 @@ void RKTrackRepEnergy::derive(const double lambda, const double T[3],
                               double& dlambda, double dT[3],
                               RKMatrix<3, 4>* pA = 0) const
 {
-  // Assumes q^2 == 1
-  const double kappa = 0.000299792458;  // speed of light over 10^12
+  // Assumes |q| == 1
+  // FIXME why '-' on next line???
+  const double kappa = -0.000299792458;  // speed of light over 10^12
   double H[3] = { kappa*B[0], kappa*B[1], kappa*B[2] };
 
-  dlambda = - E*pow(lambda, 3) * dEdx /* *q^-2 omitted */;
+  dlambda = -E*pow(lambda, 3) * /* sign convention? */ dEdx /* *q^-2 omitted */;
   dT[0] = lambda * (T[1]*H[2] - T[2]*H[1]);
   dT[1] = lambda * (T[2]*H[0] - T[0]*H[2]);
   dT[2] = lambda * (T[0]*H[1] - T[1]*H[0]);
@@ -1281,7 +1281,7 @@ void RKTrackRepEnergy::derive(const double lambda, const double T[3],
   if (pA) {
     RKMatrix<3, 4>& A = *pA;
     A(0,0) = 0; A(0,1) =  lambda*H[2]; A(0,2) = -lambda*H[1]; A(0,3) = T[1]*H[2] - T[2]*H[1];
-    A(1,0) = -lambda*H[2]; A(0,1) = 0; A(1,2) =  lambda*H[0]; A(1,3) = T[2]*H[0] - T[0]*H[2];
+    A(1,0) = -lambda*H[2]; A(1,1) = 0; A(1,2) =  lambda*H[0]; A(1,3) = T[2]*H[0] - T[0]*H[2];
     A(2,0) =  lambda*H[1]; A(2,1) = -lambda*H[0]; A(2,2) = 0; A(2,3) = T[0]*H[1] - T[1]*H[0];
   }
 }
@@ -1390,11 +1390,17 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
   double eps = std::max(epsLambda,
                         *std::max_element(epsT, epsT + 3));
 
+  /*
+  std::cout << epsLambda << std::endl;
+  std::cout << dT1[0] << " " << dT2[0] << " " << dT3[0] << " " << dT4[0] << " sum " << dT1[0] + dT2[0] + dT3[0] << " " << epsT[0] << std::endl;
+  std::cout << dT1[1] << " " << dT2[1] << " " << dT3[1] << " " << dT4[1] << " sum " << dT1[1] + dT2[1] + dT3[1] << " " << epsT[1] << std::endl;
+  std::cout << dT1[2] << " " << dT2[2] << " " << dT3[2] << " " << dT4[2] << " sum " << dT1[2] + dT2[2] + dT3[2] << " " << epsT[2] << std::endl;
+  */
   if (pJ) {
     RKMatrix<7, 7>& J = *pJ;
     std::fill(J.vals, J.vals + 49, 0);
     for (int i = 0; i < 7; ++i)
-      J(i, i) = 1;  // upper entries overwritten below.
+      J(i, i) = 1;  // some entries overwritten below.
     for (int i = 0; i < 3; ++i) {
       for (int j = 0; j < 4; ++j) {
         J(i, j + 3) = S * (i == j) + S*S/6*(A1(i, j) + A2(i, j) + A3(i, j));
@@ -1409,11 +1415,11 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
 
 
 double RKTrackRepEnergy::RKPropagate(M1x7& state7,
-                        M7x7* jacobianT,
-                        M1x3& SA,
-                        double S,
-                        bool varField,
-                        bool calcOnlyLastRowOfJ) const {
+                                     M7x7* jacobianT,
+                                     M1x3& SA,
+                                     double S,
+                                     bool varField,
+                                     bool calcOnlyLastRowOfJ) const {
   M1x7 oldState7(state7);
   M1x7 newState7;
   M7x7 oldJac;
@@ -1428,6 +1434,8 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   if (jacobianT) {
     for (int i = 0; i < 7; ++i) {
       for (int j = 0; j < 7; ++j) {
+        if (calcOnlyLastRowOfJ && j != 6)
+          continue;
         double sum = 0;
         for (int k = 0; k < 7; ++k) {
           sum += propJac(i, k) * oldJac(k, j);
@@ -1455,7 +1463,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   M1x3&   R           = *((M1x3*) &state7[0]);       // Start coordinates  [cm]  (x,  y,  z)
   M1x3&   A           = *((M1x3*) &state7[3]);       // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
 
-  double EST = est / S; // FIXME : why over S?
+  double EST = est; // FIXME : why over S?
 
   R[0] = newState7[0];
   R[1] = newState7[1];
@@ -1470,17 +1478,17 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   A[2] = newState7[5];
 
   if (jacobianT) {
-    //std::cout << S << std::endl;
-    //(*jacobianT).print();
     for (int i = 0; i < 7; ++i) {
       for (int j = 0; j < 7; ++j) {
         (*jacobianT)(j, i) = newJac(i, j);
-        //test(j, i) = newJac(i, j);
       }
-      //  std::cout << std::endl;
     }
   }
-
+  /*
+  std::cout << S << std::endl;
+  oldState7.print();
+  newState7.print();
+  */
   if (debugLvl_ > 0) {
     std::cout << "    RKTrackRepEnergy::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
   }
@@ -1754,7 +1762,7 @@ void RKTrackRepEnergy::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector
     std::cout << "  A = "; RKTools::printDim(A, 3,1);
   }*/
 
-  std::fill(J_Mp.begin(), J_Mp.end(), 7*5);
+  std::fill(J_Mp.begin(), J_Mp.end(), 0);
 
   const double AtU = A[0]*U.X() + A[1]*U.Y() + A[2]*U.Z();
   const double AtV = A[0]*V.X() + A[1]*V.Y() + A[2]*V.Z();
@@ -2090,8 +2098,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
       if (calcOnlyLastRowOfJ)
         i = 42;
 
-      double* jacPtr = jacobianT->begin();
-
+      M7x7& jacPtr = *jacobianT;
       for(unsigned int j=42; j<49; j+=7) {
         (*J_MMT_unprojected_lastRow)[j-42] = jacPtr[j];
       }
@@ -2210,7 +2217,6 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
 
   static const unsigned int maxNumIt = 10;
   unsigned int counter(0);
-
   while (fabs(fieldCurvLimit) > MINSTEP) {
 
     if(++counter > maxNumIt){
@@ -2509,8 +2515,8 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
       if (debugLvl_ > 2) {
         std::cout<<"ExtrapSteps \n";
         for (std::vector<ExtrapStep>::iterator it = ExtrapSteps_.begin(); it != ExtrapSteps_.end(); ++it){
-          std::cout << "7D Jacobian: "; RKTools::printDim((it->jac7_.begin()), 5,5);
-          std::cout << "7D noise:    "; RKTools::printDim((it->noise7_.begin()), 5,5);
+          std::cout << "7D Jacobian: "; it->jac7_.print();
+          std::cout << "7D noise:    "; it->noise7_.print();
         }
         std::cout<<"\n";
       }
