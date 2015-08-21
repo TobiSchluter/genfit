@@ -51,7 +51,7 @@ struct RKMatrix {
     return *this;
   }
 
-  void print();
+  void print() const;
 };
 
 typedef RKMatrix<1, 3> M1x3;
@@ -90,7 +90,7 @@ namespace RKTools {
 
 template<size_t nRows, size_t nCols>
 inline void
-RKMatrix<nRows, nCols>::print() {
+RKMatrix<nRows, nCols>::print() const {
   RKTools::printDim(this->vals, nRows, nCols);
 }
 
