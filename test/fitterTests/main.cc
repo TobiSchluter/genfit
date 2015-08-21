@@ -223,7 +223,7 @@ int main(int argc, char **argv) {
 
   std::vector<genfit::eMeasurementType> measurementTypes;
   for (unsigned int i = 0; i<nMeasurements; ++i) {
-    measurementTypes.push_back(genfit::eMeasurementType(i%4));
+    measurementTypes.push_back(genfit::eMeasurementType(i%8));
   }
 
   signal(SIGSEGV, handler);   // install our handler
