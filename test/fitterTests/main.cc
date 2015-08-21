@@ -135,15 +135,19 @@ int randomSign() {
 int main(int argc, char **argv) {
   unsigned int nEvents = 1000;
   bool useGUI = false;
+  const char *outFileName = 0;
 
   char option;
-  while ((option = getopt(argc, argv, "gn:")) != -1) {
+  while ((option = getopt(argc, argv, "gn:f:")) != -1) {
     switch (option) {
     case 'n':
       nEvents = atoi(optarg);
       break;
     case 'g':
       useGUI = true;
+      break;
+    case 'f':
+      outFileName = optarg;
       break;
     }
   }
@@ -219,7 +223,7 @@ int main(int argc, char **argv) {
 
   std::vector<genfit::eMeasurementType> measurementTypes;
   for (unsigned int i = 0; i<nMeasurements; ++i) {
-    measurementTypes.push_back(genfit::eMeasurementType(i%8));
+    measurementTypes.push_back(genfit::eMeasurementType(i%4));
   }
 
   signal(SIGSEGV, handler);   // install our handler
@@ -299,6 +303,12 @@ int main(int argc, char **argv) {
   gROOT->SetStyle("Plain");
   gStyle->SetPalette(1);
   gStyle->SetOptFit(1111);
+
+  TFile *outFile = 0;
+  if (outFileName) {
+    outFile = TFile::Open(outFileName, "RECREATE");
+    outFile->cd();
+  }
 
   TH1D *hmomRes = new TH1D("hmomRes","mom res",500,-20*resolution*momentum/nMeasurements,20*resolution*momentum/nMeasurements);
   TH1D *hupRes = new TH1D("hupRes","u' res",500,-15*resolution/nMeasurements, 15*resolution/nMeasurements);
@@ -561,6 +571,7 @@ int main(int argc, char **argv) {
 #ifndef VALGRIND
       if (useGUI) {
         if (!onlyDisplayFailed && iEvent < 1000) {
+          //std::cout << " adding track to display " << std::endl;
           std::vector<genfit::Track*> event;
           event.push_back(fitTrack);
           if (splitTrack > 0)
@@ -834,7 +845,7 @@ int main(int argc, char **argv) {
   if (useGUI) {
     if (debug) std::cout<<"Draw histograms ...";
     // fit and draw histograms
-    TCanvas* c1 = new TCanvas();
+    TCanvas* c1 = new TCanvas("cRes", "Resolutions");
     c1->Divide(2,3);
 
     c1->cd(1);
@@ -862,7 +873,7 @@ int main(int argc, char **argv) {
 
     c1->Write();
 
-    TCanvas* c2 = new TCanvas();
+    TCanvas* c2 = new TCanvas("cPulls", "Pulls");
     c2->Divide(2,3);
 
     c2->cd(1);
@@ -892,7 +903,7 @@ int main(int argc, char **argv) {
 
 
 
-    TCanvas* c3 = new TCanvas();
+    TCanvas* c3 = new TCanvas("cTrLen", "Track length");
     //c3->Divide(2,3);
 
     c3->cd(1);
@@ -900,9 +911,13 @@ int main(int argc, char **argv) {
     trackLenRes->Draw();
 
     c3->Write();
+  }
 
-    if (debug) std::cout<<"... done"<<std::endl;
+  if (outFile)
+    outFile->Write();
+  if (debug) std::cout<<"... done"<<std::endl;
 
+  if (useGUI) {
     // open event display
     display->setOptions("ABDEFHMPT"); // G show geometry
     if (matFX) display->setOptions("ABDEFGHMPT"); // G show geometry
