@@ -40,13 +40,14 @@ namespace genfit {
 
 
 enum eMeasurementType { Pixel = 0,
-        Spacepoint,
-        ProlateSpacepoint,
-        StripU,
-        StripV,
-        StripUV,
-        Wire,
-        WirePoint };
+                        StripU,
+                        StripV,
+                        StripUV,
+                        Spacepoint,
+                        ProlateSpacepoint,
+                        Wire,
+                        WirePoint
+};
 
 
 /**
