@@ -21,6 +21,7 @@
 
 #include <Exception.h>
 #include <RKTrackRep.h>
+#include <RKTrackRepEnergy.h>
 #include <HMatrixUnit.h>
 
 #include <cassert>
@@ -65,7 +66,8 @@ std::vector<MeasurementOnPlane*> FullMeasurement::constructMeasurementsOnPlane(c
 
 const AbsHMatrix* FullMeasurement::constructHMatrix(const AbsTrackRep* rep) const {
 
-  if (dynamic_cast<const RKTrackRep*>(rep) == NULL) {
+  if (!dynamic_cast<const RKTrackRep*>(rep)
+      && !dynamic_cast<const RKTrackRepEnergy*>(rep)) {
     Exception exc("SpacepointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
     throw exc;
   }

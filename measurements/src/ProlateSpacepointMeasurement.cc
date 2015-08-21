@@ -19,10 +19,8 @@
 
 #include "ProlateSpacepointMeasurement.h"
 
-#include <cmath>
-
 #include "Exception.h"
-#include "RKTrackRep.h"
+#include "AbsTrackRep.h"
 
 
 namespace genfit {
