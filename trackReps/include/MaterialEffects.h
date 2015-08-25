@@ -70,7 +70,6 @@ public:
                  double dirX, double dirY, double dirZ)
   {
     bool result = materialInterface_->initTrack(posX, posY, posZ, dirX, dirY, dirZ);
-    materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
     return result;
   }
 
@@ -118,8 +117,9 @@ public:
   void drawdEdx(int pdg = 11);
 
   //! Calculate dEdx for a given energy
-  double dEdx(double Energy) const;
+  double dEdx(const MaterialProperties& material, double Energy) /*const*/;
 
+  void getMaterialProperties(MaterialProperties& material) { materialInterface_->getMaterialParameters(material); }
 
   //! sets charge_, mass_
   void getParticleParameters(int pdg);
@@ -134,10 +134,10 @@ private:
   /**
    * Also sets dEdx_ and E_.
    */
-  double momentumLoss(double stepSign, double mom, bool linear);
+  double momentumLoss(const MaterialProperties& material, double stepSign, double mom, bool linear);
 
   //! Uses Bethe Bloch formula to calculate dEdx.
-  double dEdxBetheBloch(double betaSquare, double gamma, double gammasquare) const;
+  double dEdxBetheBloch(const MaterialProperties& material, double betaSquare, double gamma, double gammasquare) const;
 
   //! calculation of energy loss straggeling
   /**  For the energy loss straggeling, different formulas are used for different regions:
@@ -148,7 +148,7 @@ private:
     *
     *  Needs dEdx_, which is calculated in momentumLoss, so it has to be called afterwards!
     */
-  void noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare) const;
+  void noiseBetheBloch(M7x7& noise, const MaterialProperties& material, double mom, double betaSquare, double gamma, double gammaSquare) const;
 
   //! calculation of multiple scattering
   /**  This function first calcuates a MSC variance based on the current material and step length
@@ -158,7 +158,7 @@ private:
    * taking even the (co)variances of the position coordinates into account.
    * 
     */
-  void noiseCoulomb(M7x7& noise,
+  void noiseCoulomb(M7x7& noise, const MaterialProperties& material,
                     const M1x3& direction, double momSquare, double betaSquare) const;
 
   //! Returns dEdx
@@ -166,12 +166,12 @@ private:
     * Uses a gaussian approximation (Bethe-Heitler formula with Migdal corrections).
     * For positrons, dEdx is weighed with a correction factor.
   */
-  double dEdxBrems(double mom) const;
+  double dEdxBrems(const MaterialProperties& material, double mom) const;
 
   //! calculation of energy loss straggeling
   /** Can be called with any pdg, but only calculates straggeling for electrons and positrons.
    */
-  void noiseBrems(M7x7& noise, double momSquare, double betaSquare) const;
+  void noiseBrems(M7x7& noise, const MaterialProperties& material, double momSquare, double betaSquare) const;
 
 
 
@@ -190,11 +190,6 @@ private:
   // cached values for energy loss and noise calculations
   double dEdx_; // Runkge Kutta dEdx
   double E_; // Runge Kutta Energy
-  double matDensity_;
-  double matZ_;
-  double matA_;
-  double radiationLength_;
-  double mEE_; // mean excitation energy
 
   int pdg_;
   int charge_;

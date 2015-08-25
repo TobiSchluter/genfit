@@ -21,6 +21,7 @@
 #include "Exception.h"
 
 #include <iostream>
+#include <iomanip>
 #include <stdexcept>
 #include <string>
 #include <stdlib.h>
@@ -52,11 +53,6 @@ MaterialEffects::MaterialEffects():
   stepSize_(0),
   dEdx_(0),
   E_(0),
-  matDensity_(0),
-  matZ_(0),
-  matA_(0),
-  radiationLength_(0),
-  mEE_(0),
   pdg_(0),
   charge_(0),
   mass_(0),
@@ -169,11 +165,14 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
     realPath = fabs(realPath);
     stepSize_ = realPath;
 
-    it->matStep_.materialProperties_.getMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
+    const MaterialProperties& material = it->matStep_.materialProperties_;
 
-    if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
+    if (material.getZ() > 1.E-3) { // don't calculate energy loss for vacuum
 
-      momLoss += momentumLoss(stepSign, mom - momLoss, false);
+      momLoss += momentumLoss(material, stepSign, mom - momLoss, false);
+
+      /* FIXME material is reset in momentumLoss (which isn't used over here, so it doesn't matter.  */
+      //it->matStep_.materialProperties_.getMaterialProperties(matDensity_, matZ_, matA_, radiationLength_, mEE_);
 
       if (doNoise){
         // get values for the "effective" energy of the RK step E_
@@ -182,13 +181,13 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
         double pSquare = p*p;
 
         if (energyLossBetheBloch_ && noiseBetheBloch_)
-          this->noiseBetheBloch(*noise, p, betaSquare, gamma, gammaSquare);
+          this->noiseBetheBloch(*noise, material, p, betaSquare, gamma, gammaSquare);
 
         if (noiseCoulomb_)
-          this->noiseCoulomb(*noise, *((M1x3*) &it->state7_[3]), pSquare, betaSquare);
+          this->noiseCoulomb(*noise, material, *((M1x3*) &it->state7_[3]), pSquare, betaSquare);
 
         if (energyLossBrems_ && noiseBrems_)
-          this->noiseBrems(*noise, pSquare, betaSquare);
+          this->noiseBrems(*noise, material, pSquare, betaSquare);
       } // end doNoise
 
     }
@@ -275,8 +274,8 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
   double relMomLossPer_cm(0);
   stepSize_ = 1.; // set stepsize for momLoss calculation
 
-  if (matZ_ > 1.E-3) { // don't calculate energy loss for vacuum
-    relMomLossPer_cm = this->momentumLoss(limits.getStepSign(), mom, true) / mom;
+  if (currentMaterial.getZ() > 1.E-3) { // don't calculate energy loss for vacuum
+    relMomLossPer_cm = this->momentumLoss(currentMaterial, limits.getStepSign(), mom, true) / mom;
   }
 
   double maxStepMomLoss = fabs((maxRelMomLoss - fabs(relMomLoss)) / relMomLossPer_cm); // >= 0
@@ -299,7 +298,7 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
     if (debugLvl_ > 0) {
       std::cout << "     find next boundary\n";
     }
-    double step =  materialInterface_->findNextBoundary(extrap, sMax /*boundaryStep*/, varField);
+    double step =  materialInterface_->findNextBoundary(extrap, boundaryStep /*sMax*/ /*boundaryStep*/, varField);
 
     if (debugLvl_ > 0) {
       if (step == 0) {
@@ -334,7 +333,7 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
     state7[4] = dirNow[1];
     state7[5] = dirNow[2];
 
-    materialInterface_->initTrack(state7[0], state7[1], state7[2],
+    this->initTrack(state7[0], state7[1], state7[2],
                                   limits.getStepSign() * state7[3], limits.getStepSign() * state7[4], limits.getStepSign() * state7[5]);
 
     materialInterface_->getMaterialParameters(materialAfter);
@@ -382,7 +381,7 @@ void MaterialEffects::getMomGammaBeta(double Energy,
 
 //---- Energy-loss and Noise calculations -----------------------------------------
 
-double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear)
+double MaterialEffects::momentumLoss(const MaterialProperties& material, double stepSign, double mom, bool linear)
 {
   double E0 = hypot(mom, mass_);
   double step = stepSize_*stepSign; // signed
@@ -401,25 +400,25 @@ double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear)
   //dEdx3 = dEdx(x0 + h/2, E2); E2 = E0 + h/2 * dEdx2
   //dEdx4 = dEdx(x0 + h,   E3); E3 = E0 + h   * dEdx3
 
-  double dEdx1 = dEdx(E0); // dEdx(x0,p0)
+  double dEdx1 = dEdx(material, E0); // dEdx(x0,p0)
 
   if (linear) {
     dEdx_ = dEdx1;
   }
   else { // RK4
     double E1 = E0 - dEdx1*step/2.;
-    double dEdx2 = dEdx(E1); // dEdx(x0 + h/2, E0 + h/2 * dEdx1)
+    double dEdx2 = dEdx(material, E1); // dEdx(x0 + h/2, E0 + h/2 * dEdx1)
 
     double E2 = E0 - dEdx2*step/2.;
-    double dEdx3 = dEdx(E2); // dEdx(x0 + h/2, E0 + h/2 * dEdx2)
+    double dEdx3 = dEdx(material, E2); // dEdx(x0 + h/2, E0 + h/2 * dEdx2)
 
     double E3 = E0 - dEdx3*step;
-    double dEdx4 = dEdx(E3); // dEdx(x0 + h, E0 + h * dEdx3)
+    double dEdx4 = dEdx(material, E3); // dEdx(x0 + h, E0 + h * dEdx3)
 
     dEdx_ = (dEdx1 + 2.*dEdx2 + 2.*dEdx3 + dEdx4)/6.;
   }
 
-  E_ = E0 - dEdx_*step*0.5;
+  E_ = E0 - dEdx_*step*0.5;   // Energy at midstep for noise calculation
 
   double dE = step*dEdx_; // positive for positive stepSign
 
@@ -443,25 +442,27 @@ double MaterialEffects::momentumLoss(double stepSign, double mom, bool linear)
 }
 
 
-double MaterialEffects::dEdx(double Energy) const {
-
+double MaterialEffects::dEdx(const MaterialProperties& material, double Energy) {
+  //materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
   double mom(0), gammaSquare(0), gamma(0), betaSquare(0);
   this->getMomGammaBeta(Energy, mom, gammaSquare, gamma, betaSquare);
 
   double result(0);
 
   if (energyLossBetheBloch_)
-    result += dEdxBetheBloch(betaSquare, gamma, gammaSquare);
+    result += dEdxBetheBloch(material, betaSquare, gamma, gammaSquare);
 
   if (energyLossBrems_)
-    result += dEdxBrems(mom);
+    result += dEdxBrems(material, mom);
 
   return result;
 }
 
 
-double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double gammaSquare) const
+double MaterialEffects::dEdxBetheBloch(const MaterialProperties& material, double betaSquare, double gamma, double gammaSquare) const
 {
+  //std::cout << std::setprecision(8) << gamma << " " << charge_ << " " << mass_ << std::endl;
+
   static const double betaGammaMin(0.05);
   if (betaSquare*gammaSquare < betaGammaMin*betaGammaMin) {
     Exception exc("MaterialEffects::dEdxBetheBloch ==> beta*gamma < 0.05, Bethe-Bloch implementation not valid anymore!",__LINE__,__FILE__);
@@ -470,9 +471,9 @@ double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double g
   }
 
   // calc dEdx_, also needed in noiseBetheBloch!
-  double result( 0.307075 * matZ_ / matA_ * matDensity_ / betaSquare * charge_ * charge_ );
+  double result( 0.307075 * material.getZ() / material.getA() * material.getDensity() / betaSquare * charge_ * charge_ );
   double massRatio( electronMass / mass_ );
-  double argument( gammaSquare * betaSquare * electronMass * 1.E3 * 2. / ((1.E-6 * mEE_) *
+  double argument( gammaSquare * betaSquare * electronMass * 1.E3 * 2. / ((1.E-6 * material.getMEE()) *
       sqrt(1. + 2. * gamma * massRatio + massRatio * massRatio)) );
   result *= log(argument) - betaSquare; // Bethe-Bloch [MeV/cm]
   result *= 1.E-3;  // in GeV/cm, hence 1.e-3
@@ -484,13 +485,13 @@ double MaterialEffects::dEdxBetheBloch(double betaSquare, double gamma, double g
 }
 
 
-void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare) const
+void MaterialEffects::noiseBetheBloch(M7x7& noise, const MaterialProperties& material, double mom, double betaSquare, double gamma, double gammaSquare) const
 {
   // Code ported from GEANT 3
 
   // ENERGY LOSS FLUCTUATIONS; calculate sigma^2(E);
   double sigma2E ( 0. );
-  double zeta  ( 153.4E3 * charge_ * charge_ / betaSquare * matZ_ / matA_ * matDensity_ * fabs(stepSize_) ); // eV
+  double zeta  ( 153.4E3 * charge_ * charge_ / betaSquare * material.getZ() / material.getZ() * material.getDensity() * fabs(stepSize_) ); // eV
   double Emax  ( 2.E9 * electronMass * betaSquare * gammaSquare / (1. + 2.*gamma * electronMass / mass_ + (electronMass / mass_) * (electronMass / mass_)) ); // eV
   double kappa ( zeta / Emax );
 
@@ -498,11 +499,12 @@ void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare
     sigma2E += zeta * Emax * (1. - betaSquare / 2.); // eV^2
   } else { // Urban/Landau approximation
     // calculate number of collisions Nc
-    double I = 16. * pow(matZ_, 0.9); // eV
+    const double Z = material.getZ();
+    double I = 16. * pow(Z, 0.9); // eV
     double f2 = 0.;
-    if (matZ_ > 2.) f2 = 2. / matZ_;
+    if (Z > 2.) f2 = 2. / Z;
     double f1 = 1. - f2;
-    double e2 = 10.*matZ_ * matZ_; // eV
+    double e2 = 10.*Z * Z; // eV
     double e1 = pow((I / pow(e2, f2)), 1. / f1); // eV
 
     double mbbgg2 = 2.E9 * mass_ * betaSquare * gammaSquare; // eV
@@ -544,7 +546,7 @@ void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare
 }
 
 
-void MaterialEffects::noiseCoulomb(M7x7& noise,
+void MaterialEffects::noiseCoulomb(M7x7& noise, const MaterialProperties& material,
                                    const M1x3& direction, double momSquare, double betaSquare) const
 {
 
@@ -553,11 +555,12 @@ void MaterialEffects::noiseCoulomb(M7x7& noise,
   assert(mscModelCode_ == 0 || mscModelCode_ == 1);
   const double step = fabs(stepSize_);
   const double step2 = step * step;
+  const double Z = material.getZ();
   if (mscModelCode_ == 0) {// PANDA report PV/01-07 eq(43); linear in step length
-    sigma2 = 225.E-6 * charge_ * charge_ / (betaSquare * momSquare) * step / radiationLength_ * matZ_ / (matZ_ + 1) * log(159.*pow(matZ_, -1. / 3.)) / log(287.*pow(matZ_, -0.5)); // sigma^2 = 225E-6*z^2/mom^2 * XX0/beta_^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
+    sigma2 = 225.E-6 * charge_ * charge_ / (betaSquare * momSquare) * step / material.getRadLen() * Z / (Z + 1) * log(159.*pow(Z, -1. / 3.)) / log(287./sqrt(Z)); // sigma^2 = 225E-6*z^2/mom^2 * XX0/beta_^2 * Z/(Z+1) * ln(159*Z^(-1/3))/ln(287*Z^(-1/2)
 
   } else if (mscModelCode_ == 1) { //Highland not linear in step length formula taken from PDG book 2011 edition
-    double stepOverRadLength = step / radiationLength_;
+    double stepOverRadLength = step / material.getRadLen();
     double logCor = (1 + 0.038 * log(stepOverRadLength));
     sigma2 = 0.0136 * 0.0136 * charge_ * charge_ / (betaSquare * momSquare) * stepOverRadLength * logCor * logCor;
   }
@@ -616,7 +619,7 @@ void MaterialEffects::noiseCoulomb(M7x7& noise,
 }
 
 
-double MaterialEffects::dEdxBrems(double mom) const
+double MaterialEffects::dEdxBrems(const MaterialProperties& material, double mom) const
 {
 
   // Code ported from GEANT 3
@@ -708,18 +711,18 @@ double MaterialEffects::dEdxBrems(double mom) const
       YY = YY * Y;
     }
 
-    S = S + matZ_ * SS;
+    S = S + material.getZ() * SS;
 
     if (S > 0.) {
       double CORR = 1.;
 #if !defined(BETHE)
-      CORR = 1. / (1. + 0.805485E-10 * matDensity_ * matZ_ * E * E / (matA_ * kc * kc)); // MIGDAL correction factor
+      CORR = 1. / (1. + 0.805485E-10 * material.getDensity() * material.getZ() * E * E / (material.getA() * kc * kc)); // MIGDAL correction factor
 #endif
 
       // We use exp(beta * log(...) here because pow(..., beta) is
       // REALLY slow and we don't need ultimate numerical precision
       // for this approximation.
-      double FAC = matZ_ * (matZ_ + xi) * E * E / (E + electronMass);
+      double FAC = material.getZ() * (material.getZ() + xi) * E * E / (E + electronMass);
       if (beta == 1.) {  // That is the #ifdef BETHE case
         FAC *= kc * CORR / T;
       } else {
@@ -745,7 +748,7 @@ double MaterialEffects::dEdxBrems(double mom) const
         dedxBrems = dedxBrems * S; // GeV barn
       }
 
-      dedxBrems = 0.60221367 * matDensity_ * dedxBrems / matA_; // energy loss dE/dx [GeV/cm]
+      dedxBrems = 0.60221367 * material.getDensity() * dedxBrems / material.getA(); // energy loss dE/dx [GeV/cm]
     }
   }
 
@@ -757,8 +760,8 @@ double MaterialEffects::dEdxBrems(double mom) const
     static const double AA = 7522100., A1 = 0.415, A3 = 0.0021, A5 = 0.00054;
 
     double ETA = 0.;
-    if (matZ_ > 0.) {
-      double X = log(AA * mom / (matZ_ * matZ_));
+    if (material.getZ() > 0.) {
+      double X = log(AA * mom / pow(material.getZ(), 2));
       if (X > -8.) {
         if (X >= +9.) ETA = 1.;
         else {
@@ -782,7 +785,7 @@ double MaterialEffects::dEdxBrems(double mom) const
 }
 
 
-void MaterialEffects::noiseBrems(M7x7& noise, double momSquare, double betaSquare) const
+void MaterialEffects::noiseBrems(M7x7& noise, const MaterialProperties& material, double momSquare, double betaSquare) const
 {
 
   // Code ported from GEANT 3 and simplified
@@ -792,7 +795,7 @@ void MaterialEffects::noiseBrems(M7x7& noise, double momSquare, double betaSquar
 
   if (abs(pdg_) != 11) return; // only for electrons and positrons
 
-  double minusXOverLn2  = -1.442695 * fabs(stepSize_) / radiationLength_;
+  double minusXOverLn2  = -1.442695 * fabs(stepSize_) / material.getRadLen();
   double sigma2 = 1.44*(pow(3., minusXOverLn2) - pow(4., minusXOverLn2)) / momSquare;
   //XXX std::cout << "breams sigma: " << sigma2E << std::endl;
   //assert(sigma2 >= 0.0);
@@ -816,7 +819,8 @@ void MaterialEffects::drawdEdx(int pdg) {
   stepSize_ = 1;
 
   materialInterface_->initTrack(0, 0, 0, 1, 1, 1);
-  materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
+  MaterialProperties material;
+  materialInterface_->getMaterialParameters(material);
 
 
   double minMom = 0.00001;
@@ -835,7 +839,7 @@ void MaterialEffects::drawdEdx(int pdg) {
     energyLossBetheBloch_ = true;
 
     try {
-      hdEdxBethe.Fill(log10(mom), dEdx(E));
+      hdEdxBethe.Fill(log10(mom), dEdx(material, E));
     }
     catch (...) {
 
@@ -847,7 +851,7 @@ void MaterialEffects::drawdEdx(int pdg) {
     energyLossBrems_ = true;
     energyLossBetheBloch_ = false;
     try {
-      hdEdxBrems.Fill(log10(mom), dEdx(E));
+      hdEdxBrems.Fill(log10(mom), dEdx(material, E));
     }
     catch (...) {
 

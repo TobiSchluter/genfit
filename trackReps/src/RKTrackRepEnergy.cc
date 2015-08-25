@@ -29,6 +29,7 @@
 #include <TMath.h>
 #include <TDatabasePDG.h>
 
+#include <iomanip>
 #include <algorithm>
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
@@ -1310,10 +1311,13 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
   MaterialEffects::getInstance()->initTrack(state7[0], state7[1], state7[2],
                                             state7[3], state7[4], state7[5]);
   MaterialEffects::getInstance()->getParticleParameters(getPDG());
+  MaterialProperties mat;
+  MaterialEffects::getInstance()->getMaterialProperties(mat);
 
   const double lambdaStart = state7[6];
   const double EStart = hypot(m, charge / lambdaStart);
-  const double dEdxStart = MaterialEffects::getInstance()->dEdx(EStart);
+  const double dEdxStart = MaterialEffects::getInstance()->dEdx(mat, EStart);
+  //std::cout << std::setprecision(7) << EStart << " " << dEdxStart << " " << m << std::endl;
 
   double BStart[3];
   FieldManager::getInstance()->getFieldVal(rStart.begin(), BStart);
@@ -1325,7 +1329,7 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
 
   const double lambda2 = lambdaStart + h/2*dLambda1;
   const double E2 = hypot(m, charge / lambda2);
-  const double dEdx2 = MaterialEffects::getInstance()->dEdx(E2);
+  const double dEdx2 = MaterialEffects::getInstance()->dEdx(mat, E2);
 
   const M1x3 T2 = TStart + h/2*dT1;
   const M1x3 rMiddle = rStart + h/2*TStart + h*h/8*dT1;
@@ -1339,7 +1343,7 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
 
   const double lambda3 = lambdaStart + h/2*dLambda2;
   const double E3 = hypot(m, charge / lambda3);
-  const double dEdx3 = MaterialEffects::getInstance()->dEdx(E3);
+  const double dEdx3 = MaterialEffects::getInstance()->dEdx(mat, E3);
 
   const M1x3 T3 = TStart + h/2*dT2;
 
@@ -1350,7 +1354,7 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
 
   const double lambda4 = lambdaStart + h*dLambda3;
   const double E4 = hypot(m, charge / lambda4);
-  const double dEdx4 = MaterialEffects::getInstance()->dEdx(E4);
+  const double dEdx4 = MaterialEffects::getInstance()->dEdx(mat, E4);
 
   const M1x3 T4 = TStart + h*dT3;
   const M1x3 rEnd = rStart + h*TStart + h*h/2*dT3;
@@ -1414,8 +1418,20 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
                                      M7x7* jacobianT,
                                      M1x3& SA,
                                      double S,
-                                     bool varField,
                                      bool calcOnlyLastRowOfJ) const {
+  // The algorithm is
+  //  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001
+  //  "Track parameter propagation through the application of a new adaptive Runge-Kutta-Nyström method in the ATLAS experiment"
+  //  http://inspirehep.net/search?ln=en&ln=en&p=10.1088/1748-0221/4/04/P04001&of=hb&action_search=Search&sf=earliestdate&so=d&rm=&rg=25&sc=0
+  // where the transport of the Jacobian is described in
+  //   L. Bugge, J. Myrheim  Nucl.Instrum.Meth. 160 (1979) 43-48
+  //   "A Fast Runge-kutta Method For Fitting Tracks In A Magnetic Field"
+  //   http://inspirehep.net/record/145692
+  // and
+  //   L. Bugge, J. Myrheim  Nucl.Instrum.Meth. 179 (1981) 365-381
+  //   "Tracking And Track Fitting"
+  //   http://inspirehep.net/record/160548
+
   M1x7 oldState7(state7);
   M1x7 newState7;
   M7x7 oldJac;
@@ -1440,18 +1456,6 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
       }
     }
   }
-  // The algorithm is
-  //  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001
-  //  "Track parameter propagation through the application of a new adaptive Runge-Kutta-Nyström method in the ATLAS experiment"
-  //  http://inspirehep.net/search?ln=en&ln=en&p=10.1088/1748-0221/4/04/P04001&of=hb&action_search=Search&sf=earliestdate&so=d&rm=&rg=25&sc=0
-  // where the transport of the Jacobian is described in
-  //   L. Bugge, J. Myrheim  Nucl.Instrum.Meth. 160 (1979) 43-48
-  //   "A Fast Runge-kutta Method For Fitting Tracks In A Magnetic Field"
-  //   http://inspirehep.net/record/145692
-  // and
-  //   L. Bugge, J. Myrheim  Nucl.Instrum.Meth. 179 (1981) 365-381
-  //   "Tracking And Track Fitting"
-  //   http://inspirehep.net/record/160548
 
   static const double DLT ( .0002 );           // max. deviation for approximation-quality test
 
@@ -1936,7 +1940,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
     }
 
     M1x3 ABefore = {{ A[0], A[1], A[2] }};
-    RKPropagate(state7, jacobianT, SA, S, true, calcOnlyLastRowOfJ); // the actual Runge Kutta propagation
+    RKPropagate(state7, jacobianT, SA, S, calcOnlyLastRowOfJ); // the actual Runge Kutta propagation
 
     // update paths
     coveredDistance += S;       // add stepsize to way (signed)
@@ -2216,7 +2220,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
     M1x7 state7_temp = state7;
     M1x3 SA = {{0, 0, 0}};
 
-    double q ( RKPropagate(state7_temp, NULL, SA, fieldCurvLimit, true) );
+    double q ( RKPropagate(state7_temp, NULL, SA, fieldCurvLimit) );
     if (debugLvl_ > 0) {
       std::cout << "  maxStepArg = " << fieldCurvLimit << "; q = " << q  << " \n";
     }
@@ -2421,7 +2425,6 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     M1x7 J_MMT_unprojected_lastRow = {{0, 0, 0, 0, 0, 0, 1}};
 
     double pStart = fabs(charge / state7[6]);
-
     if( ! RKutta(SU, destPlane, charge, mass, state7, &J_MMT_, &J_MMT_unprojected_lastRow,
 		 coveredDistance, flightTime, checkJacProj, noiseProjection_,
 		 limits_, onlyOneStep, !fillExtrapSteps) ) {
@@ -2452,16 +2455,16 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
       for(int i = 0; i < 7*7; ++i) noiseArray_[i] = 0; // set noiseArray_ to 0
     }
 
+    double momLoss = 0;
     unsigned int nPoints(RKStepsFXStop_ - RKStepsFXStart_);
     if (/*!fNoMaterial &&*/ nPoints>0){
       // momLoss has a sign - negative loss means momentum gain
-      double momLoss = MaterialEffects::getInstance()->effects(RKSteps_,
-                                                               RKStepsFXStart_,
-                                                               RKStepsFXStop_,
-                                                               pStart, // momentum
-                                                               pdgCode_,
-                                                               noise);
-      momLoss = 0;
+      momLoss += MaterialEffects::getInstance()->effects(RKSteps_,
+                                                         RKStepsFXStart_,
+                                                         RKStepsFXStop_,
+                                                         pStart, // momentum
+                                                         pdgCode_,
+                                                         noise);
 
       RKStepsFXStart_ = RKStepsFXStop_;
 
@@ -2474,6 +2477,13 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
         }
       }
     } // finished MatFX
+
+    if (fabs(fabs(pStart - fabs(1 / state7[6])) - fabs(momLoss)) / fabs(momLoss) > 1e-1) {
+      std::cout << "ALERT" << std::endl;
+      std::cout << "covDist = " << coveredDistance << std::endl;
+      std::cout << state7[0] << " " << state7[1] << " " << state7[2]
+                << " " << state7[3] << " " << state7[4] << " " << state7[5] << std::endl;
+    }
 
 
     // fill ExtrapSteps_

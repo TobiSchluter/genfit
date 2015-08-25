@@ -168,7 +168,6 @@ class RKTrackRepEnergy : public AbsTrackRep {
                      M7x7* jacobian,
                      M1x3& SA,
                      double S,
-                     bool varField = true,
                      bool calcOnlyLastRowOfJ = false) const;
 
   virtual bool isSameType(const AbsTrackRep* other);
