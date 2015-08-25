@@ -1272,7 +1272,10 @@ void RKTrackRepEnergy::derive(const double lambda, const double T[3],
   const double kappa = 0.000299792458;  // speed of light over 10^12
   double H[3] = { kappa*B[0], kappa*B[1], kappa*B[2] };
 
-  dlambda = -E*pow(lambda, 3) * /* sign convention? */ dEdx /* *q^-2 omitted */;
+  // dEdx is positive in our definition, dlambda should have the same
+  // sign as lambda hence no minus in the following line, unlike
+  // Bugge.
+  dlambda = E*pow(lambda, 3) * dEdx; /* *q^-2 omitted */
   dT[0] = lambda * (T[1]*H[2] - T[2]*H[1]);
   dT[1] = lambda * (T[2]*H[0] - T[0]*H[2]);
   dT[2] = lambda * (T[0]*H[1] - T[1]*H[0]);
@@ -1464,23 +1467,13 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
 
   static const double DLT ( .0002 );           // max. deviation for approximation-quality test
 
-  // Aux parameters
-  M1x3&   R           = *((M1x3*) &state7[0]);       // Start coordinates  [cm]  (x,  y,  z)
-  M1x3&   A           = *((M1x3*) &state7[3]);       // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
-
   double EST = est; // FIXME : why over S?
-
-  R[0] = newState7[0];
-  R[1] = newState7[1];
-  R[2] = newState7[2];
 
   SA[0] = newState7[3] - oldState7[3];
   SA[1] = newState7[4] - oldState7[4];
   SA[2] = newState7[5] - oldState7[5];
 
-  A[0] = newState7[3];
-  A[1] = newState7[4];
-  A[2] = newState7[5];
+  state7 = newState7;
 
   if (jacobianT) {
     for (int i = 0; i < 7; ++i) {
