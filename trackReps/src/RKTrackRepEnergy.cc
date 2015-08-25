@@ -1263,9 +1263,9 @@ void RKTrackRepEnergy::setTime(StateOnPlane& state, double time) const {
 }
 
 
-void RKTrackRepEnergy::derive(const double lambda, const double T[3],
+void RKTrackRepEnergy::derive(const double lambda, const M1x3& T,
                               const double E, const double dEdx, const double B[3],
-                              double& dlambda, double dT[3],
+                              double& dlambda, M1x3& dT,
                               RKMatrix<3, 4>* pA = 0) const
 {
   // Assumes |q| == 1
@@ -1304,8 +1304,8 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
     pA1 = &A1; pA2 = &A2, pA3 = &A3, pA4 = &A4;
   }
 
-  const double rStart[3] = { state7[0], state7[1], state7[2] };
-  const double TStart[3] = { state7[3], state7[4], state7[5] };
+  const M1x3 rStart = {{ state7[0], state7[1], state7[2] }};
+  const M1x3 TStart = {{ state7[3], state7[4], state7[5] }};
 
   MaterialEffects::getInstance()->initTrack(state7[0], state7[1], state7[2],
                                             state7[3], state7[4], state7[5]);
@@ -1316,10 +1316,10 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
   const double dEdxStart = MaterialEffects::getInstance()->dEdx(EStart);
 
   double BStart[3];
-  FieldManager::getInstance()->getFieldVal(rStart, BStart);
+  FieldManager::getInstance()->getFieldVal(rStart.begin(), BStart);
 
   double dLambda1;
-  double dT1[3];
+  M1x3 dT1;
   derive(lambdaStart, TStart, EStart, dEdxStart, BStart,
          dLambda1, dT1, pA1);
 
@@ -1327,17 +1327,13 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
   const double E2 = hypot(m, charge / lambda2);
   const double dEdx2 = MaterialEffects::getInstance()->dEdx(E2);
 
-  const double T2[3] = { TStart[0] + h/2*dT1[0],
-                         TStart[1] + h/2*dT1[1],
-                         TStart[2] + h/2*dT1[2] };
-  const double rMiddle[3] = { rStart[0] + h/2*TStart[0] + h*h/8*dT1[0],
-                              rStart[1] + h/2*TStart[1] + h*h/8*dT1[1],
-                              rStart[2] + h/2*TStart[2] + h*h/8*dT1[2] };
+  const M1x3 T2 = TStart + h/2*dT1;
+  const M1x3 rMiddle = rStart + h/2*TStart + h*h/8*dT1;
   double BMiddle[3];
-  FieldManager::getInstance()->getFieldVal(rMiddle, BMiddle);
+  FieldManager::getInstance()->getFieldVal(rMiddle.begin(), BMiddle);
 
   double dLambda2;
-  double dT2[3];
+  M1x3 dT2;
   derive(lambda2, T2, E2, dEdx2, BMiddle,
          dLambda2, dT2, pA2);
 
@@ -1345,12 +1341,10 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
   const double E3 = hypot(m, charge / lambda3);
   const double dEdx3 = MaterialEffects::getInstance()->dEdx(E3);
 
-  const double T3[3] = { TStart[0] + h/2*dT2[0],
-                         TStart[1] + h/2*dT2[1],
-                         TStart[2] + h/2*dT2[2] };
+  const M1x3 T3 = TStart + h/2*dT2;
 
   double dLambda3;
-  double dT3[3];
+  M1x3 dT3;
   derive(lambda3, T3, E3, dEdx3, BMiddle,
          dLambda3, dT3, pA3);
 
@@ -1358,27 +1352,21 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
   const double E4 = hypot(m, charge / lambda4);
   const double dEdx4 = MaterialEffects::getInstance()->dEdx(E4);
 
-  const double T4[3] = { TStart[0] + h*dT3[0],
-                         TStart[1] + h*dT3[1],
-                         TStart[2] + h*dT3[2] };
-  const double rEnd[3] = { rStart[0] + h*TStart[0] + h*h/2*dT3[0],
-                           rStart[1] + h*TStart[1] + h*h/2*dT3[1],
-                           rStart[2] + h*TStart[2] + h*h/2*dT3[2] };
+  const M1x3 T4 = TStart + h*dT3;
+  const M1x3 rEnd = rStart + h*TStart + h*h/2*dT3;
   double BEnd[3];
-  FieldManager::getInstance()->getFieldVal(rEnd, BEnd);
+  FieldManager::getInstance()->getFieldVal(rEnd.begin(), BEnd);
 
   double dLambda4;
-  double dT4[3];
+  M1x3 dT4;
   derive(lambda4, T4, E4, dEdx4, BEnd,
          dLambda4, dT4, pA4);
 
   // Put it together ...
-  double rFinal[3];
-  for (size_t i = 0; i < 3; ++i)
-    rFinal[i] = rStart[i] + h*TStart[i] + h*h/6*(dT1[i] + dT2[i] + dT3[i]);
-  double TFinal[3];
-  for (size_t i = 0; i < 3; ++i)
-    TFinal[i] = TStart[i] + h/6 * (dT1[i] + 2*dT2[i] + 2*dT3[i] + dT4[i]);
+  M1x3 rFinal;
+  rFinal = rStart + h*TStart + h*h/6*(dT1 + dT2 + dT3);
+  M1x3 TFinal;
+  TFinal = TStart + h/6 * (dT1 + 2*dT2 + 2*dT3 + dT4);
   const double norm = hypot(hypot(TFinal[0], TFinal[1]), TFinal[2]);
   for (size_t i = 0; i < 3; ++i)
     TFinal[i] /= norm;

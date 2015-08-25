@@ -148,9 +148,9 @@ class RKTrackRepEnergy : public AbsTrackRep {
   void setTime(StateOnPlane& state, double time) const;
 
 
-  void derive(const double lambda, const double T[3],
+  void derive(const double lambda, const M1x3& T,
               const double E, const double dEdx, const double B[3],
-              double& dlambda, double dT[3], RKMatrix<3,4>* pA) const;
+              double& dlambda, M1x3& dT, RKMatrix<3,4>* pA) const;
 
   double RKstep(const M1x7& state7, const double h,
                 M1x7& newState7, RKMatrix<7, 7>* pJ) const;

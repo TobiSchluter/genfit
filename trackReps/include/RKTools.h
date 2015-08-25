@@ -36,6 +36,9 @@ struct RKMatrix {
   double& operator()(size_t iRow, size_t iCol) {
     return vals[nCols*iRow + iCol];
   }
+  const double& operator()(size_t iRow, size_t iCol) const {
+    return vals[nCols*iRow + iCol];
+  }
   double& operator[](size_t n) {
     return vals[n];
   }
@@ -51,8 +54,26 @@ struct RKMatrix {
     return *this;
   }
 
+  RKMatrix<nRows, nCols>& operator+=(const RKMatrix<nRows, nCols>& o) {
+    for (size_t i = 0; i < nRows; ++i)
+      for (size_t j = 0; j < nCols; ++j)
+        this->operator()(i, j) += o(i, j);
+    return *this;
+  }
   void print() const;
 };
+
+template<size_t nRows, size_t nCols> RKMatrix<nRows, nCols> operator+(const RKMatrix<nRows, nCols>& left, const RKMatrix<nRows, nCols>& right) {
+  return (RKMatrix<nRows, nCols>(left) += right);
+}
+
+template<size_t nRows, size_t nCols> RKMatrix<nRows, nCols> operator*(const double& left, const RKMatrix<nRows, nCols>& right) {
+  RKMatrix<nRows, nCols> result(right);
+  for (size_t i = 0; i < nRows*nCols; ++i)
+    result[i] *= left;
+  return result;
+}
+
 
 typedef RKMatrix<1, 3> M1x3;
 typedef RKMatrix<1, 4> M1x4;
