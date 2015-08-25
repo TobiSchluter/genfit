@@ -152,7 +152,7 @@ class RKTrackRepEnergy : public AbsTrackRep {
               const double E, const double dEdx, const double B[3],
               double& dlambda, double dT[3], RKMatrix<3,4>* pA) const;
 
-  double RKstep(const M1x7& state7, const double S,
+  double RKstep(const M1x7& state7, const double h,
                 M1x7& newState7, RKMatrix<7, 7>* pJ) const;
 
   //! The actual Runge Kutta propagation

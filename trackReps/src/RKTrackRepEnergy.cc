@@ -1286,7 +1286,7 @@ void RKTrackRepEnergy::derive(const double lambda, const double T[3],
 }
 
 
-double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
+double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
                                 M1x7& newState7,
                                 RKMatrix<7, 7>* pJ = 0) const
 {
@@ -1320,14 +1320,16 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
   derive(lambdaStart, TStart, EStart, dEdxStart, BStart,
          dLambda1, dT1, pA1);
 
-  const double lambda2 = lambdaStart + S/2*dLambda1;
+  const double lambda2 = lambdaStart + h/2*dLambda1;
   const double E2 = hypot(m, charge / lambda2);
   const double dEdx2 = MaterialEffects::getInstance()->dEdx(E2);
 
-  const double T2[3] = { TStart[0] + S/2*dT1[0], TStart[1] + S/2*dT1[1], TStart[2] + S/2*dT1[2] };
-  const double rMiddle[3] = { rStart[0] + S/2*TStart[0] + S*S/8*dT1[0],
-                              rStart[1] + S/2*TStart[1] + S*S/8*dT1[1],
-                              rStart[2] + S/2*TStart[2] + S*S/8*dT1[2] };
+  const double T2[3] = { TStart[0] + h/2*dT1[0],
+                         TStart[1] + h/2*dT1[1],
+                         TStart[2] + h/2*dT1[2] };
+  const double rMiddle[3] = { rStart[0] + h/2*TStart[0] + h*h/8*dT1[0],
+                              rStart[1] + h/2*TStart[1] + h*h/8*dT1[1],
+                              rStart[2] + h/2*TStart[2] + h*h/8*dT1[2] };
   double BMiddle[3];
   FieldManager::getInstance()->getFieldVal(rMiddle, BMiddle);
 
@@ -1336,25 +1338,29 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
   derive(lambda2, T2, E2, dEdx2, BMiddle,
          dLambda2, dT2, pA2);
 
-  const double lambda3 = lambdaStart + S/2*dLambda2;
+  const double lambda3 = lambdaStart + h/2*dLambda2;
   const double E3 = hypot(m, charge / lambda3);
   const double dEdx3 = MaterialEffects::getInstance()->dEdx(E3);
 
-  const double T3[3] = { TStart[0] + S/2*dT2[0], TStart[1] + S/2*dT2[1], TStart[2] + S/2*dT2[2] };
+  const double T3[3] = { TStart[0] + h/2*dT2[0],
+                         TStart[1] + h/2*dT2[1],
+                         TStart[2] + h/2*dT2[2] };
 
   double dLambda3;
   double dT3[3];
   derive(lambda3, T3, E3, dEdx3, BMiddle,
          dLambda3, dT3, pA3);
 
-  const double lambda4 = lambdaStart + S*dLambda3;
+  const double lambda4 = lambdaStart + h*dLambda3;
   const double E4 = hypot(m, charge / lambda4);
   const double dEdx4 = MaterialEffects::getInstance()->dEdx(E4);
 
-  const double T4[3] = { TStart[0] + S*dT3[0], TStart[1] + S*dT3[1], TStart[2] + S*dT3[2] };
-  const double rEnd[3] = { rStart[0] + S*TStart[0] + S*S/2*dT3[0],
-                           rStart[1] + S*TStart[1] + S*S/2*dT3[1],
-                           rStart[2] + S*TStart[2] + S*S/2*dT3[2] };
+  const double T4[3] = { TStart[0] + h*dT3[0],
+                         TStart[1] + h*dT3[1],
+                         TStart[2] + h*dT3[2] };
+  const double rEnd[3] = { rStart[0] + h*TStart[0] + h*h/2*dT3[0],
+                           rStart[1] + h*TStart[1] + h*h/2*dT3[1],
+                           rStart[2] + h*TStart[2] + h*h/2*dT3[2] };
   double BEnd[3];
   FieldManager::getInstance()->getFieldVal(rEnd, BEnd);
 
@@ -1366,14 +1372,14 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
   // Put it together ...
   double rFinal[3];
   for (size_t i = 0; i < 3; ++i)
-    rFinal[i] = rStart[i] + S*TStart[i] + S*S/6*(dT1[i] + dT2[i] + dT3[i]);
+    rFinal[i] = rStart[i] + h*TStart[i] + h*h/6*(dT1[i] + dT2[i] + dT3[i]);
   double TFinal[3];
   for (size_t i = 0; i < 3; ++i)
-    TFinal[i] = TStart[i] + S/6 * (dT1[i] + 2*dT2[i] + 2*dT3[i] + dT4[i]);
+    TFinal[i] = TStart[i] + h/6 * (dT1[i] + 2*dT2[i] + 2*dT3[i] + dT4[i]);
   const double norm = hypot(hypot(TFinal[0], TFinal[1]), TFinal[2]);
   for (size_t i = 0; i < 3; ++i)
     TFinal[i] /= norm;
-  const double lambdaFinal = lambdaStart + S/6 * (dLambda1 + 2*dLambda2 + 2*dLambda3 + dLambda4);
+  const double lambdaFinal = lambdaStart + h/6 * (dLambda1 + 2*dLambda2 + 2*dLambda3 + dLambda4);
 
   // ... and put it into the final result
   for (size_t i = 0; i < 3; ++i) {
@@ -1402,13 +1408,13 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double S,
       J(i, i) = 1;  // some entries overwritten below.
     for (int i = 0; i < 3; ++i) {
       for (int j = 0; j < 4; ++j) {
-        J(i, j + 3) = S * (i == j) + S*S/6*(A1(i, j) + A2(i, j) + A3(i, j));
-        J(i + 3, j + 3) = (i == j) + S/6*(A1(i, j) + 2*A2(i, j) + 2*A3(i, j) + A4(i, j));
+        J(i    , j + 3) = h * (i == j) + h*h/6*(A1(i, j) + A2(i, j) + A3(i, j));
+        J(i + 3, j + 3) =     (i == j) + h/6*(A1(i, j) + 2*A2(i, j) + 2*A3(i, j) + A4(i, j));
       }
     }
   }
 
-  return S*S*eps;
+  return h*h*eps;
 }
 
 
