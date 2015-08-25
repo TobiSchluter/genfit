@@ -1269,8 +1269,7 @@ void RKTrackRepEnergy::derive(const double lambda, const double T[3],
                               RKMatrix<3, 4>* pA = 0) const
 {
   // Assumes |q| == 1
-  // FIXME why '-' on next line???
-  const double kappa = -0.000299792458;  // speed of light over 10^12
+  const double kappa = 0.000299792458;  // speed of light over 10^12
   double H[3] = { kappa*B[0], kappa*B[1], kappa*B[2] };
 
   dlambda = -E*pow(lambda, 3) * /* sign convention? */ dEdx /* *q^-2 omitted */;
