@@ -286,7 +286,8 @@ int main(int argc, char **argv) {
   genfit::FieldManager::getInstance()->useCache(true, 8);
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
-  const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
+  // HelixTrackModel does not respect charge, compensate here.  FIXME
+  const double charge = -TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
 
   // init event display
 #ifndef VALGRIND
