@@ -2038,12 +2038,13 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       coveredDistance += S;
       Way  += fabs(S);
 
-      double beta = 1/hypot(1, mass*state7[6]/charge);
-      flightTime += S / beta / 29.9792458; // in ns;
     }
     else if (debugLvl_ > 0)  {
       std::cout << " RKutta - last stepsize too small -> can't do linear extrapolation! \n";
     }
+
+    double beta = 1/hypot(1, mass*state7[6]/charge);
+    flightTime += S / beta / 29.9792458; // in ns;
 
     //
     // Project Jacobian of extrapolation onto destination plane
