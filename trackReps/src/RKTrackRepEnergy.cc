@@ -2478,9 +2478,9 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
       }
     } // finished MatFX
 
-    if (fabs(fabs(pStart - fabs(1 / state7[6])) - fabs(momLoss)) / fabs(momLoss) > 1e-1) {
+    if (0 && fabs(fabs(pStart - fabs(1 / state7[6])) - fabs(momLoss)) / fabs(momLoss) > 1e-1) {
       std::cout << "ALERT" << std::endl;
-      std::cout << "covDist = " << coveredDistance << std::endl;
+      std::cout << "covDist = " << coveredDistance << " " << momLoss << " " << (fabs(pStart - fabs(1 / state7[6]))) <<  std::endl;
       std::cout << state7[0] << " " << state7[1] << " " << state7[2]
                 << " " << state7[3] << " " << state7[4] << " " << state7[5] << std::endl;
     }
