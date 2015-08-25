@@ -32,7 +32,12 @@
 
 #include <MaterialEffects.h>
 #include <RKTools.h>
+#if 0
 #include <RKTrackRep.h>
+#else
+#include <RKTrackRepEnergy.h>
+#define RKTrackRep RKTrackRepEnergy
+#endif
 #include <StepLimits.h>
 #include <TGeoMaterialInterface.h>
 
@@ -253,8 +258,8 @@ e_testStatus compareForthBackExtrapolation(bool writeHisto = false) {
       convert << pdg;//add the value of Number to the characters in the stream
       Result = convert.str();//set Result to the content of the stream
 
-      histoMap[pdg].push_back(new TH2D((std::string("deviationRel_")+Result).c_str(), "log(betaGamma) vs relative deviation", 100000, -1.e-2, 1.e-2, 50, -4, 8));
-      histoMap[pdg].push_back(new TH2D((std::string("deviationAbs_")+Result).c_str(), "log(betaGamma) vs absolute deviation; deviation (keV)", 100000, -90.0, 10.0, 50, -4, 8));
+      histoMap[pdg].push_back(new TH2D((std::string("deviationRel_")+Result).c_str(), "log(betaGamma) vs relative deviation;deviation (keV);log(#beta#gamma)", 100000, -1.e-2, 1.e-2, 50, -4, 8));
+      histoMap[pdg].push_back(new TH2D((std::string("deviationAbs_")+Result).c_str(), "log(betaGamma) vs absolute deviation; deviation (keV);log(#beta#gamma)", 100000, -90.0, 10.0, 50, -4, 8));
       histoMap[pdg].push_back(new TH2D((std::string("ExtrapLen_")+Result).c_str(), "delta ExtrapLen vs relative deviation", 50000, -5.e-2, 5.e-2, 400, -0.1, 0.1));
     }
     fill = false;
