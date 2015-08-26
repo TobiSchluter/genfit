@@ -376,6 +376,7 @@ if(DEFINED RAVE)
   ADD_GENFIT_TEST( vertexingTest           test/vertexingTest/main.cc)
   ADD_GENFIT_TEST( vertexingTestRead       test/vertexingTest/read.cc)
 endif()
+ADD_GENFIT_TEST( compare                   test/compare/main.cc)
 
 # generate and install following configuration files
 #GENERATE_PACKAGE_CONFIGURATION_FILES( genfitConfig.cmake genfitConfigVersion.cmake )
