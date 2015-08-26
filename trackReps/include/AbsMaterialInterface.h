@@ -61,8 +61,7 @@ class AbsMaterialInterface {
    * The actual step made is returned.
    */
   virtual double findNextBoundary(const AbsTrackRep::internalExtrapolator& extrap,
-                                  double sMax,
-                                  bool varField = true) = 0;
+                                  double sMax) = 0;
 
   virtual void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
 

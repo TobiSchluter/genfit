@@ -2195,6 +2195,8 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   double fieldCurvLimit( limits.getLowestLimitSignedVal() ); // signed
   std::pair<double, double> distVsStep (9.E99, 9.E99); // first: smallest straight line distances to plane; second: RK steps
 
+  RKTrackRep::propagator extrap(this, state7);
+
   static const unsigned int maxNumIt = 10;
   unsigned int counter(0);
 
@@ -2208,23 +2210,23 @@ double RKTrackRep::estimateStep(const M1x7& state7,
       break;
     }
 
-    M1x7 state7_temp = state7;
-    M1x3 SA = {{0, 0, 0}};
+    double posFinal[3];
+    double dirFinal[3];
 
-    double q ( RKPropagate(state7_temp, NULL, SA, fieldCurvLimit, true) );
+    double q ( extrap.extrapolateBy(fieldCurvLimit, posFinal, dirFinal) );
     if (debugLvl_ > 0) {
       std::cout << "  maxStepArg = " << fieldCurvLimit << "; q = " << q  << " \n";
     }
 
     // remember steps and resulting SL distances to plane for stepsize improvement
     // calculate distance to surface
-    Dist = SU[3] - (state7_temp[0] * SU[0] +
-                    state7_temp[1] * SU[1] +
-                    state7_temp[2] * SU[2]); // Distance between position and surface
+    Dist = SU[3] - (posFinal[0] * SU[0] +
+                    posFinal[1] * SU[1] +
+                    posFinal[2] * SU[2]); // Distance between position and surface
 
-    An = state7_temp[3] * SU[0] +
-         state7_temp[4] * SU[1] +
-         state7_temp[5] * SU[2];    // An = dir * N;  component of dir normal to surface
+    An = dirFinal[0] * SU[0] +
+         dirFinal[1] * SU[1] +
+         dirFinal[2] * SU[2];    // An = dir * N;  component of dir normal to surface
 
     if (fabs(Dist/An) < fabs(distVsStep.first)) {
       distVsStep.first = Dist/An;
@@ -2309,15 +2311,12 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   ++RKStepsFXStop_;
 
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
-    M1x7 state7_temp = {{ state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] }};
-    RKTrackRep::propagator extrap(this, state7_temp);
     MaterialEffects::getInstance()->stepper(extrap,
                                             charge/state7[6], // |p|
                                             relMomLoss,
                                             pdgCode_,
                                             lastStep->matStep_.materialProperties_,
-                                            limits,
-                                            true);
+                                            limits);
   } else { //assume material has not changed
     if  (RKSteps_.size()>1) {
       lastStep->matStep_.materialProperties_ = (lastStep - 1)->matStep_.materialProperties_;

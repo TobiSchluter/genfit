@@ -1490,7 +1490,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
 
   // Step length increase for a fifth order Runge-Kutta, see e.g. 17.2
   // in Numerical Recipes.  FIXME: move to caller.
-  return pow(DLT/EST, 1./5.);
+  return pow(DLT/EST, 1./4.);
 }
 
 
@@ -2138,7 +2138,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
                                 const double& charge,
                                 double& relMomLoss,
                                 StepLimits& limits) const {
-
+  int debugLvl_ = 1;
   if (useCache_) {
     if (cachePos_ >= RKSteps_.size()) {
       useCache_ = false;
@@ -2205,6 +2205,8 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
   double fieldCurvLimit( limits.getLowestLimitSignedVal() ); // signed
   std::pair<double, double> distVsStep (9.E99, 9.E99); // first: smallest straight line distances to plane; second: RK steps
 
+  RKTrackRepEnergy::propagator extrap(this, state7);
+
   static const unsigned int maxNumIt = 10;
   unsigned int counter(0);
   while (fabs(fieldCurvLimit) > MINSTEP) {
@@ -2217,23 +2219,22 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
       break;
     }
 
-    M1x7 state7_temp = state7;
-    M1x3 SA = {{0, 0, 0}};
-
-    double q ( RKPropagate(state7_temp, NULL, SA, fieldCurvLimit) );
+    double posAfter[3];
+    double dirAfter[3];
+    double q ( extrap.extrapolateBy(fieldCurvLimit, posAfter, dirAfter) );
     if (debugLvl_ > 0) {
       std::cout << "  maxStepArg = " << fieldCurvLimit << "; q = " << q  << " \n";
     }
 
     // remember steps and resulting SL distances to plane for stepsize improvement
     // calculate distance to surface
-    Dist = SU[3] - (state7_temp[0] * SU[0] +
-                    state7_temp[1] * SU[1] +
-                    state7_temp[2] * SU[2]); // Distance between position and surface
+    Dist = SU[3] - (posAfter[0] * SU[0] +
+                    posAfter[1] * SU[1] +
+                    posAfter[2] * SU[2]); // Distance between position and surface
 
-    An = state7_temp[3] * SU[0] +
-         state7_temp[4] * SU[1] +
-         state7_temp[5] * SU[2];    // An = dir * N;  component of dir normal to surface
+    An = dirAfter[0] * SU[0] +
+         dirAfter[1] * SU[1] +
+         dirAfter[2] * SU[2];    // An = dir * N;  component of dir normal to surface
 
     if (fabs(Dist/An) < fabs(distVsStep.first)) {
       distVsStep.first = Dist/An;
@@ -2318,15 +2319,12 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
   ++RKStepsFXStop_;
 
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
-    M1x7 state7_temp = {{ state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] }};
-    RKTrackRepEnergy::propagator extrap(this, state7_temp);
     MaterialEffects::getInstance()->stepper(extrap,
                                             charge/state7[6], // |p|
                                             relMomLoss,
                                             pdgCode_,
                                             lastStep->matStep_.materialProperties_,
-                                            limits,
-                                            true);
+                                            limits);
   } else { //assume material has not changed
     if  (RKSteps_.size()>1) {
       lastStep->matStep_.materialProperties_ = (lastStep - 1)->matStep_.materialProperties_;

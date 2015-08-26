@@ -85,8 +85,7 @@ TGeoMaterialInterface::getMaterialParameters(MaterialProperties& parameters)
 
 double
 TGeoMaterialInterface::findNextBoundary(const AbsTrackRep::internalExtrapolator& extrap,
-                                        double sMax, // signed
-                                        bool varField)
+                                        double sMax) // signed
 {
   const double delta(1.E-2); // cm, distance limit beneath which straight-line steps are taken.
   const double epsilon(1.E-1); // cm, allowed upper bound on arch

@@ -209,8 +209,7 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
                               double& relMomLoss, // relative momloss for the step will be added
                               const int& pdg,
                               MaterialProperties& currentMaterial,
-                              StepLimits& limits,
-                              bool varField)
+                              StepLimits& limits)
 {
 
   static const double maxRelMomLoss = .01; // maximum relative momentum loss allowed
@@ -240,7 +239,6 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
     limits.setLimit(stp_momLoss, 0);
     return;
   }
-
 
   double sMax = limits.getLowestLimitSignedVal(); // signed
 
@@ -272,9 +270,8 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
 
   // limit due to momloss
   double relMomLossPer_cm(0);
-  stepSize_ = 1.; // set stepsize for momLoss calculation
-
   if (currentMaterial.getZ() > 1.E-3) { // don't calculate energy loss for vacuum
+    stepSize_ = 1.; // set stepsize for momLoss calculation
     relMomLossPer_cm = this->momentumLoss(currentMaterial, limits.getStepSign(), mom, true) / mom;
   }
 
@@ -285,7 +282,6 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
     std::cout << "     momLoss exceeded after a step of " <<  maxStepMomLoss
         << "; relMomLoss up to now = " << relMomLoss << "\n";
   }
-
 
   // now look for boundaries
   sMax = limits.getLowestLimitSignedVal();
@@ -298,7 +294,7 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
     if (debugLvl_ > 0) {
       std::cout << "     find next boundary\n";
     }
-    double step =  materialInterface_->findNextBoundary(extrap, boundaryStep /*sMax*/ /*boundaryStep*/, varField);
+    double step =  materialInterface_->findNextBoundary(extrap, boundaryStep);
 
     if (debugLvl_ > 0) {
       if (step == 0) {

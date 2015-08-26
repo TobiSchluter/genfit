@@ -108,8 +108,7 @@ public:
                double& relMomLoss, // relative momloss for the step will be added
                const int& pdg,
                MaterialProperties& currentMaterial,
-               StepLimits& limits,
-               bool varField = true);
+               StepLimits& limits);
 
   void setDebugLvl(unsigned int lvl = 1);
 
