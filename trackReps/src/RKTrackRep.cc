@@ -2037,7 +2037,6 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
       coveredDistance += S;
       Way  += fabs(S);
-
     }
     else if (debugLvl_ > 0)  {
       std::cout << " RKutta - last stepsize too small -> can't do linear extrapolation! \n";
@@ -2077,7 +2076,7 @@ bool RKTrackRep::RKutta(const M1x4& SU,
       if (calcOnlyLastRowOfJ)
         i = 42;
 
-      double* jacPtr = jacobianT->begin();
+      M7x7& jacPtr = *jacobianT;
 
       for(unsigned int j=42; j<49; j+=7) {
         (*J_MMT_unprojected_lastRow)[j-42] = jacPtr[j];
