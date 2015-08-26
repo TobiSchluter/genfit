@@ -379,6 +379,10 @@ void MaterialEffects::getMomGammaBeta(double Energy,
 
 double MaterialEffects::momentumLoss(const MaterialProperties& material, double stepSign, double mom, bool linear)
 {
+  if (material.getZ() < 1e-3)
+    // No energy loss in vacuum.
+    return 0;
+
   double E0 = hypot(mom, mass_);
   double step = stepSize_*stepSign; // signed
 
@@ -439,7 +443,10 @@ double MaterialEffects::momentumLoss(const MaterialProperties& material, double 
 
 
 double MaterialEffects::dEdx(const MaterialProperties& material, double Energy) {
-  //materialInterface_->getMaterialParameters(matDensity_, matZ_, matA_, radiationLength_, mEE_);
+  if (material.getZ() < 1e-3)
+    // No energy loss in vacuum.
+    return 0;
+
   double mom(0), gammaSquare(0), gamma(0), betaSquare(0);
   this->getMomGammaBeta(Energy, mom, gammaSquare, gamma, betaSquare);
 
