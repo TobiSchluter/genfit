@@ -1980,6 +1980,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
     // estimate Step for next loop or linear extrapolation
     Sl = S; // last S used
     limits.removeLimit(stp_fieldCurv);
+    limits.removeLimit(stp_momLoss);
     limits.removeLimit(stp_boundary);
     limits.removeLimit(stp_plane);
     S = estimateStep(state7, SU, plane, charge, relMomLoss, limits);
@@ -1990,6 +1991,15 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
         std::cout<<" (at Plane && fabs(S) < MINSTEP) -> break and do linear extrapolation \n";
       }
       break;
+    }
+    if (limits.getLowestLimit().first == stp_momLoss &&
+        fabs(S) < MINSTEP) {
+      if (debugLvl_ > 0) {
+        std::cout<<" (momLossExceeded && fabs(S) < MINSTEP) -> return(true), no linear extrapolation; \n";
+      }
+      RKSteps_.erase(RKSteps_.end()-1);
+      --RKStepsFXStop_;
+      return(true); // no linear extrapolation!
     }
 
     // check if total angle is bigger than AngleMax. Can happen if a curler should be fitted and it does not hit the active area of the next plane.
@@ -2049,13 +2059,13 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
 
       coveredDistance += S;
       Way  += fabs(S);
-
-      double beta = 1/hypot(1, mass*state7[6]/charge);
-      flightTime += S / beta / 29.9792458; // in ns;
     }
     else if (debugLvl_ > 0)  {
       std::cout << " RKutta - last stepsize too small -> can't do linear extrapolation! \n";
     }
+
+    double beta = 1/hypot(1, mass*state7[6]/charge);
+    flightTime += S / beta / 29.9792458; // in ns;
 
     //
     // Project Jacobian of extrapolation onto destination plane
@@ -2089,6 +2099,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
         i = 42;
 
       M7x7& jacPtr = *jacobianT;
+
       for(unsigned int j=42; j<49; j+=7) {
         (*J_MMT_unprojected_lastRow)[j-42] = jacPtr[j];
       }
@@ -2185,7 +2196,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
     if (An<0) SLDist *= -1.;
   }
 
-  limits.setLimit(stp_plane, SLDist);
+    limits.setLimit(stp_plane, SLDist);
   limits.setStepSign(SLDist);
 
   if (debugLvl_ > 0) {
@@ -2203,7 +2214,8 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
   // and improve stepsize estimation to reach plane
   //
   double fieldCurvLimit( limits.getLowestLimitSignedVal() ); // signed
-  std::pair<double, double> distVsStep (9.E99, 9.E99); // first: smallest straight line distances to plane; second: RK steps
+  double remainingDist = 999;
+  double stepTaken = 0;
 
   RKTrackRepEnergy::propagator extrap(this, state7);
 
@@ -2236,9 +2248,9 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
          dirAfter[1] * SU[1] +
          dirAfter[2] * SU[2];    // An = dir * N;  component of dir normal to surface
 
-    if (fabs(Dist/An) < fabs(distVsStep.first)) {
-      distVsStep.first = Dist/An;
-      distVsStep.second = fieldCurvLimit;
+    if (fabs(Dist/An) < fabs(remainingDist)) {
+      remainingDist = Dist/An;
+      stepTaken = fieldCurvLimit;
     }
 
     // resize limit according to q never grow step size more than
@@ -2261,8 +2273,8 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
     limits.setLimit(stp_fieldCurv, fieldCurvLimit);
 
   double stepToPlane(limits.getLimitSigned(stp_plane));
-  if (fabs(distVsStep.first) < 8.E99) {
-    stepToPlane = distVsStep.first + distVsStep.second;
+  if (fabs(remainingDist) < 8.E99) {
+    stepToPlane = stepTaken + remainingDist;
   }
   limits.setLimit(stp_plane, stepToPlane);
 
