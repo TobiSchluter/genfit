@@ -2149,7 +2149,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
                                 const double& charge,
                                 double& relMomLoss,
                                 StepLimits& limits) const {
-  int debugLvl_ = 1;
+
   if (useCache_) {
     if (cachePos_ >= RKSteps_.size()) {
       useCache_ = false;
@@ -2214,8 +2214,8 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
   // and improve stepsize estimation to reach plane
   //
   double fieldCurvLimit( limits.getLowestLimitSignedVal() ); // signed
-  double remainingDist = 999;
-  double stepTaken = 0;
+  double remainingDist = 9e99;
+  double stepTaken = 9e99;
 
   RKTrackRepEnergy::propagator extrap(this, state7);
 
