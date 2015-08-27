@@ -64,7 +64,7 @@ void setup() {
   Double_t worldz = 100.;
   TGeoVolume *top = geom->MakeBox("TOP", Vacuum, worldx, worldy, worldz);
   geom->SetTopVolume(top);
-  TGeoVolume *box = geom->MakeBox("BOX", Al, worldx, .1, worldz);
+  TGeoVolume *box = geom->MakeBox("AlBOX", Al, worldx, .1, worldz);
   top->AddNode(box, 1, tr1);
   top->AddNode(box, 2, tr2);
   geom->CloseGeometry();

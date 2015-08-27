@@ -247,16 +247,14 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
 
   getParticleParameters(pdg);
 
-  double pos[3];
-  double dir[3];
-  extrap.getInitialState(pos, dir);
+  M1x3 pos;
+  M1x3 dir;
+  extrap.getInitialState(pos.vals, dir.vals);
 
   // make minStep
-  pos[0] += limits.getStepSign() * minStep * dir[0];
-  pos[1] += limits.getStepSign() * minStep * dir[1];
-  pos[2] += limits.getStepSign() * minStep * dir[2];
+  pos += limits.getStepSign() * minStep * dir;
 
-  extrap.moveStart(pos);
+  extrap.moveStart(pos.vals);
 
   materialInterface_->initTrack(pos[0], pos[1], pos[2],
                                 limits.getStepSign() * dir[0], limits.getStepSign() * dir[1], limits.getStepSign() * dir[2]);

@@ -1308,8 +1308,12 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
   const M1x3 rStart = {{ state7[0], state7[1], state7[2] }};
   const M1x3 TStart = {{ state7[3], state7[4], state7[5] }};
 
-  MaterialEffects::getInstance()->initTrack(state7[0], state7[1], state7[2],
-                                            state7[3], state7[4], state7[5]);
+  MaterialEffects::getInstance()->initTrack(state7[0] + copysign(MINSTEP, h)*state7[3],
+                                            state7[1] + copysign(MINSTEP, h)*state7[4],
+                                            state7[2] + copysign(MINSTEP, h)*state7[5],
+                                            copysign(state7[3],h),
+                                            copysign(state7[4],h),
+                                            copysign(state7[5],h));
   MaterialEffects::getInstance()->getParticleParameters(getPDG());
   MaterialProperties mat;
   MaterialEffects::getInstance()->getMaterialProperties(mat);
@@ -1940,7 +1944,13 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
     }
 
     M1x3 ABefore = {{ A[0], A[1], A[2] }};
+    double pBefore = fabs(1/state7[6]);
+    double yBefore = state7[1];
     RKPropagate(state7, jacobianT, SA, S, calcOnlyLastRowOfJ); // the actual Runge Kutta propagation
+    double pAfter = fabs(1/state7[6]);
+    double yAfter = state7[1];
+    //std::cout << " mom changed by " << pAfter - pBefore << " in step of " << S
+    //        << " from y = " << yBefore << " to y = " << yAfter << std::endl;
 
     // update paths
     coveredDistance += S;       // add stepsize to way (signed)
@@ -2196,7 +2206,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
     if (An<0) SLDist *= -1.;
   }
 
-    limits.setLimit(stp_plane, SLDist);
+  limits.setLimit(stp_plane, SLDist);
   limits.setStepSign(SLDist);
 
   if (debugLvl_ > 0) {
@@ -2234,6 +2244,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
     double posAfter[3];
     double dirAfter[3];
     double q ( extrap.extrapolateBy(fieldCurvLimit, posAfter, dirAfter) );
+
     if (debugLvl_ > 0) {
       std::cout << "  maxStepArg = " << fieldCurvLimit << "; q = " << q  << " \n";
     }
@@ -2348,6 +2359,8 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
     limits.Print();
   }
 
+  limits.removeLimit(stp_momLoss);
+
   double finalStep = limits.getLowestLimitSignedVal();
 
   lastStep->matStep_.stepSize_ = finalStep;
@@ -2355,10 +2368,10 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
 
   if (debugLvl_ > 0) {
     std::cout << "  --> Step to be used: " << finalStep << "\n";
+    //limits.Print();
   }
 
   return finalStep;
-
 }
 
 
