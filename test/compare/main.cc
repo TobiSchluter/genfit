@@ -59,6 +59,7 @@ void setup() {
   //--- define the transformations
   TGeoTranslation *tr1 = new TGeoTranslation(0., 0, 0.);
   TGeoTranslation *tr2 = new TGeoTranslation(0., .5, 0.);
+  TGeoTranslation *tr3 = new TGeoTranslation(0., -1, 0.);
 
   //--- make the top container volume
   Double_t worldx = 100.;
@@ -66,9 +67,11 @@ void setup() {
   Double_t worldz = 100.;
   TGeoVolume *top = geom->MakeBox("TOP", Vacuum, worldx, worldy, worldz);
   geom->SetTopVolume(top);
-  TGeoVolume *box = geom->MakeBox("AlBOX", Al, worldx, .1, worldz);
+  TGeoVolume *box = geom->MakeBox("AlBOX", Al, worldx, .01, worldz);
   top->AddNode(box, 1, tr1);
   top->AddNode(box, 2, tr2);
+  TGeoVolume *smallBox = geom->MakeBox("smallBox", Al, worldx, .001, worldz);
+  top->AddNode(smallBox, 1, tr3);
   geom->CloseGeometry();
    
   genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,15.));
@@ -84,17 +87,20 @@ int main()
   RKTrackRep* rk1 = new RKTrackRep(211);
   RKTrackRepEnergy* rk2 = new RKTrackRepEnergy(211);
 
-  StateOnPlane sop1(rk1);
-  StateOnPlane sop2(rk2);
+  MeasuredStateOnPlane sop1(rk1);
+  MeasuredStateOnPlane sop2(rk2);
 
   TVector3 pos(0, -1, 0);
   TVector3 mom(0, .1, 0);
+  TMatrixDSym cov(6);
+  for (int i = 0; i < 6; ++i)
+    cov(i, i) = 1.e-2;
   SharedPlanePtr start(new DetPlane(TVector3(0, -1, 0), TVector3(0, 1, 0)));
-  sop1.setPosMom(pos, mom);
-  sop2.setPosMom(pos, mom);
+  sop1.setPosMomCov(pos, mom, cov);
+  sop2.setPosMomCov(pos, mom, cov);
 
-  StateOnPlane sop3(sop1);
-  StateOnPlane sop4(sop2);
+  MeasuredStateOnPlane sop3(sop1);
+  MeasuredStateOnPlane sop4(sop2);
 
   SharedPlanePtr target(new DetPlane(TVector3(0, 1, 0), TVector3(0, 1, 0)));
   SharedPlanePtr middle(new DetPlane(TVector3(0, .2, 0), TVector3(0, 1, 0)));
@@ -103,10 +109,19 @@ int main()
 
   sop1.extrapolateToPlane(target);
   sop1.Print();
+  TMatrixD jac(5,5);
+  TMatrixDSym noise(5);
+  TVectorD d(5);
+  rk1->getForwardJacobianAndNoise(jac, noise, d);
+  jac.Print();
+  noise.Print();
 
   //rk2->setDebugLvl(1);
   sop2.extrapolateToPlane(target);
   sop2.Print();
+  rk2->getForwardJacobianAndNoise(jac, noise, d);
+  jac.Print();
+  noise.Print();
 
   std::cout << "back <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-" << std::endl;
 
