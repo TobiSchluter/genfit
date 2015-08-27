@@ -1432,12 +1432,6 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
 
   M1x7 oldState7(state7);
   M1x7 newState7;
-  M7x7 oldJac;
-  if (jacobianT) {
-    for (int i = 0; i < 7; ++i)
-      for (int j = 0; j < 7; ++j)
-        oldJac(i, j) = (*jacobianT)(j, i);
-  }
   M7x7 propJac;
   double est = RKstep(state7, S, mat, newState7, &propJac);
   M7x7 newJac;
@@ -1448,7 +1442,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
           continue;
         double sum = 0;
         for (int k = 0; k < 7; ++k) {
-          sum += propJac(i, k) * oldJac(k, j);
+          sum += propJac(i, k) * (*jacobianT)(j, k);
         }
         newJac(i, j) = sum;
       }
