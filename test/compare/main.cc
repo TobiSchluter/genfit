@@ -50,9 +50,11 @@ void setup() {
   //--- define some materials
   TGeoMaterial *matVacuum = new TGeoMaterial("Vacuum", 0,0,0);
   TGeoMaterial *matAl = new TGeoMaterial("Al", 26.98,13,2.7);
+  TGeoMaterial *matAlLowRho = new TGeoMaterial("Al", 26.98,13,0.27);
   //   //--- define some media
   TGeoMedium *Vacuum = new TGeoMedium("Vacuum",1, matVacuum);
-  TGeoMedium *Al = new TGeoMedium("Root Material",2, matAl);
+  TGeoMedium *Al = new TGeoMedium("Al",2, matAl);
+  TGeoMedium *AlLowRho = new TGeoMedium("AlLowRho",3, matAl);
 
   //--- define the transformations
   TGeoTranslation *tr1 = new TGeoTranslation(0., 0, 0.);
@@ -69,7 +71,7 @@ void setup() {
   top->AddNode(box, 2, tr2);
   geom->CloseGeometry();
    
-  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,0.));
+  genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,15.));
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 }
 

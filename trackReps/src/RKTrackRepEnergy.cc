@@ -1292,6 +1292,7 @@ void RKTrackRepEnergy::derive(const double lambda, const M1x3& T,
 
 
 double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
+                                const MaterialProperties& mat,
                                 M1x7& newState7,
                                 RKMatrix<7, 7>* pJ = 0) const
 {
@@ -1309,18 +1310,7 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
   const M1x3 rStart = {{ state7[0], state7[1], state7[2] }};
   const M1x3 TStart = {{ state7[3], state7[4], state7[5] }};
 
-  gGeoManager->PushPoint();
-  MaterialEffects::getInstance()->initTrack(state7[0] + 0.1*MINSTEP * copysign(state7[3],h),
-                                            state7[1] + 0.1*MINSTEP * copysign(state7[4],h),
-                                            state7[2] + 0.1*MINSTEP * copysign(state7[5],h),
-                                            copysign(state7[3],h),
-                                            copysign(state7[4],h),
-                                            copysign(state7[5],h));
   MaterialEffects::getInstance()->getParticleParameters(getPDG());
-  MaterialProperties mat;
-  MaterialEffects::getInstance()->getMaterialProperties(mat);
-  gGeoManager->PopPoint();
-
   const double lambdaStart = state7[6];
   const double EStart = hypot(m, charge / lambdaStart);
   const double dEdxStart = MaterialEffects::getInstance()->dEdx(mat, EStart);
@@ -1425,6 +1415,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
                                      M7x7* jacobianT,
                                      M1x3& SA,
                                      double S,
+                                     const MaterialProperties& mat,
                                      bool calcOnlyLastRowOfJ) const {
   // The algorithm is
   //  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001
@@ -1448,7 +1439,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
         oldJac(i, j) = (*jacobianT)(j, i);
   }
   M7x7 propJac;
-  double est = RKstep(state7, S, newState7, &propJac);
+  double est = RKstep(state7, S, mat, newState7, &propJac);
   M7x7 newJac;
   if (jacobianT) {
     for (int i = 0; i < 7; ++i) {
@@ -1929,7 +1920,8 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
   unsigned int counter(0);
 
   // Step estimation (signed)
-  S = estimateStep(state7, SU, plane, charge, relMomLoss, limits);
+  MaterialProperties matForStep;
+  S = estimateStep(state7, SU, plane, charge, relMomLoss, limits, matForStep);
 
   //
   // Main loop of Runge-Kutta method
@@ -1949,7 +1941,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
     M1x3 ABefore = {{ A[0], A[1], A[2] }};
     double pBefore = fabs(1/state7[6]);
     double yBefore = state7[1];
-    RKPropagate(state7, jacobianT, SA, S, calcOnlyLastRowOfJ); // the actual Runge Kutta propagation
+    RKPropagate(state7, jacobianT, SA, S, matForStep, calcOnlyLastRowOfJ); // the actual Runge Kutta propagation
     double pAfter = fabs(1/state7[6]);
     double yAfter = state7[1];
     //std::cout << " mom changed by " << pAfter - pBefore << " in step of " << S
@@ -1996,7 +1988,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
     limits.removeLimit(stp_momLoss);
     limits.removeLimit(stp_boundary);
     limits.removeLimit(stp_plane);
-    S = estimateStep(state7, SU, plane, charge, relMomLoss, limits);
+    S = estimateStep(state7, SU, plane, charge, relMomLoss, limits, matForStep);
 
     if (limits.getLowestLimit().first == stp_plane &&
         fabs(S) < MINSTEP) {
@@ -2161,7 +2153,8 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
                                 const DetPlane& plane,
                                 const double& charge,
                                 double& relMomLoss,
-                                StepLimits& limits) const {
+                                      StepLimits& limits,
+                                      MaterialProperties& mat) const {
 
   if (useCache_) {
     if (cachePos_ >= RKSteps_.size()) {
@@ -2230,7 +2223,15 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
   double remainingDist = 9e99;
   double stepTaken = 9e99;
 
-  RKTrackRepEnergy::propagator extrap(this, state7);
+  MaterialEffects::getInstance()->initTrack(state7[0] + 0.1*MINSTEP*copysign(state7[3], SLDist),
+                                            state7[1] + 0.1*MINSTEP*copysign(state7[4], SLDist),
+                                            state7[2] + 0.1*MINSTEP*copysign(state7[5], SLDist),
+                                            copysign(state7[3], SLDist),
+                                            copysign(state7[4], SLDist),
+                                            copysign(state7[5], SLDist));
+  MaterialEffects::getInstance()->getMaterialProperties(mat);
+
+  RKTrackRepEnergy::propagator extrap(this, state7, mat);
 
   static const unsigned int maxNumIt = 10;
   unsigned int counter(0);

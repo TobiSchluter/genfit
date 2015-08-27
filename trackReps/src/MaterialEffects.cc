@@ -328,7 +328,7 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
     state7[5] = dirNow[2];
 
     this->initTrack(state7[0], state7[1], state7[2],
-                                  limits.getStepSign() * state7[3], limits.getStepSign() * state7[4], limits.getStepSign() * state7[5]);
+                    limits.getStepSign() * state7[3], limits.getStepSign() * state7[4], limits.getStepSign() * state7[5]);
 
     materialInterface_->getMaterialParameters(materialAfter);
     extrap.moveStart(state7.vals);

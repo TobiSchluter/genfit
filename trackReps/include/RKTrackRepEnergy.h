@@ -30,6 +30,8 @@
 #include "StateOnPlane.h"
 #include "RKTools.h"
 #include "StepLimits.h"
+#include "MaterialProperties.h"
+#include "MaterialEffects.h"
 #include "RKTrackRep.h" //RKStep, ExtrapStep
 
 #include <algorithm>
@@ -152,7 +154,7 @@ class RKTrackRepEnergy : public AbsTrackRep {
               const double E, const double dEdx, const double B[3],
               double& dlambda, M1x3& dT, RKMatrix<3,4>* pA) const;
 
-  double RKstep(const M1x7& state7, const double h,
+  double RKstep(const M1x7& state7, const double h, const MaterialProperties& mat,
                 M1x7& newState7, RKMatrix<7, 7>* pJ) const;
 
   //! The actual Runge Kutta propagation
@@ -168,6 +170,7 @@ class RKTrackRepEnergy : public AbsTrackRep {
                      M7x7* jacobian,
                      M1x3& SA,
                      double S,
+                     const MaterialProperties& mat,
                      bool calcOnlyLastRowOfJ = false) const;
 
   virtual bool isSameType(const AbsTrackRep* other);
@@ -237,7 +240,8 @@ class RKTrackRepEnergy : public AbsTrackRep {
                       const DetPlane& plane,
                       const double& charge,
                       double& relMomLoss,
-                      StepLimits& limits) const;
+                      StepLimits& limits,
+                      MaterialProperties& matForStep) const;
 
   TVector3 pocaOnLine(const TVector3& linePoint,
                      const TVector3& lineDirection,
@@ -292,7 +296,8 @@ class RKTrackRepEnergy : public AbsTrackRep {
 public:
   class propagator : public RKTrackRepEnergy::internalExtrapolator {
   public:
-    propagator(const RKTrackRepEnergy* rep, const M1x7& state7) : rep_(rep), state7_(state7) {}
+    propagator(const RKTrackRepEnergy* rep, const M1x7& state7, MaterialProperties& mat)
+      : rep_(rep), state7_(state7), mat_(mat) { }
     void getInitialState(double posInitial[3], double dirInitial[3]) const {
       for(size_t i = 0; i < 3; ++i) {
         posInitial[i] = state7_[i];
@@ -302,7 +307,7 @@ public:
     double extrapolateBy(double S, double posFinal[3], double dirFinal[3]) const {
       M1x3 SA;
       M1x7 state(state7_);
-      double result = rep_->RKPropagate(state, 0, SA, S);
+      double result = rep_->RKPropagate(state, 0, SA, S, mat_);
       for(size_t i = 0; i < 3; ++i) {
         posFinal[i] = state[i];
         dirFinal[i] = state[i + 3];
@@ -315,6 +320,7 @@ public:
   private:
     const RKTrackRepEnergy* rep_;
     M1x7 state7_;
+    MaterialProperties mat_;
   };
 
  public:
