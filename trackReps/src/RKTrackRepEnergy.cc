@@ -867,6 +867,8 @@ double RKTrackRepEnergy::getCharge(const StateOnPlane& state) const {
   double pdgCharge( this->getPDGCharge() );
 
   // return pdgCharge with sign of q/p
+  if (state.getState()(0) == 0)
+    return pdgCharge;
   return copysign(pdgCharge, state.getState()(0));
 }
 
@@ -2029,7 +2031,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
 
     if (fabs(Sl) > 0.001*MINSTEP){
       if (debugLvl_ > 0) {
-        std::cout << " RKutta - linear extrapolation to surface\n";
+        std::cout << " RKutta - linear extrapolation to surface " << S <<"\n";
       }
       Sl = 1./Sl;        // Sl = inverted last Stepsize Sl
 

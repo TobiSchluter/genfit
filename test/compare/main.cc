@@ -60,6 +60,8 @@ void setup() {
   TGeoTranslation *tr1 = new TGeoTranslation(0., 0, 0.);
   TGeoTranslation *tr2 = new TGeoTranslation(0., .5, 0.);
   TGeoTranslation *tr3 = new TGeoTranslation(0., -1, 0.);
+  TGeoTranslation *tr4 = new TGeoTranslation(0., -1.002, 0.);
+  TGeoTranslation *tr5 = new TGeoTranslation(0., -1.004, 0.);
 
   //--- make the top container volume
   Double_t worldx = 100.;
@@ -72,6 +74,10 @@ void setup() {
   top->AddNode(box, 2, tr2);
   TGeoVolume *smallBox = geom->MakeBox("smallBox", Al, worldx, .001, worldz);
   top->AddNode(smallBox, 1, tr3);
+  TGeoVolume *smallBox2 = geom->MakeBox("smallBoxLow", AlLowRho, worldx, .001, worldz);
+  top->AddNode(smallBox2, 1, tr4);
+  top->AddNode(smallBox, 2, tr5);
+
   geom->CloseGeometry();
    
   genfit::FieldManager::getInstance()->init(new genfit::ConstField(0.,0.,15.));
@@ -84,20 +90,23 @@ int main()
 {
   setup();
 
-  RKTrackRep* rk1 = new RKTrackRep(211);
-  RKTrackRepEnergy* rk2 = new RKTrackRepEnergy(211);
+  RKTrackRep* rk1 = new RKTrackRep(-211);
+  RKTrackRepEnergy* rk2 = new RKTrackRepEnergy(-211);
 
   MeasuredStateOnPlane sop1(rk1);
   MeasuredStateOnPlane sop2(rk2);
 
-  TVector3 pos(0, -1, 0);
-  TVector3 mom(0, .1, 0);
+  TVector3 pos(0, -2, 0);
+  TVector3 mom(0.001, .1, 0.01);
   TMatrixDSym cov(6);
   for (int i = 0; i < 6; ++i)
     cov(i, i) = 1.e-2;
-  SharedPlanePtr start(new DetPlane(TVector3(0, -1, 0), TVector3(0, 1, 0)));
+  SharedPlanePtr start(new DetPlane(TVector3(0, -2, 0), TVector3(0, 1, 0)));
   sop1.setPosMomCov(pos, mom, cov);
   sop2.setPosMomCov(pos, mom, cov);
+
+  sop1.Print();
+  sop2.Print();
 
   MeasuredStateOnPlane sop3(sop1);
   MeasuredStateOnPlane sop4(sop2);
