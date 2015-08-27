@@ -1873,7 +1873,6 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
                         double mass,
                         M1x7& state7,
                         M7x7* jacobianT,
-                        M1x7* J_MMT_unprojected_lastRow,
                         double& coveredDistance,
                         double& flightTime,
                         bool& checkJacProj,
@@ -2104,10 +2103,6 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
         i = 42;
 
       M7x7& jacPtr = *jacobianT;
-
-      for(unsigned int j=42; j<49; j+=7) {
-        (*J_MMT_unprojected_lastRow)[j-42] = jacPtr[j];
-      }
 
       for(; i<49; i+=7) {
         norm = (jacPtr[i]*SU[0] + jacPtr[i+1]*SU[1] + jacPtr[i+2]*SU[2]) * An;  // dR_normal / A_normal
@@ -2449,10 +2444,8 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     limits_.reset();
     limits_.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
-    M1x7 J_MMT_unprojected_lastRow = {{0, 0, 0, 0, 0, 0, 1}};
-
     double pStart = fabs(charge / state7[6]);
-    if( ! RKutta(SU, destPlane, charge, mass, state7, &J_MMT_, &J_MMT_unprojected_lastRow,
+    if( ! RKutta(SU, destPlane, charge, mass, state7, &J_MMT_,
 		 coveredDistance, flightTime, checkJacProj, noiseProjection_,
 		 limits_, onlyOneStep, !fillExtrapSteps) ) {
       Exception exc("RKTrackRepEnergy::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);

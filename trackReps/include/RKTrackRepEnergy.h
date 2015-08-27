@@ -226,7 +226,6 @@ class RKTrackRepEnergy : public AbsTrackRep {
               double mass,
               M1x7& state7,
               M7x7* jacobianT,
-              M1x7* J_MMT_unprojected_lastRow,
               double& coveredDistance, // signed
               double& flightTime,
               bool& checkJacProj,
