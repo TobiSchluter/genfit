@@ -1433,7 +1433,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   M1x7 oldState7(state7);
   M1x7 newState7;
   M7x7 propJac;
-  double est = RKstep(state7, S, mat, newState7, &propJac);
+  double est = RKstep(state7, S, mat, newState7, jacobianT ? &propJac : 0);
   M7x7 newJac;
   if (jacobianT) {
     for (int i = 0; i < 7; ++i) {
