@@ -170,8 +170,7 @@ class RKTrackRepEnergy : public AbsTrackRep {
                      M7x7* jacobian,
                      M1x3& SA,
                      double S,
-                     const MaterialProperties& mat,
-                     bool calcOnlyLastRowOfJ = false) const;
+                     const MaterialProperties& mat) const;
 
   virtual bool isSameType(const AbsTrackRep* other);
   virtual bool isSame(const AbsTrackRep* other);
@@ -231,8 +230,7 @@ class RKTrackRepEnergy : public AbsTrackRep {
               bool& checkJacProj,
               M7x7& noiseProjection,
               StepLimits& limits,
-              bool onlyOneStep = false,
-              bool calcOnlyLastRowOfJ = false) const;
+              bool onlyOneStep = false) const;
 
   double estimateStep(const M1x7& state7,
                       const M1x4& SU,

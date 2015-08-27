@@ -1415,8 +1415,8 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
                                      M7x7* jacobianT,
                                      M1x3& SA,
                                      double S,
-                                     const MaterialProperties& mat,
-                                     bool calcOnlyLastRowOfJ) const {
+                                     const MaterialProperties& mat) const
+{
   // The algorithm is
   //  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001
   //  "Track parameter propagation through the application of a new adaptive Runge-Kutta-Nyström method in the ATLAS experiment"
@@ -1438,8 +1438,6 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   if (jacobianT) {
     for (int i = 0; i < 7; ++i) {
       for (int j = 0; j < 7; ++j) {
-        if (calcOnlyLastRowOfJ && j != 6)
-          continue;
         double sum = 0;
         for (int k = 0; k < 7; ++k) {
           sum += propJac(i, k) * (*jacobianT)(j, k);
@@ -1462,8 +1460,6 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   if (jacobianT) {
     for (int i = 0; i < 7; ++i) {
       for (int j = 0; j < 7; ++j) {
-        if (calcOnlyLastRowOfJ && j != 6)
-          continue;
         (*jacobianT)(j, i) = newJac(i, j);
       }
     }
@@ -1494,7 +1490,6 @@ void RKTrackRepEnergy::initArrays() const {
   std::fill(noiseProjection_.begin(), noiseProjection_.end(), 0);
   for (unsigned int i=0; i<7; ++i) // initialize as diagonal matrix
     noiseProjection_[i*8] = 1;
-  std::fill(J_MMT_.begin(), J_MMT_.end(), 0);
 
   fJacobian_.UnitMatrix();
   fNoise_.Zero();
@@ -1874,8 +1869,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
                         bool& checkJacProj,
                         M7x7& noiseProjection,
                         StepLimits& limits,
-                        bool onlyOneStep,
-                        bool calcOnlyLastRowOfJ) const {
+                        bool onlyOneStep) const {
 
   // limits, check-values, etc. Can be tuned!
   static const double Wmax           ( 3000. );           // max. way allowed [cm]
@@ -1891,7 +1885,6 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
   double  relMomLoss ( 0 );                      // relative momentum loss in RKutta
   double  deltaAngle ( 0. );                     // total angle by which the momentum has changed during extrapolation
   double  An(0), S(0), Sl(0), CBA(0);
-
 
   if (debugLvl_ > 0) {
     std::cout << "RKTrackRepEnergy::RKutta \n";
@@ -1936,7 +1929,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
     M1x3 ABefore = {{ A[0], A[1], A[2] }};
     double pBefore = fabs(1/state7[6]);
     double yBefore = state7[1];
-    RKPropagate(state7, jacobianT, SA, S, matForStep, calcOnlyLastRowOfJ); // the actual Runge Kutta propagation
+    RKPropagate(state7, jacobianT, SA, S, matForStep); // the actual Runge Kutta propagation
     double pAfter = fabs(1/state7[6]);
     double yAfter = state7[1];
     //std::cout << " mom changed by " << pAfter - pBefore << " in step of " << S
@@ -2094,13 +2087,10 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
       An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
       An = (fabs(An) > 1.E-7 ? 1./An : 0); // 1/A_normal
       double norm;
-      int i=0;
-      if (calcOnlyLastRowOfJ)
-        i = 42;
 
       M7x7& jacPtr = *jacobianT;
 
-      for(; i<49; i+=7) {
+      for(int i = 0; i<49; i+=7) {
         norm = (jacPtr[i]*SU[0] + jacPtr[i+1]*SU[1] + jacPtr[i+2]*SU[2]) * An;  // dR_normal / A_normal
         jacPtr[i]   -= norm*A [0];   jacPtr[i+1] -= norm*A [1];   jacPtr[i+2] -= norm*A [2];
         jacPtr[i+3] -= norm*SA[0];   jacPtr[i+4] -= norm*SA[1];   jacPtr[i+5] -= norm*SA[2];
@@ -2113,25 +2103,23 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
         //RKTools::printDim(*jacobianT, 7,7);
       }
 
-      if (!calcOnlyLastRowOfJ) {
-        for (int iRow = 0; iRow < 3; ++iRow) {
-          for (int iCol = 0; iCol < 3; ++iCol) {
-            noiseProjection[iRow*7 + iCol]       = (iRow == iCol) - An * SU[iCol] * A[iRow];
-            noiseProjection[(iRow + 3)*7 + iCol] =                - An * SU[iCol] * SA[iRow];
-          }
+      for (int iRow = 0; iRow < 3; ++iRow) {
+        for (int iCol = 0; iCol < 3; ++iCol) {
+          noiseProjection[iRow*7 + iCol]       = (iRow == iCol) - An * SU[iCol] * A[iRow];
+          noiseProjection[(iRow + 3)*7 + iCol] =                - An * SU[iCol] * SA[iRow];
         }
-
-        // noiseProjection will look like this:
-        // x x x 0 0 0 0
-        // x x x 0 0 0 0
-        // x x x 0 0 0 0
-        // x x x 1 0 0 0
-        // x x x 0 1 0 0
-        // x x x 0 0 1 0
-        // 0 0 0 0 0 0 1
       }
 
+      // noiseProjection will look like this:
+      // x x x 0 0 0 0
+      // x x x 0 0 0 0
+      // x x x 0 0 0 0
+      // x x x 1 0 0 0
+      // x x x 0 1 0 0
+      // x x x 0 0 1 0
+      // 0 0 0 0 0 0 1
     }
+
   } // end of linear extrapolation to surface
 
   return(true);
@@ -2413,6 +2401,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
 
   M1x7 startState7 = state7;
+  M7x7 J_MMT;
 
   while(true){
 
@@ -2429,8 +2418,8 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     }
 
     // initialize jacobianT with unit matrix
-    for(int i = 0; i < 7*7; ++i) J_MMT_[i] = 0;
-    for(int i=0; i<7; ++i) J_MMT_[8*i] = 1.;
+    for(int i = 0; i < 7*7; ++i) J_MMT[i] = 0;
+    for(int i=0; i<7; ++i) J_MMT[8*i] = 1.;
 
     M7x7* noise = NULL;
     isAtBoundary = false;
@@ -2441,9 +2430,9 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     limits_.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
     double pStart = fabs(charge / state7[6]);
-    if( ! RKutta(SU, destPlane, charge, mass, state7, &J_MMT_,
+    if( ! RKutta(SU, destPlane, charge, mass, state7, fillExtrapSteps ? &J_MMT : 0,
 		 coveredDistance, flightTime, checkJacProj, noiseProjection_,
-		 limits_, onlyOneStep, !fillExtrapSteps) ) {
+		 limits_, onlyOneStep) ) {
       Exception exc("RKTrackRepEnergy::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
@@ -2509,7 +2498,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
       std::vector<ExtrapStep>::iterator lastStep = ExtrapSteps_.end() - 1;
 
       // Store Jacobian of this step for final calculation.
-      lastStep->jac7_ = J_MMT_;
+      lastStep->jac7_ = J_MMT;
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane
