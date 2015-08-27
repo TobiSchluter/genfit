@@ -28,6 +28,7 @@
 #include <TDecompLU.h>
 #include <TMath.h>
 #include <TDatabasePDG.h>
+#include <TGeoManager.h>
 
 #include <iomanip>
 #include <algorithm>
@@ -1308,15 +1309,17 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
   const M1x3 rStart = {{ state7[0], state7[1], state7[2] }};
   const M1x3 TStart = {{ state7[3], state7[4], state7[5] }};
 
-  MaterialEffects::getInstance()->initTrack(state7[0] + copysign(MINSTEP, h)*state7[3],
-                                            state7[1] + copysign(MINSTEP, h)*state7[4],
-                                            state7[2] + copysign(MINSTEP, h)*state7[5],
+  gGeoManager->PushPoint();
+  MaterialEffects::getInstance()->initTrack(state7[0] + 0.1*MINSTEP * copysign(state7[3],h),
+                                            state7[1] + 0.1*MINSTEP * copysign(state7[4],h),
+                                            state7[2] + 0.1*MINSTEP * copysign(state7[5],h),
                                             copysign(state7[3],h),
                                             copysign(state7[4],h),
                                             copysign(state7[5],h));
   MaterialEffects::getInstance()->getParticleParameters(getPDG());
   MaterialProperties mat;
   MaterialEffects::getInstance()->getMaterialProperties(mat);
+  gGeoManager->PopPoint();
 
   const double lambdaStart = state7[6];
   const double EStart = hypot(m, charge / lambdaStart);
