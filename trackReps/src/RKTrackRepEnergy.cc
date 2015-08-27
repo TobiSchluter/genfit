@@ -1462,6 +1462,8 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   if (jacobianT) {
     for (int i = 0; i < 7; ++i) {
       for (int j = 0; j < 7; ++j) {
+        if (calcOnlyLastRowOfJ && j != 6)
+          continue;
         (*jacobianT)(j, i) = newJac(i, j);
       }
     }
