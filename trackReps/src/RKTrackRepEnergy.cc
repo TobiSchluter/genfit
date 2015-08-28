@@ -2154,6 +2154,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
         //for(int n = 0; n < 1*7; ++n) RKSteps_[cachePos_].state7_[n] = state7[n];
         ++RKStepsFXStop_;
         limits = RKSteps_.at(cachePos_).limits_;
+        mat = RKSteps_.at(cachePos_).matStep_.materialProperties_;
         return RKSteps_.at(cachePos_++).matStep_.stepSize_;
       }
     }
