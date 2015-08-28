@@ -330,6 +330,8 @@ public:
     void moveStart(double posNew[3]) {
       std::copy(posNew, posNew + 3, state7_.vals);
     }
+    void setMat(const MaterialProperties&) {
+    }
   private:
     const RKTrackRep* rep_;
     M1x7 state7_;

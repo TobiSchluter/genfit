@@ -1436,7 +1436,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   M1x7 newState7;
   M7x7 propJac;
   double est = RKstep(state7, S, mat, newState7, jacobianT ? &propJac : 0);
-  M7x7 newJac;
+  M7x7 newJacT;
   if (jacobianT) {
     for (int i = 0; i < 7; ++i) {
       for (int j = 0; j < 7; ++j) {
@@ -1444,7 +1444,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
         for (int k = 0; k < 7; ++k) {
           sum += propJac(i, k) * (*jacobianT)(j, k);
         }
-        newJac(i, j) = sum;
+        newJacT(j, i) = sum;
       }
     }
   }
@@ -1462,7 +1462,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   if (jacobianT) {
     for (int i = 0; i < 7; ++i) {
       for (int j = 0; j < 7; ++j) {
-        (*jacobianT)(j, i) = newJac(i, j);
+        (*jacobianT)(i, j) = newJacT(i, j);
       }
     }
   }
@@ -1477,7 +1477,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
 
   // Prevent the step length increase from getting too large, this is
   // just the point where it becomes 10.
-  if (EST < DLT*1e-5)
+  if (EST < DLT*1e-4)
     return 10;
 
   // Step length increase for a fifth order Runge-Kutta, see e.g. 17.2
@@ -1929,13 +1929,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
     }
 
     M1x3 ABefore = {{ A[0], A[1], A[2] }};
-    double pBefore = fabs(1/state7[6]);
-    double yBefore = state7[1];
     RKPropagate(state7, jacobianT, SA, S, matForStep); // the actual Runge Kutta propagation
-    double pAfter = fabs(1/state7[6]);
-    double yAfter = state7[1];
-    //std::cout << " mom changed by " << pAfter - pBefore << " in step of " << S
-    //        << " from y = " << yBefore << " to y = " << yAfter << std::endl;
 
     // update paths
     coveredDistance += S;       // add stepsize to way (signed)
@@ -2054,13 +2048,13 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
 
       coveredDistance += S;
       Way  += fabs(S);
+
+      double beta = 1/hypot(1, mass*state7[6]/charge);
+      flightTime += S / beta / 29.9792458; // in ns;
     }
     else if (debugLvl_ > 0)  {
       std::cout << " RKutta - last stepsize too small -> can't do linear extrapolation! \n";
     }
-
-    double beta = 1/hypot(1, mass*state7[6]/charge);
-    flightTime += S / beta / 29.9792458; // in ns;
 
     //
     // Project Jacobian of extrapolation onto destination plane
@@ -2405,8 +2399,6 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
 
   M1x7 startState7 = state7;
-  M7x7 J_MMT;
-
   while(true){
 
     if (debugLvl_ > 0) {
@@ -2422,10 +2414,10 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     }
 
     // initialize jacobianT with unit matrix
+    M7x7 J_MMT;
     for(int i = 0; i < 7*7; ++i) J_MMT[i] = 0;
     for(int i=0; i<7; ++i) J_MMT[8*i] = 1.;
 
-    M7x7* noise = NULL;
     isAtBoundary = false;
 
     // propagation
@@ -2459,6 +2451,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
 
     // call MatFX
+    M7x7* noise = NULL;
     if(fillExtrapSteps) {
       noise = &noiseArray_;
       for(int i = 0; i < 7*7; ++i) noiseArray_[i] = 0; // set noiseArray_ to 0
@@ -2466,7 +2459,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
     double momLoss = 0;
     unsigned int nPoints(RKStepsFXStop_ - RKStepsFXStart_);
-    if (/*!fNoMaterial &&*/ nPoints>0){
+    if (nPoints>0){
       // momLoss has a sign - negative loss means momentum gain
       momLoss += MaterialEffects::getInstance()->effects(RKSteps_,
                                                          RKStepsFXStart_,
