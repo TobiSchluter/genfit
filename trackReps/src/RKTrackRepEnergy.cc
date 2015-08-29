@@ -2319,7 +2319,6 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
   RKSteps_.push_back( defaultRKStep );
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
   lastStep->state7_ = state7;
-  lastStep->matStep_.materialProperties_ = mat;
   ++RKStepsFXStop_;
 
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough

@@ -316,7 +316,7 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
     // propagate with found step to boundary
     double posNow[3];
     double dirNow[3];
-    extrap.extrapolateBy(stepSize_, posNow, dirNow);
+    extrap.extrapolateBy(step, posNow, dirNow);
 
     // make minStep to cross boundary
     M1x7 state7; //FIXME do not really need this
