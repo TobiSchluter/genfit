@@ -28,7 +28,7 @@
 #include <stdlib.h>
 
 static const int flagSlowMatrix = 1 << 10; // Replace custom matrix multiplications with general equivalents
-static const int debugFlags = 0 | flagSlowMatrix;
+static const int debugFlags = 0; // | flagSlowMatrix;
 
 namespace genfit {
 

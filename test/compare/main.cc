@@ -105,13 +105,10 @@ int main()
   sop1.setPosMomCov(pos, mom, cov);
   sop2.setPosMomCov(pos, mom, cov);
 
-  sop1.Print();
-  sop2.Print();
-
   MeasuredStateOnPlane sop3(sop1);
   MeasuredStateOnPlane sop4(sop2);
 
-  SharedPlanePtr target(new DetPlane(TVector3(0, 1, 0), TVector3(0, 1, 0)));
+  SharedPlanePtr target(new DetPlane(TVector3(0, 1, 0), TVector3(0.1, 1, 0.1)));
   SharedPlanePtr middle(new DetPlane(TVector3(0, .2, 0), TVector3(0, 1, 0)));
 
   std::cout << "forth ->->->->->->->->->->->->->->->->->" << std::endl;
@@ -121,16 +118,31 @@ int main()
   TMatrixD jac(5,5);
   TMatrixDSym noise(5);
   TVectorD d(5);
+  std::cout << "analytically RKTrackRep" << std::endl;
   rk1->getForwardJacobianAndNoise(jac, noise, d);
   jac.Print();
   noise.Print();
+  jac.Zero();
+  std::cout << "numerically RKTrackRep:" << std::endl;
+  rk1->calcJacobianNumerically(sop3, target, jac);
+  jac.Print();
+
+  std::cout << "next" << std::endl;
 
   //rk2->setDebugLvl(1);
   sop2.extrapolateToPlane(target);
   sop2.Print();
+  std::cout << "analytically RKTrackRepEnergy" << std::endl;
   rk2->getForwardJacobianAndNoise(jac, noise, d);
   jac.Print();
   noise.Print();
+  jac.Zero();
+  std::cout << "numerically RKTrackRepEnergy:" << std::endl;
+  rk2->calcJacobianNumerically(sop4, target, jac);
+  std::cout << " jac " << std::endl;
+  jac.Print();
+
+  return 0;
 
   std::cout << "back <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-" << std::endl;
 

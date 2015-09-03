@@ -117,6 +117,7 @@ public:
 
   //! Calculate dEdx for a given energy
   double dEdx(const MaterialProperties& material, double Energy) /*const*/;
+  double d2EdxdE(const MaterialProperties& material, double Energy); // derivative
 
   void getMaterialProperties(MaterialProperties& material) { materialInterface_->getMaterialParameters(material); }
 

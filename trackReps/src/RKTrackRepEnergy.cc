@@ -1268,9 +1268,10 @@ void RKTrackRepEnergy::setTime(StateOnPlane& state, double time) const {
 
 
 void RKTrackRepEnergy::derive(const double lambda, const M1x3& T,
-                              const double E, const double dEdx, const double B[3],
+                              const double E, const double dEdx, const double d2EdxdE,
+                              const double B[3],
                               double& dlambda, M1x3& dT,
-                              RKMatrix<3, 4>* pA = 0) const
+                              RKMatrix<4, 4>* pA = 0) const
 {
   // Assumes |q| == 1
   const double kappa = 0.000299792458;  // speed of light over 10^12
@@ -1285,10 +1286,18 @@ void RKTrackRepEnergy::derive(const double lambda, const M1x3& T,
   dT[2] = lambda * (T[0]*H[1] - T[1]*H[0]);
 
   if (pA) {
-    RKMatrix<3, 4>& A = *pA;
+    RKMatrix<4, 4>& A = *pA;
     A(0,0) = 0; A(0,1) =  lambda*H[2]; A(0,2) = -lambda*H[1]; A(0,3) = T[1]*H[2] - T[2]*H[1];
     A(1,0) = -lambda*H[2]; A(1,1) = 0; A(1,2) =  lambda*H[0]; A(1,3) = T[2]*H[0] - T[0]*H[2];
     A(2,0) =  lambda*H[1]; A(2,1) = -lambda*H[0]; A(2,2) = 0; A(2,3) = T[0]*H[1] - T[1]*H[0];
+    A(3,0) =            0; A(3,1) =            0; A(3,2) = 0;
+
+    double temp = 1/lambda*(3 - pow(lambda*E, -2));
+    if (dEdx != 0) {
+      double d2Edxdlambda = -pow(lambda, -3) / E * d2EdxdE;
+      temp += 1/dEdx*d2Edxdlambda;
+    }
+    A(3, 3) = dlambda * temp; 
   }
 }
 
@@ -1303,8 +1312,8 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
   // return pdgCharge with sign of q/p
   const double charge = copysign(pdgCharge, state7[6]);
 
-  RKMatrix<3, 4> *pA1 = 0, *pA2 = 0, *pA3 = 0, *pA4 = 0;
-  RKMatrix<3, 4> A1, A2, A3, A4;
+  RKMatrix<4, 4> *pA1 = 0, *pA2 = 0, *pA3 = 0, *pA4 = 0;
+  RKMatrix<4, 4> A1, A2, A3, A4;
   if (pJ) {
     pA1 = &A1; pA2 = &A2, pA3 = &A3, pA4 = &A4;
   }
@@ -1316,6 +1325,7 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
   const double lambdaStart = state7[6];
   const double EStart = hypot(m, charge / lambdaStart);
   const double dEdxStart = MaterialEffects::getInstance()->dEdx(mat, EStart);
+  const double d2EdxdEStart = MaterialEffects::getInstance()->d2EdxdE(mat, EStart);
   //std::cout << std::setprecision(7) << EStart << " " << dEdxStart << " " << m << std::endl;
 
   double BStart[3];
@@ -1323,12 +1333,13 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
 
   double dLambda1;
   M1x3 dT1;
-  derive(lambdaStart, TStart, EStart, dEdxStart, BStart,
+  derive(lambdaStart, TStart, EStart, dEdxStart, d2EdxdEStart, BStart,
          dLambda1, dT1, pA1);
 
   const double lambda2 = lambdaStart + h/2*dLambda1;
   const double E2 = hypot(m, charge / lambda2);
   const double dEdx2 = MaterialEffects::getInstance()->dEdx(mat, E2);
+  const double d2EdxdE2 = MaterialEffects::getInstance()->d2EdxdE(mat, E2);
 
   const M1x3 T2 = TStart + h/2*dT1;
   const M1x3 rMiddle = rStart + h/2*TStart + h*h/8*dT1;
@@ -1337,23 +1348,25 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
 
   double dLambda2;
   M1x3 dT2;
-  derive(lambda2, T2, E2, dEdx2, BMiddle,
+  derive(lambda2, T2, E2, dEdx2, d2EdxdE2, BMiddle,
          dLambda2, dT2, pA2);
 
   const double lambda3 = lambdaStart + h/2*dLambda2;
   const double E3 = hypot(m, charge / lambda3);
   const double dEdx3 = MaterialEffects::getInstance()->dEdx(mat, E3);
+  const double d2EdxdE3 = MaterialEffects::getInstance()->d2EdxdE(mat, E3);
 
   const M1x3 T3 = TStart + h/2*dT2;
 
   double dLambda3;
   M1x3 dT3;
-  derive(lambda3, T3, E3, dEdx3, BMiddle,
+  derive(lambda3, T3, E3, dEdx3, d2EdxdE3, BMiddle,
          dLambda3, dT3, pA3);
 
   const double lambda4 = lambdaStart + h*dLambda3;
   const double E4 = hypot(m, charge / lambda4);
   const double dEdx4 = MaterialEffects::getInstance()->dEdx(mat, E4);
+  const double d2EdxdE4 = MaterialEffects::getInstance()->d2EdxdE(mat, E4);
 
   const M1x3 T4 = TStart + h*dT3;
   const M1x3 rEnd = rStart + h*TStart + h*h/2*dT3;
@@ -1362,7 +1375,7 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
 
   double dLambda4;
   M1x3 dT4;
-  derive(lambda4, T4, E4, dEdx4, BEnd,
+  derive(lambda4, T4, E4, dEdx4, d2EdxdE4, BEnd,
          dLambda4, dT4, pA4);
 
   // Put it together ...
@@ -1398,14 +1411,19 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
   if (pJ) {
     RKMatrix<7, 7>& J = *pJ;
     std::fill(J.vals, J.vals + 49, 0);
-    for (int i = 0; i < 7; ++i)
-      J(i, i) = 1;  // some entries overwritten below.
     for (int i = 0; i < 3; ++i) {
       for (int j = 0; j < 4; ++j) {
+        if (j < 3)
+          J(i  , j    ) =     (i == j);
         J(i    , j + 3) = h * (i == j) + h*h/6*(A1(i, j) + A2(i, j) + A3(i, j));
-        J(i + 3, j + 3) =     (i == j) + h/6*(A1(i, j) + 2*A2(i, j) + 2*A3(i, j) + A4(i, j));
       }
     }
+    for (int i = 0; i < 4; ++i) {
+      for (int j = 0; j < 4; ++j) {
+        J(i + 3, j + 3) = (i == j) + h/6 * (A1(i, j) + 2*A2(i, j) + 2*A3(i, j) + A4(i, j));
+      }
+    }
+    J.print();
   }
 
   return h*h*eps;
@@ -1438,6 +1456,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   double est = RKstep(state7, S, mat, newState7, jacobianT ? &propJac : 0);
   M7x7 newJacT;
   if (jacobianT) {
+    propJac.print();
     for (int i = 0; i < 7; ++i) {
       for (int j = 0; j < 7; ++j) {
         double sum = 0;
@@ -1447,6 +1466,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
         newJacT(j, i) = sum;
       }
     }
+    newJacT.print();
   }
 
   static const double DLT ( .0002 );           // max. deviation for approximation-quality test
@@ -1753,23 +1773,23 @@ void RKTrackRepEnergy::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector
 
   // d(u')/d(ax,ay,az)
   double fact = 1./(AtW*AtW);
-  J_Mp[16] = fact * (U.X()*AtW - W.X()*AtU); // [3][1]
-  J_Mp[21] = fact * (U.Y()*AtW - W.Y()*AtU); // [4][1]
-  J_Mp[26] = fact * (U.Z()*AtW - W.Z()*AtU); // [5][1]
+  J_Mp(3,1) = fact * (U.X()*AtW - W.X()*AtU);
+  J_Mp(4,1) = fact * (U.Y()*AtW - W.Y()*AtU);
+  J_Mp(5,1) = fact * (U.Z()*AtW - W.Z()*AtU);
   // d(v')/d(ax,ay,az)
-  J_Mp[17] = fact * (V.X()*AtW - W.X()*AtV); // [3][2]
-  J_Mp[22] = fact * (V.Y()*AtW - W.Y()*AtV); // [4][2]
-  J_Mp[27] = fact * (V.Z()*AtW - W.Z()*AtV); // [5][2]
+  J_Mp(3,2) = fact * (V.X()*AtW - W.X()*AtV);
+  J_Mp(4,2) = fact * (V.Y()*AtW - W.Y()*AtV);
+  J_Mp(5,2) = fact * (V.Z()*AtW - W.Z()*AtV);
   // d(q/p)/d(q/p)
-  J_Mp[30] = 1.; // [6][0]  - not needed for array matrix multiplication
+  J_Mp(6,0) = 1.;
   //d(u)/d(x,y,z)
-  J_Mp[3]  = U.X(); // [0][3]
-  J_Mp[8]  = U.Y(); // [1][3]
-  J_Mp[13] = U.Z(); // [2][3]
+  J_Mp(0,3)  = U.X();
+  J_Mp(1,3)  = U.Y();
+  J_Mp(2,3) = U.Z();
   //d(v)/d(x,y,z)
-  J_Mp[4]  = V.X(); // [0][4]
-  J_Mp[9]  = V.Y(); // [1][4]
-  J_Mp[14] = V.Z(); // [2][4]
+  J_Mp(0,4)  = V.X();
+  J_Mp(1,4)  = V.Y();
+  J_Mp(2,4) = V.Z();
 
   /*if (debugLvl_ > 1) {
     std::cout << "  J_Mp_7x5_ = "; RKTools::printDim(J_Mp, 7,5);
@@ -2085,11 +2105,10 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
       double norm;
 
       M7x7& jacPtr = *jacobianT;
-
-      for(int i = 0; i<49; i+=7) {
-        norm = (jacPtr[i]*SU[0] + jacPtr[i+1]*SU[1] + jacPtr[i+2]*SU[2]) * An;  // dR_normal / A_normal
-        jacPtr[i]   -= norm*A [0];   jacPtr[i+1] -= norm*A [1];   jacPtr[i+2] -= norm*A [2];
-        jacPtr[i+3] -= norm*SA[0];   jacPtr[i+4] -= norm*SA[1];   jacPtr[i+5] -= norm*SA[2];
+      for(int i = 0; i<7; ++i) {
+        norm = (jacPtr(i,0)*SU[0] + jacPtr(i,1)*SU[1] + jacPtr(i,2)*SU[2]) * An;  // dR_normal / A_normal
+        jacPtr(i,0) -= norm*A [0];   jacPtr(i,1) -= norm*A [1];   jacPtr(i,2) -= norm*A [2];
+        jacPtr(i,3) -= norm*SA[0];   jacPtr(i,4) -= norm*SA[1];   jacPtr(i,5) -= norm*SA[2];
       }
       checkJacProj = true;
 

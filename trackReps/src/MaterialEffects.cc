@@ -459,6 +459,23 @@ double MaterialEffects::dEdx(const MaterialProperties& material, double Energy) 
   return result;
 }
 
+double MaterialEffects::d2EdxdE(const MaterialProperties& material, double Energy) {
+  if (material.getZ() < 1e-3)
+    // No energy loss in vacuum.
+    return 0;
+
+  double step = 1e-5;
+  double dEleftFull = dEdx(material, Energy - step);
+  double dErightFull = dEdx(material, Energy + step);
+  double dEleftHalf = dEdx(material, Energy - step / 2);
+  double dErightHalf = dEdx(material, Energy + step / 2);
+
+  double derivFull = (dErightFull - dEleftFull) / 2 / step;
+  double derivHalf = (dErightHalf - dEleftHalf) / step;
+
+  return 1./3.*(4*derivHalf - derivFull);
+}
+
 
 double MaterialEffects::dEdxBetheBloch(const MaterialProperties& material, double betaSquare, double gamma, double gammaSquare) const
 {
