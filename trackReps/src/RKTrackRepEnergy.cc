@@ -1403,12 +1403,12 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
                         *std::max_element(epsT.begin(), epsT.end()));
 
   if (pJ) {
-    // Build the 7x7 covariance matrix, note that we don't keep the
-    // row, column corresponding to \Lambda in the notation of Lund
-    // loc.cit. as it does not make it into the final covariance
-    // matrices of the 7x7 states (everything else wouldn't make
-    // sense).  We also assume that Lund's C = 0 (i.e. no field
-    // gradients, no material density gradients).
+    // Build the 7x7 covariance matrix.  We don't keep the row, column
+    // corresponding to \Lambda in the notation of Lund loc.cit. as it
+    // does not make it into the final covariance matrices of the 7x7
+    // states (everything else wouldn't make sense).  We also assume
+    // that Lund's C equals 0 (i.e. no field gradients, no material
+    // density gradients).
     RKMatrix<7, 7>& J = *pJ;
     std::fill(J.begin(), J.end(), 0);
     for (int i = 0; i < 3; ++i) {
