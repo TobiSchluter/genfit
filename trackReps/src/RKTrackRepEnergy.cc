@@ -958,7 +958,7 @@ void RKTrackRepEnergy::calcForwardJacobianAndNoise(const M1x7& startState7, cons
   M5x7 J_pM;
   calcJ_pM_5x7(J_pM, startPlane.getU(), startPlane.getV(), pTilde, spu);
   M7x5 J_Mp;
-  calcJ_Mp_7x5(J_Mp, destPlane.getU(), destPlane.getV(), destPlane.getNormal(), *((M1x3*) &destState7[3]));
+  calcJ_Mp_7x5(J_Mp, destPlane.getU(), destPlane.getV(), *((M1x3*) &destState7[3]));
   jac.Transpose(jac); // Because the helper function wants transposed input.
   RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, *(M7x7 *)jac.GetMatrixArray(),
 				J_pM, *(M5x5 *)fJacobian_.GetMatrixArray());
@@ -1733,12 +1733,11 @@ void RKTrackRepEnergy::transformM7P(const M7x7& in7x7,
   // get vectors and aux variables
   const TVector3& U(state.getPlane()->getU());
   const TVector3& V(state.getPlane()->getV());
-  const TVector3& W(state.getPlane()->getNormal());
 
   M1x3& A = *((M1x3*) &state7[3]);
 
   M7x5 J_Mp;
-  calcJ_Mp_7x5(J_Mp, U, V, W, A);
+  calcJ_Mp_7x5(J_Mp, U, V, A);
 
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
   // the multiplication can be done much faster directly on array level
@@ -1749,18 +1748,18 @@ void RKTrackRepEnergy::transformM7P(const M7x7& in7x7,
 }
 
 
-void RKTrackRepEnergy::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const {
+void RKTrackRepEnergy::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const M1x3& A) const {
 
   /*if (debugLvl_ > 1) {
     std::cout << "RKTrackRepEnergy::calcJ_Mp_7x5 \n";
     std::cout << "  U = "; U.Print();
     std::cout << "  V = "; V.Print();
-    std::cout << "  W = "; W.Print();
     std::cout << "  A = "; RKTools::printDim(A, 3,1);
   }*/
 
   std::fill(J_Mp.begin(), J_Mp.end(), 0);
 
+  TVector3 W = U.Cross(V);
   const double AtU = A[0]*U.X() + A[1]*U.Y() + A[2]*U.Z();
   const double AtV = A[0]*V.X() + A[1]*V.Y() + A[2]*V.Z();
   const double AtW = A[0]*W.X() + A[1]*W.Y() + A[2]*W.Z();
@@ -1779,12 +1778,12 @@ void RKTrackRepEnergy::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector
   // d(q/p)/d(q/p)
   J_Mp(6,0) = 1.;
   //d(u)/d(x,y,z)
-  J_Mp(0,3)  = U.X();
-  J_Mp(1,3)  = U.Y();
+  J_Mp(0,3) = U.X();
+  J_Mp(1,3) = U.Y();
   J_Mp(2,3) = U.Z();
   //d(v)/d(x,y,z)
-  J_Mp(0,4)  = V.X();
-  J_Mp(1,4)  = V.Y();
+  J_Mp(0,4) = V.X();
+  J_Mp(1,4) = V.Y();
   J_Mp(2,4) = V.Z();
 
   /*if (debugLvl_ > 1) {
@@ -2107,7 +2106,6 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
         jacPtr(i,3) -= norm*SA[0];   jacPtr(i,4) -= norm*SA[1];   jacPtr(i,5) -= norm*SA[2];
       }
       checkJacProj = true;
-
 
       if (debugLvl_ > 0) {
         //std::cout << "  Jacobian^T of extrapolation after Projection:\n";
