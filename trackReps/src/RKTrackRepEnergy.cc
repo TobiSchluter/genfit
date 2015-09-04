@@ -1414,7 +1414,7 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
     for (int i = 0; i < 3; ++i) {
       J(i, i) = 1;
       for (int j = 0; j < 4; ++j) {
-        J(i    , j + 3) = h * (i == j) + h*h/6*(A1(i, j) + A2(i, j) + A3(i, j));
+        J(i, j + 3) = h * (i == j) + h*h/6 * (A1(i, j) + A2(i, j) + A3(i, j));
       }
     }
     for (int i = 0; i < 4; ++i) {
