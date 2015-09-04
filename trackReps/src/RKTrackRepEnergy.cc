@@ -1402,19 +1402,18 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
   double eps = std::max(epsLambda,
                         *std::max_element(epsT, epsT + 3));
 
-  /*
-  std::cout << epsLambda << std::endl;
-  std::cout << dT1[0] << " " << dT2[0] << " " << dT3[0] << " " << dT4[0] << " sum " << dT1[0] + dT2[0] + dT3[0] << " " << epsT[0] << std::endl;
-  std::cout << dT1[1] << " " << dT2[1] << " " << dT3[1] << " " << dT4[1] << " sum " << dT1[1] + dT2[1] + dT3[1] << " " << epsT[1] << std::endl;
-  std::cout << dT1[2] << " " << dT2[2] << " " << dT3[2] << " " << dT4[2] << " sum " << dT1[2] + dT2[2] + dT3[2] << " " << epsT[2] << std::endl;
-  */
   if (pJ) {
+    // Build the 7x7 covariance matrix, note that we don't keep the
+    // row, column corresponding to \Lambda in the notation of Lund
+    // loc.cit. as it does not make it into the final covariance
+    // matrices of the 7x7 states (everything else wouldn't make
+    // sense).  We also assume that Lund's C = 0 (i.e. no field
+    // gradients, no material density gradients).
     RKMatrix<7, 7>& J = *pJ;
-    std::fill(J.vals, J.vals + 49, 0);
+    std::fill(J.begin(), J.end(), 0);
     for (int i = 0; i < 3; ++i) {
+      J(i, i) = 1;
       for (int j = 0; j < 4; ++j) {
-        if (j < 3)
-          J(i  , j    ) =     (i == j);
         J(i    , j + 3) = h * (i == j) + h*h/6*(A1(i, j) + A2(i, j) + A3(i, j));
       }
     }
@@ -1423,7 +1422,6 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
         J(i + 3, j + 3) = (i == j) + h/6 * (A1(i, j) + 2*A2(i, j) + 2*A3(i, j) + A4(i, j));
       }
     }
-    J.print();
   }
 
   return h*h*eps;
@@ -1456,7 +1454,6 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   double est = RKstep(state7, S, mat, newState7, jacobianT ? &propJac : 0);
   M7x7 newJacT;
   if (jacobianT) {
-    propJac.print();
     for (int i = 0; i < 7; ++i) {
       for (int j = 0; j < 7; ++j) {
         double sum = 0;
@@ -1466,7 +1463,6 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
         newJacT(j, i) = sum;
       }
     }
-    newJacT.print();
   }
 
   static const double DLT ( .0002 );           // max. deviation for approximation-quality test
