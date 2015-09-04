@@ -1396,11 +1396,11 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
   newState7[6] = lambdaFinal;
 
   double epsLambda = fabs(dLambda1 - dLambda2 - dLambda3 + dLambda4);
-  double epsT[3];
+  M1x3 epsT;
   for (size_t i = 0; i < 3; ++i)
     epsT[i] = fabs(dT1[i] - dT2[i] - dT3[i] + dT4[i]);
   double eps = std::max(epsLambda,
-                        *std::max_element(epsT, epsT + 3));
+                        *std::max_element(epsT.begin(), epsT.end()));
 
   if (pJ) {
     // Build the 7x7 covariance matrix, note that we don't keep the
