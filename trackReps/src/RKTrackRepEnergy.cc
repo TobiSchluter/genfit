@@ -1275,12 +1275,13 @@ void RKTrackRepEnergy::derive(const double lambda, const M1x3& T,
 {
   // Assumes |q| == 1
   const double kappa = 0.000299792458;  // speed of light over 10^12
-  double H[3] = { kappa*B[0], kappa*B[1], kappa*B[2] };
+  const double H[3] = { kappa*B[0], kappa*B[1], kappa*B[2] };
 
   // dEdx is positive in our definition, dlambda should have the same
   // sign as lambda hence no minus in the following line, unlike
-  // Bugge.
+  // Bugge et al.
   dlambda = E*pow(lambda, 3) * dEdx; /* *q^-2 omitted */
+  // Lorentz force
   dT[0] = lambda * (T[1]*H[2] - T[2]*H[1]);
   dT[1] = lambda * (T[2]*H[0] - T[0]*H[2]);
   dT[2] = lambda * (T[0]*H[1] - T[1]*H[0]);
@@ -1292,12 +1293,19 @@ void RKTrackRepEnergy::derive(const double lambda, const M1x3& T,
     A(2,0) =  lambda*H[1]; A(2,1) = -lambda*H[0]; A(2,2) = 0; A(2,3) = T[0]*H[1] - T[1]*H[0];
     A(3,0) =            0; A(3,1) =            0; A(3,2) = 0;
 
-    double temp = 1/lambda*(3 - pow(lambda*E, -2));
-    if (dEdx != 0) {
-      double d2Edxdlambda = -pow(lambda, -3) / E * d2EdxdE;
-      temp += 1/dEdx*d2Edxdlambda;
+    A(3,3) = 0;
+    if (dlambda != 0) {
+      // dlambda == 0 means dEdx == 0, without this check we would be
+      // calculating 0/0.
+
+      // Chain rule, derive by lambda instead of E.
+      const double d2Edxdlambda = -d2EdxdE / pow(lambda, 3) / E;
+
+      // (3.12) in Bugge et al., the derivative of (3.11).  The
+      // different choice in units doesn't matter (lambda doesn't
+      // contain kappa).
+      A(3,3) = dlambda * (1/lambda*(3 - pow(lambda*E, -2)) + 1/dEdx*d2Edxdlambda);
     }
-    A(3, 3) = dlambda * temp; 
   }
 }
 
