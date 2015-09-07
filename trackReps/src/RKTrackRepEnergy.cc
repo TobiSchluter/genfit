@@ -1293,19 +1293,11 @@ void RKTrackRepEnergy::derive(const double lambda, const M1x3& T,
     A(2,0) =  lambda*H[1]; A(2,1) = -lambda*H[0]; A(2,2) = 0; A(2,3) = T[0]*H[1] - T[1]*H[0];
     A(3,0) =            0; A(3,1) =            0; A(3,2) = 0;
 
-    A(3,3) = 0;
-    if (dlambda != 0) {
-      // dlambda == 0 means dEdx == 0, without this check we would be
-      // calculating 0/0.
-
-      // Chain rule, derive by lambda instead of E.
-      const double d2Edxdlambda = -d2EdxdE / pow(lambda, 3) / E;
-
-      // (3.12) in Bugge et al., the derivative of (3.11).  The
-      // different choice in units doesn't matter (lambda doesn't
-      // contain kappa).
-      A(3,3) = dlambda * (1/lambda*(3 - pow(lambda*E, -2)) + 1/dEdx*d2Edxdlambda);
-    }
+    // (3.12) in Bugge et al., the derivative of (3.11).  The
+    // different choice in units doesn't matter (lambda doesn't
+    // contain kappa).  Simplified, not only simpler but also avoids
+    // dividing by zero if dEdx = 0.
+    A(3,3) = dlambda/lambda*(3 - pow(lambda*E, -2)) - d2EdxdE;
   }
 }
 
