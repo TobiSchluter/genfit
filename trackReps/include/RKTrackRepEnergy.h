@@ -200,7 +200,7 @@ class RKTrackRepEnergy : public AbsTrackRep {
                     const M1x7& state7,
                     MeasuredStateOnPlane& state) const; // plane must already be set!
 
-  void calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const TVector3& W, const M1x3& A) const;
+  void calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const M1x3& A) const;
 
   void calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
 				   const M1x7& destState7, const DetPlane& destPlane) const;

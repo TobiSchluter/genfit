@@ -1294,9 +1294,10 @@ void RKTrackRepEnergy::derive(const double lambda, const M1x3& T,
     A(3,0) =            0; A(3,1) =            0; A(3,2) = 0;
 
     // (3.12) in Bugge et al., the derivative of (3.11).  The
-    // different choice in units doesn't matter (lambda doesn't
-    // contain kappa).  Simplified, not only simpler but also avoids
-    // dividing by zero if dEdx = 0.
+    // different choice in units doesn't matter (our lambda doesn't
+    // contain kappa).  That, or their units are confused, but I don't
+    // want to redo the math with their choice.  Simplified, also
+    // avoids dividing by zero if dEdx = 0.
     A(3,3) = dlambda/lambda*(3 - pow(lambda*E, -2)) - d2EdxdE;
   }
 }
