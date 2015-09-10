@@ -1426,15 +1426,15 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
     // normalization of T while putting together the final Jacobian.
     RKMatrix<7, 7>& Jnew = *pJ;
     Jnew = J;
-    for (int iRow = 3; iRow < 6; ++iRow) {
-      for (int iCol = 3; iCol < 6; ++iCol) {
-        Jnew(iRow, iCol) = J(iRow, iCol) / norm;
-        // add the derivative of the norm ...
-        double sum = 0;
-        for (int k = 3; k < 6; ++k) {
-          sum += state7[k] * J(k, iCol);
+    if (1) {
+      for (int iRow = 3; iRow < 6; ++iRow) {
+        for (int iCol = 3; iCol < 6; ++iCol) {
+          Jnew(iRow, iCol) = J(iRow, iCol) / norm;
+          // add the terms due to the derivative of the norm ...
+          for (int k = 3; k < 6; ++k) {
+            Jnew(iRow, iCol) -= newState7[iRow] * newState7[k] * J(k, iCol) / norm;
+          }
         }
-        Jnew(iRow, iCol) -= state7[iRow] * sum;
       }
     }
   }
