@@ -1554,7 +1554,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
 
   static const double DLT ( .0002 );           // max. deviation for approximation-quality test
 
-  double EST = est; // FIXME : why over S?
+  double EST = est;
 
   SA[0] = newState7[3] - oldState7[3];
   SA[1] = newState7[4] - oldState7[4];
