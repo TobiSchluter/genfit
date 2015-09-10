@@ -1534,10 +1534,11 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
           numJac(j, i) = 1./3.*(4*derivShort - derivFull);
         }
       }
-      std::cout << "semianalytical ";
+      std::cout << "S = " << S << " semianalytical ";
       propJac.print();
       std::cout << "numerical ";
       numJac.print();
+
       //propJac = numJac;
     }
 
