@@ -27,11 +27,14 @@
 #include <math.h>
 
 
-namespace genfit {
+namespace {
 
 double MeanExcEnergy_get(int Z);
 double MeanExcEnergy_get(TGeoMaterial*);
 
+}
+
+namespace genfit {
 
 bool
 TGeoMaterialInterface::initTrack(double posX, double posY, double posZ,
@@ -236,6 +239,12 @@ TGeoMaterialInterface::findNextBoundaryStraightLine(double sMax)
 }
 
 
+
+} /* End of namespace genfit */
+
+
+namespace {
+
 /*
 Reference for elemental mean excitation energies at:
 http://physics.nist.gov/PhysRefData/XrayMassCoef/tab1.html
@@ -306,5 +315,4 @@ MeanExcEnergy_get(TGeoMaterial* mat) {
   return MeanExcEnergy_get(index, false);
 }
 
-
-} /* End of namespace genfit */
+}
