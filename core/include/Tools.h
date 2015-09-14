@@ -28,13 +28,13 @@
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
 
-/**
- * @brief Matrix inversion tools.
- */
 namespace genfit {
 
 class AbsHMatrix;
 
+/**
+ * @brief Matrix inversion tools.
+ */
 namespace tools {
 
 /** @brief Invert a matrix, throwing an Exception when inversion fails.
