@@ -1,5 +1,5 @@
-/* Copyright 2008-2013, Technische Universitaet Muenchen, Ludwig-Maximilians-Universität München
-   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch & Tobias Schlüter
+/* Copyright 2008-2015, Technische Universitaet Muenchen, Ludwig-Maximilians-Universität München
+   Authors: Tobias Schlüter
 
    This file is part of GENFIT.
 
@@ -34,11 +34,6 @@
 #include <algorithm>
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
-
-namespace {
-  // Use fast inversion instead of LU decomposition?
-  const bool useInvertFast = false;
-}
 
 namespace genfit {
 
@@ -1010,21 +1005,11 @@ void RKTrackRepTime::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym
 
   jacobian.ResizeTo(5,5);
   jacobian = fJacobian_;
-  if (!useInvertFast) {
-    bool status = TDecompLU::InvertLU(jacobian, 0.0);
-    if(status == 0){
-      Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
-      e.setFatal();
-      throw e;
-    }
-  } else {
-    double det;
-    jacobian.InvertFast(&det);
-    if(det < 1e-80){
-      Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
-      e.setFatal();
-      throw e;
-    }
+  bool status = TDecompLU::InvertLU(jacobian, 0.0);
+  if(status == 0){
+    Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
+    e.setFatal();
+    throw e;
   }
 
   noise.ResizeTo(5,5);

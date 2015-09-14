@@ -1,7 +1,6 @@
 /* Copyright 2008-2015, Technische Universitaet Muenchen,
                         Ludwig-Maximilians-Universität München
-   Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch
-            & Tobias Schlüter
+   Authors: Tobias Schlüter
 
    This file is part of GENFIT.
 
@@ -37,11 +36,12 @@
 namespace genfit {
 
 /**
- * @brief AbsTrackRep with 5D track parameterization in plane coordinates: (q/p, u', v', u, v)
+ * @brief AbsTrackRep with 6D track parameterization in plane coordinates: (q/p, u', v', u, v, t)
  *
  * q/p is charge over momentum.
  * u' and v' are direction tangents.
  * u and v are positions on a DetPlane.
+ * t is time with reference to some event time.
  */
 class RKTrackRepTime : public AbsTrackRep {
 

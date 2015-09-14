@@ -301,6 +301,7 @@ SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cc" "${lib
 SET(TRACKREPS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include/RKTrackRep.h
   ${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include/RKTrackRepEnergy.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/trackReps/include/RKTrackRepTime.h
 )
 ROOT_GENERATE_DICTIONARY("${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}"
                          "${TRACKREPS_DICTIONARY_SOURCES}"

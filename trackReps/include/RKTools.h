@@ -127,9 +127,11 @@ RKMatrix<nRows, nCols> operator*(const double& left, const RKMatrix<nRows, nCols
 typedef RKMatrix<1, 3> M1x3;
 typedef RKMatrix<1, 4> M1x4;
 typedef RKMatrix<1, 7> M1x7;
+typedef RKMatrix<1, 7> M1x8;
 typedef RKMatrix<5, 5> M5x5;
 typedef RKMatrix<6, 6> M6x6;
 typedef RKMatrix<7, 7> M7x7;
+typedef RKMatrix<7, 7> M8x8;
 typedef RKMatrix<6, 5> M6x5;
 typedef RKMatrix<7, 5> M7x5;
 typedef RKMatrix<5, 6> M5x6;
