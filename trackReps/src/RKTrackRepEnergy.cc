@@ -1404,7 +1404,7 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
                         *std::max_element(epsT.begin(), epsT.end()));
 
   if (pJ) {
-    // Build the 7x7 covariance matrix.  We don't keep the row, column
+    // Build the 7x7 Jacobian matrix.  We don't keep the row, column
     // corresponding to \Lambda in the notation of Lund loc.cit. as it
     // does not make it into the final covariance matrices of the 7x7
     // states (everything else wouldn't make sense).  We also assume
