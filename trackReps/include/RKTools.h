@@ -29,6 +29,10 @@
 
 namespace genfit {
 
+/**
+ * @brief a matrix class as a thin overlay over double[] providing
+ * type-safety and some of the simplest operations for convenience.
+ */
 template <size_t nRows, size_t nCols>
 struct RKMatrix {
   double vals[nRows * nCols];
