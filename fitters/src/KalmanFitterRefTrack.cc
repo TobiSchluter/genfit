@@ -482,9 +482,14 @@ bool KalmanFitterRefTrack::prepareTrack(Track* tr, const AbsTrackRep* rep, bool 
         prevReferenceState->resetBackward();
         referenceState->resetForward();
 
+        if (debugLvl_ > 0) {
+          std::cout << "old momentum : " << stateToExtrapolate.getMom().Mag() << std::endl;
+        }
+
         double segmentLen = rep->extrapolateToPlane(stateToExtrapolate, fitterInfo->getReferenceState()->getPlane(), false, true);
         if (debugLvl_ > 0) {
           std::cout << "extrapolated stateToExtrapolate (prevReferenceState) by " << segmentLen << " cm.\n";
+          std::cout << "new momentum : " << stateToExtrapolate.getMom().Mag() << std::endl;
         }
         trackLen += segmentLen;
 
