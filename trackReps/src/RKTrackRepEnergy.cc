@@ -1298,7 +1298,7 @@ void RKTrackRepEnergy::derive(const double lambda, const M1x3& T,
     // contain kappa).  That, or their units are confused, but I don't
     // want to redo the math with their choice.  Simplified, also
     // avoids dividing by zero if dEdx = 0.
-    A(3,3) = dlambda/lambda*(3 - pow(lambda*E, -2)) - d2EdxdE;
+    A(3,3) = dlambda/lambda*(3 - pow(lambda*E, -2)) + d2EdxdE;
   }
 }
 
@@ -1410,7 +1410,7 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
     // states (everything else wouldn't make sense).  We also assume
     // that Lund's C equals 0 (i.e. no field gradients, no material
     // density gradients).
-    RKMatrix<7, 7>& J = *pJ;
+    RKMatrix<7, 7> J;
     std::fill(J.begin(), J.end(), 0);
     for (int i = 0; i < 3; ++i) {
       J(i, i) = 1;
@@ -1421,6 +1421,22 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
     for (int i = 0; i < 4; ++i) {
       for (int j = 0; j < 4; ++j) {
         J(i + 3, j + 3) = (i == j) + h/6 * (A1(i, j) + 2*A2(i, j) + 2*A3(i, j) + A4(i, j));
+      }
+    }
+
+    // Life is a bit miserable: we have to take into account the
+    // normalization of T while putting together the final Jacobian.
+    RKMatrix<7, 7>& Jnew = *pJ;
+    Jnew = J;
+    for (int iRow = 3; iRow < 6; ++iRow) {
+      for (int iCol = 3; iCol < 6; ++iCol) {
+        Jnew(iRow, iCol) = J(iRow, iCol) / norm;
+        // add the derivative of the norm ...
+        double sum = 0;
+        for (int k = 3; k < 6; ++k) {
+          sum += state7[k] * J(k, iCol);
+        }
+        Jnew(iRow, iCol) -= state7[iRow] * sum / norm;
       }
     }
   }
@@ -1455,6 +1471,74 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   double est = RKstep(state7, S, mat, newState7, jacobianT ? &propJac : 0);
   M7x7 newJacT;
   if (jacobianT) {
+    if (0) {
+      // Numerically evaluate the Jacobian, compare
+      // no science behind these values, I verified that forward and
+      // backward propagation yield inverse matrices to good
+      // approximation.  In order to avoid bad roundoff errors, the actual
+      // step taken is determined below, separately for each direction.
+      const double defaultStepX = 1.E-8;
+      double stepX;
+
+      M7x7 numJac;
+
+      // Calculate derivative for all three dimensions successively.
+      // The algorithm follows the one in TF1::Derivative() :
+      //   df(x) = (4 D(h/2) - D(h)) / 3
+      // with D(h) = (f(x + h) - f(x - h)) / (2 h).
+      //
+      // Could perhaps do better by also using f(x) which would be stB.
+      M1x7 rightShort, rightFull;
+      M1x7 leftShort, leftFull;
+      for (size_t i = 0; i < 7; ++i) {
+        {
+          M1x7 stateCopy(state7);
+          double temp = stateCopy[i] + defaultStepX / 2;
+          // Find the actual size of the step, which will differ from
+          // defaultStepX due to roundoff.  This is the step-size we will
+          // use for this direction.  Idea taken from Numerical Recipes,
+          // 3rd ed., section 5.7.
+          //
+          // Note that if a number is exactly representable, it's double
+          // will also be exact.  Outside denormals, this also holds for
+          // halving.  Unless the exponent changes (which it only will in
+          // the vicinity of zero) adding or subtracing doesn't make a
+          // difference.
+          //
+          // We determine the roundoff error for the half-step.  If this
+          // is exactly representable, the full step will also be.
+          stepX = 2 * (temp - stateCopy[i]);
+          stateCopy[i] = temp;
+          RKstep(stateCopy, S, mat, rightShort, 0);
+        }
+        {
+          M1x7 stateCopy(state7);
+          stateCopy[i] -= stepX / 2;
+          RKstep(stateCopy, S, mat, leftShort, 0);
+        }
+        {
+          M1x7 stateCopy(state7);
+          stateCopy[i] += stepX;
+          RKstep(stateCopy, S, mat, rightFull, 0);
+        }
+        {
+          M1x7 stateCopy(state7);
+          stateCopy[i] -= stepX;
+          RKstep(stateCopy, S, mat, leftFull, 0);
+        }
+
+        // Calculate the derivatives for the individual components of
+        // the track parameters.
+        for (size_t j = 0; j < 7; ++j) {
+          double derivFull = (rightFull[j] - leftFull[j]) / 2 / stepX;
+          double derivShort = (rightShort[j] - leftShort[j]) / stepX;
+
+          numJac(j, i) = 1./3.*(4*derivShort - derivFull);
+        }
+      }
+      //propJac = numJac;
+    }
+
     for (int i = 0; i < 7; ++i) {
       for (int j = 0; j < 7; ++j) {
         double sum = 0;
@@ -2220,6 +2304,11 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
                                             copysign(state7[4], SLDist),
                                             copysign(state7[5], SLDist));
   MaterialEffects::getInstance()->getMaterialProperties(mat);
+  double slDist = MaterialEffects::getInstance()->findNextBoundaryStraightLine(fieldCurvLimit);
+
+  // Limit step to not look ahead too far.  Mainly prevents us from
+  // extrapolating long distances even though we are in thin sensors.
+  fieldCurvLimit = std::min(fieldCurvLimit, 2*slDist);
 
   RKTrackRepEnergy::propagator extrap(this, state7, mat);
 
@@ -2353,6 +2442,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
     limits.Print();
   }
 
+  // With this RK implementation, mom loss is part of what is considered curvature here.
   limits.removeLimit(stp_momLoss);
 
   double finalStep = limits.getLowestLimitSignedVal();

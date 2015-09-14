@@ -72,6 +72,10 @@ public:
     bool result = materialInterface_->initTrack(posX, posY, posZ, dirX, dirY, dirZ);
     return result;
   }
+  double findNextBoundaryStraightLine(double sMax)
+  {
+    return materialInterface_->findNextBoundaryStraightLine(sMax);
+  }
 
   void setNoEffects(bool opt = true) {noEffects_ = opt;}
 

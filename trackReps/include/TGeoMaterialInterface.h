@@ -64,7 +64,7 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
   double findNextBoundary(const AbsTrackRep::internalExtrapolator& extrap,
                           double sMax);
 
-  // ClassDef(TGeoMaterialInterface, 1);
+  double findNextBoundaryStraightLine(double sMax);
 
  private:
 };

@@ -444,7 +444,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       }
 
       TVector3 track_pos;
-      double charge;
+      double charge = rep->getPDGCharge();
 
 
       // get the fitter infos ------------------------------------------------------------------

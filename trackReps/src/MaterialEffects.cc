@@ -269,7 +269,7 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
   // limit due to momloss
   double relMomLossPer_cm(0);
   if (currentMaterial.getZ() > 1.E-3) { // don't calculate energy loss for vacuum
-    stepSize_ = 1.; // set stepsize for momLoss calculation
+    stepSize_ = 1; // set stepsize for momLoss calculation
     relMomLossPer_cm = this->momentumLoss(currentMaterial, limits.getStepSign(), mom, true) / mom;
   }
 

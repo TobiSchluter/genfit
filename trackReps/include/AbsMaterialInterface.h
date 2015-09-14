@@ -63,6 +63,8 @@ class AbsMaterialInterface {
   virtual double findNextBoundary(const AbsTrackRep::internalExtrapolator& extrap,
                                   double sMax) = 0;
 
+  virtual double findNextBoundaryStraightLine(double sMax) = 0;
+
   virtual void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
 
  protected:

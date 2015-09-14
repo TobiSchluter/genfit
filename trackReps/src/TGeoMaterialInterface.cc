@@ -103,7 +103,7 @@ TGeoMaterialInterface::findNextBoundary(const AbsTrackRep::internalExtrapolator&
   extrap.getInitialState(posNow, dirNow);
 
   // Initialize the geometry to the current location (set by caller).
-  TGeoNode* oldNode = gGeoManager->FindNextBoundary(fabs(sMax) - s);
+  gGeoManager->FindNextBoundary(fabs(sMax) - s);
   //std::cout << "old "; oldNode->Print();
   double safety = gGeoManager->GetSafeDistance(); // >= 0
   double slDist = gGeoManager->GetStep();
@@ -225,6 +225,14 @@ TGeoMaterialInterface::findNextBoundary(const AbsTrackRep::internalExtrapolator&
       }
     }
   }
+}
+
+
+double
+TGeoMaterialInterface::findNextBoundaryStraightLine(double sMax)
+{
+  gGeoManager->FindNextBoundary(fabs(sMax));
+  return gGeoManager->GetStep();
 }
 
 
