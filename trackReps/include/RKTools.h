@@ -33,48 +33,94 @@ template <size_t nRows, size_t nCols>
 struct RKMatrix {
   double vals[nRows * nCols];
 
+  /**
+   * @brief Row/column aware accessor.
+   */
   double& operator()(size_t iRow, size_t iCol) {
     return vals[nCols*iRow + iCol];
   }
+  /**
+   * @brief Row/column read-only accessor.
+   */
   const double& operator()(size_t iRow, size_t iCol) const {
     return vals[nCols*iRow + iCol];
   }
+  /**
+   * @brief Accessor to underlying array.
+   */
   double& operator[](size_t n) {
     return vals[n];
   }
+  /**
+   * @brief Read-only accessor to underlying array.
+   */
   const double& operator[](size_t n) const {
     return vals[n];
   }
+  /**
+   * @brief Iterator pointing towards beginning of underlying array.
+   */
   double* begin() { return vals; }
+  /**
+   * @brief Iterator pointing past the last element of the underlying array.
+   */
   double* end() { return vals + nRows * nCols; }
+  /**
+   * @brief Read-only iterator pointing towards beginning of underlying array.
+   */
   const double* begin() const { return vals; }
+  /**
+   * @brief Read-only iterator pointing past the last element of the underlying array.
+   */
   const double* end() const { return vals + nRows * nCols; }
+  /**
+   * @brief Matrix assignment operator.
+   */
   RKMatrix<nRows, nCols>& operator=(const RKMatrix<nRows, nCols>& o) {
     std::copy(o.begin(), o.end(), this->begin());
     return *this;
   }
-
+  /**
+   * @brief Basic matrix addition operator +=.
+   */
   RKMatrix<nRows, nCols>& operator+=(const RKMatrix<nRows, nCols>& o) {
     for (size_t i = 0; i < nRows; ++i)
       for (size_t j = 0; j < nCols; ++j)
         this->operator()(i, j) += o(i, j);
     return *this;
   }
+  /**
+   * @brief Write matrix to console.
+   */
   void print() const;
 };
 
-template<size_t nRows, size_t nCols> RKMatrix<nRows, nCols> operator+(const RKMatrix<nRows, nCols>& left, const RKMatrix<nRows, nCols>& right) {
+/**
+ * @brief Addition of two matrices.
+ */
+template<size_t nRows, size_t nCols>
+RKMatrix<nRows, nCols> operator+(const RKMatrix<nRows, nCols>& left,
+                                 const RKMatrix<nRows, nCols>& right)
+{
   return (RKMatrix<nRows, nCols>(left) += right);
 }
 
-template<size_t nRows, size_t nCols> RKMatrix<nRows, nCols> operator*(const double& left, const RKMatrix<nRows, nCols>& right) {
+/**
+ * @brief Addition of a scalar to a matrix.
+ */
+template<size_t nRows, size_t nCols>
+RKMatrix<nRows, nCols> operator*(const double& left, const RKMatrix<nRows, nCols>& right)
+{
   RKMatrix<nRows, nCols> result(right);
   for (size_t i = 0; i < nRows*nCols; ++i)
     result[i] *= left;
   return result;
 }
 
-
+//@{
+/**
+ * @brief Abbreviations for the various matrices used in the code.
+ */
 typedef RKMatrix<1, 3> M1x3;
 typedef RKMatrix<1, 4> M1x4;
 typedef RKMatrix<1, 7> M1x7;
@@ -85,6 +131,7 @@ typedef RKMatrix<6, 5> M6x5;
 typedef RKMatrix<7, 5> M7x5;
 typedef RKMatrix<5, 6> M5x6;
 typedef RKMatrix<5, 7> M5x7;
+//@}
 
 /**
  * @brief Array matrix multiplications used in RKTrackRep
@@ -109,6 +156,7 @@ namespace RKTools {
 
 }
 
+/** @brief Implementation of the print function. */
 template<size_t nRows, size_t nCols>
 inline void
 RKMatrix<nRows, nCols>::print() const {

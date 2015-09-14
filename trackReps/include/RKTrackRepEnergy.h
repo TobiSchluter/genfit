@@ -30,8 +30,6 @@
 #include "StateOnPlane.h"
 #include "RKTools.h"
 #include "StepLimits.h"
-#include "MaterialProperties.h"
-#include "MaterialEffects.h"
 #include "RKTrackRep.h" //RKStep, ExtrapStep
 
 #include <algorithm>
