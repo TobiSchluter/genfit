@@ -389,7 +389,6 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
        rep = track->getTrackRep(repId_);
        std::cout << "Draw rep" << repId_ << std::endl;
     }
-
     if (debugLvl_>0) {
       std::cout << "track " << i << std::endl;
       //track->Print();
@@ -439,17 +438,18 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
             sameTypes = false;
         }
         if (!sameTypes) {
-          std::cerr<<"cannot draw trackpoint containing multiple Measurements of differend types"<<std::endl;
+          std::cerr<<"cannot draw trackpoint containing multiple Measurements of different types"<<std::endl;
           continue;
         }
       }
 
+      TVector3 track_pos;
+      double charge;
 
 
       // get the fitter infos ------------------------------------------------------------------
       if (! tp->hasFitterInfo(rep)) {
         std::cerr<<"trackPoint has no fitterInfo for rep"<<std::endl;
-        continue;
       }
 
       AbsFitterInfo* fitterInfo = tp->getFitterInfo(rep);
@@ -457,50 +457,51 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       fi = dynamic_cast<KalmanFitterInfo*>(fitterInfo);
       if(fi == NULL) {
         std::cerr<<"can only display KalmanFitterInfo"<<std::endl;
-        continue;
-      }
-      if (! fi->hasPredictionsAndUpdates()) {
-        std::cerr<<"KalmanFitterInfo does not have all predictions and updates"<<std::endl;
-        //continue;
       }
       else {
-        try {
-          fittedState = &(fi->getFittedState(true));
+        if (! fi->hasPredictionsAndUpdates()) {
+          std::cerr<<"KalmanFitterInfo does not have all predictions and updates"<<std::endl;
+          //continue;
         }
-        catch (Exception& e) {
-          std::cerr << e.what();
-          std::cerr<<"can not get fitted state"<<std::endl;
-          fittedState = NULL;
+        else {
+          try {
+            fittedState = &(fi->getFittedState(true));
+          }
+          catch (Exception& e) {
+            std::cerr << e.what();
+            std::cerr<<"can not get fitted state"<<std::endl;
+            fittedState = NULL;
+            prevFi = fi;
+            prevFittedState = fittedState;
+            continue;
+          }
+        }
+
+        if (fittedState == NULL) {
+          if (fi->hasForwardUpdate()) {
+            fittedState = fi->getForwardUpdate();
+          }
+          else if (fi->hasBackwardUpdate()) {
+            fittedState = fi->getBackwardUpdate();
+          }
+          else if (fi->hasForwardPrediction()) {
+            fittedState = fi->getForwardPrediction();
+          }
+          else if (fi->hasBackwardPrediction()) {
+            fittedState = fi->getBackwardPrediction();
+          }
+        }
+
+        if (fittedState == NULL) {
+          std::cout << "canot get any state from fitterInfo, continue.\n";
           prevFi = fi;
           prevFittedState = fittedState;
           continue;
         }
-      }
 
-      if (fittedState == NULL) {
-        if (fi->hasForwardUpdate()) {
-          fittedState = fi->getForwardUpdate();
-        }
-        else if (fi->hasBackwardUpdate()) {
-          fittedState = fi->getBackwardUpdate();
-        }
-        else if (fi->hasForwardPrediction()) {
-          fittedState = fi->getForwardPrediction();
-        }
-        else if (fi->hasBackwardPrediction()) {
-          fittedState = fi->getBackwardPrediction();
-        }
+        track_pos = fittedState->getPos();
+        charge = fittedState->getCharge();
       }
-
-      if (fittedState == NULL) {
-        std::cout << "canot get any state from fitterInfo, continue.\n";
-        prevFi = fi;
-        prevFittedState = fittedState;
-        continue;
-      }
-
-      TVector3 track_pos = fittedState->getPos();
-      double charge = fittedState->getCharge();
 
       //std::cout << "trackPos: "; track_pos.Print();
 
@@ -518,12 +519,33 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       }
 
 
+      if (!fi) {
+        // draw planes if corresponding option is set -----------------------------------------
+        if(drawDetectors_ && planar_hit) {
+          const SharedPlanePtr& physPlane = (dynamic_cast<const PlanarMeasurement*>(m))->getPhysicalPlane();
+          const TVector3& o(physPlane->getO());
+          const TVector3& u(physPlane->getU());
+          const TVector3& v(physPlane->getV());
+          TEveBox* box = boxCreator(o, u, v, 4, 4, 0.01);
+          if (drawDetectors_ && planar_hit) {
+            box->SetMainColor(kCyan);
+          } else {
+            box->SetMainColor(kGray);
+          }
+          box->SetMainTransparency(50);
+          gEve->AddElement(box);
+        }
+        continue;
+      }
+
       // loop over MeasurementOnPlanes
       unsigned int nMeas = fi->getNumMeasurements();
       for (unsigned int iMeas = 0; iMeas < nMeas; ++iMeas) {
 
-        if (iMeas > 0 && wire_hit)
+        if (iMeas > 0 && wire_hit) {
+          std::cerr << iMeas << " is wire hit." << std::endl;
           break;
+        }
 
         const MeasurementOnPlane* mop = fi->getMeasurementOnPlane(iMeas);
         const TVectorT<double>& hit_coords = mop->getState();
@@ -564,7 +586,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         // finished setting variables ---------------------------------------------------------
 
         // draw planes if corresponding option is set -----------------------------------------
-        if(iMeas == 0 &&
+        if(//iMeas == 0 &&
            (drawPlanes_ || (drawDetectors_ && planar_hit))) {
           TVector3 move(0,0,0);
           if (planar_hit) move = track_pos-o;
@@ -584,8 +606,13 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         if (j == 0) {
           if (drawBackward_) {
               MeasuredStateOnPlane update ( *fi->getBackwardUpdate() );
-              update.extrapolateBy(-3.);
-              makeLines(&update, fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
+              try {
+                update.extrapolateBy(-3.);
+                makeLines(&update, fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
+              } catch(...) {
+                std::cout << "failure extrapolating state" << std::endl;
+                fi->getBackwardUpdate()->Print();
+              }
           }
         }
         if (j > 0 && prevFi != NULL) {
@@ -599,8 +626,14 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
             makeLines(prevFi->getForwardUpdate(), fi->getForwardPrediction(), rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
             if (j == numhits-1) {
               MeasuredStateOnPlane update ( *fi->getForwardUpdate() );
-              update.extrapolateBy(3.);
-              makeLines(fi->getForwardUpdate(), &update, rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
+              try {
+                update.extrapolateBy(3.);
+                makeLines(fi->getForwardUpdate(), &update, rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
+              } catch(Exception& e) {
+                std::cerr<<e.what();
+                std::cout << "failure extrapolating state" << std::endl;
+                fi->getForwardUpdate()->Print();
+              }
             }
           }
           if (drawBackward_) {
@@ -609,6 +642,9 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
           // draw reference track if corresponding option is set ------------------------------------------
           if(drawRefTrack_ && fi->hasReferenceState() && prevFi->hasReferenceState())
             makeLines(prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers_, false, 3);
+          else if (drawRefTrack_) {
+            std::cout << "no reference" << std::endl;
+          }
         }
         else if (j > 0 && prevFi == NULL) {
           std::cout << "previous FitterInfo == NULL \n";
