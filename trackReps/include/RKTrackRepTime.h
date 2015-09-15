@@ -183,8 +183,8 @@ class RKTrackRepTime : public AbsTrackRep {
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const;
 
-  void getState8(const StateOnPlane& state, M1x8& state8) const;
-  void getState6(StateOnPlane& state, const M1x8& state8) const; // state8 must already lie on plane of state!
+  void getStateGlobal(const StateOnPlane& stateLocal, M1x8& stateGlobal) const;
+  void getStateLocal(StateOnPlane& stateLocal, const M1x8& stateGlobal) const; // state8 must already lie on plane of state!
 
   void transformPM8(const MeasuredStateOnPlane& state,
                     M8x8& out8x8) const;
