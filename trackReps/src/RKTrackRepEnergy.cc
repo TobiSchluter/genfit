@@ -928,7 +928,7 @@ double RKTrackRepEnergy::getTime(const StateOnPlane& state) const {
 
 
 void RKTrackRepEnergy::calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
-					     const M1x7& destState7, const DetPlane& destPlane) const {
+                                                   const M1x7& destState7, const DetPlane& destPlane) const {
 
   if (debugLvl_ > 0) {
     std::cout << "RKTrackRepEnergy::calcForwardJacobianAndNoise " << std::endl;
@@ -1589,13 +1589,8 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
 
 
 void RKTrackRepEnergy::initArrays() const {
-  std::fill(noiseProjection_.begin(), noiseProjection_.end(), 0);
-  for (unsigned int i=0; i<7; ++i) // initialize as diagonal matrix
-    noiseProjection_[i*8] = 1;
-
   fJacobian_.UnitMatrix();
   fNoise_.Zero();
-  limits_.reset();
 
   RKSteps_.reserve(100);
   ExtrapSteps_.reserve(100);
@@ -2520,24 +2515,26 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     for(int i = 0; i < 7*7; ++i) J_MMT[i] = 0;
     for(int i=0; i<7; ++i) J_MMT[8*i] = 1.;
 
+    M7x7 noiseProjection(J_MMT); // initialize to unit matrix.
+
     isAtBoundary = false;
 
     // propagation
     bool checkJacProj = false;
-    limits_.reset();
-    limits_.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
+    StepLimits limits;
+    limits.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
     double pStart = fabs(charge / state7[6]);
     if( ! RKutta(SU, destPlane, charge, mass, state7, fillExtrapSteps ? &J_MMT : 0,
-		 coveredDistance, flightTime, checkJacProj, noiseProjection_,
-		 limits_, onlyOneStep) ) {
+		 coveredDistance, flightTime, checkJacProj, noiseProjection,
+		 limits, onlyOneStep) ) {
       Exception exc("RKTrackRepEnergy::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
       exc.setFatal();
       throw exc;
     }
 
-    bool atPlane(limits_.getLowestLimit().first == stp_plane);
-    if (limits_.getLowestLimit().first == stp_boundary)
+    bool atPlane(limits.getLowestLimit().first == stp_plane);
+    if (limits.getLowestLimit().first == stp_boundary)
       isAtBoundary = true;
 
 
@@ -2594,7 +2591,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane
-        RKTools::Np_N_NpT(noiseProjection_, noise);
+        RKTools::Np_N_NpT(noiseProjection, noise);
 
         if (debugLvl_ > 1) {
           std::cout << "7D noise projected onto plane: \n";

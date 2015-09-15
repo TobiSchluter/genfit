@@ -282,11 +282,6 @@ class RKTrackRepEnergy : public AbsTrackRep {
   mutable bool useCache_; //! use cached RKSteps_ for extrapolation
   mutable unsigned int cachePos_; //!
 
-  // auxiliary variables and arrays
-  // needed in Extrap()
-  mutable StepLimits limits_; //!
-  mutable M7x7 noiseArray_; //! noise matrix of the last extrapolation
-  mutable M7x7 noiseProjection_; //!
 public:
   class propagator : public RKTrackRepEnergy::internalExtrapolator {
   public:
