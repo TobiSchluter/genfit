@@ -965,10 +965,6 @@ void RKTrackRepTime::calcForwardJacobianAndNoise(const M1x8& startState8, const 
   jac.Transpose(jac); // Because the helper function wants transposed input.
   RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, *(M8x8 *)jac.GetMatrixArray(),
 				J_pM, *(M6x6 *)fJacobian_.GetMatrixArray());
-  J_pM.print();
-  J_Mp.print();
-  jac.Print();
-  fJacobian_.Print();
   RKTools::J_MpTxnoise7xJ_Mp(J_Mp, *(M7x7 *)noise.GetMatrixArray(),
 			   *(M6x6 *)fNoise_.GetMatrixArray());
 
@@ -985,11 +981,11 @@ void RKTrackRepTime::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym&
   jacobian.ResizeTo(6,6);
   jacobian = fJacobian_;
 
-  noise.ResizeTo(5,5);
+  noise.ResizeTo(6,6);
   noise = fNoise_;
 
   // lastEndState_ = jacobian * lastStartState_  + deltaState
-  deltaState.ResizeTo(5);
+  deltaState.ResizeTo(6);
   // Calculate this without temporaries:
   //deltaState = lastEndState_.getState() - jacobian * lastStartState_.getState()
   deltaState = lastStartState_.getState();
@@ -997,6 +993,8 @@ void RKTrackRepTime::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym&
   deltaState -= lastEndState_.getState();
   deltaState *= -1;
 
+  jacobian.Print();
+  noise.Print();
 
   if (debugLvl_ > 0) {
     std::cout << "delta state : "; deltaState.Print();
@@ -1024,12 +1022,12 @@ void RKTrackRepTime::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym
     throw e;
   }
 
-  noise.ResizeTo(5,5);
+  noise.ResizeTo(6,6);
   noise = fNoise_;
   noise.Similarity(jacobian);
 
   // lastStartState_ = jacobian * lastEndState_  + deltaState
-  deltaState.ResizeTo(5);
+  deltaState.ResizeTo(6);
   deltaState = lastStartState_.getState() - jacobian * lastEndState_.getState();
 }
 
