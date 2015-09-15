@@ -204,7 +204,7 @@ class RKTrackRepTime : public AbsTrackRep {
 				   const M1x8& destState8, const DetPlane& destPlane) const;
 
   void transformM6P(const M6x6& in6x6,
-                    const M1x7& state7,
+                    const M1x8& state7,
                     MeasuredStateOnPlane& state) const; // plane and charge must already be set!
 
   //! Propagates the particle through the magnetic field.

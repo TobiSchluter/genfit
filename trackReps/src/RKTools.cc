@@ -327,6 +327,15 @@ void RKTools::J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5)
 }
 
 
+void RKTools::J_MpTxcov6xJ_Mp(const M6x6& J_Mp, const M6x6& cov6, M6x6& out6)
+{
+  TMatrixD JMp(6, 6, (const double*)&J_Mp);
+  TMatrixDSym J6(6, (const double*)&cov6);
+  TMatrixD result(JMp, TMatrixD::kTransposeMult,
+                  TMatrixD(J6, TMatrixD::kMult, JMp));
+  std::copy(result.GetMatrixArray(), result.GetMatrixArray() + 6*6, out6.begin());
+}
+
 void RKTools::J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5)
 {
   if (debugFlags & flagSlowMatrix) {

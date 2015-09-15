@@ -48,8 +48,8 @@ RKTrackRepTime::RKTrackRepTime() :
   lastEndState_(this),
   RKStepsFXStart_(0),
   RKStepsFXStop_(0),
-  fJacobian_(5,5),
-  fNoise_(5),
+  fJacobian_(6,6),
+  fNoise_(6),
   useCache_(false),
   cachePos_(0)
 {
@@ -63,8 +63,8 @@ RKTrackRepTime::RKTrackRepTime(int pdgCode, char propDir) :
   lastEndState_(this),
   RKStepsFXStart_(0),
   RKStepsFXStop_(0),
-  fJacobian_(5,5),
-  fNoise_(5),
+  fJacobian_(6,6),
+  fNoise_(6),
   useCache_(false),
   cachePos_(0)
 {
@@ -1011,7 +1011,7 @@ void RKTrackRepTime::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym
     throw exc;
   }
 
-  jacobian.ResizeTo(5,5);
+  jacobian.ResizeTo(6,6);
   jacobian = fJacobian_;
   bool status = TDecompLU::InvertLU(jacobian, 0.0);
   if(status == 0){
@@ -1208,7 +1208,7 @@ void RKTrackRepTime::setPosMomCov(MeasuredStateOnPlane& state, const TVector3& p
   const M6x6& cov6x6_( *((M6x6*) cov6x6.GetMatrixArray()) );
 
   // FIXME
-  //transformM6P(cov6x6_, state8, state);
+  transformM6P(cov6x6_, state8, state);
 
 }
 
@@ -1234,7 +1234,7 @@ void RKTrackRepTime::setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& s
   const M6x6& cov6x6_( *((M6x6*) cov6x6.GetMatrixArray()) );
 
   // FIXME
-  //transformM6P(cov6x6_, state8, state);
+  transformM6P(cov6x6_, state8, state);
 
 }
 
@@ -1302,7 +1302,6 @@ void RKTrackRepTime::derive(const double lambda, const M1x3& T,
 
     // The derivative of dTime by dlambda.
     A(4,3) = copysign(E + 1/(lambda*lambda*E), lambda);
-    A.print();
   }
 }
 
@@ -1322,8 +1321,6 @@ double RKTrackRepTime::RKstep(const M1x8& state8, const double h,
   if (pJ) {
     pA1 = &A1; pA2 = &A2, pA3 = &A3, pA4 = &A4;
   }
-
-  state8.print();
 
   const M1x3 rStart = {{ state8[0], state8[1], state8[2] }};
   const M1x3 TStart = {{ state8[3], state8[4], state8[5] }};
@@ -1826,53 +1823,53 @@ void RKTrackRepTime::calcJ_Mp_8x6(M8x6& J_Mp, const TVector3& U, const TVector3&
 
 
 void RKTrackRepTime::transformM6P(const M6x6& in6x6,
-                              const M1x7& state7,
-                              MeasuredStateOnPlane& state) const { // plane and charge must already be set!
+                                  const M1x8& state8,
+                                  MeasuredStateOnPlane& state) const { // plane and charge must already be set!
 
   // get vectors and aux variables
   const TVector3& U(state.getPlane()->getU());
   const TVector3& V(state.getPlane()->getV());
   const TVector3& W(state.getPlane()->getNormal());
 
-  const double AtU = state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z();
-  const double AtV = state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z();
-  const double AtW = state7[3]*W.X() + state7[4]*W.Y() + state7[5]*W.Z();
+  const double AtU = state8[3]*U.X() + state8[4]*U.Y() + state8[5]*U.Z();
+  const double AtV = state8[3]*V.X() + state8[4]*V.Y() + state8[5]*V.Z();
+  const double AtW = state8[3]*W.X() + state8[4]*W.Y() + state8[5]*W.Z();
 
-  // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,px,py,pz)       (in is 6x6)
+  // J_Mp matrix is d(q/p,u',v',u,v,time) / d(x,y,z,px,py,pz)       (in is 6x6)
 
-  const double qop = state7[6];
+  const double qop = state8[6];
   const double p = getCharge(state)/qop; // momentum
 
-  M6x5 J_Mp_6x5;
-  std::fill(J_Mp_6x5.begin(), J_Mp_6x5.end(), 0);
+  M6x6 J_Mp_6x6;
+  std::fill(J_Mp_6x6.begin(), J_Mp_6x6.end(), 0);
 
   //d(u)/d(x,y,z)
-  J_Mp_6x5[3]  = U.X(); // [0][3]
-  J_Mp_6x5[8]  = U.Y(); // [1][3]
-  J_Mp_6x5[13] = U.Z(); // [2][3]
+  J_Mp_6x6(0,3) = U.X();
+  J_Mp_6x6(1,3) = U.Y();
+  J_Mp_6x6(2,3) = U.Z();
   //d(v)/d(x,y,z)
-  J_Mp_6x5[4]  = V.X(); // [0][4]
-  J_Mp_6x5[9]  = V.Y(); // [1][4]
-  J_Mp_6x5[14] = V.Z(); // [2][4]
+  J_Mp_6x6(0,4) = V.X();
+  J_Mp_6x6(1,4) = V.Y();
+  J_Mp_6x6(2,4) = V.Z();
   // d(q/p)/d(px,py,pz)
   double fact = (-1.) * qop / p;
-  J_Mp_6x5[15] = fact * state7[3]; // [3][0]
-  J_Mp_6x5[20] = fact * state7[4]; // [4][0]
-  J_Mp_6x5[25] = fact * state7[5]; // [5][0]
+  J_Mp_6x6(3,0) = fact * state8[3];
+  J_Mp_6x6(4,0) = fact * state8[4];
+  J_Mp_6x6(5,0) = fact * state8[5];
   // d(u')/d(px,py,pz)
   fact = 1./(p*AtW*AtW);
-  J_Mp_6x5[16] = fact * (U.X()*AtW - W.X()*AtU); // [3][1]
-  J_Mp_6x5[21] = fact * (U.Y()*AtW - W.Y()*AtU); // [4][1]
-  J_Mp_6x5[26] = fact * (U.Z()*AtW - W.Z()*AtU); // [5][1]
+  J_Mp_6x6(3,1) = fact * (U.X()*AtW - W.X()*AtU);
+  J_Mp_6x6(4,1) = fact * (U.Y()*AtW - W.Y()*AtU);
+  J_Mp_6x6(5,1) = fact * (U.Z()*AtW - W.Z()*AtU);
   // d(v')/d(px,py,pz)
-  J_Mp_6x5[17] = fact * (V.X()*AtW - W.X()*AtV); // [3][2]
-  J_Mp_6x5[22] = fact * (V.Y()*AtW - W.Y()*AtV); // [4][2]
-  J_Mp_6x5[27] = fact * (V.Z()*AtW - W.Z()*AtV); // [5][2]
+  J_Mp_6x6(3,2) = fact * (V.X()*AtW - W.X()*AtV);
+  J_Mp_6x6(4,2) = fact * (V.Y()*AtW - W.Y()*AtV);
+  J_Mp_6x6(5,2) = fact * (V.Z()*AtW - W.Z()*AtV);
 
   // do the transformation
-  // out5x5 = J_Mp^T * in * J_Mp
-  M5x5& out5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
-  RKTools::J_MpTxcov6xJ_Mp(J_Mp_6x5, in6x6, out5x5_);
+  // out6x6 = J_Mp^T * in * J_Mp
+  M6x6& out6x6_ = *((M6x6*) state.getCov().GetMatrixArray());
+  RKTools::J_MpTxcov6xJ_Mp(J_Mp_6x6, in6x6, out6x6_);
 
 }
 

@@ -157,6 +157,7 @@ namespace RKTools {
   void J_MpTxcov8xJ_Mp(const M8x6& J_Mp, const M8x8& cov8, M6x6& out6);
   void J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5);
   void J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5);
+  void J_MpTxcov6xJ_Mp(const M6x6& J_Mp, const M6x6& cov6, M6x6& out6);
 
   void J_MMTxcov7xJ_MM(const M7x7& J_MM, M7x7& cov7);
 
