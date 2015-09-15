@@ -207,6 +207,21 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x6& J_pM, const M5x5& cov5, M6x6& out6){
 
 }
 
+void RKTools::J_pMTxcov6xJ_pM(const M6x8& J_pM, const M6x6& cov6, M8x8& out8){
+  TMatrixD JpM(6, 8, (const double*)&J_pM);
+  TMatrixDSym J6(6, (const double*)&cov6);
+  J6.SimilarityT(JpM);
+  std::copy(J6.GetMatrixArray(), J6.GetMatrixArray() + 8*8, out8.begin());
+}
+
+
+void RKTools::J_pMTxcov6xJ_pM(const M6x6& J_pM, const M6x6& cov6, M6x6& out6){
+  TMatrixD JpM(6, 6, (const double*)&J_pM);
+  TMatrixDSym J6(6, (const double*)&cov6);
+  J6.SimilarityT(JpM);
+  std::copy(J6.GetMatrixArray(), J6.GetMatrixArray() + 6*6, out6.begin());
+}
+
 
 void RKTools::J_MpTxnoise7xJ_Mp(const M8x6& J_Mp, const M7x7& noise7, M6x6& out6)
 {

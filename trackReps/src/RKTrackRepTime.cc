@@ -131,7 +131,6 @@ double RKTrackRepTime::extrapolateToPlane(StateOnPlane& state,
   return coveredDistance;
 }
 
-#if 0
 double RKTrackRepTime::extrapolateToLine(StateOnPlane& state,
     const TVector3& linePoint,
     const TVector3& lineDirection,
@@ -147,8 +146,8 @@ double RKTrackRepTime::extrapolateToLine(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  M1x8 state8;
+  getState8(state, state8);
 
   bool fillExtrapSteps(false);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
@@ -161,7 +160,7 @@ double RKTrackRepTime::extrapolateToLine(StateOnPlane& state,
   double charge = getCharge(state);
   double mass = getMass(state);
   double flightTime = 0;
-  TVector3 dir(state7[3], state7[4], state7[5]);
+  TVector3 dir(state8[3], state8[4], state8[5]);
   TVector3 lastDir(0,0,0);
   TVector3 poca, poca_onwire;
   bool isAtBoundary(false);
@@ -180,11 +179,11 @@ double RKTrackRepTime::extrapolateToLine(StateOnPlane& state,
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state8, flightTime, false, NULL, true, stopAtBoundary, maxStep);
     tracklength += step;
 
-    dir.SetXYZ(state7[3], state7[4], state7[5]);
-    poca.SetXYZ(state7[0], state7[1], state7[2]);
+    dir.SetXYZ(state8[3], state8[4], state8[5]);
+    poca.SetXYZ(state8[0], state8[1], state8[2]);
     poca_onwire = pocaOnLine(linePoint, lineDirection, poca);
 
     // check break conditions
@@ -211,14 +210,14 @@ double RKTrackRepTime::extrapolateToLine(StateOnPlane& state,
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
     lastEndState_.setPlane(plane);
-    getState5(lastEndState_, state7);
+    getState6(lastEndState_, state8);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
     lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     state.setPlane(plane);
-    getState5(state, state7);
+    getState6(state, state8);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -247,8 +246,8 @@ double RKTrackRepTime::extrapToPoint(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  M1x8 state8;
+  getState8(state, state8);
 
   bool fillExtrapSteps(false);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
@@ -258,7 +257,7 @@ double RKTrackRepTime::extrapToPoint(StateOnPlane& state,
     fillExtrapSteps = true;
 
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
-  TVector3 dir(state7[3], state7[4], state7[5]);
+  TVector3 dir(state8[3], state8[4], state8[5]);
   if (G != NULL) {
     if(G->GetNrows() != 3) {
       Exception exc("RKTrackRepTime::extrapolateToLine ==> G is not 3x3",__LINE__,__FILE__);
@@ -289,14 +288,14 @@ double RKTrackRepTime::extrapToPoint(StateOnPlane& state,
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state8, flightTime, false, NULL, true, stopAtBoundary, maxStep);
     tracklength += step;
 
-    dir.SetXYZ(state7[3], state7[4], state7[5]);
+    dir.SetXYZ(state8[3], state8[4], state8[5]);
     if (G != NULL) {
       dir = TMatrix(*G) * dir;
     }
-    poca.SetXYZ(state7[0], state7[1], state7[2]);
+    poca.SetXYZ(state8[0], state8[1], state8[2]);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -326,14 +325,14 @@ double RKTrackRepTime::extrapToPoint(StateOnPlane& state,
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
     lastEndState_.setPlane(plane);
-    getState5(lastEndState_, state7);
+    getState6(lastEndState_, state8);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
     lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     state.setPlane(plane);
-    getState5(state, state7);
+    getState6(state, state8);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -364,8 +363,8 @@ double RKTrackRepTime::extrapolateToCylinder(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  M1x8 state8;
+  getState8(state, state8);
 
   bool fillExtrapSteps(false);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
@@ -394,8 +393,8 @@ double RKTrackRepTime::extrapolateToCylinder(StateOnPlane& state,
       throw exc;
     }
 
-    pos.SetXYZ(state7[0], state7[1], state7[2]);
-    dir.SetXYZ(state7[3], state7[4], state7[5]);
+    pos.SetXYZ(state8[0], state8[1], state8[2]);
+    dir.SetXYZ(state8[3], state8[4], state8[5]);
 
     // solve quadratic equation
     TVector3 AO = (pos - linePoint);
@@ -436,12 +435,12 @@ double RKTrackRepTime::extrapolateToCylinder(StateOnPlane& state,
     plane->setO(dest);
     plane->setUV((dest-linePoint).Cross(lineDirection), lineDirection);
 
-    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state8, flightTime, false, NULL, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
-      pos.SetXYZ(state7[0], state7[1], state7[2]);
-      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      pos.SetXYZ(state8[0], state8[1], state8[2]);
+      dir.SetXYZ(state8[3], state8[4], state8[5]);
       plane->setO(pos);
       plane->setUV((pos-linePoint).Cross(lineDirection), lineDirection);
       break;
@@ -456,14 +455,14 @@ double RKTrackRepTime::extrapolateToCylinder(StateOnPlane& state,
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
     lastEndState_.setPlane(plane);
-    getState5(lastEndState_, state7);
+    getState6(lastEndState_, state8);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
     lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     state.setPlane(plane);
-    getState5(state, state7);
+    getState6(state, state8);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -472,7 +471,8 @@ double RKTrackRepTime::extrapolateToCylinder(StateOnPlane& state,
   return tracklength;
 }
 
-  
+
+
 double RKTrackRepTime::extrapolateToCone(StateOnPlane& state,
     double openingAngle,
     const TVector3& conePoint,
@@ -489,8 +489,8 @@ double RKTrackRepTime::extrapolateToCone(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  M1x8 state8;
+  getState8(state, state8);
 
   bool fillExtrapSteps(false);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
@@ -519,8 +519,8 @@ double RKTrackRepTime::extrapolateToCone(StateOnPlane& state,
       throw exc;
     }
 
-    pos.SetXYZ(state7[0], state7[1], state7[2]);
-    dir.SetXYZ(state7[3], state7[4], state7[5]);
+    pos.SetXYZ(state8[0], state8[1], state8[2]);
+    dir.SetXYZ(state8[3], state8[4], state8[5]);
 
     // solve quadratic equation a k^2 + 2 b k + c = 0
     // a = (U . D)^2 - cos^2 alpha * U^2
@@ -570,12 +570,12 @@ double RKTrackRepTime::extrapolateToCone(StateOnPlane& state,
     plane->setO(dest);
     plane->setUV((dest-conePoint).Cross(coneDirection), dest-conePoint);
 
-    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state8, flightTime, false, NULL, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
-      pos.SetXYZ(state7[0], state7[1], state7[2]);
-      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      pos.SetXYZ(state8[0], state8[1], state8[2]);
+      dir.SetXYZ(state8[3], state8[4], state8[5]);
       plane->setO(pos);
       plane->setUV((pos-conePoint).Cross(coneDirection), pos-conePoint);
       break;
@@ -590,14 +590,14 @@ double RKTrackRepTime::extrapolateToCone(StateOnPlane& state,
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
     lastEndState_.setPlane(plane);
-    getState5(lastEndState_, state7);
+    getState6(lastEndState_, state8);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
     lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     state.setPlane(plane);
-    getState5(state, state7);
+    getState6(state, state8);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -622,8 +622,8 @@ double RKTrackRepTime::extrapolateToSphere(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  M1x8 state8;
+  getState8(state, state8);
 
   bool fillExtrapSteps(false);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
@@ -652,8 +652,8 @@ double RKTrackRepTime::extrapolateToSphere(StateOnPlane& state,
       throw exc;
     }
 
-    pos.SetXYZ(state7[0], state7[1], state7[2]);
-    dir.SetXYZ(state7[3], state7[4], state7[5]);
+    pos.SetXYZ(state8[0], state8[1], state8[2]);
+    dir.SetXYZ(state8[3], state8[4], state8[5]);
 
     // solve quadratic equation
     TVector3 AO = (pos - point);
@@ -682,12 +682,12 @@ double RKTrackRepTime::extrapolateToSphere(StateOnPlane& state,
 
     plane->setON(dest, dest-point);
 
-    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state8, flightTime, false, NULL, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
-      pos.SetXYZ(state7[0], state7[1], state7[2]);
-      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      pos.SetXYZ(state8[0], state8[1], state8[2]);
+      dir.SetXYZ(state8[3], state8[4], state8[5]);
       plane->setON(pos, pos-point);
       break;
     }
@@ -701,14 +701,14 @@ double RKTrackRepTime::extrapolateToSphere(StateOnPlane& state,
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
     lastEndState_.setPlane(plane);
-    getState5(lastEndState_, state7);
+    getState6(lastEndState_, state8);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
     lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     state.setPlane(plane);
-    getState5(state, state7);
+    getState6(state, state8);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -732,8 +732,8 @@ double RKTrackRepTime::extrapolateBy(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  M1x8 state8;
+  getState8(state, state8);
 
   bool fillExtrapSteps(false);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
@@ -762,19 +762,19 @@ double RKTrackRepTime::extrapolateBy(StateOnPlane& state,
       throw exc;
     }
 
-    pos.SetXYZ(state7[0], state7[1], state7[2]);
-    dir.SetXYZ(state7[3], state7[4], state7[5]);
+    pos.SetXYZ(state8[0], state8[1], state8[2]);
+    dir.SetXYZ(state8[3], state8[4], state8[5]);
 
     dest = pos + 1.5*(step-tracklength) * dir;
 
     plane->setON(dest, dir);
 
-    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, (step-tracklength));
+    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state8, flightTime, false, NULL, true, stopAtBoundary, (step-tracklength));
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
-      pos.SetXYZ(state7[0], state7[1], state7[2]);
-      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      pos.SetXYZ(state8[0], state8[1], state8[2]);
+      dir.SetXYZ(state8[3], state8[4], state8[5]);
       plane->setON(pos, dir);
       break;
     }
@@ -783,8 +783,8 @@ double RKTrackRepTime::extrapolateBy(StateOnPlane& state,
       if (debugLvl_ > 0) {
         std::cout << "RKTrackRepTime::extrapolateBy(): reached after " << iterations << " iterations. \n";
       }
-      pos.SetXYZ(state7[0], state7[1], state7[2]);
-      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      pos.SetXYZ(state8[0], state8[1], state8[2]);
+      dir.SetXYZ(state8[3], state8[4], state8[5]);
       plane->setON(pos, dir);
       break;
     }
@@ -796,14 +796,14 @@ double RKTrackRepTime::extrapolateBy(StateOnPlane& state,
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
     lastEndState_.setPlane(plane);
-    getState5(lastEndState_, state7);
+    getState6(lastEndState_, state8);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
     lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     state.setPlane(plane);
-    getState5(state, state7);
+    getState6(state, state8);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -811,7 +811,7 @@ double RKTrackRepTime::extrapolateBy(StateOnPlane& state,
 
   return tracklength;
 }
-#endif
+
 
 TVector3 RKTrackRepTime::getPos(const StateOnPlane& state) const {
   M1x8 state8;
@@ -840,7 +840,6 @@ void RKTrackRepTime::getPosMom(const StateOnPlane& state, TVector3& pos, TVector
   mom.SetMag(getCharge(state)/state8[6]);
 }
 
-#if 0
 void RKTrackRepTime::getPosMomCov(const MeasuredStateOnPlane& state, TVector3& pos, TVector3& mom, TMatrixDSym& cov) const {
   getPosMom(state, pos, mom);
   cov.ResizeTo(6,6);
@@ -854,7 +853,7 @@ TMatrixDSym RKTrackRepTime::get6DCov(const MeasuredStateOnPlane& state) const {
 
   return cov;
 }
-#endif
+
 
 double RKTrackRepTime::getCharge(const StateOnPlane& state) const {
 
@@ -1699,7 +1698,7 @@ void RKTrackRepTime::calcJ_pM_6x8(M6x8& J_pM, const TVector3& U, const TVector3&
 
 
 void RKTrackRepTime::transformPM6(const MeasuredStateOnPlane& state,
-                              M6x6& out6x6) const {
+                                  M6x6& out6x6) const {
 
   // get vectors and aux variables
   const TVector3& U(state.getPlane()->getU());
@@ -1725,37 +1724,36 @@ void RKTrackRepTime::transformPM6(const MeasuredStateOnPlane& state,
   const double qop = state5(0);
   const double p = getCharge(state)/qop; // momentum
 
-  M5x6 J_pM_5x6;
-  std::fill(J_pM_5x6.begin(), J_pM_5x6.end(), 0);
+  M6x6 J_pM_6x6;
+  std::fill(J_pM_6x6.begin(), J_pM_6x6.end(), 0);
 
   // d(px,py,pz)/d(q/p)
   double fact = -1. * p / (pTildeMag * qop);
-  J_pM_5x6[3] = fact * pTilde[0]; // [0][3]
-  J_pM_5x6[4] = fact * pTilde[1]; // [0][4]
-  J_pM_5x6[5] = fact * pTilde[2]; // [0][5]
+  J_pM_6x6(0,3) = fact * pTilde[0];
+  J_pM_6x6(0,4) = fact * pTilde[1];
+  J_pM_6x6(0,5) = fact * pTilde[2];
   // d(px,py,pz)/d(u')
   fact = p * spu / pTildeMag;
-  J_pM_5x6[9]  = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 ); // [1][3]
-  J_pM_5x6[10] = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 ); // [1][4]
-  J_pM_5x6[11] = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 ); // [1][5]
+  J_pM_6x6(1,3) = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 );
+  J_pM_6x6(1,4) = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 );
+  J_pM_6x6(1,5) = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 );
   // d(px,py,pz)/d(v')
-  J_pM_5x6[15] = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 ); // [2][3]
-  J_pM_5x6[16] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
-  J_pM_5x6[17] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
+  J_pM_6x6(2,3) = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 );
+  J_pM_6x6(2,4) = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 );
+  J_pM_6x6(2,5) = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 );
   // d(x,y,z)/d(u)
-  J_pM_5x6[18] = U.X(); // [3][0]
-  J_pM_5x6[19] = U.Y(); // [3][1]
-  J_pM_5x6[20] = U.Z(); // [3][2]
+  J_pM_6x6(3,0) = U.X();
+  J_pM_6x6(3,1) = U.Y();
+  J_pM_6x6(3,2) = U.Z();
   // d(x,y,z)/d(v)
-  J_pM_5x6[24] = V.X(); // [4][0]
-  J_pM_5x6[25] = V.Y(); // [4][1]
-  J_pM_5x6[26] = V.Z(); // [4][2]
-
+  J_pM_6x6(4,0) = V.X();
+  J_pM_6x6(4,1) = V.Y();
+  J_pM_6x6(4,2) = V.Z();
 
   // do the transformation
-  // out = J_pM^T * in5x5 * J_pM
-  const M5x5& in5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
-  RKTools::J_pMTxcov5xJ_pM(J_pM_5x6, in5x5_, out6x6);
+  // out = J_pM^T * in6x6 * J_pM
+  const M6x6& in6x6_ = *((M6x6*) state.getCov().GetMatrixArray());
+  RKTools::J_pMTxcov6xJ_pM(J_pM_6x6, in6x6_, out6x6);
 
 }
 
