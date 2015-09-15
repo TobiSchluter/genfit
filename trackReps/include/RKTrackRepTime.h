@@ -152,8 +152,8 @@ class RKTrackRepTime : public AbsTrackRep {
               const double E, const double dEdx, const double d2EdxdE, const double B[3],
               double& dlambda, M1x3& dT, double& dTime, M5x5* pA) const;
 
-  double RKstep(const M1x8& state7, const double h, const MaterialProperties& mat,
-                M1x8& newState7, M8x8* pJ) const;
+  double RKstep(const M1x8& stateGlobal, const double h, const MaterialProperties& mat,
+                M1x8& newStateGlobal, M8x8* pJ) const;
 
   //! The actual Runge Kutta propagation
   /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).
@@ -164,7 +164,7 @@ class RKTrackRepTime : public AbsTrackRep {
    *  The return value is an estimation on how good the extrapolation is, and it is usually fine if it is > 1.
    *  It gives a suggestion how you must scale S so that the quality will be sufficient.
    */
-  double RKPropagate(M1x8& state7,
+  double RKPropagate(M1x8& stateGlobal,
                      M8x8* jacobian,
                      M1x3& SA,
                      double S,
@@ -204,7 +204,7 @@ class RKTrackRepTime : public AbsTrackRep {
 				   const M1x8& destState8, const DetPlane& destPlane) const;
 
   void transformM6P(const M6x6& in6x6,
-                    const M1x8& state7,
+                    const M1x8& stateGlobal,
                     MeasuredStateOnPlane& state) const; // plane and charge must already be set!
 
   //! Propagates the particle through the magnetic field.
@@ -221,7 +221,7 @@ class RKTrackRepTime : public AbsTrackRep {
               const DetPlane& plane,
               double charge,
               double mass,
-              M1x8& state7,
+              M1x8& stateGlobal,
               M8x8* jacobianT,
               double& coveredDistance, // signed
               double& flightTime,
@@ -230,7 +230,7 @@ class RKTrackRepTime : public AbsTrackRep {
               StepLimits& limits,
               bool onlyOneStep = false) const;
 
-  double estimateStep(const M1x8& state8,
+  double estimateStep(const M1x8& stateGlobal,
                       const M1x4& SU,
                       const DetPlane& plane,
                       const double& charge,
@@ -266,7 +266,7 @@ class RKTrackRepTime : public AbsTrackRep {
 
   void checkCache(const StateOnPlane& state, const SharedPlanePtr* plane) const;
 
-  double momMag(const M1x7& state7) const;
+  double momMag(const M1x7& stateGlobal) const;
 
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
@@ -289,18 +289,18 @@ class RKTrackRepTime : public AbsTrackRep {
 public:
   class propagator : public RKTrackRepTime::internalExtrapolator {
   public:
-    propagator(const RKTrackRepTime* rep, const M1x8& state8, MaterialProperties& mat)
-      : rep_(rep), state8_(state8), mat_(mat) {}
+    propagator(const RKTrackRepTime* rep, const M1x8& stateGlobal, MaterialProperties& mat)
+      : rep_(rep), stateGlobal_(stateGlobal), mat_(mat) {}
     void getInitialState(double posInitial[3], double dirInitial[3]) const {
       for(size_t i = 0; i < 3; ++i) {
-        posInitial[i] = state8_[i];
-        dirInitial[i] = state8_[i + 3];
+        posInitial[i] = stateGlobal_[i];
+        dirInitial[i] = stateGlobal_[i + 3];
       }
     }
     double extrapolateBy(double S, double posFinal[3], double dirFinal[3]) const {
       M1x3 SA;
       M1x8 state;
-      state = state8_;
+      state = stateGlobal_;
       double result = rep_->RKPropagate(state, 0, SA, S, mat_);
       for(size_t i = 0; i < 3; ++i) {
         posFinal[i] = state[i];
@@ -309,14 +309,14 @@ public:
       return result;
     }
     void moveStart(double posNew[3]) {
-      std::copy(posNew, posNew + 3, state8_.vals);
+      std::copy(posNew, posNew + 3, stateGlobal_.vals);
     }
     void setMat(const MaterialProperties& mat) {
       mat_ = mat;
     }
   private:
     const RKTrackRepTime* rep_;
-    M1x8 state8_;
+    M1x8 stateGlobal_;
     MaterialProperties mat_;
   };
 
