@@ -950,7 +950,7 @@ void RKTrackRepTime::calcForwardJacobianAndNoise(const M1x8& startState8, const 
     jac *= TMatrixD(TMatrixD::kTransposed, TMatrixD(8, 8, ExtrapSteps_[i].jac_.begin()));
   }
 
-  // Project into 5x5 space.
+  // Project into 6x6 space.
   M1x3 pTilde = {{startState8[3], startState8[4], startState8[5]}};
   const TVector3& normal = startPlane.getNormal();
   double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
@@ -965,6 +965,10 @@ void RKTrackRepTime::calcForwardJacobianAndNoise(const M1x8& startState8, const 
   jac.Transpose(jac); // Because the helper function wants transposed input.
   RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, *(M8x8 *)jac.GetMatrixArray(),
 				J_pM, *(M6x6 *)fJacobian_.GetMatrixArray());
+  J_pM.print();
+  J_Mp.print();
+  jac.Print();
+  fJacobian_.Print();
   RKTools::J_MpTxnoise7xJ_Mp(J_Mp, *(M7x7 *)noise.GetMatrixArray(),
 			   *(M6x6 *)fNoise_.GetMatrixArray());
 
@@ -978,7 +982,7 @@ void RKTrackRepTime::calcForwardJacobianAndNoise(const M1x8& startState8, const 
 
 void RKTrackRepTime::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const {
 
-  jacobian.ResizeTo(5,5);
+  jacobian.ResizeTo(6,6);
   jacobian = fJacobian_;
 
   noise.ResizeTo(5,5);
@@ -1689,7 +1693,7 @@ void RKTrackRepTime::calcJ_pM_6x8(M6x8& J_pM, const TVector3& U, const TVector3&
   J_pM(5,7) = 1.;
 
   /*if (debugLvl_ > 1) {
-    std::cout << "  J_pM_5x7_ = "; RKTools::printDim(J_pM_5x7_, 5,7);
+    std::cout << "  J_pM = "; J_pM.print()
   }*/
 }
 
@@ -1793,7 +1797,7 @@ void RKTrackRepTime::calcJ_Mp_8x6(M8x6& J_Mp, const TVector3& U, const TVector3&
   const double AtV = A[0]*V.X() + A[1]*V.Y() + A[2]*V.Z();
   const double AtW = A[0]*W.X() + A[1]*W.Y() + A[2]*W.Z();
 
-  // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,ax,ay,az,q/p)   (in is 7x7)
+  // J_Mp matrix is d(q/p,u',v',u,v,time) / d(x,y,z,ax,ay,az,q/p,time)   (in is 8x8)
 
   // d(u')/d(ax,ay,az)
   double fact = 1./(AtW*AtW);
@@ -1814,6 +1818,8 @@ void RKTrackRepTime::calcJ_Mp_8x6(M8x6& J_Mp, const TVector3& U, const TVector3&
   J_Mp(0,4) = V.X();
   J_Mp(1,4) = V.Y();
   J_Mp(2,4) = V.Z();
+  //d(time)/d(time)
+  J_Mp(7,5) = 1.;
 
   /*if (debugLvl_ > 1) {
     std::cout << "  J_Mp_7x5_ = "; RKTools::printDim(J_Mp, 7,5);
