@@ -18,6 +18,10 @@
 */
 
 #include "RKTrackRep.h"
+namespace genfit {
+typedef struct TRKStep<7> RKStep;
+typedef struct TExtrapStep<7> ExtrapStep;
+}
 
 #include <Exception.h>
 #include <FieldManager.h>
@@ -939,11 +943,11 @@ void RKTrackRep::calcForwardJacobianAndNoise(const M1x7& startState7, const DetP
   }
 
   // The Jacobians returned from RKutta are transposed.
-  TMatrixD jac(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_.back().jac7_.begin()));
-  TMatrixDSym noise(7, ExtrapSteps_.back().noise7_.begin());
+  TMatrixD jac(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_.back().jac_.begin()));
+  TMatrixDSym noise(7, ExtrapSteps_.back().noise_.begin());
   for (int i = ExtrapSteps_.size() - 2; i >= 0; --i) {
-    noise += TMatrixDSym(7, ExtrapSteps_[i].noise7_.begin()).Similarity(jac);
-    jac *= TMatrixD(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_[i].jac7_.begin()));
+    noise += TMatrixDSym(7, ExtrapSteps_[i].noise_.begin()).Similarity(jac);
+    jac *= TMatrixD(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_[i].jac_.begin()));
   }
 
   // Project into 5x5 space.
@@ -2306,7 +2310,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   static const RKStep defaultRKStep;
   RKSteps_.push_back( defaultRKStep );
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
-  lastStep->state7_ = state7;
+  lastStep->state_ = state7;
   ++RKStepsFXStop_;
 
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
@@ -2544,7 +2548,7 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       std::vector<ExtrapStep>::iterator lastStep = ExtrapSteps_.end() - 1;
 
       // Store Jacobian of this step for final calculation.
-      lastStep->jac7_ = J_MMT_;
+      lastStep->jac_ = J_MMT_;
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane
@@ -2557,13 +2561,13 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
       }
 
       // Store this step's noise for final calculation.
-      lastStep->noise7_ = noiseArray_;
+      lastStep->noise_ = noiseArray_;
 
       if (debugLvl_ > 2) {
         std::cout<<"ExtrapSteps \n";
         for (std::vector<ExtrapStep>::iterator it = ExtrapSteps_.begin(); it != ExtrapSteps_.end(); ++it){
-          std::cout << "7D Jacobian: "; RKTools::printDim((it->jac7_.begin()), 5,5);
-          std::cout << "7D noise:    "; RKTools::printDim((it->noise7_.begin()), 5,5);
+          std::cout << "7D Jacobian: "; it->jac_.print();
+          std::cout << "7D noise:    "; it->noise_.print();
         }
         std::cout<<"\n";
       }

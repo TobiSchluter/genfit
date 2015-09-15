@@ -208,6 +208,29 @@ void RKTools::J_pMTxcov5xJ_pM(const M5x6& J_pM, const M5x5& cov5, M6x6& out6){
 }
 
 
+void RKTools::J_MpTxnoise7xJ_Mp(const M8x6& J_Mp, const M7x7& noise7, M6x6& out6)
+{
+  TMatrixD JMp(8, 6, (const double*)&J_Mp);
+  TMatrixD n8(7, 7, (const double*)&noise7);
+  n8.ResizeTo(8, 8);
+  TMatrixD result(JMp, TMatrixD::kTransposeMult,
+                  TMatrixD(n8, TMatrixD::kMult, JMp));
+  std::copy(result.GetMatrixArray(), result.GetMatrixArray() + 6*6, out6.begin());
+  return;
+}
+
+
+void RKTools::J_MpTxcov8xJ_Mp(const M8x6& J_Mp, const M8x8& cov8, M6x6& out6)
+{
+  TMatrixD JMp(8, 6, (const double*)&J_Mp);
+  TMatrixD c8(8, 8, (const double*)&cov8);
+  TMatrixD result(JMp, TMatrixD::kTransposeMult,
+                  TMatrixD(c8, TMatrixD::kMult, JMp));
+  std::copy(result.GetMatrixArray(), result.GetMatrixArray() + 6*6, out6.begin());
+  return;
+}
+
+
 void RKTools::J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5)
 {
   if (debugFlags & flagSlowMatrix) {
@@ -523,6 +546,25 @@ void RKTools::J_MMxJ_MM(M7x7& J_MM, const M7x7& J_MM_old){
   J_MM[42+5] = J_MM_old[42+3] * J_MM_temp[21+5] + J_MM_old[42+4] * J_MM_temp[28+5] + J_MM_old[42+5] * J_MM_temp[35+5] + J_MM_old[42+6] * J_MM_temp[42+5];
   J_MM[42+6] = J_MM_old[42+6] * J_MM_temp[42+6];
 
+}
+
+
+void RKTools::J_pMTTxJ_MMTTxJ_MpTT(const M8x6& J_pMT, const M8x8& J_MMT, const M6x8& J_MpT, M6x6& J_pp)
+{
+  // calculates  J_pp = J_pM * J_MM * J_Mp
+  // input J_MMT is transposed version of actual jacobian J_MM
+  // input J_pMT is transposed version of actual jacobian J_pM (Master to plane)
+  // input J_MpT is transposed version of actual jacobian J_Mp (plane to Master)
+
+  TMatrixD JpMT(8, 6, (const double*)&J_pMT);
+  TMatrixD J8(8, 8, (const double*)&J_MMT);
+  TMatrixD JMpT(6, 8, (const double*)&J_MpT);
+  TMatrixD result(TMatrixD::kTransposed,
+                  TMatrixD(JMpT, TMatrixD::kMult,
+                           TMatrixD(J8, TMatrixD::kMult, JpMT)));
+
+  std::copy(result.GetMatrixArray(), result.GetMatrixArray() + 6*6, J_pp.begin());
+  return;
 }
 
 

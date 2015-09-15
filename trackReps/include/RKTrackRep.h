@@ -36,27 +36,26 @@ namespace genfit {
 /**
  * @brief Helper for RKTrackRep
  */
-struct RKStep {
+template<size_t nDim> struct TRKStep {
   MatStep matStep_; // material properties and stepsize
-  M1x7 state7_; // 7D state vector
+  RKMatrix<1, nDim> state_; // 7D state vector
   StepLimits limits_;
 
-  RKStep() {
-    std::fill(state7_.begin(), state7_.end(), 0);
+  TRKStep() {
+    std::fill(state_.begin(), state_.end(), 0);
   }
 };
-
 
 /**
  * @brief Helper for RKTrackRep
  */
-struct ExtrapStep {
-  M7x7 jac7_; // 5D jacobian of transport
-  M7x7 noise7_; // 5D noise matrix
+template<size_t nDim> struct TExtrapStep {
+  RKMatrix<nDim, nDim> jac_; // jacobian of transport
+  RKMatrix<7, 7> noise_; // noise matrix
 
-  ExtrapStep() {
-    std::fill(jac7_.begin(), jac7_.end(), 0);
-    std::fill(noise7_.begin(), jac7_.end(), 0);
+  TExtrapStep() {
+    std::fill(jac_.begin(), jac_.end(), 0);
+    std::fill(noise_.begin(), noise_.end(), 0);
   }
 };
 
@@ -290,10 +289,10 @@ class RKTrackRep : public AbsTrackRep {
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
   mutable StateOnPlane lastEndState_; //! state where the last extrapolation has ended
-  mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
+  mutable std::vector<TRKStep<7> > RKSteps_; //! RungeKutta steps made in the last extrapolation
   mutable int RKStepsFXStart_; //!
   mutable int RKStepsFXStop_; //!
-  mutable std::vector<ExtrapStep> ExtrapSteps_; //! steps made in Extrap during last extrapolation
+  mutable std::vector<TExtrapStep<7> > ExtrapSteps_; //! steps made in Extrap during last extrapolation
 
   mutable TMatrixD fJacobian_; //!
   mutable TMatrixDSym fNoise_; //!

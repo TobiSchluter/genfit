@@ -110,7 +110,7 @@ class RKTrackRepTime : public AbsTrackRep {
       bool calcJacobianNoise = false) const;
 
 
-  unsigned int getDim() const {return 5;}
+  unsigned int getDim() const {return 6;}
 
   virtual TVector3 getPos(const StateOnPlane& state) const;
 
@@ -164,8 +164,8 @@ class RKTrackRepTime : public AbsTrackRep {
    *  The return value is an estimation on how good the extrapolation is, and it is usually fine if it is > 1.
    *  It gives a suggestion how you must scale S so that the quality will be sufficient.
    */
-  double RKPropagate(M1x7& state7,
-                     M7x7* jacobian,
+  double RKPropagate(M1x8& state7,
+                     M8x8* jacobian,
                      M1x3& SA,
                      double S,
                      const MaterialProperties& mat) const;
@@ -183,25 +183,25 @@ class RKTrackRepTime : public AbsTrackRep {
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const;
 
-  void getState7(const StateOnPlane& state, M1x7& state7) const;
-  void getState5(StateOnPlane& state, const M1x7& state7) const; // state7 must already lie on plane of state!
+  void getState8(const StateOnPlane& state, M1x8& state8) const;
+  void getState6(StateOnPlane& state, const M1x8& state8) const; // state8 must already lie on plane of state!
 
-  void transformPM7(const MeasuredStateOnPlane& state,
-                    M7x7& out7x7) const;
+  void transformPM8(const MeasuredStateOnPlane& state,
+                    M8x8& out8x8) const;
 
-  void calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
+  void calcJ_pM_6x8(M6x8& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
 
   void transformPM6(const MeasuredStateOnPlane& state,
                     M6x6& out6x6) const;
 
-  void transformM7P(const M7x7& in7x7,
-                    const M1x7& state7,
+  void transformM8P(const M8x8& in8x8,
+                    const M1x8& state8,
                     MeasuredStateOnPlane& state) const; // plane must already be set!
 
-  void calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const M1x3& A) const;
+  void calcJ_Mp_8x6(M8x6& J_Mp, const TVector3& U, const TVector3& V, const M1x3& A) const;
 
-  void calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
-				   const M1x7& destState7, const DetPlane& destPlane) const;
+  void calcForwardJacobianAndNoise(const M1x8& startState8, const DetPlane& startPlane,
+				   const M1x8& destState8, const DetPlane& destPlane) const;
 
   void transformM6P(const M6x6& in6x6,
                     const M1x7& state7,
@@ -221,8 +221,8 @@ class RKTrackRepTime : public AbsTrackRep {
               const DetPlane& plane,
               double charge,
               double mass,
-              M1x7& state7,
-              M7x7* jacobianT,
+              M1x8& state7,
+              M8x8* jacobianT,
               double& coveredDistance, // signed
               double& flightTime,
               bool& checkJacProj,
@@ -230,7 +230,7 @@ class RKTrackRepTime : public AbsTrackRep {
               StepLimits& limits,
               bool onlyOneStep = false) const;
 
-  double estimateStep(const M1x7& state7,
+  double estimateStep(const M1x8& state8,
                       const M1x4& SU,
                       const DetPlane& plane,
                       const double& charge,
@@ -256,7 +256,7 @@ class RKTrackRepTime : public AbsTrackRep {
                 double charge,
                 double mass,
                 bool& isAtBoundary,
-                M1x7& state7,
+                M1x8& state8,
                 double& flightTime,
                 bool fillExtrapSteps,
                 TMatrixDSym* cov = nullptr,
@@ -271,10 +271,10 @@ class RKTrackRepTime : public AbsTrackRep {
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
   mutable StateOnPlane lastEndState_; //! state where the last extrapolation has ended
-  mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
+  mutable std::vector<TRKStep<8> > RKSteps_; //! RungeKutta steps made in the last extrapolation
   mutable int RKStepsFXStart_; //!
   mutable int RKStepsFXStop_; //!
-  mutable std::vector<ExtrapStep> ExtrapSteps_; //! steps made in Extrap during last extrapolation
+  mutable std::vector<TExtrapStep<8> > ExtrapSteps_; //! steps made in Extrap during last extrapolation
 
   mutable TMatrixD fJacobian_; //!
   mutable TMatrixDSym fNoise_; //!
@@ -285,23 +285,22 @@ class RKTrackRepTime : public AbsTrackRep {
   // auxiliary variables and arrays
   // needed in Extrap()
   mutable StepLimits limits_; //!
-  mutable M7x7 noiseArray_; //! noise matrix of the last extrapolation
   mutable M7x7 noiseProjection_; //!
-  mutable M7x7 J_MMT_; //!
 public:
   class propagator : public RKTrackRepTime::internalExtrapolator {
   public:
-    propagator(const RKTrackRepTime* rep, const M1x7& state7, MaterialProperties& mat)
-      : rep_(rep), state7_(state7), mat_(mat) { }
+    propagator(const RKTrackRepTime* rep, const M1x8& state8, MaterialProperties& mat)
+      : rep_(rep), state8_(state8), mat_(mat) {}
     void getInitialState(double posInitial[3], double dirInitial[3]) const {
       for(size_t i = 0; i < 3; ++i) {
-        posInitial[i] = state7_[i];
-        dirInitial[i] = state7_[i + 3];
+        posInitial[i] = state8_[i];
+        dirInitial[i] = state8_[i + 3];
       }
     }
     double extrapolateBy(double S, double posFinal[3], double dirFinal[3]) const {
       M1x3 SA;
-      M1x7 state(state7_);
+      M1x8 state;
+      state = state8_;
       double result = rep_->RKPropagate(state, 0, SA, S, mat_);
       for(size_t i = 0; i < 3; ++i) {
         posFinal[i] = state[i];
@@ -310,14 +309,14 @@ public:
       return result;
     }
     void moveStart(double posNew[3]) {
-      std::copy(posNew, posNew + 3, state7_.vals);
+      std::copy(posNew, posNew + 3, state8_.vals);
     }
     void setMat(const MaterialProperties& mat) {
       mat_ = mat;
     }
   private:
     const RKTrackRepTime* rep_;
-    M1x7 state7_;
+    M1x8 state8_;
     MaterialProperties mat_;
   };
 

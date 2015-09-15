@@ -108,7 +108,26 @@ void MaterialEffects::setMscModel(const std::string& modelName)
 }
 
 
-double MaterialEffects::effects(const std::vector<RKStep>& steps,
+double MaterialEffects::effects(const std::vector<TRKStep<8> >& steps,
+                                int materialsFXStart,
+                                int materialsFXStop,
+                                const double& mom,
+                                const int& pdg,
+                                M7x7* noise)
+{
+  std::vector<TRKStep<7> > steps7;
+  for (size_t i = 0; i < steps.size(); ++i) {
+    TRKStep<8> step8 = steps[i];
+    TRKStep<7> step7;
+    step7.matStep_ = step8.matStep_;
+    step7.limits_ = step8.limits_;
+    std::copy(step8.state_.begin(), step8.state_.end() - 1, step7.state_.begin());
+    steps7.push_back(step7);
+  }
+  return effects(steps7, materialsFXStart, materialsFXStop, mom, pdg, noise);
+}
+
+double MaterialEffects::effects(const std::vector<TRKStep<7> >& steps,
                                 int materialsFXStart,
                                 int materialsFXStop,
                                 const double& mom,
@@ -142,7 +161,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
 
   double momLoss = 0.;
 
-  for ( std::vector<RKStep>::const_iterator it = steps.begin() + materialsFXStart; it !=  steps.begin() + materialsFXStop; ++it) { // loop over steps
+  for ( std::vector<TRKStep<7> >::const_iterator it = steps.begin() + materialsFXStart; it !=  steps.begin() + materialsFXStop; ++it) { // loop over steps
 
     double realPath = it->matStep_.stepSize_;
     if (fabs(realPath) < 1.E-8) {
@@ -184,7 +203,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
           this->noiseBetheBloch(*noise, material, p, betaSquare, gamma, gammaSquare);
 
         if (noiseCoulomb_)
-          this->noiseCoulomb(*noise, material, *((M1x3*) &it->state7_[3]), pSquare, betaSquare);
+          this->noiseCoulomb(*noise, material, *((M1x3*) &it->state_[3]), pSquare, betaSquare);
 
         if (energyLossBrems_ && noiseBrems_)
           this->noiseBrems(*noise, material, pSquare, betaSquare);

@@ -134,8 +134,12 @@ typedef RKMatrix<7, 7> M7x7;
 typedef RKMatrix<8, 8> M8x8;
 typedef RKMatrix<6, 5> M6x5;
 typedef RKMatrix<7, 5> M7x5;
+typedef RKMatrix<8, 5> M8x5;
+typedef RKMatrix<8, 6> M8x6;
 typedef RKMatrix<5, 6> M5x6;
 typedef RKMatrix<5, 7> M5x7;
+typedef RKMatrix<5, 8> M5x8;
+typedef RKMatrix<6, 8> M6x8;
 //@}
 
 /**
@@ -146,6 +150,10 @@ namespace RKTools {
   void J_pMTxcov5xJ_pM(const M5x7& J_pM, const M5x5& cov5, M7x7& out7);
   void J_pMTxcov5xJ_pM(const M5x6& J_pM, const M5x5& cov5, M6x6& out6);
 
+  void J_pMTxcov6xJ_pM(const M6x8& J_pM, const M6x6& cov5, M8x8& out7);
+
+  void J_MpTxnoise7xJ_Mp(const M8x6& J_Mp, const M7x7& noise7, M6x6& out6);
+  void J_MpTxcov8xJ_Mp(const M8x6& J_Mp, const M8x8& cov8, M6x6& out6);
   void J_MpTxcov7xJ_Mp(const M7x5& J_Mp, const M7x7& cov7, M5x5& out5);
   void J_MpTxcov6xJ_Mp(const M6x5& J_Mp, const M6x6& cov6, M5x5& out5);
 
@@ -153,6 +161,7 @@ namespace RKTools {
 
   void J_MMxJ_MM(M7x7& J_MM, const M7x7& J_MM_old);
 
+  void J_pMTTxJ_MMTTxJ_MpTT(const M8x6& J_pMT, const M8x8& J_MMT, const M6x8& J_MpT, M6x6& J_pp);
   void J_pMTTxJ_MMTTxJ_MpTT(const M7x5& J_pMT, const M7x7& J_MMT, const M5x7& J_MpT, M5x5& J_pp);
 
   void Np_N_NpT(const M7x7& Np, M7x7& N);
