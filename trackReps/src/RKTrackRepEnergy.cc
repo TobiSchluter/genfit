@@ -1589,7 +1589,6 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
 
 
 void RKTrackRepEnergy::initArrays() const {
-  std::fill(noiseArray_.begin(), noiseArray_.end(), 0);
   std::fill(noiseProjection_.begin(), noiseProjection_.end(), 0);
   for (unsigned int i=0; i<7; ++i) // initialize as diagonal matrix
     noiseProjection_[i*8] = 1;
@@ -2554,10 +2553,11 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
 
     // call MatFX
-    M7x7* noise = NULL;
+    M7x7* pNoise = NULL;
+    M7x7 noise;
     if(fillExtrapSteps) {
-      noise = &noiseArray_;
-      for(int i = 0; i < 7*7; ++i) noiseArray_[i] = 0; // set noiseArray_ to 0
+      pNoise = &noise;
+      for(int i = 0; i < 7*7; ++i) noise[i] = 0; // set noiseArray_ to 0
     }
 
     double momLoss = 0;
@@ -2569,27 +2569,19 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
                                                          RKStepsFXStop_,
                                                          pStart, // momentum
                                                          pdgCode_,
-                                                         noise);
+                                                         pNoise);
 
       RKStepsFXStart_ = RKStepsFXStop_;
 
       if (debugLvl_ > 0) {
         std::cout << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6])
             << "; coveredDistance = " << coveredDistance << "\n";
-        if (debugLvl_ > 1 && noise != NULL) {
+        if (debugLvl_ > 1 && pNoise != NULL) {
           std::cout << "7D noise: \n";
-          RKTools::printDim(noise->begin(), 7, 7);
+          noise.print();
         }
       }
     } // finished MatFX
-
-    if (0 && fabs(fabs(pStart - fabs(1 / state7[6])) - fabs(momLoss)) / fabs(momLoss) > 1e-1) {
-      std::cout << "ALERT" << std::endl;
-      std::cout << "covDist = " << coveredDistance << " " << momLoss << " " << (fabs(pStart - fabs(1 / state7[6]))) <<  std::endl;
-      std::cout << state7[0] << " " << state7[1] << " " << state7[2]
-                << " " << state7[3] << " " << state7[4] << " " << state7[5] << std::endl;
-    }
-
 
     // fill ExtrapSteps_
     if (fillExtrapSteps) {
@@ -2602,16 +2594,16 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
       if( checkJacProj == true ){
         //project the noise onto the destPlane
-        RKTools::Np_N_NpT(noiseProjection_, noiseArray_);
+        RKTools::Np_N_NpT(noiseProjection_, noise);
 
         if (debugLvl_ > 1) {
           std::cout << "7D noise projected onto plane: \n";
-          RKTools::printDim(noiseArray_.begin(), 7, 7);
+          noise.print();
         }
       }
 
       // Store this step's noise for final calculation.
-      lastStep->noise7_ = noiseArray_;
+      lastStep->noise7_ = noise;
 
       if (debugLvl_ > 2) {
         std::cout<<"ExtrapSteps \n";

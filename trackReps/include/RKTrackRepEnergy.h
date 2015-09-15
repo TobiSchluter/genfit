@@ -287,7 +287,6 @@ class RKTrackRepEnergy : public AbsTrackRep {
   mutable StepLimits limits_; //!
   mutable M7x7 noiseArray_; //! noise matrix of the last extrapolation
   mutable M7x7 noiseProjection_; //!
-  mutable M7x7 J_MMT_; //!
 public:
   class propagator : public RKTrackRepEnergy::internalExtrapolator {
   public:
