@@ -150,10 +150,10 @@ class RKTrackRepTime : public AbsTrackRep {
 
   void derive(const double lambda, const M1x3& T,
               const double E, const double dEdx, const double d2EdxdE, const double B[3],
-              double& dlambda, M1x3& dT, RKMatrix<4,4>* pA) const;
+              double& dlambda, M1x3& dT, double& dTime, M5x5* pA) const;
 
-  double RKstep(const M1x7& state7, const double h, const MaterialProperties& mat,
-                M1x7& newState7, RKMatrix<7, 7>* pJ) const;
+  double RKstep(const M1x8& state7, const double h, const MaterialProperties& mat,
+                M1x8& newState7, M8x8* pJ) const;
 
   //! The actual Runge Kutta propagation
   /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).

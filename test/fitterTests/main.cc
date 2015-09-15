@@ -41,6 +41,7 @@
 #include <RKTools.h>
 #include <RKTrackRep.h>
 #include <RKTrackRepEnergy.h>
+#include <RKTrackRepTime.h>
 #include <StepLimits.h>
 #include <TGeoMaterialInterface.h>
 
@@ -409,7 +410,8 @@ int main(int argc, char **argv) {
       double sign(1.);
       if (chargeSwitchProb > gRandom->Uniform(1.))
         sign = -1.;
-      genfit::AbsTrackRep* rep = new genfit::RKTrackRepEnergy(sign*pdg);
+      //genfit::AbsTrackRep* rep = new genfit::RKTrackRepEnergy(sign*pdg);
+      genfit::AbsTrackRep* rep = new genfit::RKTrackRepTime(sign*pdg);
       sign = 1.;
       if (chargeSwitchProb > gRandom->Uniform(1.))
         sign = -1.;

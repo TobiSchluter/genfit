@@ -13,5 +13,6 @@
 
 #pragma link C++ class genfit::RKTrackRep-;
 #pragma link C++ class genfit::RKTrackRepEnergy-;
+#pragma link C++ class genfit::RKTrackRepTime-;
 
 #endif

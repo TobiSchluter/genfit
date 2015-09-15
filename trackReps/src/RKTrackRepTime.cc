@@ -1253,14 +1253,16 @@ void RKTrackRepTime::setTime(StateOnPlane& state, double time) const {
 
 
 void RKTrackRepTime::derive(const double lambda, const M1x3& T,
-                              const double E, const double dEdx, const double d2EdxdE,
-                              const double B[3],
-                              double& dlambda, M1x3& dT,
-                              RKMatrix<4, 4>* pA = 0) const
+                            const double E, const double dEdx, const double d2EdxdE,
+                            const double B[3],
+                            double& dlambda, M1x3& dT, double& dTime,
+                            M5x5* pA = 0) const
 {
   // Assumes |q| == 1
   const double kappa = 0.000299792458;  // speed of light over 10^12
   const double H[3] = { kappa*B[0], kappa*B[1], kappa*B[2] };
+
+  dTime = fabs(lambda) * E;  // == 1 / beta
 
   // dEdx is positive in our definition, dlambda should have the same
   // sign as lambda hence no minus in the following line, unlike
@@ -1272,11 +1274,11 @@ void RKTrackRepTime::derive(const double lambda, const M1x3& T,
   dT[2] = lambda * (T[0]*H[1] - T[1]*H[0]);
 
   if (pA) {
-    RKMatrix<4, 4>& A = *pA;
+    M5x5& A = *pA;
+    std::fill(A.begin(), A.end(), 0);
     A(0,0) = 0; A(0,1) =  lambda*H[2]; A(0,2) = -lambda*H[1]; A(0,3) = T[1]*H[2] - T[2]*H[1];
     A(1,0) = -lambda*H[2]; A(1,1) = 0; A(1,2) =  lambda*H[0]; A(1,3) = T[2]*H[0] - T[0]*H[2];
     A(2,0) =  lambda*H[1]; A(2,1) = -lambda*H[0]; A(2,2) = 0; A(2,3) = T[0]*H[1] - T[1]*H[0];
-    A(3,0) =            0; A(3,1) =            0; A(3,2) = 0;
 
     // (3.12) in Bugge et al., the derivative of (3.11).  The
     // different choice in units doesn't matter (our lambda doesn't
@@ -1284,31 +1286,38 @@ void RKTrackRepTime::derive(const double lambda, const M1x3& T,
     // want to redo the math with their choice.  Simplified, also
     // avoids dividing by zero if dEdx = 0.
     A(3,3) = dlambda/lambda*(3 - pow(lambda*E, -2)) + d2EdxdE;
+
+    // The derivative of dTime by dlambda.
+    A(4,3) = copysign(E + 1/(lambda*lambda*E), lambda);
+    A.print();
   }
 }
 
 
-double RKTrackRepTime::RKstep(const M1x7& state7, const double h,
+double RKTrackRepTime::RKstep(const M1x8& state8, const double h,
                                 const MaterialProperties& mat,
-                                M1x7& newState7,
-                                RKMatrix<7, 7>* pJ = 0) const
+                                M1x8& newState8,
+                                M8x8* pJ = 0) const
 {
   const double m = TDatabasePDG::Instance()->GetParticle(getPDG())->Mass();
   const double pdgCharge( this->getPDGCharge() );
   // return pdgCharge with sign of q/p
-  const double charge = copysign(pdgCharge, state7[6]);
+  const double charge = copysign(pdgCharge, state8[6]);
 
-  RKMatrix<4, 4> *pA1 = 0, *pA2 = 0, *pA3 = 0, *pA4 = 0;
-  RKMatrix<4, 4> A1, A2, A3, A4;
+  M5x5 *pA1 = 0, *pA2 = 0, *pA3 = 0, *pA4 = 0;
+  M5x5 A1, A2, A3, A4;
   if (pJ) {
     pA1 = &A1; pA2 = &A2, pA3 = &A3, pA4 = &A4;
   }
 
-  const M1x3 rStart = {{ state7[0], state7[1], state7[2] }};
-  const M1x3 TStart = {{ state7[3], state7[4], state7[5] }};
+  state8.print();
+
+  const M1x3 rStart = {{ state8[0], state8[1], state8[2] }};
+  const M1x3 TStart = {{ state8[3], state8[4], state8[5] }};
+  const double timeStart = state8[7];
 
   MaterialEffects::getInstance()->getParticleParameters(getPDG());
-  const double lambdaStart = state7[6];
+  const double lambdaStart = state8[6];
   const double EStart = hypot(m, charge / lambdaStart);
   const double dEdxStart = MaterialEffects::getInstance()->dEdx(mat, EStart);
   const double d2EdxdEStart = MaterialEffects::getInstance()->d2EdxdE(mat, EStart);
@@ -1319,8 +1328,9 @@ double RKTrackRepTime::RKstep(const M1x7& state7, const double h,
 
   double dLambda1;
   M1x3 dT1;
+  double dTime1;
   derive(lambdaStart, TStart, EStart, dEdxStart, d2EdxdEStart, BStart,
-         dLambda1, dT1, pA1);
+         dLambda1, dT1, dTime1, pA1);
 
   const double lambda2 = lambdaStart + h/2*dLambda1;
   const double E2 = hypot(m, charge / lambda2);
@@ -1329,13 +1339,15 @@ double RKTrackRepTime::RKstep(const M1x7& state7, const double h,
 
   const M1x3 T2 = TStart + h/2*dT1;
   const M1x3 rMiddle = rStart + h/2*TStart + h*h/8*dT1;
+  const double time2 = timeStart + h/2*dTime1;
   double BMiddle[3];
   FieldManager::getInstance()->getFieldVal(rMiddle.begin(), BMiddle);
 
   double dLambda2;
   M1x3 dT2;
+  double dTime2;
   derive(lambda2, T2, E2, dEdx2, d2EdxdE2, BMiddle,
-         dLambda2, dT2, pA2);
+         dLambda2, dT2, dTime2, pA2);
 
   const double lambda3 = lambdaStart + h/2*dLambda2;
   const double E3 = hypot(m, charge / lambda3);
@@ -1343,11 +1355,13 @@ double RKTrackRepTime::RKstep(const M1x7& state7, const double h,
   const double d2EdxdE3 = MaterialEffects::getInstance()->d2EdxdE(mat, E3);
 
   const M1x3 T3 = TStart + h/2*dT2;
+  const double time3 = timeStart + h/2*dTime2;
 
   double dLambda3;
   M1x3 dT3;
+  double dTime3;
   derive(lambda3, T3, E3, dEdx3, d2EdxdE3, BMiddle,
-         dLambda3, dT3, pA3);
+         dLambda3, dT3, dTime3, pA3);
 
   const double lambda4 = lambdaStart + h*dLambda3;
   const double E4 = hypot(m, charge / lambda4);
@@ -1356,13 +1370,15 @@ double RKTrackRepTime::RKstep(const M1x7& state7, const double h,
 
   const M1x3 T4 = TStart + h*dT3;
   const M1x3 rEnd = rStart + h*TStart + h*h/2*dT3;
+  const double time4 = timeStart + h*dTime3;
   double BEnd[3];
   FieldManager::getInstance()->getFieldVal(rEnd.begin(), BEnd);
 
   double dLambda4;
   M1x3 dT4;
+  double dTime4;
   derive(lambda4, T4, E4, dEdx4, d2EdxdE4, BEnd,
-         dLambda4, dT4, pA4);
+         dLambda4, dT4, dTime4, pA4);
 
   // Put it together ...
   M1x3 rFinal;
@@ -1373,29 +1389,32 @@ double RKTrackRepTime::RKstep(const M1x7& state7, const double h,
   for (size_t i = 0; i < 3; ++i)
     TFinal[i] /= norm;
   const double lambdaFinal = lambdaStart + h/6 * (dLambda1 + 2*dLambda2 + 2*dLambda3 + dLambda4);
+  const double timeFinal = timeStart + h/6 * (dTime1 + 2*dTime2 + 2*dTime3 + dTime4);
 
   // ... and put it into the final result
   for (size_t i = 0; i < 3; ++i) {
-    newState7[i] = rFinal[i];
-    newState7[i + 3] = TFinal[i];
+    newState8[i] = rFinal[i];
+    newState8[i + 3] = TFinal[i];
   }
-  newState7[6] = lambdaFinal;
+  newState8[6] = lambdaFinal;
+  newState8[7] = timeFinal;
 
   double epsLambda = fabs(dLambda1 - dLambda2 - dLambda3 + dLambda4);
+  double epsTime = fabs(dTime1 - dTime2 - dTime3 + dTime4);
   M1x3 epsT;
   for (size_t i = 0; i < 3; ++i)
     epsT[i] = fabs(dT1[i] - dT2[i] - dT3[i] + dT4[i]);
-  double eps = std::max(epsLambda,
-                        *std::max_element(epsT.begin(), epsT.end()));
+  double eps = std::max(epsLambda, std::max(epsTime,
+                                            *std::max_element(epsT.begin(), epsT.end())));
 
   if (pJ) {
-    // Build the 7x7 covariance matrix.  We don't keep the row, column
+    // Build the 8x8 Jacobian matrix.  We don't keep the row, column
     // corresponding to \Lambda in the notation of Lund loc.cit. as it
     // does not make it into the final covariance matrices of the 7x7
     // states (everything else wouldn't make sense).  We also assume
     // that Lund's C equals 0 (i.e. no field gradients, no material
     // density gradients).
-    RKMatrix<7, 7> J;
+    M8x8 J;
     std::fill(J.begin(), J.end(), 0);
     for (int i = 0; i < 3; ++i) {
       J(i, i) = 1;
@@ -1403,15 +1422,15 @@ double RKTrackRepTime::RKstep(const M1x7& state7, const double h,
         J(i, j + 3) = h * (i == j) + h*h/6 * (A1(i, j) + A2(i, j) + A3(i, j));
       }
     }
-    for (int i = 0; i < 4; ++i) {
-      for (int j = 0; j < 4; ++j) {
+    for (int i = 0; i < 5; ++i) {
+      for (int j = 0; j < 5; ++j) {
         J(i + 3, j + 3) = (i == j) + h/6 * (A1(i, j) + 2*A2(i, j) + 2*A3(i, j) + A4(i, j));
       }
     }
 
     // Life is a bit miserable: we have to take into account the
     // normalization of T while putting together the final Jacobian.
-    RKMatrix<7, 7>& Jnew = *pJ;
+    M8x8& Jnew = *pJ;
     Jnew = J;
     for (int iRow = 3; iRow < 6; ++iRow) {
       for (int iCol = 3; iCol < 6; ++iCol) {
@@ -1419,9 +1438,9 @@ double RKTrackRepTime::RKstep(const M1x7& state7, const double h,
         // add the derivative of the norm ...
         double sum = 0;
         for (int k = 3; k < 6; ++k) {
-          sum += state7[k] * J(k, iCol);
+          sum += state8[k] * J(k, iCol);
         }
-        Jnew(iRow, iCol) -= state7[iRow] * sum / norm;
+        Jnew(iRow, iCol) -= state8[iRow] * sum / norm;
       }
     }
   }
@@ -1432,10 +1451,10 @@ double RKTrackRepTime::RKstep(const M1x7& state7, const double h,
 
 
 double RKTrackRepTime::RKPropagate(M1x7& state7,
-                                     M7x7* jacobianT,
-                                     M1x3& SA,
-                                     double S,
-                                     const MaterialProperties& mat) const
+                                   M7x7* jacobianT,
+                                   M1x3& SA,
+                                   double S,
+                                   const MaterialProperties& mat) const
 {
   // The algorithm is
   //  E Lund et al 2009 JINST 4 P04001 doi:10.1088/1748-0221/4/04/P04001
@@ -1450,80 +1469,16 @@ double RKTrackRepTime::RKPropagate(M1x7& state7,
   //   "Tracking And Track Fitting"
   //   http://inspirehep.net/record/160548
 
-  M1x7 oldState7(state7);
-  M1x7 newState7;
-  M7x7 propJac;
-  double est = RKstep(state7, S, mat, newState7, jacobianT ? &propJac : 0);
-  M7x7 newJacT;
+  M1x8 state8;
+  std::copy(state7.begin(), state7.end(), state8.begin());
+  state8[7] = 0;
+
+  M1x8 oldState8(state8);
+  M1x8 newState8;
+  M8x8 propJac;
+  double est = RKstep(state8, S, mat, newState8, jacobianT ? &propJac : 0);
+  M8x8 newJacT;
   if (jacobianT) {
-    if (0) {
-      // Numerically evaluate the Jacobian, compare
-      // no science behind these values, I verified that forward and
-      // backward propagation yield inverse matrices to good
-      // approximation.  In order to avoid bad roundoff errors, the actual
-      // step taken is determined below, separately for each direction.
-      const double defaultStepX = 1.E-8;
-      double stepX;
-
-      M7x7 numJac;
-
-      // Calculate derivative for all three dimensions successively.
-      // The algorithm follows the one in TF1::Derivative() :
-      //   df(x) = (4 D(h/2) - D(h)) / 3
-      // with D(h) = (f(x + h) - f(x - h)) / (2 h).
-      //
-      // Could perhaps do better by also using f(x) which would be stB.
-      M1x7 rightShort, rightFull;
-      M1x7 leftShort, leftFull;
-      for (size_t i = 0; i < 7; ++i) {
-        {
-          M1x7 stateCopy(state7);
-          double temp = stateCopy[i] + defaultStepX / 2;
-          // Find the actual size of the step, which will differ from
-          // defaultStepX due to roundoff.  This is the step-size we will
-          // use for this direction.  Idea taken from Numerical Recipes,
-          // 3rd ed., section 5.7.
-          //
-          // Note that if a number is exactly representable, it's double
-          // will also be exact.  Outside denormals, this also holds for
-          // halving.  Unless the exponent changes (which it only will in
-          // the vicinity of zero) adding or subtracing doesn't make a
-          // difference.
-          //
-          // We determine the roundoff error for the half-step.  If this
-          // is exactly representable, the full step will also be.
-          stepX = 2 * (temp - stateCopy[i]);
-          stateCopy[i] = temp;
-          RKstep(stateCopy, S, mat, rightShort, 0);
-        }
-        {
-          M1x7 stateCopy(state7);
-          stateCopy[i] -= stepX / 2;
-          RKstep(stateCopy, S, mat, leftShort, 0);
-        }
-        {
-          M1x7 stateCopy(state7);
-          stateCopy[i] += stepX;
-          RKstep(stateCopy, S, mat, rightFull, 0);
-        }
-        {
-          M1x7 stateCopy(state7);
-          stateCopy[i] -= stepX;
-          RKstep(stateCopy, S, mat, leftFull, 0);
-        }
-
-        // Calculate the derivatives for the individual components of
-        // the track parameters.
-        for (size_t j = 0; j < 7; ++j) {
-          double derivFull = (rightFull[j] - leftFull[j]) / 2 / stepX;
-          double derivShort = (rightShort[j] - leftShort[j]) / stepX;
-
-          numJac(j, i) = 1./3.*(4*derivShort - derivFull);
-        }
-      }
-      //propJac = numJac;
-    }
-
     for (int i = 0; i < 7; ++i) {
       for (int j = 0; j < 7; ++j) {
         double sum = 0;
@@ -1539,11 +1494,11 @@ double RKTrackRepTime::RKPropagate(M1x7& state7,
 
   double EST = est; // FIXME : why over S?
 
-  SA[0] = newState7[3] - oldState7[3];
-  SA[1] = newState7[4] - oldState7[4];
-  SA[2] = newState7[5] - oldState7[5];
+  SA[0] = newState8[3] - oldState8[3];
+  SA[1] = newState8[4] - oldState8[4];
+  SA[2] = newState8[5] - oldState8[5];
 
-  state7 = newState7;
+  std::copy(newState8.begin(), newState8.end() - 1, state7.begin());
 
   if (jacobianT) {
     for (int i = 0; i < 7; ++i) {
