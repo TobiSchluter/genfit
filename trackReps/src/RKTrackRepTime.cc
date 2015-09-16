@@ -82,7 +82,6 @@ double RKTrackRepTime::extrapolateToPlane(StateOnPlane& state,
     bool stopAtBoundary,
     bool calcJacobianNoise) const {
 
-  int debugLvl_ = 1;
   if (debugLvl_ > 0) {
     std::cout << "RKTrackRepTime::extrapolateToPlane()\n";
   }
@@ -1874,9 +1873,10 @@ void RKTrackRepTime::transformM6P(const M6x6& in6x6,
 
   // do the transformation
   // out6x6 = J_Mp^T * in * J_Mp
-  M6x6& out6x6_ = *((M6x6*) state.getCov().GetMatrixArray());
-  RKTools::J_MpTxcov6xJ_Mp(J_Mp_6x6, in6x6, out6x6_);
+  M6x6& out6x6 = *((M6x6*) state.getCov().GetMatrixArray());
+  RKTools::J_MpTxcov6xJ_Mp(J_Mp_6x6, in6x6, out6x6);
 
+  out6x6[5*6 + 5] = 1;
 }
 
 
@@ -1987,7 +1987,7 @@ bool RKTrackRepTime::RKutta(const M1x4& SU,
 
     double beta = 1/hypot(1, mass*stateGlobal[6]/charge);
     flightTime += S / beta / 29.9792458; // in ns
-    std::cout << S / beta / 29.9792458 << " " << stateGlobal[7] << std::endl;
+    std::cout << flightTime << " " << S / beta / 29.9792458 << " " << stateGlobal[7] << std::endl;
 
     // check way limit
     if(Way > Wmax){
@@ -2698,9 +2698,9 @@ void RKTrackRepTime::checkCache(const StateOnPlane& state, const SharedPlanePtr*
 }
 
 
-double RKTrackRepTime::momMag(const M1x7& state7) const {
+double RKTrackRepTime::momMag(const M1x8& stateGlobal) const {
   // FIXME given this interface this function cannot work for charge =/= +-1
-  return fabs(1/state7[6]);
+  return fabs(1/stateGlobal[6]);
 }
 
 

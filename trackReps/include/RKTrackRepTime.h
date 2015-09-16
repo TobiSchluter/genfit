@@ -266,7 +266,7 @@ class RKTrackRepTime : public AbsTrackRep {
 
   void checkCache(const StateOnPlane& state, const SharedPlanePtr* plane) const;
 
-  double momMag(const M1x7& stateGlobal) const;
+  double momMag(const M1x8& stateGlobal) const;
 
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
