@@ -282,6 +282,10 @@ SET(MEASUREMENTS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixUnit.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixV.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixUV.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixU6.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixUT6.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixV6.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/HMatrixUV6.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/FullMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/PlanarMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/ProlateSpacepointMeasurement.h

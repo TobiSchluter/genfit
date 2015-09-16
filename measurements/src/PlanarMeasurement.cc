@@ -22,9 +22,13 @@
 #include <Exception.h>
 #include <RKTrackRep.h>
 #include <RKTrackRepEnergy.h>
+#include <RKTrackRepTime.h>
 #include <HMatrixU.h>
 #include <HMatrixV.h>
 #include <HMatrixUV.h>
+#include <HMatrixU6.h>
+#include <HMatrixV6.h>
+#include <HMatrixUV6.h>
 
 #include <cassert>
 
@@ -67,26 +71,42 @@ std::vector<MeasurementOnPlane*> PlanarMeasurement::constructMeasurementsOnPlane
 
 const AbsHMatrix* PlanarMeasurement::constructHMatrix(const AbsTrackRep* rep) const {
 
-  if (!dynamic_cast<const RKTrackRep*>(rep)
-      && !dynamic_cast<const RKTrackRepEnergy*>(rep) ) {
-    Exception exc("SpacepointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
-    throw exc;
+  if (dynamic_cast<const RKTrackRep*>(rep)
+      || dynamic_cast<const RKTrackRepEnergy*>(rep) ) {
+
+    switch(rawHitCoords_.GetNrows()) {
+    case 1:
+      if (stripV_)
+        return new HMatrixV();
+      return new HMatrixU();
+
+    case 2:
+      return new HMatrixUV();
+
+    default:
+      Exception exc("PlanarMeasurement default implementation can only handle 1D (strip) or 2D (pixel) measurements!", __LINE__,__FILE__);
+      throw exc;
+    }
   }
 
-  switch(rawHitCoords_.GetNrows()) {
-  case 1:
-    if (stripV_)
-      return new HMatrixV();
-    return new HMatrixU();
+  if (dynamic_cast<const RKTrackRepTime*>(rep)) {
+    switch(rawHitCoords_.GetNrows()) {
+    case 1:
+      if (stripV_)
+        return new HMatrixV6();
+      return new HMatrixU6();
 
-  case 2:
-    return new HMatrixUV();
+    case 2:
+      return new HMatrixUV6();
 
-  default:
-    Exception exc("PlanarMeasurement default implementation can only handle 1D (strip) or 2D (pixel) measurements!", __LINE__,__FILE__);
-    throw exc;
+    default:
+      Exception exc("PlanarMeasurement default implementation can only handle 1D (strip) or 2D (pixel) measurements!", __LINE__,__FILE__);
+      throw exc;
+    }
   }
-
+    
+  Exception exc("SpacepointMeasurement default implementation can only handle state vectors of type RKTrackRep!", __LINE__,__FILE__);
+  throw exc;
 }
 
 void PlanarMeasurement::Streamer(TBuffer &R__b)

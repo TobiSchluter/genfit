@@ -15,6 +15,12 @@
 #pragma link C++ class genfit::HMatrixUnit+;
 #pragma link C++ class genfit::HMatrixV+;
 #pragma link C++ class genfit::HMatrixUV+;
+
+#pragma link C++ class genfit::HMatrixU6+;
+#pragma link C++ class genfit::HMatrixUT6+;
+#pragma link C++ class genfit::HMatrixV6+;
+#pragma link C++ class genfit::HMatrixUV6+;
+
 #pragma link C++ class genfit::ProlateSpacepointMeasurement+;
 #pragma link C++ class genfit::WireMeasurement+;
 #pragma link C++ class genfit::WireMeasurementNew+;
