@@ -25,7 +25,7 @@
 
 namespace genfit {
 
-HelixTrackModel::HelixTrackModel(const TVector3& pos, const TVector3& mom, double charge) {
+HelixTrackModel::HelixTrackModel(const TVector3& pos, const TVector3& mom, double charge, double mass) : mass_(mass) {
 
   mom_ = mom.Mag();
 

@@ -43,9 +43,10 @@ class HelixTrackModel : public TObject {
  public:
 
   // Constructors/Destructors ---------
-  HelixTrackModel(const TVector3& pos, const TVector3& mom, double charge);
+  HelixTrackModel(const TVector3& pos, const TVector3& mom, double charge, double mass = .113);
 
   TVector3 getPos(double tracklength) const;
+  double getTime(double tracklength) const { return tracklength*hypot(1, mass_/mom_); }
   void getPosMom(double tracklength, TVector3& pos, TVector3& mom) const;
   void getPosDir(double tracklength, TVector3& pos, TVector3& dir) const {
     getPosMom(tracklength, pos, dir);
@@ -56,6 +57,7 @@ class HelixTrackModel : public TObject {
  private:
 
   double sgn_;
+  double mass_;
   double mom_;
   double R_; // radius
   TVector3 center_;
