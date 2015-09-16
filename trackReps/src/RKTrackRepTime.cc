@@ -1304,7 +1304,7 @@ void RKTrackRepTime::derive(const double lambda, const M1x3& T,
     A(3,3) = dlambda/lambda*(3 - pow(lambda*E, -2)) + d2EdxdE;
 
     // The derivative of dTime by dlambda.
-    A(4,3) = copysign(E + 1/(lambda*lambda*E), lambda);
+    A(4,3) = copysign(E / c, lambda) - 1/(lambda*fabs(lambda)*E) / c;
   }
 }
 
@@ -1488,6 +1488,78 @@ double RKTrackRepTime::RKPropagate(M1x8& stateGlobal,
   double est = RKstep(stateGlobal, S, mat, newStateGlobal, jacobianT ? &propJac : 0);
   M8x8 newJacT;
   if (jacobianT) {
+    if (0) {
+      // Numerically evaluate the Jacobian, compare
+      // no science behind these values, I verified that forward and
+      // backward propagation yield inverse matrices to good
+      // approximation.  In order to avoid bad roundoff errors, the actual
+      // step taken is determined below, separately for each direction.
+      const double defaultStepX = 1.E-8;
+      double stepX;
+
+      M8x8 numJac;
+
+      // Calculate derivative for all three dimensions successively.
+      // The algorithm follows the one in TF1::Derivative() :
+      //   df(x) = (4 D(h/2) - D(h)) / 3
+      // with D(h) = (f(x + h) - f(x - h)) / (2 h).
+      //
+      // Could perhaps do better by also using f(x) which would be stB.
+      M1x8 rightShort, rightFull;
+      M1x8 leftShort, leftFull;
+      for (size_t i = 0; i < 8; ++i) {
+        {
+          M1x8 stateCopy(stateGlobal);
+          double temp = stateCopy[i] + defaultStepX / 2;
+          // Find the actual size of the step, which will differ from
+          // defaultStepX due to roundoff.  This is the step-size we will
+          // use for this direction.  Idea taken from Numerical Recipes,
+          // 3rd ed., section 5.7.
+          //
+          // Note that if a number is exactly representable, it's double
+          // will also be exact.  Outside denormals, this also holds for
+          // halving.  Unless the exponent changes (which it only will in
+          // the vicinity of zero) adding or subtracing doesn't make a
+          // difference.
+          //
+          // We determine the roundoff error for the half-step.  If this
+          // is exactly representable, the full step will also be.
+          stepX = 2 * (temp - stateCopy[i]);
+          stateCopy[i] = temp;
+          RKstep(stateCopy, S, mat, rightShort, 0);
+        }
+        {
+          M1x8 stateCopy(stateGlobal);
+          stateCopy[i] -= stepX / 2;
+          RKstep(stateCopy, S, mat, leftShort, 0);
+        }
+        {
+          M1x8 stateCopy(stateGlobal);
+          stateCopy[i] += stepX;
+          RKstep(stateCopy, S, mat, rightFull, 0);
+        }
+        {
+          M1x8 stateCopy(stateGlobal);
+          stateCopy[i] -= stepX;
+          RKstep(stateCopy, S, mat, leftFull, 0);
+        }
+
+        // Calculate the derivatives for the individual components of
+        // the track parameters.
+        for (size_t j = 0; j < 8; ++j) {
+          double derivFull = (rightFull[j] - leftFull[j]) / 2 / stepX;
+          double derivShort = (rightShort[j] - leftShort[j]) / stepX;
+
+          numJac(j, i) = 1./3.*(4*derivShort - derivFull);
+        }
+      }
+      std::cout << "S = " << S << " semianalytical ";
+      propJac.print();
+      std::cout << "numerical ";
+      numJac.print();
+      //propJac = numJac;
+    }
+
     for (int i = 0; i < 8; ++i) {
       for (int j = 0; j < 8; ++j) {
         double sum = 0;
@@ -1987,7 +2059,7 @@ bool RKTrackRepTime::RKutta(const M1x4& SU,
 
     double beta = 1/hypot(1, mass*stateGlobal[6]/charge);
     flightTime += S / beta / 29.9792458; // in ns
-    std::cout << flightTime << " " << S / beta / 29.9792458 << " " << stateGlobal[7] << std::endl;
+    std::cout << counter << "\t " << flightTime << " " << S / beta / 29.9792458 << " " << stateGlobal[7] << std::endl;
 
     // check way limit
     if(Way > Wmax){
