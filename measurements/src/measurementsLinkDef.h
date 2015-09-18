@@ -33,4 +33,6 @@
 
 #pragma link C++ class genfit::WireTrackCandHit+;
 
+#pragma link C++ class genfit::StripTimeMeasurement-;
+
 #endif

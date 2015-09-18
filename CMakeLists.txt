@@ -294,6 +294,7 @@ SET(MEASUREMENTS_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/WireMeasurementNew.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/WirePointMeasurement.h
   ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/WireTrackCandHit.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/measurements/include/StripTimeMeasurement.h
 )
 ROOT_GENERATE_DICTIONARY("${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}"
                          "${MEASUREMENTS_DICTIONARY_SOURCES}"
