@@ -1264,6 +1264,8 @@ void RKTrackRepTime::setSpu(StateOnPlane& state, double spu) const {
 void RKTrackRepTime::setTime(StateOnPlane& state, double time) const {
   state.getAuxInfo().ResizeTo(2);
   (state.getAuxInfo())(1) = time;
+
+  state.getState(6) = time;
 }
 
 
