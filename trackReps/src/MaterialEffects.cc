@@ -460,7 +460,7 @@ double MaterialEffects::momentumLoss(const MaterialProperties& material, double 
 
 
 double MaterialEffects::dEdx(const MaterialProperties& material, double Energy) {
-  if (material.getZ() < 1e-3)
+  if (noEffects_ || material.getZ() < 1e-3)
     // No energy loss in vacuum.
     return 0;
 
