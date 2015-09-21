@@ -1088,42 +1088,42 @@ TEveElement* EventDisplay::makeLines(const std::string& name, const std::string&
       rep->getPosMomCov(*measuredState, position, direction, cov);
 
       // get eigenvalues & -vectors
-      TMatrixDSymEigen eigen_values(cov.GetSub(0,2, 0,2));
-      TVectorT<double> ev = eigen_values.GetEigenValues();
-      TMatrixT<double> eVec = eigen_values.GetEigenVectors();
       TVector3 eVec1, eVec2;
-      // limit
-      static const double maxErr = 1000.;
-      double ev0 = std::min(ev(0), maxErr);
-      double ev1 = std::min(ev(1), maxErr);
-      double ev2 = std::min(ev(2), maxErr);
+      {
+        TMatrixDSymEigen eigen_values(cov.GetSub(0,2, 0,2));
+        const TVectorD& ev = eigen_values.GetEigenValues();
+        const TMatrixD& eVec = eigen_values.GetEigenVectors();
+        // limit
+        static const double maxErr = 1000.;
+        double ev0 = std::min(ev(0), maxErr);
+        double ev1 = std::min(ev(1), maxErr);
+        double ev2 = std::min(ev(2), maxErr);
 
-      // get two largest eigenvalues/-vectors
-      if (ev0 < ev1 && ev0 < ev2) {
-        eVec1.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
-        eVec1 *= sqrt(ev1);
-        eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
-        eVec2 *= sqrt(ev2);
+        // get two largest eigenvalues/-vectors
+        if (ev0 < ev1 && ev0 < ev2) {
+          eVec1.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
+          eVec1 *= sqrt(ev1);
+          eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
+          eVec2 *= sqrt(ev2);
+        }
+        else if (ev1 < ev0 && ev1 < ev2) {
+          eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
+          eVec1 *= sqrt(ev0);
+          eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
+          eVec2 *= sqrt(ev2);
+        }
+        else {
+          eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
+          eVec1 *= sqrt(ev0);
+          eVec2.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
+          eVec2 *= sqrt(ev1);
+        }
       }
-      else if (ev1 < ev0 && ev1 < ev2) {
-        eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
-        eVec1 *= sqrt(ev0);
-        eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
-        eVec2 *= sqrt(ev2);
-      }
-      else {
-        eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
-        eVec1 *= sqrt(ev0);
-        eVec2.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
-        eVec2 *= sqrt(ev1);
-      }
-
       if (eVec1.Cross(eVec2)*eval < 0)
         eVec2 *= -1;
       //assert(eVec1.Cross(eVec2)*eval > 0);
 
-      const TVector3 oldEVec1(eVec1);
-      const TVector3 oldEVec2(eVec2);
+      const TVector3& oldEVec1(eVec1);
 
       const int nEdges = 24;
       std::vector<TVector3> vertices;
@@ -1154,32 +1154,35 @@ TEveElement* EventDisplay::makeLines(const std::string& name, const std::string&
       rep->getPosMomCov(stateCopy, position, direction, cov);
 
       // get eigenvalues & -vectors
-      TMatrixDSymEigen eigen_values2(cov.GetSub(0,2, 0,2));
-      ev = eigen_values2.GetEigenValues();
-      eVec = eigen_values2.GetEigenVectors();
-      // limit
-      ev0 = std::min(ev(0), maxErr);
-      ev1 = std::min(ev(1), maxErr);
-      ev2 = std::min(ev(2), maxErr);
+      {
+        TMatrixDSymEigen eigen_values(cov.GetSub(0,2, 0,2));
+        const TVectorD& ev = eigen_values.GetEigenValues();
+        const TMatrixD& eVec = eigen_values.GetEigenVectors();
+        // limit
+        static const double maxErr = 1000.;
+        double ev0 = std::min(ev(0), maxErr);
+        double ev1 = std::min(ev(1), maxErr);
+        double ev2 = std::min(ev(2), maxErr);
 
-      // get two largest eigenvalues/-vectors
-      if (ev0 < ev1 && ev0 < ev2) {
-        eVec1.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
-        eVec1 *= sqrt(ev1);
-        eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
-        eVec2 *= sqrt(ev2);
-      }
-      else if (ev1 < ev0 && ev1 < ev2) {
-        eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
-        eVec1 *= sqrt(ev0);
-        eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
-        eVec2 *= sqrt(ev2);
-      }
-      else {
-        eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
-        eVec1 *= sqrt(ev0);
-        eVec2.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
-        eVec2 *= sqrt(ev1);
+        // get two largest eigenvalues/-vectors
+        if (ev0 < ev1 && ev0 < ev2) {
+          eVec1.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
+          eVec1 *= sqrt(ev1);
+          eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
+          eVec2 *= sqrt(ev2);
+        }
+        else if (ev1 < ev0 && ev1 < ev2) {
+          eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
+          eVec1 *= sqrt(ev0);
+          eVec2.SetXYZ(eVec(0,2),eVec(1,2),eVec(2,2));
+          eVec2 *= sqrt(ev2);
+        }
+        else {
+          eVec1.SetXYZ(eVec(0,0),eVec(1,0),eVec(2,0));
+          eVec1 *= sqrt(ev0);
+          eVec2.SetXYZ(eVec(0,1),eVec(1,1),eVec(2,1));
+          eVec2 *= sqrt(ev1);
+        }
       }
 
       if (eVec1.Cross(eVec2)*eval < 0)
