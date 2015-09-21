@@ -995,45 +995,23 @@ TEveBox* EventDisplay::boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, 
   TEveBox* box = new TEveBox("detPlane_shape");
   float vertices[24];
 
-  TVector3 norm = u.Cross(v);
+  TVector3 normal = u.Cross(v);
   u *= (0.5*ud);
   v *= (0.5*vd);
-  norm *= (0.5*depth);
+  normal *= (0.5*depth);
 
-  vertices[0] = o(0) - u(0) - v(0) - norm(0);
-  vertices[1] = o(1) - u(1) - v(1) - norm(1);
-  vertices[2] = o(2) - u(2) - v(2) - norm(2);
+  for (int k = 0; k < 8; ++k) {
+    int signU = (k & 4) ? -1 : 1;
+    int signV = (k & 2) ? -1 : 1;
+    int signN = (k & 1) ? -1 : 1;
+    vertices[3*k    ] = o(0) + signU * u(0) + signV * v(0) + signN * normal(0);
+    vertices[3*k + 1] = o(1) + signU * u(1) + signV * v(1) + signN * normal(1);
+    vertices[3*k + 2] = o(2) + signU * u(2) + signV * v(2) + signN * normal(2);
+  }
 
-  vertices[3] = o(0) + u(0) - v(0) - norm(0);
-  vertices[4] = o(1) + u(1) - v(1) - norm(1);
-  vertices[5] = o(2) + u(2) - v(2) - norm(2);
+  box->SetVertices(vertices);
 
-  vertices[6] = o(0) + u(0) - v(0) + norm(0);
-  vertices[7] = o(1) + u(1) - v(1) + norm(1);
-  vertices[8] = o(2) + u(2) - v(2) + norm(2);
-
-  vertices[9] = o(0) - u(0) - v(0) + norm(0);
-  vertices[10] = o(1) - u(1) - v(1) + norm(1);
-  vertices[11] = o(2) - u(2) - v(2) + norm(2);
-
-  vertices[12] = o(0) - u(0) + v(0) - norm(0);
-  vertices[13] = o(1) - u(1) + v(1) - norm(1);
-  vertices[14] = o(2) - u(2) + v(2) - norm(2);
-
-  vertices[15] = o(0) + u(0) + v(0) - norm(0);
-  vertices[16] = o(1) + u(1) + v(1) - norm(1);
-  vertices[17] = o(2) + u(2) + v(2) - norm(2);
-
-  vertices[18] = o(0) + u(0) + v(0) + norm(0);
-  vertices[19] = o(1) + u(1) + v(1) + norm(1);
-  vertices[20] = o(2) + u(2) + v(2) + norm(2);
-
-  vertices[21] = o(0) - u(0) + v(0) + norm(0);
-  vertices[22] = o(1) - u(1) + v(1) + norm(1);
-  vertices[23] = o(2) - u(2) + v(2) + norm(2);
-
-
-  for(int k = 0; k < 24; k += 3) box->SetVertex((k/3), vertices[k], vertices[k+1], vertices[k+2]);
+  //for(int k = 0; k < 8; ++k) box->SetVertex(k, vertices[3*k], vertices[3*k+1], vertices[3*k+2]);
 
   return box;
 
