@@ -993,7 +993,6 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 TEveBox* EventDisplay::boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth) {
 
   TEveBox* box = new TEveBox("detPlane_shape");
-  float vertices[24];
 
   TVector3 normal = u.Cross(v);
   u *= (0.5*ud);
@@ -1001,17 +1000,16 @@ TEveBox* EventDisplay::boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, 
   normal *= (0.5*depth);
 
   for (int k = 0; k < 8; ++k) {
+    // Coordinates for all eight corners of the box.
     int signU = (k & 4) ? -1 : 1;
     int signV = (k & 2) ? -1 : 1;
     int signN = (k & 1) ? -1 : 1;
-    vertices[3*k    ] = o(0) + signU * u(0) + signV * v(0) + signN * normal(0);
-    vertices[3*k + 1] = o(1) + signU * u(1) + signV * v(1) + signN * normal(1);
-    vertices[3*k + 2] = o(2) + signU * u(2) + signV * v(2) + signN * normal(2);
+    float vertex[3];
+    for (int i = 0; i < 3; ++i) {
+      vertex[i] = o(i) + signU * u(i) + signV * v(i) + signN * normal(i);
+    }
+    box->SetVertex(k, vertex);
   }
-
-  box->SetVertices(vertices);
-
-  //for(int k = 0; k < 8; ++k) box->SetVertex(k, vertices[3*k], vertices[3*k+1], vertices[3*k+2]);
 
   return box;
 
