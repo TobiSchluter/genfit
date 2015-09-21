@@ -203,11 +203,12 @@ int main(int argc, char **argv) {
   const bool prefit = false; // make a simple Kalman iteration before the actual fit
   const bool refit  = false; // if fit did not converge, try to fit again
 
-  const bool twoReps = false; // test if everything works with more than one rep in the tracks
-
   const bool checkPruning = true; // test pruning
 
-  const int pdg = 13;               // particle pdg code
+  const int pdg = -321;//211;//212;//13;               // particle pdg code
+
+  const bool twoReps = false; // test if everything works with more than one rep in the tracks
+  boost::scoped_ptr<genfit::AbsTrackRep> repToUse(new genfit::RKTrackRepTime(pdg));  // The rep that will be used as default, has to be cloned into the tracks
 
   const bool smearPosMom = true;     // init the Reps with smeared pos and mom
   const double chargeSwitchProb = -0.1; // probability to seed with wrong charge sign
@@ -223,9 +224,22 @@ int main(int argc, char **argv) {
   const bool onlyDisplayFailed = false; // only load non-converged tracks into the display
 
   std::vector<genfit::eMeasurementType> measurementTypes;
-  for (unsigned int i = 0; i<nMeasurements; ++i) {
-    measurementTypes.push_back(genfit::eMeasurementType(i%8));
-  }
+  //for (unsigned int i = 0; i<nMeasurements; ++i) {
+  //measurementTypes.push_back(genfit::eMeasurementType((i%2)));
+  //}
+  measurementTypes.push_back(genfit::Pixel);
+  measurementTypes.push_back(genfit::Pixel);
+  measurementTypes.push_back(genfit::Pixel);
+  measurementTypes.push_back(genfit::Pixel);
+  measurementTypes.push_back(genfit::StripUT);
+  measurementTypes.push_back(genfit::WireTime);
+  measurementTypes.push_back(genfit::WireTime);
+  measurementTypes.push_back(genfit::WireTime);
+  measurementTypes.push_back(genfit::StripUT);
+  measurementTypes.push_back(genfit::Pixel);
+  measurementTypes.push_back(genfit::Pixel);
+  measurementTypes.push_back(genfit::Pixel);
+  measurementTypes.push_back(genfit::Pixel);
 
   signal(SIGSEGV, handler);   // install our handler
 
@@ -250,6 +264,7 @@ int main(int argc, char **argv) {
       break;
   }
   fitter->setMaxIterations(nIter);
+  //fitter->setDebugLvl(2);
   //if (debug)
   //  fitter->setDebugLvl(10);
 
@@ -287,8 +302,7 @@ int main(int argc, char **argv) {
   genfit::FieldManager::getInstance()->useCache(true, 8);
   genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
-  // HelixTrackModel does not respect charge, compensate here.  FIXME
-  const double charge = -TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
+  const double charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge()/(3.);
 
   // init event display
 #ifndef VALGRIND
@@ -311,7 +325,25 @@ int main(int argc, char **argv) {
     outFile = TFile::Open(outFileName, "RECREATE");
     outFile->cd();
   }
+  std::vector<TH1*> vhRes;
+  std::vector<TH1*> vhPull;
+  for (size_t i = 0; i < repToUse->getDim(); ++i) {
+    std::stringstream title;
+    std::stringstream name;
+    title << "hRes" << i;
+    name << repToUse->getNameForLocalCoord(i) << " resolution";
+    TH1* h = new TH1D(title.str().c_str(), name.str().c_str(), 500, -resolution, resolution);
+    vhRes.push_back(h);
 
+    title.clear();
+    title.str("");
+    name.clear();
+    name.str("");
+    title << "hPull" << i;
+    name << repToUse->getNameForLocalCoord(i) << " pull";
+    h = new TH1D(title.str().c_str(), name.str().c_str(), 200, -6, 6);
+    vhPull.push_back(h);
+  }
   TH1D *hmomRes = new TH1D("hmomRes","mom res",500,-20*resolution*momentum/nMeasurements,20*resolution*momentum/nMeasurements);
   TH1D *hupRes = new TH1D("hupRes","u' res",500,-15*resolution/nMeasurements, 15*resolution/nMeasurements);
   TH1D *hvpRes = new TH1D("hvpRes","v' res",500,-15*resolution/nMeasurements, 15*resolution/nMeasurements);
@@ -389,7 +421,7 @@ int main(int argc, char **argv) {
       }
 
       // calc helix parameters
-      genfit::HelixTrackModel* helix = new genfit::HelixTrackModel(pos, mom, charge);
+      genfit::HelixTrackModel* helix = new genfit::HelixTrackModel(pos, mom, charge, TDatabasePDG::Instance()->GetParticle(pdg)->Mass());
       measurementCreator.setTrackModel(helix);
 
       // smeared start values
@@ -411,17 +443,20 @@ int main(int argc, char **argv) {
       if (chargeSwitchProb > gRandom->Uniform(1.))
         sign = -1.;
       //genfit::AbsTrackRep* rep = new genfit::RKTrackRepEnergy(sign*pdg);
-      genfit::AbsTrackRep* rep = new genfit::RKTrackRepTime(sign*pdg);
-      sign = 1.;
-      if (chargeSwitchProb > gRandom->Uniform(1.))
-        sign = -1.;
-      genfit::AbsTrackRep* secondRep = new genfit::RKTrackRep(sign*-211);
+      genfit::AbsTrackRep* rep = repToUse->clone();
+
       genfit::MeasuredStateOnPlane stateRef(rep);
       rep->setPosMomCov(stateRef, pos, mom, covM);
 
       // smeared start state
       genfit::MeasuredStateOnPlane stateSmeared(rep);
       rep->setPosMomCov(stateSmeared, posM, momM, covM);
+      rep->setChargeSign(stateSmeared, sign*rep->getPDGCharge());
+
+      sign = 1.;
+      if (chargeSwitchProb > gRandom->Uniform(1.))
+        sign = -1.;
+      genfit::AbsTrackRep* secondRep = new genfit::RKTrackRep(sign*-211);
 
       //rep->setPropDir(1);
 
@@ -650,6 +685,11 @@ int main(int argc, char **argv) {
       double pval = fitter->getPVal(fitTrack, rep);
       //assert( fabs(pval - static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getBackwardPVal()) < 1E-10 );
 
+      for (size_t i = 0; i < repToUse->getDim(); ++i) {
+        vhRes[i]->Fill(state[i] - referenceState[i]);
+        vhPull[i]->Fill((state[i] - referenceState[i]) / sqrt(cov[i][i]));
+      }
+
       hmomRes->Fill( (charge/state[0]-momentum));
       hupRes->Fill(  (state[1]-referenceState[1]));
       hvpRes->Fill(  (state[2]-referenceState[2]));
@@ -675,6 +715,7 @@ int main(int argc, char **argv) {
       catch (genfit::Exception& e) {
         std::cerr << e.what();
         std::cout << "could not get TrackLen or TOF! \n";
+        continue;
       }
 
 
@@ -876,7 +917,7 @@ int main(int argc, char **argv) {
 
     c1->Write();
 
-    TCanvas* c2 = new TCanvas("cPulls", "Pulls");
+    TCanvas* c2 = new TCanvas("cPull", "Pulls");
     c2->Divide(2,3);
 
     c2->cd(1);
@@ -914,6 +955,24 @@ int main(int argc, char **argv) {
     trackLenRes->Draw();
 
     c3->Write();
+
+    TCanvas* c4 = new TCanvas("cResolutions", "Resolutions");
+    std::cout << "HELLO I WANT TO SHOW " << repToUse->getDim() << std::endl;
+    c4->DivideSquare(repToUse->getDim());
+    for (size_t i = 0; i < repToUse->getDim(); ++i) {
+      c4->cd(i+1);
+      vhRes[i]->Draw();
+      vhRes[i]->Fit("gaus");
+    }
+    TCanvas* c5 = new TCanvas("cPulls", "Pulls");
+    c5->DivideSquare(repToUse->getDim());
+    for (size_t i = 0; i < repToUse->getDim(); ++i) {
+      c5->cd(i+1);
+      vhPull[i]->Draw();
+      vhPull[i]->Fit("gaus");
+    }
+    c4->Write();
+    c5->Write();
   }
 
   if (outFile)

@@ -15,6 +15,7 @@
 #include "SpacepointMeasurement.h"
 #include "WireMeasurement.h"
 #include "WirePointMeasurement.h"
+#include "StripTimeMeasurement.h"
 #include "AbsTrackRep.h"
 #include "ConstField.h"
 #include "DetPlane.h"
@@ -510,10 +511,11 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       bool full_hit =  (dynamic_cast<const FullMeasurement*>(m) != NULL);
       bool planar_hit = (dynamic_cast<const PlanarMeasurement*>(m) != NULL);
       bool planar_pixel_hit = planar_hit && hit_coords_dim == 2;
+      bool strip_time_hit = (dynamic_cast<const StripTimeMeasurement*>(m) != NULL);
       bool space_hit = (dynamic_cast<const SpacepointMeasurement*>(m) != NULL);
       bool wire_hit = m && m->isLeftRightMeasurement();
       bool wirepoint_hit = wire_hit &&  (dynamic_cast<const WirePointMeasurement*>(m) != NULL);
-      if (!full_hit && !planar_hit && !planar_pixel_hit && !space_hit && !wire_hit && !wirepoint_hit) {
+      if (!full_hit && !planar_hit && !planar_pixel_hit && !strip_time_hit && !space_hit && !wire_hit && !wirepoint_hit) {
         std::cout << "Track " << i << ", Hit " << j << ": Unknown measurement type: skipping hit!" << std::endl;
         continue;
       }
@@ -521,8 +523,12 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
       if (!fi) {
         // draw planes if corresponding option is set -----------------------------------------
-        if(drawDetectors_ && planar_hit) {
-          const SharedPlanePtr& physPlane = (dynamic_cast<const PlanarMeasurement*>(m))->getPhysicalPlane();
+        if(drawDetectors_ && (planar_hit || strip_time_hit)) {
+          SharedPlanePtr physPlane;
+          if (planar_hit)
+            physPlane = (dynamic_cast<const PlanarMeasurement*>(m))->getPhysicalPlane();
+          else if (strip_time_hit)
+            physPlane = (dynamic_cast<const StripTimeMeasurement*>(m))->getPhysicalPlane();
           const TVector3& o(physPlane->getO());
           const TVector3& u(physPlane->getU());
           const TVector3& v(physPlane->getV());

@@ -236,6 +236,13 @@ class AbsTrackRep : public TObject {
   //! Get the dimension of the state vector used by the track representation.
   virtual unsigned int getDim() const = 0;
 
+  /** Get names for the variables in the state, i.e. of the local
+   * coordinates used by the rep.  i is in the range 0 to getDim() - 1
+   * and is an index into the vector returned by
+   * StateOnPlane::getState().
+   */
+  virtual const char *getNameForLocalCoord(size_t i) = 0;
+
   //! Get the cartesian position of a state.
   virtual TVector3 getPos(const StateOnPlane& state) const = 0;
 

@@ -2061,7 +2061,7 @@ bool RKTrackRepTime::RKutta(const M1x4& SU,
 
     double beta = 1/hypot(1, mass*stateGlobal[6]/charge);
     flightTime += S / beta / 29.9792458; // in ns
-    std::cout << counter << "\t " << flightTime << " " << S / beta / 29.9792458 << " " << stateGlobal[7] << std::endl;
+    //std::cout << counter << "\t " << flightTime << " " << S / beta / 29.9792458 << " " << stateGlobal[7] << std::endl;
 
     // check way limit
     if(Way > Wmax){

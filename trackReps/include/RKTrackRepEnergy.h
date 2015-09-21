@@ -111,6 +111,17 @@ class RKTrackRepEnergy : public AbsTrackRep {
 
 
   unsigned int getDim() const {return 5;}
+  const char *getNameForLocalCoord(size_t i) {
+    assert(0 <= i && i < getDim());
+    switch (i) {
+    case 0: return "qop";
+    case 1: return "u'";
+    case 2: return "v'";
+    case 3: return "u";
+    case 4: return "v";
+    }
+    return 0; // Silence warnings about missing return statement.
+  }
 
   virtual TVector3 getPos(const StateOnPlane& state) const;
 

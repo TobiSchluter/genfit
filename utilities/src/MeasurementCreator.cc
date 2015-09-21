@@ -22,10 +22,12 @@
 #include <iostream>
 
 #include <PlanarMeasurement.h>
+#include <StripTimeMeasurement.h>
 #include <ProlateSpacepointMeasurement.h>
 #include <SpacepointMeasurement.h>
 #include <WireMeasurement.h>
 #include <WirePointMeasurement.h>
+#include <WireTimeMeasurement.h>
 
 #include <TRandom.h>
 #include <TMath.h>
@@ -68,6 +70,7 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
   TVector3 point, dir;
   trackModel_->getPosDir(tracklength, point, dir);
 
+  double time = trackModel_->getTime(tracklength);
 
   TVector3 planeNorm(dir);
   planeNorm.SetTheta(thetaDetPlane_*TMath::Pi()/180);
@@ -80,7 +83,8 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
   TVector3 wirePerp;
 
   if (type == Wire ||
-      type == WirePoint){
+      type == WirePoint ||
+      type == WireTime){
 
     // skew layers
     if (useSkew_ && (int)((double)wireCounter_/(double)nSuperLayer_)%2 == 1) {
@@ -213,43 +217,70 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
     }
     break;
 
-    case StripU: case StripV: case StripUV : {
-      if (debug_) std::cerr << "create StripHit" << std::endl;
+  case StripU: case StripV: case StripUV: case StripUT: {
+    if (debug_) std::cerr << "create StripHit" << std::endl;
 
-      TVector3 vU, vV;
-      vU = planeNorm.Cross(z);
-      vV = (planeNorm.Cross(z)).Cross(planeNorm);
-      genfit::SharedPlanePtr plane(new genfit::DetPlane(point, vU, vV));
+    TVector3 vU, vV;
+    vU = planeNorm.Cross(z);
+    vV = (planeNorm.Cross(z)).Cross(planeNorm);
+    genfit::SharedPlanePtr plane(new genfit::DetPlane(point, vU, vV));
 
-      TVectorD hitCoords(1);
-      if (outlier)
-        hitCoords(0) = gRandom->Uniform(-outlierRange_, outlierRange_);
-      else
-        hitCoords(0) = gRandom->Gaus(0,resolution_);
+    TVectorD hitCoords(1);
+    if (outlier)
+      hitCoords(0) = gRandom->Uniform(-outlierRange_, outlierRange_);
+    else
+      hitCoords(0) = gRandom->Gaus(0,resolution_);
 
-      TMatrixDSym hitCov(1);
-      hitCov(0,0) = resolution_*resolution_;
+    TMatrixDSym hitCov(1);
+    hitCov(0,0) = resolution_*resolution_;
+
+    if (type != StripUT && type != StripUV) {
 
       measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
       static_cast<genfit::PlanarMeasurement*>(measurement)->setPlane(plane, measurementCounter_);
       if (type == StripV)
         static_cast<genfit::PlanarMeasurement*>(measurement)->setStripV();
       retVal.push_back(measurement);
+    } else if (type == StripUT) {
+      const double resolutionT = .1;
+      hitCoords.ResizeTo(2);
+      hitCoords(1) = gRandom->Gaus(time, resolutionT);
 
+      hitCov.ResizeTo(2,2);
+      hitCov(1,1) = resolutionT * resolutionT;
 
-      if (type == StripUV) {
-        if (outlier)
-          hitCoords(0) = gRandom->Uniform(-outlierRange_, outlierRange_);
-        else
-          hitCoords(0) = gRandom->Gaus(0,resolution_);
+      measurement = new genfit::StripTimeMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
+      static_cast<genfit::PlanarMeasurement*>(measurement)->setPlane(plane, measurementCounter_);
+      retVal.push_back(measurement);
+    } else if (type == StripUV) {
+      if (outlier)
+        hitCoords(0) = gRandom->Uniform(-outlierRange_, outlierRange_);
+      else
+        hitCoords(0) = gRandom->Gaus(0,resolution_);
 
-        hitCov(0,0) = resolution_*resolution_;
+      hitCov(0,0) = resolution_*resolution_;
 
-        measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
-        static_cast<genfit::PlanarMeasurement*>(measurement)->setPlane(plane, measurementCounter_);
-        static_cast<genfit::PlanarMeasurement*>(measurement)->setStripV();
-        retVal.push_back(measurement);
-      }
+      measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
+      static_cast<genfit::PlanarMeasurement*>(measurement)->setPlane(plane, measurementCounter_);
+      static_cast<genfit::PlanarMeasurement*>(measurement)->setStripV();
+      retVal.push_back(measurement);
+    }
+  }
+    break;
+
+  case WireTime:
+    {
+      double vDrift = 1e-3;
+      double vSignal = 1e8;
+      double resolutionT = 1;
+
+      double TMeasured = gRandom->Gaus(wirePerp.Mag() / vDrift + time, resolutionT);
+      measurement = new WireTimeMeasurement(TMeasured, resolutionT,
+                                            (point-wirePerp-currentWireDir),
+                                            (point-wirePerp+currentWireDir),
+                                            vDrift, vSignal,
+                                            int(type), measurementCounter_, nullptr);
+      retVal.push_back(measurement);
     }
     break;
 

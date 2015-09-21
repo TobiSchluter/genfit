@@ -1056,6 +1056,8 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
       std::cout << "\033[0m";
     }
 
+    //sleep(1);
+
     // Calculate chi² increment.  At the first point chi2inc == 0 and
     // the matrix will not be invertible.
     res_ = m.getState();

@@ -40,6 +40,8 @@ namespace genfit {
 
 
 enum eMeasurementType { Pixel = 0,
+                        WireTime,
+                        StripUT,
                         StripU,
                         StripV,
                         StripUV,
