@@ -124,7 +124,6 @@ double RKTrackRepTime::extrapolateToPlane(StateOnPlane& state,
 
   // back to 6D
   getStateLocal(state, stateGlobal);
-  setTime(state, getTime(state) + flightTime);
   //std::cout << getTime(state) << " " << stateGlobal[7] << std::endl;
   lastEndState_ = state;
 
@@ -921,6 +920,7 @@ double RKTrackRepTime::getSpu(const StateOnPlane& state) const {
 }
 
 double RKTrackRepTime::getTime(const StateOnPlane& state) const {
+  return state.getState()(5);
 
   const TVectorD& auxInfo = state.getAuxInfo();
   if (auxInfo.GetNrows() == 2)
