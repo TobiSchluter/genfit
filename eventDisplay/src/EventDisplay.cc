@@ -614,7 +614,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
               MeasuredStateOnPlane update ( *fi->getBackwardUpdate() );
               try {
                 update.extrapolateBy(-3.);
-                eve_tp->AddElement(makeLines("backwardUpdate", "backward update", &update, fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1));
+                makeLines(eve_tp, "backwardUpdate", "backward update", &update, fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
               } catch(...) {
                 std::cout << "failure extrapolating state" << std::endl;
                 fi->getBackwardUpdate()->Print();
@@ -623,18 +623,18 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         }
         if (j > 0 && prevFi != NULL) {
           if(drawTrack_) {
-            makeLines("prevFittedState", "previous fitted state", prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers_, drawErrors_, 3);
+            makeLines(eve_tp, "prevFittedState", "previous fitted state", prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, drawTrackMarkers_, drawErrors_, 3);
             if (drawErrors_) { // make sure to draw errors in both directions
-              eve_tp->AddElement(makeLines("prevFittedStateErr", "errors of previous fitted state", prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, false, drawErrors_, 0, 0));
+              makeLines(eve_tp, "prevFittedStateErr", "errors of previous fitted state", prevFittedState, fittedState, rep, charge > 0 ? kRed : kBlue, 1, false, drawErrors_, 0, 0);
             }
           }
           if (drawForward_) {
-            eve_tp->AddElement(makeLines("forwardUpdate", "forward update", prevFi->getForwardUpdate(), fi->getForwardPrediction(), rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0));
+            makeLines(eve_tp, "forwardUpdate", "forward update", prevFi->getForwardUpdate(), fi->getForwardPrediction(), rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
             if (j == numhits-1) {
               MeasuredStateOnPlane update ( *fi->getForwardUpdate() );
               try {
                 update.extrapolateBy(3.);
-                eve_tp->AddElement(makeLines("forwardUpdate", "forward Update", fi->getForwardUpdate(), &update, rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0));
+                makeLines(eve_tp, "forwardUpdate", "forward Update", fi->getForwardUpdate(), &update, rep, kCyan, 1, drawTrackMarkers_, drawErrors_, 1, 0);
               } catch(Exception& e) {
                 std::cerr<<e.what();
                 std::cout << "failure extrapolating state" << std::endl;
@@ -643,11 +643,11 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
             }
           }
           if (drawBackward_) {
-            eve_tp->AddElement(makeLines("backwardPrediction", "backward Prediction", prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1));
+            makeLines(eve_tp, "backwardPrediction", "backward Prediction", prevFi->getBackwardPrediction(), fi->getBackwardUpdate(), rep, kMagenta, 1, drawTrackMarkers_, drawErrors_, 1);
           }
           // draw reference track if corresponding option is set ------------------------------------------
           if(drawRefTrack_ && fi->hasReferenceState() && prevFi->hasReferenceState())
-            eve_tp->AddElement(makeLines("referenceState", "reference State", prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers_, false, 3));
+            makeLines(eve_tp, "referenceState", "reference State", prevFi->getReferenceState(), fi->getReferenceState(), rep, charge > 0 ? kRed + 2 : kBlue + 2, 2, drawTrackMarkers_, false, 3);
           else if (drawRefTrack_) {
             std::cout << "no reference" << std::endl;
           }
@@ -699,11 +699,11 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
             MeasuredStateOnPlane prevSop(sop);
             prevSop.extrapolateBy(-3);
-            eve_tp->AddElement(makeLines("fullMeasurement", "full Measurement", &sop, &prevSop, rep, kYellow, 1, false, true, 0, 0));
+            makeLines(eve_tp, "fullMeasurement", "full Measurement", &sop, &prevSop, rep, kYellow, 1, false, true, 0, 0);
 
             prevSop = sop;
             prevSop.extrapolateBy(3);
-            eve_tp->AddElement(makeLines("fullMeasurement", "full Measurement", &sop, &prevSop, rep, kYellow, 1, false, true, 0, 0));
+            makeLines(eve_tp, "fullMeasurement", "full Measurement", &sop, &prevSop, rep, kYellow, 1, false, true, 0, 0);
           }
 
           // draw spacepoint hits -----------------------------------------------------------
@@ -932,20 +932,20 @@ TEveBox* EventDisplay::boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, 
   }
 
   return box;
-
 }
 
 
-TEveElement* EventDisplay::makeLines(const std::string& name, const std::string& title,
-                                     const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
-                                     const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth, int markerPos)
+void EventDisplay::makeLines(TEveElementList* list, const std::string& name, const std::string& title,
+                             const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
+                             const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth, int markerPos)
 {
   if (prevState == NULL || state == NULL) {
     std::cerr << "prevState == NULL || state == NULL\n";
-    return 0;
+    return;
   }
 
   TEveElement* element = new TEveElementList(name.c_str(), title.c_str());
+  list->AddElement(element);
 
   TVector3 pos, dir, oldPos, oldDir;
   rep->getPosDir(*state, pos, dir);
@@ -1067,7 +1067,7 @@ TEveElement* EventDisplay::makeLines(const std::string& name, const std::string&
       }
       catch(Exception& e){
         std::cerr<<e.what();
-        return element;
+        return;
       }
 
       // get cov at 2nd plane
@@ -1148,8 +1148,6 @@ TEveElement* EventDisplay::makeLines(const std::string& name, const std::string&
       element->AddElement(error_shape);
     }
   }
-
-  return element;
 }
 
 

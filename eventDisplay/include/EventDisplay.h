@@ -161,8 +161,8 @@ class EventDisplay : public TNamed {
      */
     TEveBox* boxCreator(TVector3 o, TVector3 u, TVector3 v, float ud, float vd, float depth);
 
-    TEveElement* makeLines(const std::string& name, const std::string& title, const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
-						   const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth = 2, int markerPos = 1);
+    void makeLines(TEveElementList* list, const std::string& name, const std::string& title, const StateOnPlane* prevState, const StateOnPlane* state, const AbsTrackRep* rep,
+				   const Color_t& color, const Style_t& style, bool drawMarkers, bool drawErrors, double lineWidth = 2, int markerPos = 1);
 
 
     static EventDisplay* eventDisplay_; //!

@@ -166,7 +166,7 @@ bool WireTimeMeasurement::HMatrix::isEqual(const AbsHMatrix& other) const
 
 void WireTimeMeasurement::drawMeasurement(TEveElementList* list, const MeasuredStateOnPlane& fittedState) const
 {
-  double radius = fabs((TMeasured_ - fittedState.getTime()) * vDrift_);
+  double radius = (TMeasured_ - fittedState.getTime()) * fabs(vDrift_);
   TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
   det_shape->SetShape(new TGeoTube(std::max(0., radius-0.0105/2.), radius+0.0105/2., 4));
 
@@ -175,9 +175,10 @@ void WireTimeMeasurement::drawMeasurement(TEveElementList* list, const MeasuredS
   const TVector3& u = fittedState.getPlane()->getU();
   const TVector3& v = fittedState.getPlane()->getV();
   const TVector3& norm = fittedState.getPlane()->getNormal();
-  TGeoRotation det_rot("det_rot", (u.Theta()*180)/M_PI, (u.Phi()*180)/M_PI,
-                       (norm.Theta()*180)/M_PI, (norm.Phi()*180)/M_PI,
-                       (v.Theta()*180)/M_PI, (v.Phi()*180)/M_PI); // move the tube to the right place and rotate it correctly
+  const double rad2deg = 180 / M_PI;
+  TGeoRotation det_rot("det_rot", u.Theta()*rad2deg, u.Phi()*rad2deg,
+                       norm.Theta()*rad2deg, norm.Phi()*rad2deg,
+                       v.Theta()*rad2deg, v.Phi()*rad2deg); // move the tube to the right place and rotate it correctly
   TVector3 move = v*(v*(track_pos-o)); // move the tube along the wire until the track goes through it
   TGeoCombiTrans det_trans(o(0) + move.X(),
                            o(1) + move.Y(),
