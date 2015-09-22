@@ -184,8 +184,8 @@ int main(int argc, char **argv) {
   const bool fullMeasurement = false; // put fit result of first tracklet as FullMeasurement into second tracklet, don't merge
 
   //const genfit::eFitterType fitterId = genfit::SimpleKalman;
-  const genfit::eFitterType fitterId = genfit::RefKalman;
-  //const genfit::eFitterType fitterId = genfit::DafRef;
+  //const genfit::eFitterType fitterId = genfit::RefKalman;
+  const genfit::eFitterType fitterId = genfit::DafRef;
   //const genfit::eFitterType fitterId = genfit::DafSimple;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
 
   const bool checkPruning = true; // test pruning
 
-  const int pdg = -321;//211;//212;//13;               // particle pdg code
+  const int pdg = 13;//-321;//211;//212;//13;               // particle pdg code
 
   const bool twoReps = false; // test if everything works with more than one rep in the tracks
   boost::scoped_ptr<genfit::AbsTrackRep> repToUse(new genfit::RKTrackRepTime(pdg));  // The rep that will be used as default, has to be cloned into the tracks
@@ -232,9 +232,15 @@ int main(int argc, char **argv) {
   measurementTypes.push_back(genfit::Pixel);
   measurementTypes.push_back(genfit::Pixel);
   measurementTypes.push_back(genfit::StripUT);
+#if 0
+  measurementTypes.push_back(genfit::StripUT);
+  measurementTypes.push_back(genfit::StripUT);
+  measurementTypes.push_back(genfit::StripUT);
+#else
   measurementTypes.push_back(genfit::WireTime);
   measurementTypes.push_back(genfit::WireTime);
   measurementTypes.push_back(genfit::WireTime);
+#endif
   measurementTypes.push_back(genfit::StripUT);
   measurementTypes.push_back(genfit::Pixel);
   measurementTypes.push_back(genfit::Pixel);
@@ -332,7 +338,7 @@ int main(int argc, char **argv) {
     std::stringstream name;
     title << "hRes" << i;
     name << repToUse->getNameForLocalCoord(i) << " resolution";
-    TH1* h = new TH1D(title.str().c_str(), name.str().c_str(), 500, -resolution, resolution);
+    TH1* h = new TH1D(title.str().c_str(), name.str().c_str(), 500, -.5, .51);//resolution, resolution);
     vhRes.push_back(h);
 
     title.clear();
@@ -447,6 +453,7 @@ int main(int argc, char **argv) {
 
       genfit::MeasuredStateOnPlane stateRef(rep);
       rep->setPosMomCov(stateRef, pos, mom, covM);
+      rep->setTime(stateRef, 0);
 
       // smeared start state
       genfit::MeasuredStateOnPlane stateSmeared(rep);
@@ -652,7 +659,6 @@ int main(int argc, char **argv) {
         std::cout << "Track could not be fitted successfully! Fit is not converged! \n";
         continue;
       }
-
 
       genfit::TrackPoint* tp = fitTrack->getPointWithMeasurementAndFitterInfo(0, rep);
       if (tp == NULL) {

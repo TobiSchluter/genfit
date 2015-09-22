@@ -69,6 +69,11 @@ TVector3 HelixTrackModel::getPos(double tracklength) const {
   return pos;
 }
 
+double HelixTrackModel::getTime(double tracklength) const
+{
+  return tracklength*hypot(1, mass_/mom_)/29.9792458;
+}
+
 void HelixTrackModel::getPosMom(double tracklength, TVector3& pos, TVector3& mom) const {
 
   double angle = alpha0_ - sgn_ * tracklength / R_ * sin(theta_);

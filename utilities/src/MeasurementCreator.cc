@@ -60,7 +60,7 @@ MeasurementCreator::MeasurementCreator() :
 }
 
 
-std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType type, double tracklength, bool& outlier, int& lr) {
+std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType type, double trackLength, bool& outlier, int& lr) {
 
   outlier = false;
   lr = 0;
@@ -68,9 +68,9 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
   genfit::AbsMeasurement* measurement;
 
   TVector3 point, dir;
-  trackModel_->getPosDir(tracklength, point, dir);
+  trackModel_->getPosDir(trackLength, point, dir);
 
-  double time = trackModel_->getTime(tracklength);
+  double time = trackModel_->getTime(trackLength);
 
   TVector3 planeNorm(dir);
   planeNorm.SetTheta(thetaDetPlane_*TMath::Pi()/180);

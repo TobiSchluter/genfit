@@ -99,14 +99,15 @@ SharedPlanePtr WireTimeMeasurement::constructPlane(const StateOnPlane& state) co
 
 std::vector<MeasurementOnPlane*> WireTimeMeasurement::constructMeasurementsOnPlane(const StateOnPlane& state) const
 {
-  double m = getRawHitCoords()(0);
+  double driftTimeR = TMeasured_ - state.getTime();
+  double driftTimeL = -driftTimeR;
 
-  MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(1, &m),
+  MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(1, &driftTimeR),
                                                     getRawHitCov(),
-                                                    state.getPlane(), state.getRep(), new HMatrix(vDrift_, vSignal_, false));
-  MeasurementOnPlane* mopL = new MeasurementOnPlane(TVectorD(1, &m),
+                                                    state.getPlane(), state.getRep(), new HMatrix(vDrift_, vSignal_));
+  MeasurementOnPlane* mopL = new MeasurementOnPlane(TVectorD(1, &driftTimeL),
                                                     getRawHitCov(),
-                                                    state.getPlane(), state.getRep(), new HMatrix(vDrift_, vSignal_, true));
+                                                    state.getPlane(), state.getRep(), new HMatrix(vDrift_, vSignal_));
 
   // set left/right weights
   if (leftRight_ < 0) {
@@ -118,14 +119,14 @@ std::vector<MeasurementOnPlane*> WireTimeMeasurement::constructMeasurementsOnPla
     mopR->setWeight(1);
   }
   else {
-    double val = 0.5; // * pow(std::max(0., 1 - m/500), 2.);
+    double val = 0.5 * pow(std::max(0., 1 - fabs(driftTimeR * vDrift_ / 2)), 2.);
     mopL->setWeight(val);
     mopR->setWeight(val);
   }
 
   std::vector<MeasurementOnPlane*> retVal;
   retVal.push_back(mopR);
-  //retVal.push_back(mopL);
+  retVal.push_back(mopL);
   return retVal;
 }
 
@@ -147,10 +148,10 @@ void WireTimeMeasurement::setLeftRightResolution(int lr){
   else leftRight_ = 1;
 }
 
-WireTimeMeasurement::HMatrix::HMatrix(double vDrift, double vSignal, bool left)
+WireTimeMeasurement::HMatrix::HMatrix(double vDrift, double vSignal)
   : H_(1, 6)
 {
-  H_(0,3) = (left ? 1 : -1) * 1/vDrift;
+  H_(0,3) = 1/vDrift;
   H_(0,4) = 1/vSignal;
   H_(0,5) = 1;
 }

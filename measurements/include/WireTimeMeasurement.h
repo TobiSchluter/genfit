@@ -119,7 +119,7 @@ class WireTimeMeasurement : public AbsMeasurement, public display::IDrawableMeas
 
   class HMatrix : public AbsHMatrix {
   public:
-    HMatrix(double vDrift, double vSignal, bool left = false);
+    HMatrix(double vDrift, double vSignal);
     virtual ~HMatrix() {;}
 
     virtual const TMatrixD& getMatrix() const { return H_; }
