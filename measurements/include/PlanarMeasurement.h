@@ -26,7 +26,7 @@
 #include "AbsMeasurement.h"
 #include "AbsHMatrix.h"
 #include "MeasurementOnPlane.h"
-
+#include "IDrawableMeasurement.h"
 
 namespace genfit {
 
@@ -41,7 +41,7 @@ class AbsTrackRep;
  * The main feature of this type of hit is, that the detector plane
  * is defined by the detector hardware. 
  */
-class PlanarMeasurement : public AbsMeasurement {
+class PlanarMeasurement : public AbsMeasurement, public display::IDrawableMeasurement {
 
  public:
   PlanarMeasurement(int nDim = 1);
@@ -60,6 +60,9 @@ class PlanarMeasurement : public AbsMeasurement {
   virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
 
   virtual void setPlane(const SharedPlanePtr& physicalPlane, int planeId = -1) {physicalPlane_ = physicalPlane; planeId_ = planeId;}
+
+  virtual void drawMeasurement(TEveElementList *list, const MeasuredStateOnPlane& fittedState) const;
+  virtual void drawDetector(TEveElementList *list) const;
 
   /** @brief Use if the coordinate for 1D hits measured in V direction.
    *

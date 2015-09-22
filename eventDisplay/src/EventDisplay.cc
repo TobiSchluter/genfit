@@ -529,6 +529,8 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
 
       // determine measurement type
+      const genfit::display::IDrawableMeasurement* drawable =
+        dynamic_cast<const genfit::display::IDrawableMeasurement*>(m);
       bool full_hit =  (dynamic_cast<const FullMeasurement*>(m) != NULL);
       bool planar_hit = (dynamic_cast<const PlanarMeasurement*>(m) != NULL);
       bool planar_pixel_hit = planar_hit && hit_coords_dim == 2;
@@ -536,7 +538,7 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
       bool space_hit = (dynamic_cast<const SpacepointMeasurement*>(m) != NULL);
       bool wire_hit = m && m->isLeftRightMeasurement();
       bool wirepoint_hit = wire_hit &&  (dynamic_cast<const WirePointMeasurement*>(m) != NULL);
-      if (!full_hit && !planar_hit && !planar_pixel_hit && !strip_time_hit && !space_hit && !wire_hit && !wirepoint_hit) {
+      if (!drawable && !full_hit && !planar_hit && !planar_pixel_hit && !strip_time_hit && !space_hit && !wire_hit && !wirepoint_hit) {
         std::cout << "Track " << i << ", Hit " << j << ": Unknown measurement type: skipping hit!" << std::endl;
         continue;
       }
@@ -544,23 +546,8 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
       if (!fi) {
         // draw planes if corresponding option is set -----------------------------------------
-        if(drawDetectors_ && (planar_hit || strip_time_hit)) {
-          SharedPlanePtr physPlane;
-          if (planar_hit)
-            physPlane = (dynamic_cast<const PlanarMeasurement*>(m))->getPhysicalPlane();
-          else if (strip_time_hit)
-            physPlane = (dynamic_cast<const StripTimeMeasurement*>(m))->getPhysicalPlane();
-          const TVector3& o(physPlane->getO());
-          const TVector3& u(physPlane->getU());
-          const TVector3& v(physPlane->getV());
-          TEveBox* box = boxCreator(o, u, v, 4, 4, 0.01);
-          if (drawDetectors_ && planar_hit) {
-            box->SetMainColor(kCyan);
-          } else {
-            box->SetMainColor(kGray);
-          }
-          box->SetMainTransparency(50);
-          eve_tp->AddElement(box);
+        if (drawDetectors_ && drawable) {
+          drawable->drawDetector(eve_tp);
         }
         continue;
       }
@@ -613,17 +600,9 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         // finished setting variables ---------------------------------------------------------
 
         // draw planes if corresponding option is set -----------------------------------------
-        if(//iMeas == 0 &&
-           (drawPlanes_ || (drawDetectors_ && planar_hit))) {
-          TVector3 move(0,0,0);
-          if (planar_hit) move = track_pos-o;
-          if (wire_hit) move = v*(v*(track_pos-o)); // move the plane along the wire until the track goes through it
-          TEveBox* box = boxCreator(o + move, u, v, plane_size, plane_size, 0.01);
-          if (drawDetectors_ && planar_hit) {
-            box->SetMainColor(kCyan);
-          } else {
-            box->SetMainColor(kGray);
-          }
+        if (drawPlanes_) {
+          TEveBox* box = genfit::display::boxCreator(track_pos, u, v, 4, 4, 0.01);
+          box->SetMainColor(kCyan);
           box->SetMainTransparency(50);
           eve_tp->AddElement(box);
         }
@@ -679,8 +658,9 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
 
         // draw detectors if option is set, only important for wire hits ----------------------
         if(drawDetectors_) {
-
-          if(wire_hit) {
+          if (drawable)
+            drawable->drawDetector(eve_tp);
+          else if(wire_hit) {
             TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
             det_shape->IncDenyDestroy();
             det_shape->SetShape(new TGeoTube(std::max(0., (double)(hit_u-0.0105/2.)), hit_u+0.0105/2., plane_size));
@@ -705,7 +685,9 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
         }
         // finished drawing detectors ---------------------------------------------------------
 
-        if(drawHits_) {
+        if (drawHits_ && drawable) {
+          drawable->drawMeasurement(eve_tp, *fittedState);
+        } else if(drawHits_) {
 
           // draw planar hits, with distinction between strip and pixel hits ----------------
           if (full_hit) {
@@ -723,68 +705,6 @@ void EventDisplay::drawEvent(unsigned int id, bool resetCam) {
             prevSop.extrapolateBy(3);
             eve_tp->AddElement(makeLines("fullMeasurement", "full Measurement", &sop, &prevSop, rep, kYellow, 1, false, true, 0, 0));
           }
-
-          if(planar_hit) {
-            if(!planar_pixel_hit) {
-              TEveBox* hit_box;
-              TVector3 stripDir3 = stripDir.X()*u + stripDir.Y()*v;
-              TVector3 stripDir3perp = stripDir.Y()*u - stripDir.X()*v;
-              TVector3 move = stripDir3perp*(stripDir3perp*(track_pos-o));
-              hit_box = boxCreator((o + move + hit_u*stripDir3), stripDir3, stripDir3perp, errorScale_*std::sqrt(hit_cov(0,0)), plane_size, 0.0105);
-              hit_box->SetMainColor(kYellow);
-              hit_box->SetMainTransparency(0);
-              eve_tp->AddElement(hit_box);
-            } else {
-              // calculate eigenvalues to draw error-ellipse ----------------------------
-              TMatrixDSymEigen eigen_values(hit_cov);
-              TEveGeoShape* cov_shape = new TEveGeoShape("cov_shape");
-              cov_shape->IncDenyDestroy();
-              TVectorT<double> ev = eigen_values.GetEigenValues();
-              TMatrixT<double> eVec = eigen_values.GetEigenVectors();
-              double pseudo_res_0 = errorScale_*std::sqrt(ev(0));
-              double pseudo_res_1 = errorScale_*std::sqrt(ev(1));
-              // finished calcluating, got the values -----------------------------------
-
-              // do autoscaling if necessary --------------------------------------------
-              if(drawAutoScale_) {
-                double min_cov = std::min(pseudo_res_0,pseudo_res_1);
-                if(min_cov < 1e-5) {
-                  std::cout << "Track " << i << ", Hit " << j << ": Invalid covariance matrix (Eigenvalue < 1e-5), autoscaling not possible!" << std::endl;
-                } else {
-                  if(min_cov < 0.049) {
-                    double cor = 0.05 / min_cov;
-                    std::cout << "Track " << i << ", Hit " << j << ": Pixel covariance too small, rescaling by " << cor;
-                    errorScale_ *= cor;
-                    pseudo_res_0 *= cor;
-                    pseudo_res_1 *= cor;
-                    std::cout << " to " << errorScale_ << std::endl;
-                  }
-                }
-              }
-              // finished autoscaling ---------------------------------------------------
-
-              // calculate the semiaxis of the error ellipse ----------------------------
-              cov_shape->SetShape(new TGeoEltu(pseudo_res_0, pseudo_res_1, 0.0105));
-              TVector3 pix_pos = o + hit_u*u + hit_v*v;
-              TVector3 u_semiaxis = (pix_pos + eVec(0,0)*u + eVec(1,0)*v)-pix_pos;
-              TVector3 v_semiaxis = (pix_pos + eVec(0,1)*u + eVec(1,1)*v)-pix_pos;
-              TVector3 norm = u.Cross(v);
-              // finished calculating ---------------------------------------------------
-
-              // rotate and translate everything correctly ------------------------------
-              TGeoRotation det_rot("det_rot", (u_semiaxis.Theta()*180)/TMath::Pi(), (u_semiaxis.Phi()*180)/TMath::Pi(),
-                  (v_semiaxis.Theta()*180)/TMath::Pi(), (v_semiaxis.Phi()*180)/TMath::Pi(),
-                  (norm.Theta()*180)/TMath::Pi(), (norm.Phi()*180)/TMath::Pi());
-              TGeoCombiTrans det_trans(pix_pos(0),pix_pos(1),pix_pos(2), &det_rot);
-              cov_shape->SetTransMatrix(det_trans);
-              // finished rotating and translating --------------------------------------
-
-              cov_shape->SetMainColor(kYellow);
-              cov_shape->SetMainTransparency(0);
-              eve_tp->AddElement(cov_shape);
-            }
-          }
-          // finished drawing planar hits ---------------------------------------------------
 
           // draw spacepoint hits -----------------------------------------------------------
           if(space_hit) {
@@ -1688,5 +1608,30 @@ void EventDisplay::guiSelectMmHandling(int val){
   gotoEvent(eventId_);
 }
 
+
+TEveBox* display::boxCreator(const TVector3& o, TVector3 u, TVector3 v, float ud, float vd, float depth) {
+
+  TEveBox* box = new TEveBox("detPlane_shape");
+
+  TVector3 normal = u.Cross(v);
+  u *= (0.5*ud);
+  v *= (0.5*vd);
+  normal *= (0.5*depth);
+
+  for (int k = 0; k < 8; ++k) {
+    // Coordinates for all eight corners of the box.
+    int signU = (k & 4) ? -1 : 1;
+    int signV = (k & 2) ? -1 : 1;
+    int signN = (k & 1) ? -1 : 1;
+    float vertex[3];
+    for (int i = 0; i < 3; ++i) {
+      vertex[i] = o(i) + signU * u(i) + signV * v(i) + signN * normal(i);
+    }
+    box->SetVertex(k, vertex);
+  }
+
+  return box;
+
+}
 
 } // end of namespace genfit

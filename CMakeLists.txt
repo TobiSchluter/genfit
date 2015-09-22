@@ -236,6 +236,7 @@ SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/coreRootDict.cc" "${library_sou
 
 SET(EVENTDISPLAY_DICTIONARY_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include/EventDisplay.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include/IDrawableMeasurement.h
 )
 ROOT_GENERATE_DICTIONARY("${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}"
                          "${EVENTDISPLAY_DICTIONARY_SOURCES}"
@@ -299,7 +300,7 @@ SET(MEASUREMENTS_DICTIONARY_SOURCES
 )
 ROOT_GENERATE_DICTIONARY("${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}"
                          "${MEASUREMENTS_DICTIONARY_SOURCES}"
-                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/measurements/include"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/core/include;${CMAKE_CURRENT_SOURCE_DIR}/eventDisplay/include;${CMAKE_CURRENT_SOURCE_DIR}/measurements/include"
 			 "${CMAKE_CURRENT_SOURCE_DIR}/measurements/src/measurementsLinkDef.h"
 			 "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cc")
 SET(library_sources "${CMAKE_CURRENT_BINARY_DIR}/measurementsRootDict.cc" "${library_sources}")

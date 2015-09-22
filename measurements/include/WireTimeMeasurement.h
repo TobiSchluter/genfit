@@ -27,6 +27,7 @@
 #include "AbsMeasurement.h"
 #include "AbsHMatrix.h"
 #include "MeasurementOnPlane.h"
+#include "IDrawableMeasurement.h"
 
 
 namespace genfit {
@@ -53,7 +54,7 @@ namespace genfit {
  * coordinate in the plane)
  *
  */
-class WireTimeMeasurement : public AbsMeasurement {
+class WireTimeMeasurement : public AbsMeasurement, public display::IDrawableMeasurement {
 
  public:
   WireTimeMeasurement();
@@ -99,6 +100,9 @@ class WireTimeMeasurement : public AbsMeasurement {
   virtual bool isLeftRigthMeasurement() const {return true;}
   double getMaxDistance(){return maxDistance_;}
   int getLeftRightResolution() const {return leftRight_;}
+
+  void drawMeasurement(TEveElementList* list, const MeasuredStateOnPlane& fittedState) const;
+  void drawDetector(TEveElementList* list) const;
 
  private:
 

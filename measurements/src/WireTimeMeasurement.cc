@@ -161,5 +161,15 @@ bool WireTimeMeasurement::HMatrix::isEqual(const AbsHMatrix& other) const
 }
 
 
+void WireTimeMeasurement::drawMeasurement(TEveElementList* list, const MeasuredStateOnPlane& fittedState) const
+{
+  return;
+}
+
+void WireTimeMeasurement::drawDetector(TEveElementList* list) const
+{
+  return;
+}
+
 } /* End of namespace genfit */
 /** @} */
