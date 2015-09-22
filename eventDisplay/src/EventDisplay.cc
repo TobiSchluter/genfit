@@ -1123,7 +1123,7 @@ TEveElement* EventDisplay::makeLines(const std::string& name, const std::string&
         eVec2 *= -1;
       //assert(eVec1.Cross(eVec2)*eval > 0);
 
-      const TVector3& oldEVec1(eVec1);
+      TVector3 oldEVec1(eVec1);
 
       const int nEdges = 24;
       std::vector<TVector3> vertices;
