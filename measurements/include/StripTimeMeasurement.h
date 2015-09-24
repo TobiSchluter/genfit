@@ -26,6 +26,7 @@
 #include "AbsMeasurement.h"
 #include "AbsHMatrix.h"
 #include "MeasurementOnPlane.h"
+#include "IDrawableMeasurement.h"
 
 
 namespace genfit {
@@ -41,7 +42,7 @@ class AbsTrackRep;
  * The main feature of this type of hit is, that the detector plane
  * is defined by the detector hardware. 
  */
-class StripTimeMeasurement : public AbsMeasurement {
+class StripTimeMeasurement : public AbsMeasurement, public display::IDrawableMeasurement {
 
  public:
   StripTimeMeasurement();
@@ -58,6 +59,9 @@ class StripTimeMeasurement : public AbsMeasurement {
   virtual std::vector<MeasurementOnPlane*> constructMeasurementsOnPlane(const StateOnPlane& state) const;
 
   virtual const AbsHMatrix* constructHMatrix(const AbsTrackRep*) const;
+
+  virtual void drawMeasurement(TEveElementList *list, const MeasuredStateOnPlane& fittedState) const;
+  virtual void drawDetector(TEveElementList *list) const;
 
   virtual void setPlane(const SharedPlanePtr& physicalPlane, int planeId = -1) {physicalPlane_ = physicalPlane; planeId_ = planeId;}
 

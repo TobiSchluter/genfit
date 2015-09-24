@@ -27,6 +27,8 @@
 #include <RKTrackRepTime.h>
 #include <HMatrixUT6.h>
 
+#include <TEveBox.h>
+
 #include <cassert>
 
 
@@ -75,6 +77,47 @@ const AbsHMatrix* StripTimeMeasurement::constructHMatrix(const AbsTrackRep* rep)
 
   Exception exc("SpacepointMeasurement default implementation can only handle state vectors of type RKTrackRepTime!", __LINE__,__FILE__);
   throw exc;
+}
+
+void StripTimeMeasurement::drawDetector(TEveElementList *list) const
+{
+  SharedPlanePtr physPlane = this->getPhysicalPlane();
+  const TVector3& o(physPlane->getO());
+  const TVector3& u(physPlane->getU());
+  const TVector3& v(physPlane->getV());
+  TEveBox* box = genfit::display::boxCreator(o, u, v, 4, 4, 0.01);
+  box->SetMainColor(kGray);
+  box->SetMainTransparency(50);
+
+  list->AddElement(box);
+}
+
+void StripTimeMeasurement::drawMeasurement(TEveElementList *list, const MeasuredStateOnPlane& fittedState) const
+{
+  const TVector3& track_pos = fittedState.getPos();
+  const TVector3& o = fittedState.getPlane()->getO();
+  const TVector3& u = fittedState.getPlane()->getU();
+  const TVector3& v = fittedState.getPlane()->getV();
+
+  double hit_u = getRawHitCoords()(0);
+  const TMatrixDSym& hit_cov = getRawHitCov();
+
+  double errorScale_ = 1;
+  double plane_size = 4;
+
+  TEveBox* hit_box;
+  TVector3 stripDir3 = u;
+  TVector3 stripDir3perp = -v;
+  if (stripV_) {
+    stripDir3 = v;
+    stripDir3perp = u;
+  }
+  TVector3 move = stripDir3perp*(stripDir3perp*(track_pos-o));
+  hit_box = genfit::display::boxCreator((o + move + hit_u*stripDir3), stripDir3, stripDir3perp, errorScale_*std::sqrt(hit_cov(0,0)), plane_size, 0.0105);
+  hit_box->SetMainColor(kYellow);
+  hit_box->SetMainTransparency(0);
+
+  list->AddElement(hit_box);
 }
 
 void StripTimeMeasurement::Streamer(TBuffer &R__b)
