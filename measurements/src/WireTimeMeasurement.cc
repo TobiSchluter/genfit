@@ -99,14 +99,21 @@ SharedPlanePtr WireTimeMeasurement::constructPlane(const StateOnPlane& state) co
 
 std::vector<MeasurementOnPlane*> WireTimeMeasurement::constructMeasurementsOnPlane(const StateOnPlane& state) const
 {
-  double driftTimeR = TMeasured_ - state.getTime();
-  double driftTimeL = -driftTimeR;
+  double driftDistanceR = (TMeasured_ - state.getTime());
+  double driftDistanceL = -driftDistanceR;
 
-  MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(1, &driftTimeR),
-                                                    getRawHitCov(),
+  double sigma2 = sigmaT_ * sigmaT_;
+
+  if (driftDistanceR < 0)
+    std::swap(driftDistanceR, driftDistanceL);
+
+  //std::cout << "driftDistance " << driftDistanceR << " " << TMeasured_ << " " << state.getTime() << std::endl;
+
+  MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(1, &driftDistanceR),
+                                                    TMatrixDSym(1, &sigma2),
                                                     state.getPlane(), state.getRep(), new HMatrix(vDrift_, vSignal_));
-  MeasurementOnPlane* mopL = new MeasurementOnPlane(TVectorD(1, &driftTimeL),
-                                                    getRawHitCov(),
+  MeasurementOnPlane* mopL = new MeasurementOnPlane(TVectorD(1, &driftDistanceL),
+                                                    TMatrixDSym(1, &sigma2),
                                                     state.getPlane(), state.getRep(), new HMatrix(vDrift_, vSignal_));
 
   // set left/right weights
@@ -119,12 +126,13 @@ std::vector<MeasurementOnPlane*> WireTimeMeasurement::constructMeasurementsOnPla
     mopR->setWeight(1);
   }
   else {
-    double val = 0.5 * pow(std::max(0., 1 - fabs(driftTimeR * vDrift_ / 2)), 2.);
+    double val = 0.5 * pow(std::max(0., 1 - fabs(vDrift_ * driftDistanceR / 2)), 2.);
     mopL->setWeight(val);
     mopR->setWeight(val);
   }
 
   std::vector<MeasurementOnPlane*> retVal;
+  //mopR->setWeight(1.);
   retVal.push_back(mopR);
   retVal.push_back(mopL);
   return retVal;
@@ -151,8 +159,8 @@ void WireTimeMeasurement::setLeftRightResolution(int lr){
 WireTimeMeasurement::HMatrix::HMatrix(double vDrift, double vSignal)
   : H_(1, 6)
 {
-  H_(0,3) = 1/vDrift;
-  H_(0,4) = 1/vSignal;
+  H_(0,3) = 1 / vDrift;
+  H_(0,4) = 0; //vDrift/vSignal;
   H_(0,5) = 1;
 }
 
@@ -167,9 +175,9 @@ bool WireTimeMeasurement::HMatrix::isEqual(const AbsHMatrix& other) const
 
 void WireTimeMeasurement::drawMeasurement(TEveElementList* list, const MeasuredStateOnPlane& fittedState) const
 {
-  double radius = (TMeasured_ - fittedState.getTime()) * fabs(vDrift_);
-  TEveGeoShape* det_shape = new TEveGeoShape("det_shape");
-  det_shape->SetShape(new TGeoTube(std::max(0., radius-0.0105/2.), radius+0.0105/2., 4));
+  double radius = std::max(0., (TMeasured_ - fittedState.getTime())) * vDrift_;
+  TEveGeoShape* det_shapeR = new TEveGeoShape("hitR");
+  det_shapeR->SetShape(new TGeoTube(std::max(0., radius-0.0105/2.), radius+0.0105/2., 4));
 
   const TVector3& track_pos = fittedState.getPos();
   const TVector3& o = fittedState.getPlane()->getO();
@@ -177,7 +185,8 @@ void WireTimeMeasurement::drawMeasurement(TEveElementList* list, const MeasuredS
   const TVector3& v = fittedState.getPlane()->getV();
   const TVector3& norm = fittedState.getPlane()->getNormal();
   const double rad2deg = 180 / M_PI;
-  TGeoRotation det_rot("det_rot", u.Theta()*rad2deg, u.Phi()*rad2deg,
+  TGeoRotation det_rot("det_rot",
+                       u.Theta()*rad2deg, u.Phi()*rad2deg,
                        norm.Theta()*rad2deg, norm.Phi()*rad2deg,
                        v.Theta()*rad2deg, v.Phi()*rad2deg); // move the tube to the right place and rotate it correctly
   TVector3 move = v*(v*(track_pos-o)); // move the tube along the wire until the track goes through it
@@ -185,10 +194,10 @@ void WireTimeMeasurement::drawMeasurement(TEveElementList* list, const MeasuredS
                            o(1) + move.Y(),
                            o(2) + move.Z(),
                            &det_rot);
-  det_shape->SetTransMatrix(det_trans);
-  det_shape->SetMainColor(kCyan);
-  det_shape->SetMainTransparency(25);
-  list->AddElement(det_shape);
+  det_shapeR->SetTransMatrix(det_trans);
+  det_shapeR->SetMainColor(kCyan);
+  det_shapeR->SetMainTransparency(25);
+  list->AddElement(det_shapeR);
 }
 
 void WireTimeMeasurement::drawDetector(TEveElementList* list) const

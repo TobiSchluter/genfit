@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
 
   const unsigned int nMeasurements = 10;
   const double BField = 20.;       // kGauss
-  const double momentum = 0.1;     // GeV
+  const double momentum = .1;     // GeV
   const double theta = 110;         // degree
   const double thetaDetPlane = 90;         // degree
   const double phiDetPlane = 0;         // degree
@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
   const int nSuperLayer = 10;
   const double minDrift = 0.;
   const double maxDrift = 2;
-  const bool idealLRResolution = false; // resolve the l/r ambiguities of the wire measurements
+  const bool idealLRResolution = true; //false; // resolve the l/r ambiguities of the wire measurements
 
   const double outlierProb = -0.1;
   const double outlierRange = 2;
@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
   const bool twoReps = false; // test if everything works with more than one rep in the tracks
   boost::scoped_ptr<genfit::AbsTrackRep> repToUse(new genfit::RKTrackRepTime(pdg));  // The rep that will be used as default, has to be cloned into the tracks
 
-  const bool smearPosMom = true;     // init the Reps with smeared pos and mom
+  const bool smearPosMom = false; //true;     // init the Reps with smeared pos and mom
   const double chargeSwitchProb = -0.1; // probability to seed with wrong charge sign
   const double posSmear = 10*resolution;     // cm
   const double momSmear = 5. /180.*TMath::Pi();     // rad
@@ -231,17 +231,31 @@ int main(int argc, char **argv) {
   measurementTypes.push_back(genfit::Pixel);
   measurementTypes.push_back(genfit::Pixel);
   measurementTypes.push_back(genfit::Pixel);
+#if 1
+  //  measurementTypes.push_back(genfit::StripUT);
+#  if 0
   measurementTypes.push_back(genfit::StripUT);
-#if 0
   measurementTypes.push_back(genfit::StripUT);
   measurementTypes.push_back(genfit::StripUT);
-  measurementTypes.push_back(genfit::StripUT);
+#  else
+  for (int i = 0; i < 1; ++i) {
+    //measurementTypes.push_back(genfit::StripUT);
+    measurementTypes.push_back(genfit::WireTime);
+    measurementTypes.push_back(genfit::WireTime);
+    measurementTypes.push_back(genfit::WireTime);
+    measurementTypes.push_back(genfit::WireTime);
+    measurementTypes.push_back(genfit::WireTime);
+    //measurementTypes.push_back(genfit::StripUT);
+  }
+#  endif
+  //  measurementTypes.push_back(genfit::StripUT);
 #else
-  measurementTypes.push_back(genfit::WireTime);
-  measurementTypes.push_back(genfit::WireTime);
-  measurementTypes.push_back(genfit::WireTime);
+  measurementTypes.push_back(genfit::StripU);
+  measurementTypes.push_back(genfit::StripU);
+  measurementTypes.push_back(genfit::StripU);
+  measurementTypes.push_back(genfit::StripU);
+  measurementTypes.push_back(genfit::StripU);
 #endif
-  measurementTypes.push_back(genfit::StripUT);
   measurementTypes.push_back(genfit::Pixel);
   measurementTypes.push_back(genfit::Pixel);
   measurementTypes.push_back(genfit::Pixel);
@@ -332,6 +346,7 @@ int main(int argc, char **argv) {
     outFile->cd();
   }
   std::vector<TH1*> vhRes;
+  std::vector<TH1*> vhCov;
   std::vector<TH1*> vhPull;
   for (size_t i = 0; i < repToUse->getDim(); ++i) {
     std::stringstream title;
@@ -345,11 +360,21 @@ int main(int argc, char **argv) {
     title.str("");
     name.clear();
     name.str("");
+    title << "hCov" << i;
+    name << repToUse->getNameForLocalCoord(i) << " #sqrt{cov}";
+    h = new TH1D(title.str().c_str(), name.str().c_str(), 200, 0, 20);
+    vhCov.push_back(h);
+
+    title.clear();
+    title.str("");
+    name.clear();
+    name.str("");
     title << "hPull" << i;
     name << repToUse->getNameForLocalCoord(i) << " pull";
     h = new TH1D(title.str().c_str(), name.str().c_str(), 200, -6, 6);
     vhPull.push_back(h);
   }
+  TH1* hNDF = new TH1D("hNDF", "NDF", 100, 0, 100);
   TH1D *hmomRes = new TH1D("hmomRes","mom res",500,-20*resolution*momentum/nMeasurements,20*resolution*momentum/nMeasurements);
   TH1D *hupRes = new TH1D("hupRes","u' res",500,-15*resolution/nMeasurements, 15*resolution/nMeasurements);
   TH1D *hvpRes = new TH1D("hvpRes","v' res",500,-15*resolution/nMeasurements, 15*resolution/nMeasurements);
@@ -517,6 +542,8 @@ int main(int argc, char **argv) {
       else
         delete secondRep;
       //if (debug) fitTrack->Print("C");
+
+      fitTrack->setTimeSeed(gRandom->Gaus(0, 1));
 
       assert(fitTrack->checkConsistency());
       //fitTrack->addTrackRep(rep->clone()); // check if everything works fine with more than one rep
@@ -691,8 +718,11 @@ int main(int argc, char **argv) {
       double pval = fitter->getPVal(fitTrack, rep);
       //assert( fabs(pval - static_cast<genfit::KalmanFitStatus*>(fitTrack->getFitStatus(rep))->getBackwardPVal()) < 1E-10 );
 
+      hNDF->Fill(fitTrack->getFitStatus(rep)->getNdf());
+
       for (size_t i = 0; i < repToUse->getDim(); ++i) {
         vhRes[i]->Fill(state[i] - referenceState[i]);
+        vhCov[i]->Fill(sqrt(cov[i][i]));
         vhPull[i]->Fill((state[i] - referenceState[i]) / sqrt(cov[i][i]));
       }
 
@@ -709,6 +739,7 @@ int main(int argc, char **argv) {
       huPu->Fill(   (state[3]-referenceState[3]) / sqrt(cov[3][3]) );
       hvPu->Fill(   (state[4]-referenceState[4]) / sqrt(cov[4][4]) );
 
+      std::cout << referenceState[5] << " " << state[5] << " sigma = " << sqrt(cov[5][5]) << std::endl;
 
       try {
         trackLenRes->Fill( (trueLen - fitTrack->getTrackLen(rep)) / trueLen );
@@ -921,8 +952,6 @@ int main(int argc, char **argv) {
     hvRes->Fit("gaus");
     hvRes->Draw();
 
-    c1->Write();
-
     TCanvas* c2 = new TCanvas("cPull", "Pulls");
     c2->Divide(2,3);
 
@@ -948,8 +977,6 @@ int main(int argc, char **argv) {
     c2->cd(6);
     hvPu->Fit("gaus");
     hvPu->Draw();
-
-    c2->Write();
 
 
 
@@ -977,8 +1004,13 @@ int main(int argc, char **argv) {
       vhPull[i]->Draw();
       vhPull[i]->Fit("gaus");
     }
-    c4->Write();
-    c5->Write();
+    TCanvas* c6 = new TCanvas("cCov", "Cov");
+    c6->DivideSquare(repToUse->getDim());
+    for (size_t i = 0; i < repToUse->getDim(); ++i) {
+      c6->cd(i+1);
+      vhCov[i]->Draw();
+      vhCov[i]->Fit("gaus");
+    }
   }
 
   if (outFile)

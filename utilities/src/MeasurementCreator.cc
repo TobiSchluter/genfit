@@ -250,7 +250,7 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
       hitCov(1,1) = resolutionT * resolutionT;
 
       measurement = new genfit::StripTimeMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
-      static_cast<genfit::PlanarMeasurement*>(measurement)->setPlane(plane, measurementCounter_);
+      static_cast<genfit::StripTimeMeasurement*>(measurement)->setPlane(plane, measurementCounter_);
       retVal.push_back(measurement);
     } else if (type == StripUV) {
       if (outlier)
@@ -270,16 +270,21 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
 
   case WireTime:
     {
-      double vDrift = 1e-3;
-      double vSignal = 1e8;
+      double vDrift = 4e-3; // Realistic for Belle 2
+      double vSignal = 1e8;  // ignored so far, speed to readout along wire
       double resolutionT = 1;
 
-      double TMeasured = gRandom->Gaus(wirePerp.Mag() / vDrift + time, resolutionT);
+      double T0 = time + wirePerp.Mag() / vDrift;
+      double TMeasured = gRandom->Gaus(T0, resolutionT);
+      //std::cout << time << " " << wirePerp.Mag() << " " << T0 << " " << TMeasured << std::endl;
       measurement = new WireTimeMeasurement(TMeasured, resolutionT,
                                             (point-wirePerp-currentWireDir),
                                             (point-wirePerp+currentWireDir),
                                             vDrift, vSignal,
                                             int(type), measurementCounter_, nullptr);
+      if (idealLRResolution_){
+        measurement->setLeftRightResolution(lr);
+      }
       retVal.push_back(measurement);
     }
     break;
