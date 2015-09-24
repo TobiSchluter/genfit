@@ -65,6 +65,7 @@ class AbsMeasurement : public TObject {
   //! If the AbsMeasurement is a wire hit, the left/right resolution will be used.
   virtual bool isLeftRightMeasurement() const {return false;}
   virtual int getLeftRightResolution() const {return 0;}
+  virtual void setLeftRightResolution(int lr) {}
 
   unsigned int getDim() const {return rawHitCoords_.GetNrows();}
 
