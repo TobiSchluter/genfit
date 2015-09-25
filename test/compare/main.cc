@@ -38,6 +38,7 @@
 #include <RKTools.h>
 #include <RKTrackRep.h>
 #include <RKTrackRepEnergy.h>
+#include <RKTrackRepTime.h>
 #include <StepLimits.h>
 #include <TGeoMaterialInterface.h>
 
@@ -89,11 +90,9 @@ int main()
 {
   setup();
 
-  RKTrackRep* rk1 = new RKTrackRep(-211);
-  RKTrackRepEnergy* rk2 = new RKTrackRepEnergy(-211);
+  AbsTrackRep* rk1 = new RKTrackRepTime(-211);
 
   MeasuredStateOnPlane mop1(rk1);
-  MeasuredStateOnPlane mop2(rk2);
 
   TVector3 pos(0, -2, 0);
   TVector3 mom(0, .1, .0);
@@ -102,10 +101,8 @@ int main()
     cov(i, i) = 1.e-2;
   SharedPlanePtr start(new DetPlane(TVector3(0, -2, 0), TVector3(0, 1, 0)));
   mop1.setPosMomCov(pos, mom, cov);
-  mop2.setPosMomCov(pos, mom, cov);
 
   MeasuredStateOnPlane mop3(mop1);
-  MeasuredStateOnPlane mop4(mop2);
 
   SharedPlanePtr target(new DetPlane(TVector3(0, 1, 0), TVector3(0, 1, .2)));
   SharedPlanePtr middle(new DetPlane(TVector3(0, .02, 0), TVector3(0, 1, 0)));
@@ -125,6 +122,8 @@ int main()
   rk1->calcJacobianNumerically(mop3, target, jac);
   jac.Print();
 
+  return 0;
+#if 0
   std::cout << "next" << std::endl;
 
   //rk2->setDebugLvl(1);
@@ -199,6 +198,6 @@ int main()
   //mop4.Print();
   mop4.extrapolateToPlane(start);
   mop4.Print();
-
+#endif
   return 0;
 }

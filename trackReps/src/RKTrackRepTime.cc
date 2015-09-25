@@ -1442,20 +1442,24 @@ double RKTrackRepTime::RKstep(const M1x8& stateGlobal, const double h,
         J(i + 3, j + 3) = (i == j) + h/6 * (A1(i, j) + 2*A2(i, j) + 2*A3(i, j) + A4(i, j));
       }
     }
+    M8x8& Jnew = *pJ;
+    Jnew = J;
 
     // Life is a bit miserable: we have to take into account the
     // normalization of T while putting together the final Jacobian.
-    M8x8& Jnew = *pJ;
-    Jnew = J;
     for (int iRow = 3; iRow < 6; ++iRow) {
       for (int iCol = 3; iCol < 6; ++iCol) {
         Jnew(iRow, iCol) = J(iRow, iCol) / norm;
         // add the derivative of the norm ...
         double sum = 0;
         for (int k = 3; k < 6; ++k) {
-          sum += stateGlobal[k] * J(k, iCol);
+          sum += newStateGlobal[k] * J(k, iCol);
         }
-        Jnew(iRow, iCol) -= stateGlobal[iRow] * sum / norm;
+        // We don't divide by norm^3 as it appears if you calculate
+        // this by hand, because newStateGlobal already contains a factor
+        // norm and appears twice.  I.e., this expression contains the
+        // correct power of norm.
+        Jnew(iRow, iCol) -= newStateGlobal[iRow] * sum / norm;
       }
     }
   }
@@ -1490,7 +1494,7 @@ double RKTrackRepTime::RKPropagate(M1x8& stateGlobal,
   double est = RKstep(stateGlobal, S, mat, newStateGlobal, jacobianT ? &propJac : 0);
   M8x8 newJacT;
   if (jacobianT) {
-    if (0) {
+    if (1) {
       // Numerically evaluate the Jacobian, compare
       // no science behind these values, I verified that forward and
       // backward propagation yield inverse matrices to good
@@ -1741,7 +1745,7 @@ void RKTrackRepTime::calcJ_pM_6x8(M6x8& J_pM, const TVector3& U, const TVector3&
   const double utpTildeOverpTildeMag2 = (U.X()*pTilde[0] + U.Y()*pTilde[1] + U.Z()*pTilde[2]) / pTildeMag2;
   const double vtpTildeOverpTildeMag2 = (V.X()*pTilde[0] + V.Y()*pTilde[1] + V.Z()*pTilde[2]) / pTildeMag2;
 
-  //J_pM matrix is d(x,y,z,ax,ay,az,q/p) / d(q/p,u',v',u,v)   (out is 7x7)
+  //J_pM matrix is d(x,y,z,ax,ay,az,q/p,t) / d(q/p,u',v',u,v,t)   (out is 7x7)
 
    // d(x,y,z)/d(u)
   J_pM(3,0) = U.X();
@@ -1762,12 +1766,17 @@ void RKTrackRepTime::calcJ_pM_6x8(M6x8& J_pM, const TVector3& U, const TVector3&
   J_pM(2,3) = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 ); // [2][3]
   J_pM(2,4) = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
   J_pM(2,5) = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
+  // d(time)/d(u,v)
+  /*
+  J_pM(3,7) = 1 * utpTildeOverpTildeMag2 * pTildeMag;
+  J_pM(4,7) = 1 * vtpTildeOverpTildeMag2 * pTildeMag;
+  */
   // d(time)/d(time)
   J_pM(5,7) = 1.;
 
-  /*if (debugLvl_ > 1) {
-    std::cout << "  J_pM = "; J_pM.print()
-  }*/
+  if (debugLvl_ > 1) {
+    std::cout << "  J_pM = "; J_pM.print();
+  }
 }
 
 
