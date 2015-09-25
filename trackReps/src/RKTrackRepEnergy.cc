@@ -1438,9 +1438,9 @@ double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
         // add the derivative of the norm ...
         double sum = 0;
         for (int k = 3; k < 6; ++k) {
-          sum += state7[k] * J(k, iCol);
+          sum += newState7[k] * J(k, iCol);
         }
-        Jnew(iRow, iCol) -= state7[iRow] * sum / norm;
+        Jnew(iRow, iCol) -= newState7[iRow] * sum / norm;
       }
     }
   }
