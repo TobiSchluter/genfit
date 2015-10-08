@@ -1722,24 +1722,45 @@ void RKTrackRepEnergy::calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector
   //J_pM matrix is d(x,y,z,ax,ay,az,q/p) / d(q/p,u',v',u,v)   (out is 7x7)
 
    // d(x,y,z)/d(u)
-  J_pM[21] = U.X(); // [3][0]
-  J_pM[22] = U.Y(); // [3][1]
-  J_pM[23] = U.Z(); // [3][2]
+  J_pM(3,0) = U.X();
+  J_pM(3,1) = U.Y();
+  J_pM(3,2) = U.Z();
   // d(x,y,z)/d(v)
-  J_pM[28] = V.X(); // [4][0]
-  J_pM[29] = V.Y(); // [4][1]
-  J_pM[30] = V.Z(); // [4][2]
+  J_pM(4,0) = V.X();
+  J_pM(4,1) = V.Y();
+  J_pM(4,2) = V.Z();
   // d(q/p)/d(q/p)
-  J_pM[6] = 1.; // not needed for array matrix multiplication
+  J_pM(0,6) = 1.;
   // d(ax,ay,az)/d(u')
   double fact = spu / pTildeMag;
-  J_pM[10] = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 ); // [1][3]
-  J_pM[11] = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 ); // [1][4]
-  J_pM[12] = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 ); // [1][5]
+  J_pM(1,3) = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 );
+  J_pM(1,4) = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 );
+  J_pM(1,5) = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 );
   // d(ax,ay,az)/d(v')
-  J_pM[17] = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 ); // [2][3]
-  J_pM[18] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
-  J_pM[19] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
+  J_pM(2,3) = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 );
+  J_pM(2,4) = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 );
+  J_pM(2,5) = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 );
+
+#if 0
+  // Alternative calculation
+  // FIXME does not take spu into account (because I'm not completely
+  // sure how pTilde is defined, TS 20151008)
+  const TVector3& A(pTilde[0], pTilde[1], pTilde[2]);
+  A.SetMag(1.);
+  const TVector3& N(U.Cross(V));
+
+  // d(ax,ay,az)/d(u')
+  const TVector3& derU = pow(A.Dot(N), -2) * (U * A.Dot(N) - N * A.Dot(U));
+  J_pM(1,3) = derU.X();
+  J_pM(1,4) = derU.Y();
+  J_pM(1,5) = derU.Z();
+
+  // d(ax,ay,az)/d(v')
+  const TVector3& derV = pow(A.Dot(N), -2) * (V * A.Dot(N) - N * A.Dot(V));
+  J_pM(2,3) = derV.X();
+  J_pM(2,4) = derV.Y();
+  J_pM(2,5) = derV.Z();
+#endif
 
   /*if (debugLvl_ > 1) {
     std::cout << "  J_pM_5x7_ = "; RKTools::printDim(J_pM_5x7_, 5,7);
