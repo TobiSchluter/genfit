@@ -1060,12 +1060,12 @@ std::vector<genfit::MatStep> RKTrackRep::getSteps() const {
 }
 
 
-double RKTrackRep::getRadiationLenght() const {
+double RKTrackRep::getRadiationLength() const {
 
   // Todo: test
 
   if (RKSteps_.size() == 0) {
-    Exception exc("RKTrackRep::getRadiationLenght ==> cache is empty.",__LINE__,__FILE__);
+    Exception exc("RKTrackRep::getRadiationLength ==> cache is empty.",__LINE__,__FILE__);
     throw exc;
   }
 

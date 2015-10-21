@@ -168,7 +168,7 @@ class RKTrackRep : public AbsTrackRep {
 
   std::vector<genfit::MatStep> getSteps() const;
 
-  virtual double getRadiationLenght() const;
+  virtual double getRadiationLength() const;
 
   virtual void setPosMom(StateOnPlane& state, const TVector3& pos, const TVector3& mom) const;
   virtual void setPosMom(StateOnPlane& state, const TVectorD& state6) const;
