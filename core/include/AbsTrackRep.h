@@ -304,7 +304,9 @@ class AbsTrackRep : public TObject {
   virtual std::vector<genfit::MatStep> getSteps() const = 0;
 
   //! Get the accumulated X/X0 (path / radiation length) of the material crossed in the last extrapolation.
-  virtual double getRadiationLenght() const = 0;
+  virtual double getRadiationLength() const = 0;
+  //! This typo existed for a long time, and it's fairly cheap to keep this around.
+  double getRadiationLenght() const { return this->getRadiationLength(); }
 
   //! Get the time corresponding to the StateOnPlane.  Extrapolation
   // should keep this up to date with the time of flight.
