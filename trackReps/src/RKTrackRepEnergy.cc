@@ -1475,7 +1475,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   double est = RKstep(state7, S, mat, newState7, jacobianT ? &propJac : 0);
   M7x7 newJacT;
   if (jacobianT) {
-    if (0) {
+    if (1) {
       // Numerically evaluate the Jacobian, compare
       // no science behind these values, I verified that forward and
       // backward propagation yield inverse matrices to good
@@ -1540,6 +1540,9 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
           numJac(j, i) = 1./3.*(4*derivShort - derivFull);
         }
       }
+      std::cout << " numerical, then analytical" << std::endl;
+      numJac.print();
+      propJac.print();
       //propJac = numJac;
     }
 
