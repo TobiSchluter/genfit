@@ -29,7 +29,6 @@
 
 namespace {
 
-double MeanExcEnergy_get(int Z);
 double MeanExcEnergy_get(TGeoMaterial*);
 
 }
