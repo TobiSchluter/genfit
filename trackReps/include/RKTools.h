@@ -109,7 +109,7 @@ RKMatrix<nRows, nCols> operator+(const RKMatrix<nRows, nCols>& left,
 }
 
 /**
- * @brief Addition of a scalar to a matrix.
+ * @brief Multiplying a matrix by a scalar (from the left).
  */
 template<size_t nRows, size_t nCols>
 RKMatrix<nRows, nCols> operator*(const double& left, const RKMatrix<nRows, nCols>& right)
