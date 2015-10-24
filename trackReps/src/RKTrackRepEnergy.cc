@@ -99,7 +99,7 @@ double RKTrackRepEnergy::extrapolateToPlane(StateOnPlane& state,
     return 0;
   }
 
-  checkCache(state, &plane);
+  checkCache(state, plane);
 
   // to 7D
   M1x7 state7 = {{0, 0, 0, 0, 0, 0, 0}};
@@ -146,7 +146,7 @@ double RKTrackRepEnergy::extrapolateToLine(StateOnPlane& state,
     std::cout << "RKTrackRepEnergy::extrapolateToLine()\n";
   }
 
-  checkCache(state, NULL);
+  resetCache(state);
 
   static const unsigned int maxIt(1000);
 
@@ -246,7 +246,7 @@ double RKTrackRepEnergy::extrapToPoint(StateOnPlane& state,
     std::cout << "RKTrackRepEnergy::extrapolateToPoint()\n";
   }
 
-  checkCache(state, NULL);
+  resetCache(state);
 
   static const unsigned int maxIt(1000);
 
@@ -363,7 +363,7 @@ double RKTrackRepEnergy::extrapolateToCylinder(StateOnPlane& state,
     std::cout << "RKTrackRepEnergy::extrapolateToCylinder()\n";
   }
 
-  checkCache(state, NULL);
+  resetCache(state);
 
   static const unsigned int maxIt(1000);
 
@@ -488,7 +488,7 @@ double RKTrackRepEnergy::extrapolateToCone(StateOnPlane& state,
     std::cout << "RKTrackRepEnergy::extrapolateToCone()\n";
   }
 
-  checkCache(state, NULL);
+  resetCache(state);
 
   static const unsigned int maxIt(1000);
 
@@ -621,7 +621,7 @@ double RKTrackRepEnergy::extrapolateToSphere(StateOnPlane& state,
     std::cout << "RKTrackRepEnergy::extrapolateToSphere()\n";
   }
 
-  checkCache(state, NULL);
+  resetCache(state);
 
   static const unsigned int maxIt(1000);
 
@@ -731,7 +731,7 @@ double RKTrackRepEnergy::extrapolateBy(StateOnPlane& state,
     std::cout << "RKTrackRepEnergy::extrapolateBy()\n";
   }
 
-  checkCache(state, NULL);
+  resetCache(state);
 
   static const unsigned int maxIt(1000);
 
@@ -2699,8 +2699,21 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
   return coveredDistance;
 }
 
+void RKTrackRepEnergy::resetCache(const StateOnPlane& state) const
+{
+  cachePos_ = 0;
+  RKStepsFXStart_ = 0;
+  RKStepsFXStop_ = 0;
+  ExtrapSteps_.clear();
+  initArrays();
 
-void RKTrackRepEnergy::checkCache(const StateOnPlane& state, const SharedPlanePtr* plane) const {
+  RKSteps_.clear();
+  lastStartState_.setStatePlane(state.getState(), state.getPlane());
+}
+
+
+void RKTrackRepEnergy::checkCache(const StateOnPlane& state, const SharedPlanePtr& plane) const
+{
 
   if (state.getRep() != this){
     Exception exc("RKTrackRepEnergy::checkCache ==> state is defined wrt. another TrackRep",__LINE__,__FILE__);
@@ -2720,15 +2733,13 @@ void RKTrackRepEnergy::checkCache(const StateOnPlane& state, const SharedPlanePt
   ExtrapSteps_.clear();
   initArrays();
 
+  useCache_ = (lastStartState_.getPlane()
+	       && lastEndState_.getPlane()
+	       && state.getPlane() == lastStartState_.getPlane()
+	       && state.getState() == lastStartState_.getState()
+	       && plane->distance(getPos(lastEndState_)) <= MINSTEP);
 
-  if (plane &&
-      lastStartState_.getPlane() &&
-      lastEndState_.getPlane() &&
-      state.getPlane() == lastStartState_.getPlane() &&
-      state.getState() == lastStartState_.getState() &&
-      (*plane)->distance(getPos(lastEndState_)) <= MINSTEP) {
-    useCache_ = true;
-
+  if (useCache_) {
     // clean up cache. Only use steps with same sign.
     double firstStep(0);
     for (unsigned int i=0; i<RKSteps_.size(); ++i) {
@@ -2747,32 +2758,26 @@ void RKTrackRepEnergy::checkCache(const StateOnPlane& state, const SharedPlanePt
     if (debugLvl_ > 0) {
         std::cout << "RKTrackRepEnergy::checkCache: use cached material and step values.\n";
     }
+
+    return;
   }
-  else {
 
-    if (debugLvl_ > 0) {
-      std::cout << "RKTrackRepEnergy::checkCache: can NOT use cached material and step values.\n";
+  // Cannot use cache.
+  if (debugLvl_ > 0) {
+    std::cout << "RKTrackRepEnergy::checkCache: cannot use cached material and step values.\n";
 
-      if (plane != NULL) {
-        if (state.getPlane() != lastStartState_.getPlane()) {
-          std::cout << "state.getPlane() != lastStartState_.getPlane()\n";
-        }
-        else {
-          if (! (state.getState() == lastStartState_.getState())) {
-            std::cout << "state.getState() != lastStartState_.getState()\n";
-          }
-          else if (lastEndState_.getPlane().get() != NULL) {
-            std::cout << "distance " << (*plane)->distance(getPos(lastEndState_)) << "\n";
-          }
-        }
+    if (state.getPlane() != lastStartState_.getPlane()) {
+      std::cout << "state.getPlane() != lastStartState_.getPlane()\n";
+    } else {
+      if (! (state.getState() == lastStartState_.getState())) {
+	std::cout << "state.getState() != lastStartState_.getState()\n";
+      } else if (lastEndState_.getPlane()) {
+	std::cout << "distance " << plane->distance(getPos(lastEndState_)) << "\n";
       }
     }
-
-    useCache_ = false;
-    RKSteps_.clear();
-
-    lastStartState_.setStatePlane(state.getState(), state.getPlane());
   }
+
+  resetCache(state);
 }
 
 

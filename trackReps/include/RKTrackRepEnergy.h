@@ -275,7 +275,8 @@ class RKTrackRepEnergy : public AbsTrackRep {
                 bool stopAtBoundary = false,
                 double maxStep = 1.E99) const;
 
-  void checkCache(const StateOnPlane& state, const SharedPlanePtr* plane) const;
+  void resetCache(const StateOnPlane& state) const;
+  void checkCache(const StateOnPlane& state, const SharedPlanePtr& plane) const;
 
   double momMag(const M1x7& state7) const;
 
