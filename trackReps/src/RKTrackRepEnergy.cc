@@ -2172,11 +2172,10 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
       }
       An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
       An = (fabs(An) > 1.E-7 ? 1./An : 0); // 1/A_normal
-      double norm;
 
       M7x7& jacPtr = *jacobianT;
       for(int i = 0; i<7; ++i) {
-        norm = (jacPtr(i,0)*SU[0] + jacPtr(i,1)*SU[1] + jacPtr(i,2)*SU[2]) * An;  // dR_normal / A_normal
+        double norm = (jacPtr(i,0)*SU[0] + jacPtr(i,1)*SU[1] + jacPtr(i,2)*SU[2]) * An;  // dR_normal / A_normal
         jacPtr(i,0) -= norm*A [0];   jacPtr(i,1) -= norm*A [1];   jacPtr(i,2) -= norm*A [2];
         jacPtr(i,3) -= norm*SA[0];   jacPtr(i,4) -= norm*SA[1];   jacPtr(i,5) -= norm*SA[2];
       }
@@ -2189,8 +2188,8 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
 
       for (int iRow = 0; iRow < 3; ++iRow) {
         for (int iCol = 0; iCol < 3; ++iCol) {
-          noiseProjection[iRow*7 + iCol]       = (iRow == iCol) - An * SU[iCol] * A[iRow];
-          noiseProjection[(iRow + 3)*7 + iCol] =                - An * SU[iCol] * SA[iRow];
+          noiseProjection(iRow, iCol)     = (iRow == iCol) - An * SU[iCol] * A[iRow];
+          noiseProjection(iRow + 3, iCol) =                - An * SU[iCol] * SA[iRow];
         }
       }
 
@@ -2578,8 +2577,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
     // fill ExtrapSteps_
     if (fillExtrapSteps) {
-      static const ExtrapStep defaultExtrapStep;
-      ExtrapSteps_.push_back(defaultExtrapStep);
+      ExtrapSteps_.push_back(ExtrapStep());
       std::vector<ExtrapStep>::iterator lastStep = ExtrapSteps_.end() - 1;
 
       // Store Jacobian of this step for final calculation.
