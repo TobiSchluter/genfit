@@ -275,9 +275,6 @@ class RKTrackRepEnergy : public AbsTrackRep {
                 bool stopAtBoundary = false,
                 double maxStep = 1.E99) const;
 
-  void resetCache(const StateOnPlane& state) const;
-  void checkCache(const StateOnPlane& state, const SharedPlanePtr& plane) const;
-
   double momMag(const M1x7& state7) const;
 
 
@@ -291,6 +288,8 @@ class RKTrackRepEnergy : public AbsTrackRep {
   mutable TMatrixD fJacobian_; //!
   mutable TMatrixDSym fNoise_; //!
 
+  void resetCache(const StateOnPlane& state) const;
+  void checkCache(const StateOnPlane& state, const SharedPlanePtr& plane) const;
   mutable bool useCache_; //! use cached RKSteps_ for extrapolation
   mutable unsigned int cachePos_; //!
 
