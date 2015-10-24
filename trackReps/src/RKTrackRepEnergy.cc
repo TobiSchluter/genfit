@@ -2577,12 +2577,6 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
     // fill ExtrapSteps_
     if (fillExtrapSteps) {
-      ExtrapSteps_.push_back(ExtrapStep());
-      std::vector<ExtrapStep>::iterator lastStep = ExtrapSteps_.end() - 1;
-
-      // Store Jacobian of this step for final calculation.
-      lastStep->jac_ = J_MMT;
-
       if( checkJacProj == true ){
         //project the noise onto the destPlane
         RKTools::Np_N_NpT(noiseProjection, noise);
@@ -2593,8 +2587,8 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
         }
       }
 
-      // Store this step's noise for final calculation.
-      lastStep->noise_ = noise;
+      // Store this step's Jacobian and noise for final calculation.
+      ExtrapSteps_.push_back(ExtrapStep(J_MMT, noise));
 
       if (debugLvl_ > 2) {
         std::cout<<"ExtrapSteps \n";

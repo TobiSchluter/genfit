@@ -57,6 +57,10 @@ template<size_t nDim> struct TExtrapStep {
     std::fill(jac_.begin(), jac_.end(), 0);
     std::fill(noise_.begin(), noise_.end(), 0);
   }
+
+  TExtrapStep(const RKMatrix<nDim, nDim>& j,
+	      const RKMatrix<7, 7>& n)
+    : jac_(j), noise_(n) {}
 };
 
 
