@@ -211,7 +211,6 @@ double RKTrackRepEnergy::extrapolateToLine(StateOnPlane& state,
     getState5(lastEndState_, plane, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
-    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     getState5(state, plane, state7);
@@ -322,7 +321,6 @@ double RKTrackRepEnergy::extrapToPoint(StateOnPlane& state,
     getState5(lastEndState_, plane, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
-    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     getState5(state, plane, state7);
@@ -448,7 +446,6 @@ double RKTrackRepEnergy::extrapolateToCylinder(StateOnPlane& state,
     getState5(lastEndState_, plane, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
-    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     getState5(state, plane, state7);
@@ -578,7 +575,6 @@ double RKTrackRepEnergy::extrapolateToCone(StateOnPlane& state,
     getState5(lastEndState_, plane, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
-    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     getState5(state, plane, state7);
@@ -685,7 +681,6 @@ double RKTrackRepEnergy::extrapolateToSphere(StateOnPlane& state,
     getState5(lastEndState_, plane, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
-    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     getState5(state, plane, state7);
@@ -776,7 +771,6 @@ double RKTrackRepEnergy::extrapolateBy(StateOnPlane& state,
     getState5(lastEndState_, plane, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
-    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     getState5(state, plane, state7);
@@ -1014,9 +1008,6 @@ void RKTrackRepEnergy::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDS
 
 
 std::vector<genfit::MatStep> RKTrackRepEnergy::getSteps() const {
-
-  // Todo: test
-
   if (RKSteps_.size() == 0) {
     Exception exc("RKTrackRepEnergy::getSteps ==> cache is empty.",__LINE__,__FILE__);
     throw exc;

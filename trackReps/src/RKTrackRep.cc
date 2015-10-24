@@ -216,6 +216,7 @@ double RKTrackRep::extrapolateToLine(StateOnPlane& state,
     getState5(lastEndState_, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
+    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     state.setPlane(plane);
@@ -330,6 +331,7 @@ double RKTrackRep::extrapToPoint(StateOnPlane& state,
     getState5(lastEndState_, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
+    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     state.setPlane(plane);
@@ -459,6 +461,7 @@ double RKTrackRep::extrapolateToCylinder(StateOnPlane& state,
     getState5(lastEndState_, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
+    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     state.setPlane(plane);
@@ -592,6 +595,7 @@ double RKTrackRep::extrapolateToCone(StateOnPlane& state,
     getState5(lastEndState_, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
+    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     state.setPlane(plane);
@@ -702,6 +706,7 @@ double RKTrackRep::extrapolateToSphere(StateOnPlane& state,
     getState5(lastEndState_, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
+    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     state.setPlane(plane);
@@ -796,6 +801,7 @@ double RKTrackRep::extrapolateBy(StateOnPlane& state,
     getState5(lastEndState_, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
+    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
     state.setPlane(plane);
@@ -1035,6 +1041,9 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 
 
 std::vector<genfit::MatStep> RKTrackRep::getSteps() const {
+
+  // Todo: test
+
   if (RKSteps_.size() == 0) {
     Exception exc("RKTrackRep::getSteps ==> cache is empty.",__LINE__,__FILE__);
     throw exc;
