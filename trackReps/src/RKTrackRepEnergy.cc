@@ -2687,12 +2687,6 @@ void RKTrackRepEnergy::checkCache(const StateOnPlane& state, const SharedPlanePt
     throw exc;
   }
 
-  cachePos_ = 0;
-  RKStepsFXStart_ = 0;
-  RKStepsFXStop_ = 0;
-  ExtrapSteps_.clear();
-  initArrays();
-
   useCache_ = (lastStartState_.getPlane()
 	       && lastEndState_.getPlane()
 	       && state.getPlane() == lastStartState_.getPlane()
@@ -2700,6 +2694,12 @@ void RKTrackRepEnergy::checkCache(const StateOnPlane& state, const SharedPlanePt
 	       && plane->distance(getPos(lastEndState_)) <= MINSTEP);
 
   if (useCache_) {
+    cachePos_ = 0;
+    RKStepsFXStart_ = 0;
+    RKStepsFXStop_ = 0;
+    ExtrapSteps_.clear();
+    initArrays();
+
     // clean up cache. Only use steps with same sign.
     double firstStep(0);
     for (unsigned int i=0; i<RKSteps_.size(); ++i) {
