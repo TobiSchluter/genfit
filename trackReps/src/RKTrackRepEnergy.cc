@@ -106,29 +106,25 @@ double RKTrackRepEnergy::extrapolateToPlane(StateOnPlane& state,
   getState7(state, state7);
 
   TMatrixDSym* covPtr(NULL);
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     covPtr = &(static_cast<MeasuredStateOnPlane*>(&state)->getCov());
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   // actual extrapolation
   bool isAtBoundary(false);
   double flightTime( 0. );
   double coveredDistance( Extrap(*(state.getPlane()), *plane, getCharge(state), getMass(state), isAtBoundary, state7, flightTime, fillExtrapSteps, covPtr, false, stopAtBoundary) );
 
+  SharedPlanePtr finalPlane = plane;
   if (stopAtBoundary && isAtBoundary) {
-    state.setPlane(SharedPlanePtr(new DetPlane(TVector3(state7[0], state7[1], state7[2]),
-                                                TVector3(state7[3], state7[4], state7[5]))));
-  }
-  else {
-    state.setPlane(plane);
+    finalPlane = SharedPlanePtr(new DetPlane(TVector3(state7[0], state7[1], state7[2]),
+					     TVector3(state7[3], state7[4], state7[5])));
   }
 
   // back to 5D
-  getState5(state, state7);
+  getState5(state, finalPlane, state7);
   setTime(state, getTime(state) + flightTime);
   lastEndState_ = state;
 
@@ -154,12 +150,10 @@ double RKTrackRepEnergy::extrapolateToLine(StateOnPlane& state,
   M1x7 state7;
   getState7(state, state7);
 
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
   double charge = getCharge(state);
@@ -214,15 +208,13 @@ double RKTrackRepEnergy::extrapolateToLine(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    lastEndState_.setPlane(plane);
-    getState5(lastEndState_, state7);
+    getState5(lastEndState_, plane, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
     lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
-    state.setPlane(plane);
-    getState5(state, state7);
+    getState5(state, plane, state7);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -254,12 +246,10 @@ double RKTrackRepEnergy::extrapToPoint(StateOnPlane& state,
   M1x7 state7;
   getState7(state, state7);
 
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
   TVector3 dir(state7[3], state7[4], state7[5]);
@@ -329,15 +319,13 @@ double RKTrackRepEnergy::extrapToPoint(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    lastEndState_.setPlane(plane);
-    getState5(lastEndState_, state7);
+    getState5(lastEndState_, plane, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
     lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
-    state.setPlane(plane);
-    getState5(state, state7);
+    getState5(state, plane, state7);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -371,12 +359,10 @@ double RKTrackRepEnergy::extrapolateToCylinder(StateOnPlane& state,
   M1x7 state7;
   getState7(state, state7);
 
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   double tracklength(0.), maxStep(1.E99);
 
@@ -459,15 +445,13 @@ double RKTrackRepEnergy::extrapolateToCylinder(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    lastEndState_.setPlane(plane);
-    getState5(lastEndState_, state7);
+    getState5(lastEndState_, plane, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
     lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
-    state.setPlane(plane);
-    getState5(state, state7);
+    getState5(state, plane, state7);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -496,12 +480,10 @@ double RKTrackRepEnergy::extrapolateToCone(StateOnPlane& state,
   M1x7 state7;
   getState7(state, state7);
 
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   double tracklength(0.), maxStep(1.E99);
 
@@ -593,15 +575,13 @@ double RKTrackRepEnergy::extrapolateToCone(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    lastEndState_.setPlane(plane);
-    getState5(lastEndState_, state7);
+    getState5(lastEndState_, plane, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
     lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
-    state.setPlane(plane);
-    getState5(state, state7);
+    getState5(state, plane, state7);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -629,12 +609,10 @@ double RKTrackRepEnergy::extrapolateToSphere(StateOnPlane& state,
   M1x7 state7;
   getState7(state, state7);
 
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   double tracklength(0.), maxStep(1.E99);
 
@@ -704,15 +682,13 @@ double RKTrackRepEnergy::extrapolateToSphere(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    lastEndState_.setPlane(plane);
-    getState5(lastEndState_, state7);
+    getState5(lastEndState_, plane, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
     lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
-    state.setPlane(plane);
-    getState5(state, state7);
+    getState5(state, plane, state7);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -739,12 +715,10 @@ double RKTrackRepEnergy::extrapolateBy(StateOnPlane& state,
   M1x7 state7;
   getState7(state, state7);
 
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   double tracklength(0.);
 
@@ -799,15 +773,13 @@ double RKTrackRepEnergy::extrapolateBy(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    lastEndState_.setPlane(plane);
-    getState5(lastEndState_, state7);
+    getState5(lastEndState_, plane, state7);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
     lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
-    state.setPlane(plane);
-    getState5(state, state7);
+    getState5(state, plane, state7);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -1128,7 +1100,7 @@ void RKTrackRepEnergy::setPosMom(StateOnPlane& state, const TVector3& pos, const
 
     state7[6] = getCharge(state) * norm;
 
-    getState5(state, state7);
+    getState5(state, state.getPlane(), state7);
 
   }
   else { // pos is not on plane -> create new plane!
@@ -1641,22 +1613,21 @@ void RKTrackRepEnergy::getState7(const StateOnPlane& state, M1x7& state7) const 
 }
 
 
-void RKTrackRepEnergy::getState5(StateOnPlane& state, const M1x7& state7) const {
+void RKTrackRepEnergy::getState5(StateOnPlane& state, const SharedPlanePtr& plane, const M1x7& state7) const {
 
   // state5: (q/p, u', v'. u, v)
 
   double spu(1.);
 
-  const TVector3& O(state.getPlane()->getO());
-  const TVector3& U(state.getPlane()->getU());
-  const TVector3& V(state.getPlane()->getV());
-  const TVector3& W(state.getPlane()->getNormal());
+  state.setPlane(plane);
+  const TVector3& O(plane->getO());
+  const TVector3& U(plane->getU());
+  const TVector3& V(plane->getV());
+  const TVector3& W(plane->getNormal());
 
-  // force A to be in normal direction and set spu accordingly
+  // Set spu according to whether we go along the normal or in the opposite direction.
   double AtW( state7[3]*W.X() + state7[4]*W.Y() + state7[5]*W.Z() );
   if (AtW < 0.) {
-    //fDir *= -1.;
-    //AtW *= -1.;
     spu = -1.;
   }
 

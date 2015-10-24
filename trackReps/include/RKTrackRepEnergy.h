@@ -195,7 +195,7 @@ class RKTrackRepEnergy : public AbsTrackRep {
       bool calcJacobianNoise = false) const;
 
   void getState7(const StateOnPlane& state, M1x7& state7) const;
-  void getState5(StateOnPlane& state, const M1x7& state7) const; // state7 must already lie on plane of state!
+  void getState5(StateOnPlane& state, const SharedPlanePtr& plane, const M1x7& state7) const; // state7 must be on plane.
 
   void transformPM7(const MeasuredStateOnPlane& state,
                     M7x7& out7x7) const;
