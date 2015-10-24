@@ -1035,9 +1035,6 @@ void RKTrackRep::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& no
 
 
 std::vector<genfit::MatStep> RKTrackRep::getSteps() const {
-
-  // Todo: test
-
   if (RKSteps_.size() == 0) {
     Exception exc("RKTrackRep::getSteps ==> cache is empty.",__LINE__,__FILE__);
     throw exc;
