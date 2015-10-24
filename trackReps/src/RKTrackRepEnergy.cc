@@ -2128,9 +2128,15 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
 
     // check if we went back and forth multiple times -> we don't come closer to the plane!
     if (counter > 3){
-      if (S                            *RKSteps_.at(counter-1).matStep_.stepSize_ < 0 &&
-          RKSteps_.at(counter-1).matStep_.stepSize_*RKSteps_.at(counter-2).matStep_.stepSize_ < 0 &&
-          RKSteps_.at(counter-2).matStep_.stepSize_*RKSteps_.at(counter-3).matStep_.stepSize_ < 0){
+      double stepSize1 = RKSteps_.at(counter-1).matStep_.stepSize_;
+      double stepSize2 = RKSteps_.at(counter-2).matStep_.stepSize_;
+      double stepSize3 = RKSteps_.at(counter-3).matStep_.stepSize_;
+
+      int sign1 = std::signbit(S * stepSize1);
+      int sign2 = std::signbit(stepSize1 * stepSize2);
+      int sign3 = std::signbit(stepSize2 * stepSize3);
+
+      if (sign1 && sign2 && sign3) {
         Exception exc("RKTrackRepEnergy::RKutta ==> Do not get closer to plane!",__LINE__,__FILE__);
         exc.setFatal();
         throw exc;
