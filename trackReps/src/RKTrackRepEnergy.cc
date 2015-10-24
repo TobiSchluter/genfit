@@ -2662,12 +2662,12 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 void RKTrackRepEnergy::resetCache(const StateOnPlane& state) const
 {
   cachePos_ = 0;
+  RKSteps_.clear();
   RKStepsFXStart_ = 0;
   RKStepsFXStop_ = 0;
   ExtrapSteps_.clear();
   initArrays();
 
-  RKSteps_.clear();
   lastStartState_.setStatePlane(state.getState(), state.getPlane());
 }
 
