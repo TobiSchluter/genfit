@@ -93,6 +93,15 @@ struct RKMatrix {
     return *this;
   }
   /**
+   * @brief Basic matrix multiplication by scalar.
+   */
+  RKMatrix<nRows, nCols>& operator*=(const double &x) {
+    for (size_t i = 0; i < nRows; ++i)
+      for (size_t j = 0; j < nCols; ++j)
+        this->operator()(i, j) *= x;
+    return *this;
+  }
+  /**
    * @brief Write matrix to console.
    */
   void print() const;
