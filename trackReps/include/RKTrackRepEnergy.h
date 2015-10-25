@@ -292,7 +292,6 @@ class RKTrackRepEnergy : public AbsTrackRep {
   mutable std::vector<TRKStep<7> > RKSteps_; //! RungeKutta steps made in the last extrapolation
   mutable int RKStepsFXStart_; //!
   mutable int RKStepsFXStop_; //!
-  mutable std::vector<TExtrapStep<7> > ExtrapSteps_; //! steps made in Extrap during last extrapolation
 
   mutable TMatrixD fJacobian_; //!
   mutable TMatrixDSym fNoise_; //!

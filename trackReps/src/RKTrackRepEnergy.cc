@@ -20,7 +20,6 @@
 #include "RKTrackRepEnergy.h"
 namespace genfit {
 typedef struct TRKStep<7> RKStep;
-typedef struct TExtrapStep<7> ExtrapStep;
 }
 
 #include <Exception.h>
@@ -29,7 +28,6 @@ typedef struct TExtrapStep<7> ExtrapStep;
 #include <MeasuredStateOnPlane.h>
 #include <MeasurementOnPlane.h>
 
-#include <TDecompLU.h>
 #include <TMath.h>
 #include <TDatabasePDG.h>
 #include <TGeoManager.h>
@@ -39,10 +37,6 @@ typedef struct TExtrapStep<7> ExtrapStep;
 
 #define MINSTEP 0.001   // minimum step [cm] for Runge Kutta and iteration to POCA
 
-namespace {
-  // Use fast inversion instead of LU decomposition?
-  const bool useInvertFast = false;
-}
 
 namespace genfit {
 
@@ -926,34 +920,6 @@ void RKTrackRepEnergy::projectJacobianAndNoise(const M1x7& startState7, const De
   }
 }
 
-void RKTrackRepEnergy::calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
-                                                   const M1x7& destState7, const DetPlane& destPlane) const {
-
-  if (debugLvl_ > 0) {
-    std::cout << "RKTrackRepEnergy::calcForwardJacobianAndNoise " << std::endl;
-  }
-
-  if (ExtrapSteps_.size() == 0) {
-    Exception exc("RKTrackRepEnergy::calcForwardJacobianAndNoise ==> cache is empty. Extrapolation must run with a MeasuredStateOnPlane.",__LINE__,__FILE__);
-    throw exc;
-  }
-
-  // The Jacobians returned from RKutta are transposed.
-  TMatrixD jac(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_.back().jac_.begin()));
-  TMatrixDSym noise(7, ExtrapSteps_.back().noise_.begin());
-  for (int i = ExtrapSteps_.size() - 2; i >= 0; --i) {
-    noise += TMatrixDSym(7, ExtrapSteps_[i].noise_.begin()).Similarity(jac);
-    jac *= TMatrixD(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_[i].jac_.begin()));
-  }
-
-
-  //jac.Print();
-  projectJacobianAndNoise(startState7, startPlane, destState7, destPlane,
-			  *(M7x7*)jac.GetMatrixArray(),
-			  *(M7x7*)noise.GetMatrixArray(),
-			  *(M5x5*)fJacobian_.GetMatrixArray(), *(M5x5*)fNoise_.GetMatrixArray());
-}
-
 
 void RKTrackRepEnergy::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const {
 
@@ -985,28 +951,13 @@ void RKTrackRepEnergy::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDS
     std::cout << "RKTrackRepEnergy::getBackwardJacobianAndNoise " << std::endl;
   }
 
-  if (ExtrapSteps_.size() == 0) {
-    Exception exc("RKTrackRepEnergy::getBackwardJacobianAndNoise ==> cache is empty. Extrapolation must run with a MeasuredStateOnPlane.",__LINE__,__FILE__);
-    throw exc;
-  }
-
   jacobian.ResizeTo(5,5);
   jacobian = fJacobian_;
-  if (!useInvertFast) {
-    bool status = TDecompLU::InvertLU(jacobian, 0.0);
-    if(status == 0){
-      Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
-      e.setFatal();
-      throw e;
-    }
-  } else {
-    double det;
-    jacobian.InvertFast(&det);
-    if(det < 1e-80){
-      Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
-      e.setFatal();
-      throw e;
-    }
+  bool status = TDecompLU::InvertLU(jacobian, 0.0);
+  if(status == 0){
+    Exception e("cannot invert matrix, status = 0", __LINE__,__FILE__);
+    e.setFatal();
+    throw e;
   }
 
   noise.ResizeTo(5,5);
@@ -1575,7 +1526,6 @@ void RKTrackRepEnergy::initArrays() const {
   fNoise_.Zero();
 
   RKSteps_.reserve(100);
-  ExtrapSteps_.reserve(100);
 
   lastStartState_.getAuxInfo().ResizeTo(2);
   lastEndState_.getAuxInfo().ResizeTo(2);
@@ -2588,7 +2538,6 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
       }
     } // finished MatFX
 
-    // fill ExtrapSteps_
     if (fillExtrapSteps) {
       if( checkJacProj == true ){
         //project the noise onto the destPlane
@@ -2600,21 +2549,13 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
         }
       }
 
-      // Store this step's Jacobian and noise for final calculation.
-      ExtrapSteps_.push_back(ExtrapStep(J_MMT, noise));
+      // Propagate noise and Jacobian
+      // TODO check noise
+      // FIXME don't use intermediate matrix
       TMatrixD Jstep(7, 7, J_MMT.begin());
       cumulativeNoise.SimilarityT(Jstep);
       cumulativeNoise += TMatrixDSym(7, noise.begin());
       cumulativeJ *= TMatrixD(7, 7, J_MMT.begin());
-
-      if (debugLvl_ > 2) {
-        std::cout<<"ExtrapSteps \n";
-        for (std::vector<ExtrapStep>::iterator it = ExtrapSteps_.begin(); it != ExtrapSteps_.end(); ++it){
-          std::cout << "7D Jacobian: "; it->jac_.print();
-          std::cout << "7D noise:    "; it->noise_.print();
-        }
-        std::cout<<"\n";
-      }
     }
 
 
@@ -2654,7 +2595,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
   if (fillExtrapSteps) {
     // propagate cov and add noise
 
-    // TMatrixD(TMatrixD::kTransposed, cumulativeJ).Print();
+    // FIXME transpose until I clean up all interfaces
     M7x7 jacT;
     for (int iRow = 0; iRow < 7; ++iRow)
       for (int iCol = 0; iCol < 7; ++iCol)
@@ -2665,8 +2606,6 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 			    *(M7x7*)cumulativeNoise.GetMatrixArray(),
 			    *(M5x5*)fJacobian_.GetMatrixArray(),
 			    *(M5x5*)fNoise_.GetMatrixArray());
-
-    //calcForwardJacobianAndNoise(startState7, startPlane, state7, destPlane);
 
     if (cov != NULL) {
       cov->Similarity(fJacobian_);
@@ -2689,7 +2628,6 @@ void RKTrackRepEnergy::resetCache(const StateOnPlane& state) const
   RKSteps_.clear();
   RKStepsFXStart_ = 0;
   RKStepsFXStop_ = 0;
-  ExtrapSteps_.clear();
   initArrays();
 
   lastStartState_.setStatePlane(state.getState(), state.getPlane());
@@ -2721,7 +2659,6 @@ void RKTrackRepEnergy::checkCache(const StateOnPlane& state, const SharedPlanePt
     cachePos_ = 0;
     RKStepsFXStart_ = 0;
     RKStepsFXStop_ = 0;
-    ExtrapSteps_.clear();
     initArrays();
 
     // clean up cache. Only use steps with same sign.
