@@ -1,4 +1,4 @@
-/* Copyright 2008-2013, Technische Universitaet Muenchen, Ludwig-Maximilians-Universität München
+/* Copyright 2008-2015, Technische Universitaet Muenchen, Ludwig-Maximilians-Universität München
    Authors: Christian Hoeppner & Sebastian Neubert & Johannes Rauch & Tobias Schlüter
 
    This file is part of GENFIT.
