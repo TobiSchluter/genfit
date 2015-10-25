@@ -2655,8 +2655,18 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     // propagate cov and add noise
 
     // TMatrixD(TMatrixD::kTransposed, cumulativeJ).Print();
+    M7x7 jacT;
+    for (int iRow = 0; iRow < 7; ++iRow)
+      for (int iCol = 0; iCol < 7; ++iCol)
+	jacT(iRow,iCol) = cumulativeJ(iCol,iRow);
 
-    calcForwardJacobianAndNoise(startState7, startPlane, state7, destPlane);
+    projectJacobianAndNoise(startState7, startPlane, state7, destPlane,
+			    jacT,
+			    *(M7x7*)cumulativeNoise.GetMatrixArray(),
+			    *(M5x5*)fJacobian_.GetMatrixArray(),
+			    *(M5x5*)fNoise_.GetMatrixArray());
+
+    //calcForwardJacobianAndNoise(startState7, startPlane, state7, destPlane);
 
     if (cov != NULL) {
       cov->Similarity(fJacobian_);
