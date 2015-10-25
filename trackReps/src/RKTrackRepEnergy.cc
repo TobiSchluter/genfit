@@ -946,11 +946,12 @@ void RKTrackRepEnergy::calcForwardJacobianAndNoise(const M1x7& startState7, cons
     jac *= TMatrixD(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_[i].jac_.begin()));
   }
 
+
+  //jac.Print();
   projectJacobianAndNoise(startState7, startPlane, destState7, destPlane,
 			  *(M7x7*)jac.GetMatrixArray(),
 			  *(M7x7*)noise.GetMatrixArray(),
 			  *(M5x5*)fJacobian_.GetMatrixArray(), *(M5x5*)fNoise_.GetMatrixArray());
-
 }
 
 
@@ -1449,7 +1450,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   double est = RKstep(state7, S, mat, newState7, jacobianT ? &propJac : 0);
   M7x7 newJacT;
   if (jacobianT) {
-    if (1) {
+    if (0) {
       // Numerically evaluate the Jacobian, compare
       // no science behind these values, I verified that forward and
       // backward propagation yield inverse matrices to good
@@ -2484,7 +2485,6 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
                           bool stopAtBoundary,
                           double maxStep) const
 {
-
   static const unsigned int maxNumIt(500);
   unsigned int numIt(0);
 
@@ -2499,6 +2499,11 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     SU[1] *= -1;
     SU[2] *= -1;
   }
+
+  TMatrixD cumulativeJ(7,7);
+  for (int i = 0; i < 7; ++i)
+    cumulativeJ(i,i) = 1;
+  TMatrixDSym cumulativeNoise(7);
 
   M1x7 startState7 = state7;
   while(true){
@@ -2552,8 +2557,6 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
       std::cout<<"\n";
     }
 
-
-
     // call MatFX
     M7x7* pNoise = NULL;
     M7x7 noise;
@@ -2599,6 +2602,10 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
       // Store this step's Jacobian and noise for final calculation.
       ExtrapSteps_.push_back(ExtrapStep(J_MMT, noise));
+      TMatrixD Jstep(7, 7, J_MMT.begin());
+      cumulativeNoise.SimilarityT(Jstep);
+      cumulativeNoise += TMatrixDSym(7, noise.begin());
+      cumulativeJ *= TMatrixD(7, 7, J_MMT.begin());
 
       if (debugLvl_ > 2) {
         std::cout<<"ExtrapSteps \n";
@@ -2646,6 +2653,9 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
   if (fillExtrapSteps) {
     // propagate cov and add noise
+
+    // TMatrixD(TMatrixD::kTransposed, cumulativeJ).Print();
+
     calcForwardJacobianAndNoise(startState7, startPlane, state7, destPlane);
 
     if (cov != NULL) {
