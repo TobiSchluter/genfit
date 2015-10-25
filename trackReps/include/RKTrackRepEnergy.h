@@ -30,7 +30,7 @@
 #include "StateOnPlane.h"
 #include "RKTools.h"
 #include "StepLimits.h"
-#include "RKTrackRep.h" //RKStep, ExtrapStep
+#include "RKTrackRep.h" //RKStep
 
 #include <algorithm>
 
@@ -220,8 +220,6 @@ class RKTrackRepEnergy : public AbsTrackRep {
 			       const M1x7& destState7, const DetPlane& destPlane,
 			       const M7x7& jac, const M7x7& noise,
 			       M5x5& jac5, M5x5& noise5) const;
-  void calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
-				   const M1x7& destState7, const DetPlane& destPlane) const;
 
   void transformM6P(const M6x6& in6x6,
                     const M1x7& state7,

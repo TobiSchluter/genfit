@@ -896,6 +896,14 @@ void RKTrackRepEnergy::projectJacobianAndNoise(const M1x7& startState7, const De
 					       const M7x7& jac, const M7x7& noise,
 					       M5x5& jac5, M5x5& noise5) const
 {
+  // FIXME It would probably save a lot more computing time if --
+  // during assembly of the Jacobian -- we started from the projection
+  // to the start plane, which is (7x5), and then only did (7x7)x(7x5)
+  // multiplications instead of doing (7x7)x(7x7) multiplications
+  // throughout, followed by some smart multiplications when reducting
+  // to (5x5) in the end.  There seems to be no way around doing 7x7
+  // all the time when dealing with noise, unfortunately.
+
   // Project into 5x5 space.
   M1x3 pTilde = {{startState7[3], startState7[4], startState7[5]}};
   const TVector3& normal = startPlane.getNormal();
