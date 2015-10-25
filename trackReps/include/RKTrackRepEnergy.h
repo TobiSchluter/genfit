@@ -211,6 +211,15 @@ class RKTrackRepEnergy : public AbsTrackRep {
 
   void calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const M1x3& A) const;
 
+  /**
+   * Takes the 7x7 jacobian and noise for the transport of the global state startState7 
+   * to the final global state destState7 and gives the 5x5 jacobian and noise, where 
+   * the local coordinates are defined by startPlane and destPlane.
+   */
+  void projectJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
+			       const M1x7& destState7, const DetPlane& destPlane,
+			       const M7x7& jac, const M7x7& noise,
+			       M5x5& jac5, M5x5& noise5) const;
   void calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
 				   const M1x7& destState7, const DetPlane& destPlane) const;
 

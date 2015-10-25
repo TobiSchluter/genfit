@@ -897,6 +897,35 @@ double RKTrackRepEnergy::getTime(const StateOnPlane& state) const {
 }
 
 
+void RKTrackRepEnergy::projectJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
+					       const M1x7& destState7, const DetPlane& destPlane,
+					       const M7x7& jac, const M7x7& noise,
+					       M5x5& jac5, M5x5& noise5) const
+{
+  // Project into 5x5 space.
+  M1x3 pTilde = {{startState7[3], startState7[4], startState7[5]}};
+  const TVector3& normal = startPlane.getNormal();
+  double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
+  double spu = pTildeW > 0 ? 1 : -1;
+  pTilde *= spu/pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
+  M5x7 J_pM;
+  calcJ_pM_5x7(J_pM, startPlane.getU(), startPlane.getV(), pTilde, spu);
+  M7x5 J_Mp;
+  calcJ_Mp_7x5(J_Mp, destPlane.getU(), destPlane.getV(), *((M1x3*) &destState7[3]));
+  // Because the helper function wants transposed input, we transpose the input ...
+  M7x7 jacT;
+  for (int iRow = 0; iRow < 7; ++iRow)
+    for (int iCol = 0; iCol < 7; ++iCol)
+      jacT(iRow,iCol) = jac(iCol,iRow);
+  RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, jacT, J_pM, *(M5x5 *)fJacobian_.GetMatrixArray());
+  RKTools::J_MpTxcov7xJ_Mp(J_Mp, noise, *(M5x5 *)fNoise_.GetMatrixArray());
+
+  if (debugLvl_ > 0) {
+    std::cout << "total jacobian : "; fJacobian_.Print();
+    std::cout << "total noise : "; fNoise_.Print();
+  }
+}
+
 void RKTrackRepEnergy::calcForwardJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
                                                    const M1x7& destState7, const DetPlane& destPlane) const {
 
@@ -917,28 +946,10 @@ void RKTrackRepEnergy::calcForwardJacobianAndNoise(const M1x7& startState7, cons
     jac *= TMatrixD(TMatrixD::kTransposed, TMatrixD(7, 7, ExtrapSteps_[i].jac_.begin()));
   }
 
-  // Project into 5x5 space.
-  M1x3 pTilde = {{startState7[3], startState7[4], startState7[5]}};
-  const TVector3& normal = startPlane.getNormal();
-  double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
-  double spu = pTildeW > 0 ? 1 : -1;
-  for (unsigned int i=0; i<3; ++i) {
-    pTilde[i] *= spu/pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
-  }
-  M5x7 J_pM;
-  calcJ_pM_5x7(J_pM, startPlane.getU(), startPlane.getV(), pTilde, spu);
-  M7x5 J_Mp;
-  calcJ_Mp_7x5(J_Mp, destPlane.getU(), destPlane.getV(), *((M1x3*) &destState7[3]));
-  jac.Transpose(jac); // Because the helper function wants transposed input.
-  RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, *(M7x7 *)jac.GetMatrixArray(),
-				J_pM, *(M5x5 *)fJacobian_.GetMatrixArray());
-  RKTools::J_MpTxcov7xJ_Mp(J_Mp, *(M7x7 *)noise.GetMatrixArray(),
-			   *(M5x5 *)fNoise_.GetMatrixArray());
-
-  if (debugLvl_ > 0) {
-    std::cout << "total jacobian : "; fJacobian_.Print();
-    std::cout << "total noise : "; fNoise_.Print();
-  }
+  projectJacobianAndNoise(startState7, startPlane, destState7, destPlane,
+			  *(M7x7*)jac.GetMatrixArray(),
+			  *(M7x7*)noise.GetMatrixArray(),
+			  *(M5x5*)fJacobian_.GetMatrixArray(), *(M5x5*)fNoise_.GetMatrixArray());
 
 }
 
@@ -2488,7 +2499,6 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     SU[1] *= -1;
     SU[2] *= -1;
   }
-
 
   M1x7 startState7 = state7;
   while(true){
