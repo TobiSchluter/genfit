@@ -2455,7 +2455,7 @@ double RKTrackRepTime::estimateStep(const M1x8& stateGlobal,
   static const RKStep defaultRKStep;
   RKSteps_.push_back( defaultRKStep );
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
-  std::copy(stateGlobal.begin(), stateGlobal.end(), lastStep->state_.begin());
+  lastStep->setState(stateGlobal);
   ++RKStepsFXStop_;
 
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough

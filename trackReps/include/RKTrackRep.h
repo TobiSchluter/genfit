@@ -38,12 +38,20 @@ namespace genfit {
  */
 template<size_t nDim> struct TRKStep {
   MatStep matStep_; // material properties and stepsize
-  RKMatrix<1, nDim> state_; // 7D state vector
   StepLimits limits_;
 
   TRKStep() {
     std::fill(state_.begin(), state_.end(), 0);
   }
+
+  void setState(const RKMatrix<1, nDim>& st) {
+    state_ = st;
+  }
+
+  const RKMatrix<1, nDim>& getState() const { return state_; }
+
+private:
+  RKMatrix<1, nDim> state_; // 7D state vector
 };
 
 /**
