@@ -287,7 +287,7 @@ class RKTrackRepEnergy : public AbsTrackRep {
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
   mutable StateOnPlane lastEndState_; //! state where the last extrapolation has ended
-  mutable std::vector<TRKStep<7> > RKSteps_; //! RungeKutta steps made in the last extrapolation
+  mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
   mutable int RKStepsFXStart_; //!
   mutable int RKStepsFXStop_; //!
 

@@ -19,7 +19,6 @@
 
 #include "RKTrackRepTime.h"
 namespace genfit {
-typedef struct TRKStep<8> RKStep;
 typedef struct TExtrapStep<8> ExtrapStep;
 }
 
@@ -2455,7 +2454,7 @@ double RKTrackRepTime::estimateStep(const M1x8& stateGlobal,
   static const RKStep defaultRKStep;
   RKSteps_.push_back( defaultRKStep );
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
-  lastStep->setState(stateGlobal);
+  lastStep->setDir(&stateGlobal[3]);
   ++RKStepsFXStop_;
 
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough

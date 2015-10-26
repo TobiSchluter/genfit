@@ -36,22 +36,20 @@ namespace genfit {
 /**
  * @brief Helper for RKTrackRep
  */
-template<size_t nDim> struct TRKStep {
+struct RKStep {
   MatStep matStep_; // material properties and stepsize
   StepLimits limits_;
 
-  TRKStep() {
-    std::fill(state_.begin(), state_.end(), 0);
+  RKStep() {
+    std::fill(dir_, dir_ + 3, 0.);
   }
 
-  void setState(const RKMatrix<1, nDim>& st) {
-    state_ = st;
+  void setDir(const double dir[3]) {
+    std::copy(dir, dir+3, dir_);
   }
-
-  const RKMatrix<1, nDim>& getState() const { return state_; }
-
+  const double* getDir() const { return dir_; }
 private:
-  RKMatrix<1, nDim> state_; // 7D state vector
+  double dir_[3]; // direction
 };
 
 /**
@@ -312,7 +310,7 @@ class RKTrackRep : public AbsTrackRep {
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
   mutable StateOnPlane lastEndState_; //! state where the last extrapolation has ended
-  mutable std::vector<TRKStep<7> > RKSteps_; //! RungeKutta steps made in the last extrapolation
+  mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
   mutable int RKStepsFXStart_; //!
   mutable int RKStepsFXStop_; //!
   mutable std::vector<TExtrapStep<7> > ExtrapSteps_; //! steps made in Extrap during last extrapolation

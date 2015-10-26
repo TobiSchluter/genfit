@@ -18,9 +18,6 @@
 */
 
 #include "RKTrackRepEnergy.h"
-namespace genfit {
-typedef struct TRKStep<7> RKStep;
-}
 
 #include <Exception.h>
 #include <FieldManager.h>
@@ -2381,7 +2378,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
   static const RKStep defaultRKStep;
   RKSteps_.push_back( defaultRKStep );
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
-  lastStep->setState(state7);
+  lastStep->setDir(&state7[3]);
   ++RKStepsFXStop_;
 
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
