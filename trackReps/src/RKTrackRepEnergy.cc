@@ -1232,10 +1232,10 @@ void RKTrackRepEnergy::derive(const double lambda, const M1x3& T,
 }
 
 
-double RKTrackRepEnergy::RKstep(const M1x7& state7, const double h,
-                                const MaterialProperties& mat,
-                                M1x7& newState7,
-                                RKMatrix<7, 7>* pJ = 0) const
+double RKTrackRepEnergy::RKintegrate(const M1x7& state7, const double h,
+                                     const MaterialProperties& mat,
+                                     M1x7& newState7,
+                                     RKMatrix<7, 7>* pJ = 0) const
 {
   const double m = TDatabasePDG::Instance()->GetParticle(getPDG())->Mass();
   const double pdgCharge( this->getPDGCharge() );
@@ -1397,7 +1397,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   M1x7 oldState7(state7);
   M1x7 newState7;
   M7x7 propJac;
-  double est = RKstep(state7, S, mat, newState7, jacobianT ? &propJac : 0);
+  double est = RKintegrate(state7, S, mat, newState7, jacobianT ? &propJac : 0);
   M7x7 newJacT;
   if (jacobianT) {
     if (0) {
@@ -1438,22 +1438,22 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
           // is exactly representable, the full step will also be.
           stepX = 2 * (temp - stateCopy[i]);
           stateCopy[i] = temp;
-          RKstep(stateCopy, S, mat, rightShort, 0);
+          RKintegrate(stateCopy, S, mat, rightShort, 0);
         }
         {
           M1x7 stateCopy(state7);
           stateCopy[i] -= stepX / 2;
-          RKstep(stateCopy, S, mat, leftShort, 0);
+          RKintegrate(stateCopy, S, mat, leftShort, 0);
         }
         {
           M1x7 stateCopy(state7);
           stateCopy[i] += stepX;
-          RKstep(stateCopy, S, mat, rightFull, 0);
+          RKintegrate(stateCopy, S, mat, rightFull, 0);
         }
         {
           M1x7 stateCopy(state7);
           stateCopy[i] -= stepX;
-          RKstep(stateCopy, S, mat, leftFull, 0);
+          RKintegrate(stateCopy, S, mat, leftFull, 0);
         }
 
         // Calculate the derivatives for the individual components of

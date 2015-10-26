@@ -158,13 +158,18 @@ class RKTrackRepEnergy : public AbsTrackRep {
   void setSpu(StateOnPlane& state, double spu) const;
   void setTime(StateOnPlane& state, double time) const;
 
-
+  /**
+   * Derivative of the equations of motion, to be used for the RK integration
+   */
   void derive(const double lambda, const M1x3& T,
               const double E, const double dEdx, const double d2EdxdE, const double B[3],
               double& dlambda, M1x3& dT, RKMatrix<4,4>* pA) const;
 
-  double RKstep(const M1x7& state7, const double h, const MaterialProperties& mat,
-                M1x7& newState7, RKMatrix<7, 7>* pJ) const;
+  /**
+   * The RK integration step
+   */
+  double RKintegrate(const M1x7& state7, const double h, const MaterialProperties& mat,
+                     M1x7& newState7, RKMatrix<7, 7>* pJ) const;
 
   //! The actual Runge Kutta propagation
   /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).
