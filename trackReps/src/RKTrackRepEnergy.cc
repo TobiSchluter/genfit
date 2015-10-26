@@ -31,6 +31,7 @@ typedef struct TRKStep<7> RKStep;
 #include <TMath.h>
 #include <TDatabasePDG.h>
 #include <TGeoManager.h>
+#include <TDecompLU.h>
 
 #include <iomanip>
 #include <algorithm>
