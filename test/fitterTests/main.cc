@@ -184,8 +184,8 @@ int main(int argc, char **argv) {
   const bool fullMeasurement = false; // put fit result of first tracklet as FullMeasurement into second tracklet, don't merge
 
   //const genfit::eFitterType fitterId = genfit::SimpleKalman;
-  //const genfit::eFitterType fitterId = genfit::RefKalman;
-  const genfit::eFitterType fitterId = genfit::DafRef;
+  const genfit::eFitterType fitterId = genfit::RefKalman;
+  //const genfit::eFitterType fitterId = genfit::DafRef;
   //const genfit::eFitterType fitterId = genfit::DafSimple;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
   const int pdg = 13;//-321;//211;//212;//13;               // particle pdg code
 
   const bool twoReps = false; // test if everything works with more than one rep in the tracks
-  boost::scoped_ptr<genfit::AbsTrackRep> repToUse(new genfit::RKTrackRepTime(pdg));  // The rep that will be used as default, has to be cloned into the tracks
+  boost::scoped_ptr<genfit::AbsTrackRep> repToUse(new genfit::RKTrackRepEnergy(pdg));  // The rep that will be used as default, has to be cloned into the tracks
 
   const bool smearPosMom = false; //true;     // init the Reps with smeared pos and mom
   const double chargeSwitchProb = -0.1; // probability to seed with wrong charge sign
@@ -231,7 +231,7 @@ int main(int argc, char **argv) {
   measurementTypes.push_back(genfit::Pixel);
   measurementTypes.push_back(genfit::Pixel);
   measurementTypes.push_back(genfit::Pixel);
-#if 1
+#if 0
   //  measurementTypes.push_back(genfit::StripUT);
 #  if 0
   measurementTypes.push_back(genfit::StripUT);
@@ -739,7 +739,7 @@ int main(int argc, char **argv) {
       huPu->Fill(   (state[3]-referenceState[3]) / sqrt(cov[3][3]) );
       hvPu->Fill(   (state[4]-referenceState[4]) / sqrt(cov[4][4]) );
 
-      std::cout << referenceState[5] << " " << state[5] << " sigma = " << sqrt(cov[5][5]) << std::endl;
+      //std::cout << referenceState[5] << " " << state[5] << " sigma = " << sqrt(cov[5][5]) << std::endl;
 
       try {
         trackLenRes->Fill( (trueLen - fitTrack->getTrackLen(rep)) / trueLen );
@@ -990,7 +990,6 @@ int main(int argc, char **argv) {
     c3->Write();
 
     TCanvas* c4 = new TCanvas("cResolutions", "Resolutions");
-    std::cout << "HELLO I WANT TO SHOW " << repToUse->getDim() << std::endl;
     c4->DivideSquare(repToUse->getDim());
     for (size_t i = 0; i < repToUse->getDim(); ++i) {
       c4->cd(i+1);

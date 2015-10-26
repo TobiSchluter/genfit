@@ -90,7 +90,7 @@ int main()
 {
   setup();
 
-  AbsTrackRep* rk1 = new RKTrackRepTime(-211);
+  AbsTrackRep* rk1 = new RKTrackRepEnergy(-211);
 
   MeasuredStateOnPlane mop1(rk1);
 
