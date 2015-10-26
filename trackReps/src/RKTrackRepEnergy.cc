@@ -2522,8 +2522,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     }
 
     double momLoss = 0;
-    unsigned int nPoints(RKStepsFXStop_ - RKStepsFXStart_);
-    if (nPoints>0){
+    if (RKStepsFXStop_ > RKStepsFXStart_){
       // momLoss has a sign - negative loss means momentum gain
       momLoss += MaterialEffects::getInstance()->effects(RKStepsFXStart_,
                                                          RKStepsFXStop_,
