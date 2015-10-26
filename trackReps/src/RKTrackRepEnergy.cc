@@ -2521,14 +2521,13 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
       for(int i = 0; i < 7*7; ++i) noise[i] = 0; // set noiseArray_ to 0
     }
 
-    double momLoss = 0;
     if (RKStepsFXStop_ > RKStepsFXStart_){
       // momLoss has a sign - negative loss means momentum gain
-      momLoss += MaterialEffects::getInstance()->effects(RKStepsFXStart_,
-                                                         RKStepsFXStop_,
-                                                         pStart, // momentum
-                                                         pdgCode_,
-                                                         pNoise);
+      double momLoss = MaterialEffects::getInstance()->effects(RKStepsFXStart_,
+                                                               RKStepsFXStop_,
+                                                               pStart, // momentum
+                                                               pdgCode_,
+                                                               pNoise);
 
       RKStepsFXStart_ = RKStepsFXStop_;
 
