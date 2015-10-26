@@ -982,14 +982,7 @@ std::vector<genfit::MatStep> RKTrackRepEnergy::getSteps() const {
     throw exc;
   }
 
-  std::vector<MatStep> retVal;
-  retVal.reserve(RKSteps_.size());
-
-  for (unsigned int i = 0; i<RKSteps_.size(); ++i) {
-    retVal.push_back(RKSteps_[i]);
-  }
-
-  return retVal;
+  return std::vector<MatStep>(RKSteps_.begin(), RKSteps_.end());
 }
 
 
