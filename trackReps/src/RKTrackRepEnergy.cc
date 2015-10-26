@@ -2525,8 +2525,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     unsigned int nPoints(RKStepsFXStop_ - RKStepsFXStart_);
     if (nPoints>0){
       // momLoss has a sign - negative loss means momentum gain
-      momLoss += MaterialEffects::getInstance()->effects(RKSteps_,
-                                                         RKStepsFXStart_,
+      momLoss += MaterialEffects::getInstance()->effects(RKStepsFXStart_,
                                                          RKStepsFXStop_,
                                                          pStart, // momentum
                                                          pdgCode_,
@@ -2632,8 +2631,7 @@ void RKTrackRepEnergy::resetCache(const StateOnPlane& state) const
 {
   cachePos_ = 0;
   RKSteps_.clear();
-  RKStepsFXStart_ = 0;
-  RKStepsFXStop_ = 0;
+  RKStepsFXStart_ = RKStepsFXStop_ = RKSteps_.begin();
   initArrays();
 
   lastStartState_.setStatePlane(state.getState(), state.getPlane());
@@ -2663,8 +2661,7 @@ void RKTrackRepEnergy::checkCache(const StateOnPlane& state, const SharedPlanePt
 
   if (useCache_) {
     cachePos_ = 0;
-    RKStepsFXStart_ = 0;
-    RKStepsFXStop_ = 0;
+    RKStepsFXStart_ = RKStepsFXStop_ = RKSteps_.begin();
     initArrays();
 
     // clean up cache. Only use steps with same sign.

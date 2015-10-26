@@ -2598,8 +2598,7 @@ double RKTrackRepTime::Extrap(const DetPlane& startPlane,
     unsigned int nPoints(RKStepsFXStop_ - RKStepsFXStart_);
     if (nPoints>0){
       // momLoss has a sign - negative loss means momentum gain
-      momLoss += MaterialEffects::getInstance()->effects(RKSteps_,
-                                                         RKStepsFXStart_,
+      momLoss += MaterialEffects::getInstance()->effects(RKStepsFXStart_,
                                                          RKStepsFXStop_,
                                                          pStart, // momentum
                                                          pdgCode_,
@@ -2719,8 +2718,7 @@ void RKTrackRepTime::checkCache(const StateOnPlane& state, const SharedPlanePtr*
   }
 
   cachePos_ = 0;
-  RKStepsFXStart_ = 0;
-  RKStepsFXStop_ = 0;
+  RKStepsFXStart_ = RKStepsFXStop_ = RKSteps_.begin();
   ExtrapSteps_.clear();
   initArrays();
 

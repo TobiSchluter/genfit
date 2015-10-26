@@ -95,9 +95,8 @@ public:
 
 
   //! Calculates energy loss in the traveled path, optional calculation of noise matrix
-  double effects(const std::vector<RKStep>& steps,
-                 int materialsFXStart,
-                 int materialsFXStop,
+  double effects(const std::vector<RKStep>::const_iterator& materialsFXStart,
+                 const std::vector<RKStep>::const_iterator& materialsFXStop,
                  const double& mom,
                  const int& pdg,
                  M7x7* noise = nullptr);

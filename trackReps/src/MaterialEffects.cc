@@ -107,9 +107,8 @@ void MaterialEffects::setMscModel(const std::string& modelName)
   }
 }
 
-double MaterialEffects::effects(const std::vector<RKStep>& steps,
-                                int materialsFXStart,
-                                int materialsFXStop,
+double MaterialEffects::effects(const std::vector<RKStep>::const_iterator& materialsFXStart,
+                                const std::vector<RKStep>::const_iterator& materialsFXStop,
                                 const double& mom,
                                 const int& pdg,
                                 M7x7* noise)
@@ -141,7 +140,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
 
   double momLoss = 0.;
 
-  for ( std::vector<RKStep>::const_iterator it = steps.begin() + materialsFXStart; it !=  steps.begin() + materialsFXStop; ++it) { // loop over steps
+  for ( std::vector<RKStep>::const_iterator it = materialsFXStart; it !=  materialsFXStop; ++it) { // loop over steps
 
     double realPath = it->stepSize_;
     if (fabs(realPath) < 1.E-8) {
