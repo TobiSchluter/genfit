@@ -143,7 +143,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
 
   for ( std::vector<RKStep>::const_iterator it = steps.begin() + materialsFXStart; it !=  steps.begin() + materialsFXStop; ++it) { // loop over steps
 
-    double realPath = it->matStep_.stepSize_;
+    double realPath = it->stepSize_;
     if (fabs(realPath) < 1.E-8) {
       // do material effects only if distance is not too small
       continue;
@@ -154,8 +154,8 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
       if (doNoise) 
         std::cout << "and noise";
       std::cout << " for ";
-      std::cout << "stepSize = " << it->matStep_.stepSize_ << "\t";
-      it->matStep_.materialProperties_.Print();
+      std::cout << "stepSize = " << it->stepSize_ << "\t";
+      it->materialProperties_.Print();
     }
 
     double stepSign(1.);
@@ -164,7 +164,7 @@ double MaterialEffects::effects(const std::vector<RKStep>& steps,
     realPath = fabs(realPath);
     stepSize_ = realPath;
 
-    const MaterialProperties& material = it->matStep_.materialProperties_;
+    const MaterialProperties& material = it->materialProperties_;
 
     if (material.getZ() > 1.E-3) { // don't calculate energy loss for vacuum
 

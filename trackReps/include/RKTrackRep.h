@@ -36,8 +36,7 @@ namespace genfit {
 /**
  * @brief Helper for RKTrackRep
  */
-struct RKStep {
-  MatStep matStep_; // material properties and stepsize
+struct RKStep : public MatStep {
   StepLimits limits_;
 
   RKStep() {

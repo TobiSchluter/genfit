@@ -1052,7 +1052,7 @@ std::vector<genfit::MatStep> RKTrackRep::getSteps() const {
   retVal.reserve(RKSteps_.size());
 
   for (unsigned int i = 0; i<RKSteps_.size(); ++i) {
-    retVal.push_back(RKSteps_[i].matStep_);
+    retVal.push_back(RKSteps_[i]);
   }
 
   return retVal;
@@ -1071,7 +1071,7 @@ double RKTrackRep::getRadiationLength() const {
   double radLen(0);
 
   for (unsigned int i = 0; i<RKSteps_.size(); ++i) {
-    radLen += RKSteps_.at(i).matStep_.stepSize_ / RKSteps_.at(i).matStep_.materialProperties_.getRadLen();
+    radLen += RKSteps_.at(i).stepSize_ / RKSteps_.at(i).materialProperties_.getRadLen();
   }
 
   return radLen;
@@ -1998,9 +1998,9 @@ bool RKTrackRep::RKutta(const M1x4& SU,
 
     // check if we went back and forth multiple times -> we don't come closer to the plane!
     if (counter > 3){
-      if (S                            *RKSteps_.at(counter-1).matStep_.stepSize_ < 0 &&
-          RKSteps_.at(counter-1).matStep_.stepSize_*RKSteps_.at(counter-2).matStep_.stepSize_ < 0 &&
-          RKSteps_.at(counter-2).matStep_.stepSize_*RKSteps_.at(counter-3).matStep_.stepSize_ < 0){
+      if (S                            *RKSteps_.at(counter-1).stepSize_ < 0 &&
+          RKSteps_.at(counter-1).stepSize_*RKSteps_.at(counter-2).stepSize_ < 0 &&
+          RKSteps_.at(counter-2).stepSize_*RKSteps_.at(counter-3).stepSize_ < 0){
         Exception exc("RKTrackRep::RKutta ==> Do not get closer to plane!",__LINE__,__FILE__);
         exc.setFatal();
         throw exc;
@@ -2143,12 +2143,12 @@ double RKTrackRep::estimateStep(const M1x7& state7,
       }
       else {
         if (debugLvl_ > 0) {
-          std::cout << " RKTrackRep::estimateStep: use stepSize " << cachePos_ << " from cache: " << RKSteps_.at(cachePos_).matStep_.stepSize_ << "\n";
+          std::cout << " RKTrackRep::estimateStep: use stepSize " << cachePos_ << " from cache: " << RKSteps_.at(cachePos_).stepSize_ << "\n";
         }
         //for(int n = 0; n < 1*7; ++n) RKSteps_[cachePos_].state7_[n] = state7[n];
         ++RKStepsFXStop_;
         limits = RKSteps_.at(cachePos_).limits_;
-        return RKSteps_.at(cachePos_++).matStep_.stepSize_;
+        return RKSteps_.at(cachePos_++).stepSize_;
       }
     }
   }
@@ -2317,11 +2317,11 @@ double RKTrackRep::estimateStep(const M1x7& state7,
                                             charge/state7[6], // |p|
                                             relMomLoss,
                                             pdgCode_,
-                                            lastStep->matStep_.materialProperties_,
+                                            lastStep->materialProperties_,
                                             limits);
   } else { //assume material has not changed
     if  (RKSteps_.size()>1) {
-      lastStep->matStep_.materialProperties_ = (lastStep - 1)->matStep_.materialProperties_;
+      lastStep->materialProperties_ = (lastStep - 1)->materialProperties_;
     }
   }
 
@@ -2332,7 +2332,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
 
   double finalStep = limits.getLowestLimitSignedVal();
 
-  lastStep->matStep_.stepSize_ = finalStep;
+  lastStep->stepSize_ = finalStep;
   lastStep->limits_ = limits;
 
   if (debugLvl_ > 0) {
@@ -2433,8 +2433,8 @@ double RKTrackRep::Extrap(const DetPlane& startPlane,
     if (debugLvl_ > 0) {
       std::cout<<"RKSteps \n";
       for (std::vector<RKStep>::iterator it = RKSteps_.begin(); it != RKSteps_.end(); ++it){
-        std::cout << "stepSize = " << it->matStep_.stepSize_ << "\t";
-        it->matStep_.materialProperties_.Print();
+        std::cout << "stepSize = " << it->stepSize_ << "\t";
+        it->materialProperties_.Print();
       }
       std::cout<<"\n";
     }
@@ -2659,12 +2659,12 @@ void RKTrackRep::checkCache(const StateOnPlane& state, const SharedPlanePtr* pla
     double firstStep(0);
     for (unsigned int i=0; i<RKSteps_.size(); ++i) {
       if (i == 0) {
-        firstStep = RKSteps_.at(0).matStep_.stepSize_;
+        firstStep = RKSteps_.at(0).stepSize_;
         continue;
       }
-      if (RKSteps_.at(i).matStep_.stepSize_ * firstStep < 0) {
-        if (RKSteps_.at(i-1).matStep_.materialProperties_ == RKSteps_.at(i).matStep_.materialProperties_) {
-          RKSteps_.at(i-1).matStep_.stepSize_ += RKSteps_.at(i).matStep_.stepSize_;
+      if (RKSteps_.at(i).stepSize_ * firstStep < 0) {
+        if (RKSteps_.at(i-1).materialProperties_ == RKSteps_.at(i).materialProperties_) {
+          RKSteps_.at(i-1).stepSize_ += RKSteps_.at(i).stepSize_;
         }
         RKSteps_.erase(RKSteps_.begin()+i, RKSteps_.end());
       }
