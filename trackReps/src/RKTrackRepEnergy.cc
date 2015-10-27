@@ -2379,6 +2379,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
                                             limits);
   } else { //assume material has not changed
     if  (RKSteps_.size()>1) {
+      // FIXME doesn't that imply the wrong step length?
       lastStep->materialProperties_ = (lastStep - 1)->materialProperties_;
     }
   }
