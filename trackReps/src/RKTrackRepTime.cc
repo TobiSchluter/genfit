@@ -45,8 +45,6 @@ RKTrackRepTime::RKTrackRepTime() :
   AbsTrackRep(),
   lastStartState_(this),
   lastEndState_(this),
-  RKStepsFXStart_(0),
-  RKStepsFXStop_(0),
   fJacobian_(6,6),
   fNoise_(6),
   useCache_(false),
@@ -60,8 +58,6 @@ RKTrackRepTime::RKTrackRepTime(int pdgCode, char propDir) :
   AbsTrackRep(pdgCode, propDir),
   lastStartState_(this),
   lastEndState_(this),
-  RKStepsFXStart_(0),
-  RKStepsFXStop_(0),
   fJacobian_(6,6),
   fNoise_(6),
   useCache_(false),
@@ -1620,6 +1616,7 @@ void RKTrackRepTime::initArrays() const {
   limits_.reset();
 
   RKSteps_.reserve(100);
+  RKStepsFXStart_ = RKStepsFXStop_ = RKSteps_.begin();
   ExtrapSteps_.reserve(100);
 
   lastStartState_.getAuxInfo().ResizeTo(2);

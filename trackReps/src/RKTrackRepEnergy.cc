@@ -43,8 +43,6 @@ RKTrackRepEnergy::RKTrackRepEnergy() :
   AbsTrackRep(),
   lastStartState_(this),
   lastEndState_(this),
-  RKStepsFXStart_(0),
-  RKStepsFXStop_(0),
   fJacobian_(5,5),
   fNoise_(5),
   useCache_(false),
@@ -58,8 +56,6 @@ RKTrackRepEnergy::RKTrackRepEnergy(int pdgCode, char propDir) :
   AbsTrackRep(pdgCode, propDir),
   lastStartState_(this),
   lastEndState_(this),
-  RKStepsFXStart_(0),
-  RKStepsFXStop_(0),
   fJacobian_(5,5),
   fNoise_(5),
   useCache_(false),
@@ -1525,6 +1521,7 @@ void RKTrackRepEnergy::initArrays() const {
   fNoise_.Zero();
 
   RKSteps_.reserve(100);
+  RKStepsFXStart_ = RKStepsFXStop_ = RKSteps_.begin();
 
   lastStartState_.getAuxInfo().ResizeTo(2);
   lastEndState_.getAuxInfo().ResizeTo(2);
