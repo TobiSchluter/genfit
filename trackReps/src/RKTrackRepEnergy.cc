@@ -45,8 +45,7 @@ RKTrackRepEnergy::RKTrackRepEnergy() :
   lastEndState_(this),
   fJacobian_(5,5),
   fNoise_(5),
-  useCache_(false),
-  cachePos_(0)
+  useCache_(false)
 {
   initArrays();
 }
@@ -58,8 +57,7 @@ RKTrackRepEnergy::RKTrackRepEnergy(int pdgCode, char propDir) :
   lastEndState_(this),
   fJacobian_(5,5),
   fNoise_(5),
-  useCache_(false),
-  cachePos_(0)
+  useCache_(false)
 {
   initArrays();
 }
@@ -1521,7 +1519,7 @@ void RKTrackRepEnergy::initArrays() const {
   fNoise_.Zero();
 
   RKSteps_.reserve(100);
-  RKStepsFXStart_ = RKStepsFXStop_ = RKSteps_.begin();
+  RKStepsFXStart_ = RKStepsFXStop_ = cachePos_ = RKSteps_.begin();
 
   lastStartState_.getAuxInfo().ResizeTo(2);
   lastEndState_.getAuxInfo().ResizeTo(2);
@@ -2177,24 +2175,25 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
                                       MaterialProperties& mat) const {
 
   if (useCache_) {
-    if (cachePos_ >= RKSteps_.size()) {
+    if (cachePos_ >= RKSteps_.end()) {
       useCache_ = false;
     }
     else {
-      if (RKSteps_.at(cachePos_).limits_.getLowestLimit().first == stp_plane) {
+      if (cachePos_->limits_.getLowestLimit().first == stp_plane) {
         // we need to step exactly to the plane, so don't use the cache!
         useCache_ = false;
-        RKSteps_.erase(RKSteps_.begin() + cachePos_, RKSteps_.end());
+        RKSteps_.erase(cachePos_, RKSteps_.end());
       }
       else {
+	const std::vector<RKStep>::const_iterator useThis = cachePos_;
         if (debugLvl_ > 0) {
-          std::cout << " RKTrackRepEnergy::estimateStep: use stepSize " << cachePos_ << " from cache: " << RKSteps_.at(cachePos_).stepSize_ << "\n";
+          std::cout << " RKTrackRepEnergy::estimateStep: use stepSize from cache: " << useThis->stepSize_ << "\n";
         }
-        //for(int n = 0; n < 1*7; ++n) RKSteps_[cachePos_].state7_[n] = state7[n];
+	++cachePos_;
         ++RKStepsFXStop_;
-        limits = RKSteps_.at(cachePos_).limits_;
-        mat = RKSteps_.at(cachePos_).materialProperties_;
-        return RKSteps_.at(cachePos_++).stepSize_;
+        limits = useThis->limits_;
+        mat = useThis->materialProperties_;
+        return useThis->stepSize_;
       }
     }
   }
@@ -2617,9 +2616,8 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
 void RKTrackRepEnergy::resetCache(const StateOnPlane& state) const
 {
-  cachePos_ = 0;
   RKSteps_.clear();
-  RKStepsFXStart_ = RKStepsFXStop_ = RKSteps_.begin();
+  RKStepsFXStart_ = RKStepsFXStop_ = cachePos_ = RKSteps_.begin();
   initArrays();
 
   lastStartState_.setStatePlane(state.getState(), state.getPlane());
@@ -2648,8 +2646,7 @@ void RKTrackRepEnergy::checkCache(const StateOnPlane& state, const SharedPlanePt
 	       && plane->distance(getPos(lastEndState_)) <= MINSTEP);
 
   if (useCache_) {
-    cachePos_ = 0;
-    RKStepsFXStart_ = RKStepsFXStop_ = RKSteps_.begin();
+    RKStepsFXStart_ = RKStepsFXStop_ = cachePos_ = RKSteps_.begin();
     initArrays();
 
     // clean up cache. Only use steps with same sign.

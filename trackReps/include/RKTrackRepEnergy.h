@@ -292,9 +292,6 @@ class RKTrackRepEnergy : public AbsTrackRep {
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
   mutable StateOnPlane lastEndState_; //! state where the last extrapolation has ended
-  mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
-  mutable std::vector<RKStep>::const_iterator RKStepsFXStart_; //!
-  mutable std::vector<RKStep>::const_iterator RKStepsFXStop_; //!
 
   mutable TMatrixD fJacobian_; //!
   mutable TMatrixDSym fNoise_; //!
@@ -302,7 +299,10 @@ class RKTrackRepEnergy : public AbsTrackRep {
   void resetCache(const StateOnPlane& state) const;
   void checkCache(const StateOnPlane& state, const SharedPlanePtr& plane) const;
   mutable bool useCache_; //! use cached RKSteps_ for extrapolation
-  mutable unsigned int cachePos_; //!
+  mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
+  mutable std::vector<RKStep>::const_iterator RKStepsFXStart_; //!
+  mutable std::vector<RKStep>::const_iterator RKStepsFXStop_; //!
+  mutable std::vector<RKStep>::const_iterator cachePos_; //!
 
 public:
   class propagator : public RKTrackRepEnergy::internalExtrapolator {
