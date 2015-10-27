@@ -2364,8 +2364,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
 
 
   // call stepper and reduce stepsize if step not too small
-  static const RKStep defaultRKStep;
-  RKSteps_.push_back( defaultRKStep );
+  RKSteps_.push_back( RKStep() );
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
   lastStep->setDir(&state7[3]);
   ++RKStepsFXStop_;
