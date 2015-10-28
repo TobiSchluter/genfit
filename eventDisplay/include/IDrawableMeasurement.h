@@ -3,8 +3,12 @@
 
 class TEveElementList;
 class TEveBox;
+class TVector3;
 
 namespace genfit {
+
+class MeasuredStateOnPlane;
+
 namespace display {
 
 /*
