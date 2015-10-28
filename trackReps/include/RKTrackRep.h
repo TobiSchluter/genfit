@@ -149,7 +149,7 @@ class RKTrackRep : public AbsTrackRep {
 
   unsigned int getDim() const {return 5;}
   const char *getNameForLocalCoord(size_t i) {
-    assert(0 <= i && i < getDim());
+    assert(i < getDim());
     switch (i) {
     case 0: return "qop";
     case 1: return "u'";
