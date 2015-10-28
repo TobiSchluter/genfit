@@ -2648,15 +2648,17 @@ void RKTrackRepEnergy::checkCache(const StateOnPlane& state, const SharedPlanePt
     RKStepsFXStart_ = RKStepsFXStop_ = cachePos_ = RKSteps_.begin();
     initArrays();
 
-    // clean up cache. Only use steps with same sign.
+    // Clean up cache. Only use steps with same sign.
     if (RKSteps_.size() > 0) {
-      double firstStep = RKSteps_.at(0).stepSize_;
-      for (unsigned int i=1; i<RKSteps_.size(); ++i) {
-	if (RKSteps_.at(i).stepSize_ * firstStep < 0) {
-	  if (RKSteps_.at(i-1).materialProperties_ == RKSteps_.at(i).materialProperties_) {
-	    RKSteps_.at(i-1).stepSize_ += RKSteps_.at(i).stepSize_;
+      double firstStepSize = RKSteps_[0].stepSize_;
+      for (std::vector<RKStep>::iterator it = RKSteps_.begin(); it != RKSteps_.end(); ++it) {
+	if (it->stepSize_ * firstStepSize < 0) {
+          // Will never come here for the first step.
+	  if ((it - 1)->materialProperties_ == it->materialProperties_) {
+            // Shorten the penultimate step.
+	    (it - 1)->stepSize_ += it->stepSize_;
 	  }
-	  RKSteps_.erase(RKSteps_.begin()+i, RKSteps_.end());
+	  RKSteps_.erase(it, RKSteps_.end());
 	  break;
 	}
       }
