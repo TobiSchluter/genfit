@@ -2190,7 +2190,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
           std::cout << " RKTrackRepEnergy::estimateStep: use stepSize from cache: " << useThis->stepSize_ << "\n";
         }
 	++cachePos_;
-        ++RKStepsFXStop_;
+        ++RKStepsFXStop_;   // FIXME does this make sense?  If not, RKStepsFXStop_ can be replaced by RKSTeps_.end().
         limits = useThis->limits_;
         mat = useThis->materialProperties_;
         return useThis->stepSize_;
