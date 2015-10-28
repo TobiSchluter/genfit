@@ -911,8 +911,8 @@ void RKTrackRepEnergy::projectJacobianAndNoise(const M1x7& startState7, const De
   for (int iRow = 0; iRow < 7; ++iRow)
     for (int iCol = 0; iCol < 7; ++iCol)
       jacT(iRow,iCol) = jac(iCol,iRow);
-  RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, jacT, J_pM, *(M5x5 *)fJacobian_.GetMatrixArray());
-  RKTools::J_MpTxcov7xJ_Mp(J_Mp, noise, *(M5x5 *)fNoise_.GetMatrixArray());
+  RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, jacT, J_pM, jac5);
+  RKTools::J_MpTxcov7xJ_Mp(J_Mp, noise, noise5);
 
   if (debugLvl_ > 0) {
     std::cout << "total jacobian : "; fJacobian_.Print();
@@ -2364,9 +2364,8 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
 
 
   // call stepper and reduce stepsize if step not too small
-  RKSteps_.push_back( RKStep() );
+  RKSteps_.push_back( RKStep(&state7[3]) );
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
-  lastStep->setDir(&state7[3]);
   ++RKStepsFXStop_;
 
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough

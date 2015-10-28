@@ -43,6 +43,10 @@ struct RKStep : public MatStep {
     std::fill(dir_, dir_ + 3, 0.);
   }
 
+  RKStep(const double dir[3]) {
+    std::copy(dir, dir+3, dir_);
+  }
+
   void setDir(const double dir[3]) {
     std::copy(dir, dir+3, dir_);
   }
