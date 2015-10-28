@@ -302,7 +302,8 @@ class RKTrackRepEnergy : public AbsTrackRep {
   mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
   mutable std::vector<RKStep>::const_iterator RKStepsFXStart_; //!
   mutable std::vector<RKStep>::const_iterator RKStepsFXStop_; //!
-  mutable std::vector<RKStep>::const_iterator cachePos_; //!
+  // FIXME: gcc doesn't want a const_iterator here (error in estimateStep()), clang allows it.
+  mutable std::vector<RKStep>::iterator cachePos_; //!
 
 public:
   class propagator : public RKTrackRepEnergy::internalExtrapolator {

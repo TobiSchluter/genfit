@@ -2026,7 +2026,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
       if (debugLvl_ > 0) {
         std::cout<<" (momLossExceeded && fabs(S) < MINSTEP) -> return(true), no linear extrapolation; \n";
       }
-      RKSteps_.erase(RKSteps_.end()-1);
+      RKSteps_.pop_back();
       --RKStepsFXStop_;
       return(true); // no linear extrapolation!
     }
