@@ -182,7 +182,7 @@ double MaterialEffects::effects(const std::vector<RKStep>::const_iterator& mater
           this->noiseBetheBloch(*noise, material, p, betaSquare, gamma, gammaSquare);
 
         if (noiseCoulomb_)
-          this->noiseCoulomb(*noise, material, *(const M1x3*)&it->getDir(), pSquare, betaSquare);
+          this->noiseCoulomb(*noise, material, *(const M1x3*)it->getDir(), pSquare, betaSquare);
 
         if (energyLossBrems_ && noiseBrems_)
           this->noiseBrems(*noise, material, pSquare, betaSquare);
