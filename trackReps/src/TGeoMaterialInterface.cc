@@ -142,7 +142,7 @@ TGeoMaterialInterface::findNextBoundary(const AbsTrackRep::internalExtrapolator&
         << " stepSign*(s + slDist) = "
         << stepSign << "*(" << s + slDist << ")\n";
 
-      //TGeoNode* newNode = gGeoManager->FindNextBoundaryAndStep(slDist);
+      TGeoNode* newNode = gGeoManager->FindNextBoundaryAndStep(slDist);
       //std::cout << "new "; newNode->Print();
       return stepSign*(s + slDist);
     }

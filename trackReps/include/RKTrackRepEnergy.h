@@ -240,7 +240,7 @@ class RKTrackRepEnergy : public AbsTrackRep {
     * If this is the case, RKutta() will only propagate the reduced distance and then return. This is to ensure that
     * material effects, which are calculated after the propagation, are taken into account properly.
     */
-  bool RKutta(const M1x4& SU,
+  void RKutta(const M1x4& SU,
               const DetPlane& plane,
               double charge,
               double mass,
@@ -248,7 +248,6 @@ class RKTrackRepEnergy : public AbsTrackRep {
               M7x7* jacobianT,
               double& coveredDistance, // signed
               double& flightTime,
-              bool& checkJacProj,
               M7x7& noiseProjection,
               StepLimits& limits,
               bool onlyOneStep = false) const;

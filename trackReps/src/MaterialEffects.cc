@@ -209,7 +209,6 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
                               MaterialProperties& currentMaterial,
                               StepLimits& limits)
 {
-
   static const double maxRelMomLoss = .01; // maximum relative momentum loss allowed
   static const double Pmin   = 4.E-3;           // minimum momentum for propagation [GeV]
   static const double minStep = 1.E-4; // 1 µm
@@ -248,12 +247,6 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
   M1x3 pos;
   M1x3 dir;
   extrap.getInitialState(pos.vals, dir.vals);
-
-  // make minStep
-  pos += limits.getStepSign() * minStep * dir;
-
-  extrap.moveStart(pos.vals);
-
   materialInterface_->initTrack(pos[0], pos[1], pos[2],
                                 limits.getStepSign() * dir[0], limits.getStepSign() * dir[1], limits.getStepSign() * dir[2]);
 
@@ -291,6 +284,7 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
       std::cout << "     find next boundary\n";
     }
     double step =  materialInterface_->findNextBoundary(extrap, boundaryStep);
+    materialInterface_->getMaterialParameters(materialAfter);
 
     if (debugLvl_ > 0) {
       if (step == 0) {
@@ -315,21 +309,7 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
     double posNow[3];
     double dirNow[3];
     extrap.extrapolateBy(step, posNow, dirNow);
-
-    // make minStep to cross boundary
-    M1x7 state7; //FIXME do not really need this
-    state7[0] = posNow[0] + limits.getStepSign() * minStep * dirNow[0];
-    state7[1] = posNow[1] + limits.getStepSign() * minStep * dirNow[1];
-    state7[2] = posNow[2] + limits.getStepSign() * minStep * dirNow[2];
-    state7[3] = dirNow[0];
-    state7[4] = dirNow[1];
-    state7[5] = dirNow[2];
-
-    this->initTrack(state7[0], state7[1], state7[2],
-                    limits.getStepSign() * state7[3], limits.getStepSign() * state7[4], limits.getStepSign() * state7[5]);
-
-    materialInterface_->getMaterialParameters(materialAfter);
-    extrap.moveStart(state7.vals);
+    extrap.moveStart(posNow);
 
     if (debugLvl_ > 0) {
       std::cout << "     material after step: "; materialAfter.Print();
@@ -340,7 +320,6 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
   }
 
   limits.setLimit(stp_boundary, stepSize_);
-
 
   relMomLoss += relMomLossPer_cm * limits.getLowestLimitVal();
 }
@@ -375,9 +354,11 @@ void MaterialEffects::getMomGammaBeta(double Energy,
 
 double MaterialEffects::momentumLoss(const MaterialProperties& material, double stepSign, double mom, bool linear)
 {
-  if (material.getZ() < 1e-3)
+  if (material.getZ() < 1e-3) {
     // No energy loss in vacuum.
+    dEdx_ = 0;
     return 0;
+  }
 
   double E0 = hypot(mom, mass_);
   double step = stepSize_*stepSign; // signed
@@ -439,9 +420,10 @@ double MaterialEffects::momentumLoss(const MaterialProperties& material, double 
 
 
 double MaterialEffects::dEdx(const MaterialProperties& material, double Energy) const {
-  if (noEffects_ || material.getZ() < 1e-3)
+  if (noEffects_ || material.getZ() < 1e-3) {
     // No energy loss in vacuum.
     return 0;
+  }
 
   double mom(0), gammaSquare(0), gamma(0), betaSquare(0);
   this->getMomGammaBeta(Energy, mom, gammaSquare, gamma, betaSquare);
@@ -486,7 +468,6 @@ double MaterialEffects::dEdxBetheBloch(const MaterialProperties& material, doubl
     throw exc;
   }
 
-  // calc dEdx_, also needed in noiseBetheBloch!
   double result( 0.307075 * material.getZ() / material.getA() * material.getDensity() / betaSquare * charge_ * charge_ );
   double massRatio( electronMass / mass_ );
   double argument( gammaSquare * betaSquare * electronMass * 1.E3 * 2. / ((1.E-6 * material.getMEE()) *

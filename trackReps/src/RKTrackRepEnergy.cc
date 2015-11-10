@@ -658,6 +658,7 @@ double RKTrackRepEnergy::extrapolateToSphere(StateOnPlane& state,
 
     if(fabs(k)<MINSTEP) break;
 
+
     startPlane = *plane;
 
   }
@@ -1326,6 +1327,9 @@ double RKTrackRepEnergy::RKintegrate(const M1x7& state7, const double h,
   double eps = std::max(epsLambda,
                         *std::max_element(epsT.begin(), epsT.end()));
 
+  //mat.Print();
+  //std::cout << "|momentum loss| = " << fabs(1/lambdaFinal - 1/lambdaStart) << std::endl;
+
   if (pJ) {
     // Build the 7x7 Jacobian matrix.  We don't keep the row, column
     // corresponding to \Lambda in the notation of Lund loc.cit. as it
@@ -1900,7 +1904,7 @@ void RKTrackRepEnergy::transformM6P(const M6x6& in6x6,
 //
 // Authors: R.Brun, M.Hansroul, V.Perevoztchikov (Geant3)
 //
-bool RKTrackRepEnergy::RKutta(const M1x4& SU,
+void RKTrackRepEnergy::RKutta(const M1x4& SU,
                         const DetPlane& plane,
                         double charge,
                         double mass,
@@ -1908,7 +1912,6 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
                         M7x7* jacobianT,
                         double& coveredDistance,
                         double& flightTime,
-                        bool& checkJacProj,
                         M7x7& noiseProjection,
                         StepLimits& limits,
                         bool onlyOneStep) const {
@@ -1936,8 +1939,6 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
     std::cout << "destination: "; plane.Print();
   }
 
-  checkJacProj = false;
-
   // check momentum
   if(momentum < Pmin){
     std::ostringstream sstream;
@@ -1956,7 +1957,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
   //
   // Main loop of Runge-Kutta method
   //
-  while (fabs(S) >= MINSTEP || counter == 0) {
+  do {
 
     if(++counter > maxNumIt){
       Exception exc("RKTrackRepEnergy::RKutta ==> maximum number of iterations exceeded",__LINE__,__FILE__);
@@ -1966,6 +1967,9 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
 
     if (debugLvl_ > 0) {
       std::cout << "------ RKutta main loop nr. " << counter-1 << " ------\n";
+      std::cout << "starting at X = (" << state7[0] << ", " << state7[1] << ", " << state7[2] << ") R = " << hypot(state7[0], state7[1]) << std::endl;
+      std::cout << "matForStep "; matForStep.Print();
+      std::cout << "step Length " << S << std::endl;
     }
 
     M1x3 ABefore = {{ A[0], A[1], A[2] }};
@@ -1987,14 +1991,14 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
       throw exc;
     }
 
-    if (onlyOneStep) return(true);
+    if (onlyOneStep) return;
 
     // if stepsize has been limited by material, break the loop and return. No linear extrapolation!
     if (limits.getLowestLimit().first == stp_momLoss) {
       if (debugLvl_ > 0) {
         std::cout<<" momLossExceeded -> return(true); \n";
       }
-      return(true);
+      return;
     }
 
     // if stepsize has been limited by material boundary, break the loop and return. No linear extrapolation!
@@ -2002,7 +2006,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
       if (debugLvl_ > 0) {
         std::cout<<" at boundary -> return(true); \n";
       }
-      return(true);
+      return;
     }
 
 
@@ -2014,27 +2018,24 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
     limits.removeLimit(stp_plane);
     S = estimateStep(state7, SU, plane, charge, relMomLoss, limits, matForStep);
 
-    if (limits.getLowestLimit().first == stp_plane &&
-        fabs(S) < MINSTEP) {
+    if (fabs(S) < MINSTEP && limits.getLowestLimit().first == stp_plane) {
       if (debugLvl_ > 0) {
         std::cout<<" (at Plane && fabs(S) < MINSTEP) -> break and do linear extrapolation \n";
       }
       break;
     }
-    if (limits.getLowestLimit().first == stp_momLoss &&
-        fabs(S) < MINSTEP) {
+    if (fabs(S) < MINSTEP && limits.getLowestLimit().first == stp_momLoss) {
       if (debugLvl_ > 0) {
         std::cout<<" (momLossExceeded && fabs(S) < MINSTEP) -> return(true), no linear extrapolation; \n";
       }
       RKSteps_.pop_back();
       --RKStepsFXStop_;
-      return(true); // no linear extrapolation!
+      return; // no linear extrapolation!
     }
 
     // check if total angle is bigger than AngleMax. Can happen if a curler should be fitted and it does not hit the active area of the next plane.
     double arg = ABefore[0]*A[0] + ABefore[1]*A[1] + ABefore[2]*A[2];
-    arg = arg > 1 ? 1 : arg;
-    arg = arg < -1 ? -1 : arg;
+    arg = std::min(1., std::max(-1., arg));
     deltaAngle += acos(arg);
     if (fabs(deltaAngle) > AngleMax){
       std::ostringstream sstream;
@@ -2061,7 +2062,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
       }
     }
 
-  } //end of main loop
+  } while (fabs(S) >= MINSTEP); //end of main loop
 
 
   //
@@ -2105,7 +2106,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
     //
     // Project Jacobian of extrapolation onto destination plane
     //
-    if (jacobianT != NULL) {
+    if (jacobianT) {
 
       // projected jacobianT
       // x x x x x x 0
@@ -2115,11 +2116,6 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
       // x x x x x x 0
       // x x x x x x 0
       // x x x x x x 1
-
-      if (checkJacProj && RKSteps_.size()>0){
-        Exception exc("RKTrackRepEnergy::Extrap ==> covariance is projected onto destination plane again",__LINE__,__FILE__);
-        throw exc;
-      }
 
       if (debugLvl_ > 0) {
         //std::cout << "  Jacobian^T of extrapolation before Projection:\n";
@@ -2135,7 +2131,6 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
         jacPtr(i,0) -= norm*A [0];   jacPtr(i,1) -= norm*A [1];   jacPtr(i,2) -= norm*A [2];
         jacPtr(i,3) -= norm*SA[0];   jacPtr(i,4) -= norm*SA[1];   jacPtr(i,5) -= norm*SA[2];
       }
-      checkJacProj = true;
 
       if (debugLvl_ > 0) {
         //std::cout << "  Jacobian^T of extrapolation after Projection:\n";
@@ -2161,7 +2156,7 @@ bool RKTrackRepEnergy::RKutta(const M1x4& SU,
 
   } // end of linear extrapolation to surface
 
-  return(true);
+  return;
 
 }
 
@@ -2243,9 +2238,9 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
   double remainingDist = 9e99;
   double stepTaken = 9e99;
 
-  MaterialEffects::getInstance()->initTrack(state7[0] + 0.1*MINSTEP*copysign(state7[3], SLDist),
-                                            state7[1] + 0.1*MINSTEP*copysign(state7[4], SLDist),
-                                            state7[2] + 0.1*MINSTEP*copysign(state7[5], SLDist),
+  MaterialEffects::getInstance()->initTrack(state7[0], // + 0.1*MINSTEP*copysign(state7[3], SLDist),
+                                            state7[1], // + 0.1*MINSTEP*copysign(state7[4], SLDist),
+                                            state7[2], // + 0.1*MINSTEP*copysign(state7[5], SLDist),
                                             copysign(state7[3], SLDist),
                                             copysign(state7[4], SLDist),
                                             copysign(state7[5], SLDist));
@@ -2473,18 +2468,13 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     isAtBoundary = false;
 
     // propagation
-    bool checkJacProj = false;
     StepLimits limits;
     limits.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
     double pStart = fabs(charge / state7[6]);
-    if( ! RKutta(SU, destPlane, charge, mass, state7, fillExtrapSteps ? &J_MMT : 0,
-		 coveredDistance, flightTime, checkJacProj, noiseProjection,
-		 limits, onlyOneStep) ) {
-      Exception exc("RKTrackRepEnergy::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
-      exc.setFatal();
-      throw exc;
-    }
+    RKutta(SU, destPlane, charge, mass, state7, fillExtrapSteps ? &J_MMT : 0,
+           coveredDistance, flightTime, noiseProjection,
+           limits, onlyOneStep);
 
     bool atPlane(limits.getLowestLimit().first == stp_plane);
     if (limits.getLowestLimit().first == stp_boundary)
@@ -2529,14 +2519,12 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     } // finished MatFX
 
     if (fillExtrapSteps) {
-      if( checkJacProj == true ){
-        //project the noise onto the destPlane
-        RKTools::Np_N_NpT(noiseProjection, noise);
+      //project the noise onto the destPlane
+      RKTools::Np_N_NpT(noiseProjection, noise);
 
-        if (debugLvl_ > 1) {
-          std::cout << "7D noise projected onto plane: \n";
-          noise.print();
-        }
+      if (debugLvl_ > 1) {
+        std::cout << "7D noise projected onto plane: \n";
+        noise.print();
       }
 
       // Propagate noise and Jacobian
