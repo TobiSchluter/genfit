@@ -2249,7 +2249,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
 
   // Limit step to not look ahead too far.  Mainly prevents us from
   // extrapolating long distances even though we are in thin sensors.
-  fieldCurvLimit = std::min(fieldCurvLimit, 2*slDist);
+  fieldCurvLimit = limits.getStepSign() * std::min(fabs(fieldCurvLimit), 2.*slDist);
 
   RKTrackRepEnergy::propagator extrap(this, state7, mat);
 

@@ -251,6 +251,7 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
                                 limits.getStepSign() * dir[0], limits.getStepSign() * dir[1], limits.getStepSign() * dir[2]);
 
   materialInterface_->getMaterialParameters(currentMaterial);
+  extrap.setMat(currentMaterial);
 
 
   if (debugLvl_ > 0) {
@@ -284,12 +285,12 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
       std::cout << "     find next boundary\n";
     }
     double step =  materialInterface_->findNextBoundary(extrap, boundaryStep);
-    materialInterface_->getMaterialParameters(materialAfter);
 
-    if (debugLvl_ > 0) {
-      if (step == 0) {
+    if (step == 0) {
+      if (debugLvl_ > 0) {
         std::cout << "     materialInterface_ returned a step of 0 \n";
       }
+      break;
     }
 
     stepSize_ += step;
@@ -310,6 +311,11 @@ void MaterialEffects::stepper(AbsTrackRep::internalExtrapolator& extrap,
     double dirNow[3];
     extrap.extrapolateBy(step, posNow, dirNow);
     extrap.moveStart(posNow);
+
+    materialInterface_->initTrack(posNow[0], posNow[1], posNow[2],
+                                  dirNow[0], dirNow[1], dirNow[2]);
+    materialInterface_->getMaterialParameters(materialAfter);
+    extrap.setMat(materialAfter);
 
     if (debugLvl_ > 0) {
       std::cout << "     material after step: "; materialAfter.Print();
