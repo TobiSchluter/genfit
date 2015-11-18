@@ -357,7 +357,7 @@ class AbsTrackRep : public TObject {
   //! check if other is of same type (e.g. RKTrackRep) and has same pdg code.
   virtual bool isSame(const AbsTrackRep* other) = 0;
 
-  virtual void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
+  virtual void setDebugLvl(unsigned int lvl = 1) const {debugLvl_ = lvl;}
 
   virtual void Print(const Option_t* = "") const;
 
@@ -383,7 +383,7 @@ class AbsTrackRep : public TObject {
   //! propagation direction (-1, 0, 1) -> (backward, auto, forward)
   char propDir_;
 
-  unsigned int debugLvl_;
+  mutable unsigned int debugLvl_;
 
  public:
   ClassDef(AbsTrackRep,1)
