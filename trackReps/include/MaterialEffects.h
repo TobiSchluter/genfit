@@ -72,6 +72,7 @@ public:
     bool result = materialInterface_->initTrack(posX, posY, posZ, dirX, dirY, dirZ);
     return result;
   }
+  void getLastNormal(double normal[3]) const { return materialInterface_->getLastNormal(normal); }
   double findNextBoundaryStraightLine(double sMax)
   {
     return materialInterface_->findNextBoundaryStraightLine(sMax);

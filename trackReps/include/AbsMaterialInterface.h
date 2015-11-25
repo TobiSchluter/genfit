@@ -43,6 +43,8 @@ class AbsMaterialInterface {
    */
   virtual bool initTrack(double posX, double posY, double posZ,
                          double dirX, double dirY, double dirZ) = 0;
+  virtual void getLastNormal(double normal[3]) const = 0;
+
 
   /** @brief Get material parameters in current material
    */
@@ -65,7 +67,7 @@ class AbsMaterialInterface {
 
   virtual double findNextBoundaryStraightLine(double sMax) = 0;
 
-  virtual void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
+  void setDebugLvl(unsigned int lvl = 1) {debugLvl_ = lvl;}
 
  protected:
   unsigned int debugLvl_;

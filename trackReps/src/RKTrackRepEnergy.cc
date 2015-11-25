@@ -1222,7 +1222,7 @@ void RKTrackRepEnergy::derive(const double lambda, const M1x3& T,
     // contain kappa).  That, or their units are confused, but I don't
     // want to redo the math with their choice.  Simplified, also
     // avoids dividing by zero if dEdx = 0.
-    A(3,3) = dlambda/lambda*(3 - pow(lambda*E, -2)) + d2EdxdE;
+    A(3,3) = dlambda/lambda*(3 - pow(lambda*E, -2)) - d2EdxdE;
   }
 }
 
@@ -2006,6 +2006,24 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
       if (debugLvl_ > 0) {
         std::cout<<" at boundary -> return(true); \n";
       }
+      if (jacobianT) {
+        double An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
+        An = (fabs(An) > 1.E-7 ? 1./An : 0); // 1/A_normal
+        double E = hypot(mass, 1/state7[6]);
+        double dEdx = MaterialEffects::getInstance()->dEdx(matForStep, E);
+        double dlambda = pow(state7[6], 3) * E * dEdx;
+
+        M7x7& j = *jacobianT;
+        for(int i = 0; i<7; ++i) {
+          // FIXME USE NORMAL FROM MATERIAL
+          double normal[3];
+          MaterialEffects::getInstance()->getLastNormal(normal);
+          double norm = (j(i,0)*normal[0] + j(i,1)*normal[1] + j(i,2)*normal[2]) * An;  // dR_normal / A_normal
+          j(i,0) -= norm*A [0];   j(i,1) -= norm*A [1];   j(i,2) -= norm*A [2];
+          j(i,3) -= norm*SA[0];   j(i,4) -= norm*SA[1];   j(i,5) -= norm*SA[2];
+          j(i,6) -= norm*dlambda;
+        }
+      }
       return;
     }
 
@@ -2124,12 +2142,16 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
       }
       An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
       An = (fabs(An) > 1.E-7 ? 1./An : 0); // 1/A_normal
+      double E = hypot(mass, 1/state7[6]);
+      double dEdx = MaterialEffects::getInstance()->dEdx(matForStep, E);
+      double dlambda = pow(state7[6], 3) * E * dEdx;
 
-      M7x7& jacPtr = *jacobianT;
+      M7x7& j = *jacobianT;
       for(int i = 0; i<7; ++i) {
-        double norm = (jacPtr(i,0)*SU[0] + jacPtr(i,1)*SU[1] + jacPtr(i,2)*SU[2]) * An;  // dR_normal / A_normal
-        jacPtr(i,0) -= norm*A [0];   jacPtr(i,1) -= norm*A [1];   jacPtr(i,2) -= norm*A [2];
-        jacPtr(i,3) -= norm*SA[0];   jacPtr(i,4) -= norm*SA[1];   jacPtr(i,5) -= norm*SA[2];
+        double norm = (j(i,0)*SU[0] + j(i,1)*SU[1] + j(i,2)*SU[2]) * An;  // dR_normal / A_normal
+        j(i,0) -= norm*A [0];   j(i,1) -= norm*A [1];   j(i,2) -= norm*A [2];
+        j(i,3) -= norm*SA[0];   j(i,4) -= norm*SA[1];   j(i,5) -= norm*SA[2];
+        j(i,6) -= norm*dlambda;
       }
 
       if (debugLvl_ > 0) {
@@ -2238,9 +2260,9 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
   double remainingDist = 9e99;
   double stepTaken = 9e99;
 
-  MaterialEffects::getInstance()->initTrack(state7[0], // + 0.1*MINSTEP*copysign(state7[3], SLDist),
-                                            state7[1], // + 0.1*MINSTEP*copysign(state7[4], SLDist),
-                                            state7[2], // + 0.1*MINSTEP*copysign(state7[5], SLDist),
+  MaterialEffects::getInstance()->initTrack(state7[0],
+                                            state7[1],
+                                            state7[2],
                                             copysign(state7[3], SLDist),
                                             copysign(state7[4], SLDist),
                                             copysign(state7[5], SLDist));

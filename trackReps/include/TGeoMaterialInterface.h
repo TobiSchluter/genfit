@@ -44,6 +44,7 @@ class TGeoMaterialInterface : public AbsMaterialInterface {
    */
   bool initTrack(double posX, double posY, double posZ,
                  double dirX, double dirY, double dirZ);
+  void getLastNormal(double normal[3]) const { normal[0] = normal[1] = 0; normal[2] = 1.; }
 
   /** @brief Get material parameters in current material
    */
