@@ -55,8 +55,8 @@ RKTrackRepEnergy::RKTrackRepEnergy(int pdgCode, char propDir) :
   AbsTrackRep(pdgCode, propDir),
   lastStartState_(this),
   lastEndState_(this),
-  fJacobian_(5,5),
-  fNoise_(5),
+  fJacobian_(nLocal,nLocal),
+  fNoise_(nLocal),
   useCache_(false)
 {
   initArrays();
@@ -88,8 +88,8 @@ double RKTrackRepEnergy::extrapolateToPlane(StateOnPlane& state,
   checkCache(state, plane);
 
   // to 7D
-  M1x7 state7 = {{0, 0, 0, 0, 0, 0, 0}};
-  getState7(state, state7);
+  tVectGlobal stateGlobal;
+  getStateGlobal(state, stateGlobal);
 
   TMatrixDSym* covPtr(NULL);
   bool fillExtrapSteps(calcJacobianNoise);
@@ -101,16 +101,16 @@ double RKTrackRepEnergy::extrapolateToPlane(StateOnPlane& state,
   // actual extrapolation
   bool isAtBoundary(false);
   double flightTime( 0. );
-  double coveredDistance( Extrap(*(state.getPlane()), *plane, getCharge(state), getMass(state), isAtBoundary, state7, flightTime, fillExtrapSteps, covPtr, false, stopAtBoundary) );
+  double coveredDistance( Extrap(*(state.getPlane()), *plane, getCharge(state), getMass(state), isAtBoundary, stateGlobal, flightTime, fillExtrapSteps, covPtr, false, stopAtBoundary) );
 
   SharedPlanePtr finalPlane = plane;
   if (stopAtBoundary && isAtBoundary) {
-    finalPlane = SharedPlanePtr(new DetPlane(TVector3(state7[0], state7[1], state7[2]),
-					     TVector3(state7[3], state7[4], state7[5])));
+    finalPlane = SharedPlanePtr(new DetPlane(TVector3(stateGlobal[0], stateGlobal[1], stateGlobal[2]),
+					     TVector3(stateGlobal[3], stateGlobal[4], stateGlobal[5])));
   }
 
   // back to 5D
-  getState5(state, finalPlane, state7);
+  getStateLocal(state, finalPlane, stateGlobal);
   setTime(state, getTime(state) + flightTime);
   lastEndState_ = state;
 
@@ -133,8 +133,8 @@ double RKTrackRepEnergy::extrapolateToLine(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  tVectGlobal stateGlobal;
+  getStateGlobal(state, stateGlobal);
 
   bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
@@ -145,7 +145,7 @@ double RKTrackRepEnergy::extrapolateToLine(StateOnPlane& state,
   double charge = getCharge(state);
   double mass = getMass(state);
   double flightTime = 0;
-  TVector3 dir(state7[3], state7[4], state7[5]);
+  TVector3 dir(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
   TVector3 lastDir(0,0,0);
   TVector3 poca, poca_onwire;
   bool isAtBoundary(false);
@@ -164,11 +164,11 @@ double RKTrackRepEnergy::extrapolateToLine(StateOnPlane& state,
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, stateGlobal, flightTime, false, NULL, true, stopAtBoundary, maxStep);
     tracklength += step;
 
-    dir.SetXYZ(state7[3], state7[4], state7[5]);
-    poca.SetXYZ(state7[0], state7[1], state7[2]);
+    dir.SetXYZ(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
+    poca.SetXYZ(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
     poca_onwire = pocaOnLine(linePoint, lineDirection, poca);
 
     // check break conditions
@@ -194,12 +194,12 @@ double RKTrackRepEnergy::extrapolateToLine(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    getState5(lastEndState_, plane, state7);
+    getStateLocal(lastEndState_, plane, stateGlobal);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
   }
   else {
-    getState5(state, plane, state7);
+    getStateLocal(state, plane, stateGlobal);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -228,8 +228,8 @@ double RKTrackRepEnergy::extrapToPoint(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  tVectGlobal stateGlobal;
+  getStateGlobal(state, stateGlobal);
 
   bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
@@ -237,7 +237,7 @@ double RKTrackRepEnergy::extrapToPoint(StateOnPlane& state,
   }
 
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
-  TVector3 dir(state7[3], state7[4], state7[5]);
+  TVector3 dir(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
   if (G != NULL) {
     if(G->GetNrows() != 3) {
       Exception exc("RKTrackRepEnergy::extrapolateToLine ==> G is not 3x3",__LINE__,__FILE__);
@@ -268,14 +268,14 @@ double RKTrackRepEnergy::extrapToPoint(StateOnPlane& state,
     lastStep = step;
     lastDir = dir;
 
-    step = this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    step = this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, stateGlobal, flightTime, false, NULL, true, stopAtBoundary, maxStep);
     tracklength += step;
 
-    dir.SetXYZ(state7[3], state7[4], state7[5]);
+    dir.SetXYZ(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
     if (G != NULL) {
       dir = TMatrix(*G) * dir;
     }
-    poca.SetXYZ(state7[0], state7[1], state7[2]);
+    poca.SetXYZ(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
@@ -304,12 +304,12 @@ double RKTrackRepEnergy::extrapToPoint(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    getState5(lastEndState_, plane, state7);
+    getStateLocal(lastEndState_, plane, stateGlobal);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
   }
   else {
-    getState5(state, plane, state7);
+    getStateLocal(state, plane, stateGlobal);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -340,8 +340,8 @@ double RKTrackRepEnergy::extrapolateToCylinder(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  tVectGlobal stateGlobal;
+  getStateGlobal(state, stateGlobal);
 
   bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
@@ -368,8 +368,8 @@ double RKTrackRepEnergy::extrapolateToCylinder(StateOnPlane& state,
       throw exc;
     }
 
-    pos.SetXYZ(state7[0], state7[1], state7[2]);
-    dir.SetXYZ(state7[3], state7[4], state7[5]);
+    pos.SetXYZ(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
+    dir.SetXYZ(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
 
     // solve quadratic equation
     TVector3 AO = (pos - linePoint);
@@ -410,12 +410,12 @@ double RKTrackRepEnergy::extrapolateToCylinder(StateOnPlane& state,
     plane->setO(dest);
     plane->setUV((dest-linePoint).Cross(lineDirection), lineDirection);
 
-    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, stateGlobal, flightTime, false, NULL, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
-      pos.SetXYZ(state7[0], state7[1], state7[2]);
-      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      pos.SetXYZ(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
+      dir.SetXYZ(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
       plane->setO(pos);
       plane->setUV((pos-linePoint).Cross(lineDirection), lineDirection);
       break;
@@ -429,12 +429,12 @@ double RKTrackRepEnergy::extrapolateToCylinder(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    getState5(lastEndState_, plane, state7);
+    getStateLocal(lastEndState_, plane, stateGlobal);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
   }
   else {
-    getState5(state, plane, state7);
+    getStateLocal(state, plane, stateGlobal);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -460,8 +460,8 @@ double RKTrackRepEnergy::extrapolateToCone(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  tVectGlobal stateGlobal;
+  getStateGlobal(state, stateGlobal);
 
   bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
@@ -488,8 +488,8 @@ double RKTrackRepEnergy::extrapolateToCone(StateOnPlane& state,
       throw exc;
     }
 
-    pos.SetXYZ(state7[0], state7[1], state7[2]);
-    dir.SetXYZ(state7[3], state7[4], state7[5]);
+    pos.SetXYZ(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
+    dir.SetXYZ(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
 
     // solve quadratic equation a k^2 + 2 b k + c = 0
     // a = (U . D)^2 - cos^2 alpha * U^2
@@ -539,12 +539,12 @@ double RKTrackRepEnergy::extrapolateToCone(StateOnPlane& state,
     plane->setO(dest);
     plane->setUV((dest-conePoint).Cross(coneDirection), dest-conePoint);
 
-    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, stateGlobal, flightTime, false, NULL, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
-      pos.SetXYZ(state7[0], state7[1], state7[2]);
-      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      pos.SetXYZ(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
+      dir.SetXYZ(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
       plane->setO(pos);
       plane->setUV((pos-conePoint).Cross(coneDirection), pos-conePoint);
       break;
@@ -558,12 +558,12 @@ double RKTrackRepEnergy::extrapolateToCone(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    getState5(lastEndState_, plane, state7);
+    getStateLocal(lastEndState_, plane, stateGlobal);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
   }
   else {
-    getState5(state, plane, state7);
+    getStateLocal(state, plane, stateGlobal);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -588,8 +588,8 @@ double RKTrackRepEnergy::extrapolateToSphere(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  tVectGlobal stateGlobal;
+  getStateGlobal(state, stateGlobal);
 
   bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
@@ -616,8 +616,8 @@ double RKTrackRepEnergy::extrapolateToSphere(StateOnPlane& state,
       throw exc;
     }
 
-    pos.SetXYZ(state7[0], state7[1], state7[2]);
-    dir.SetXYZ(state7[3], state7[4], state7[5]);
+    pos.SetXYZ(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
+    dir.SetXYZ(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
 
     // solve quadratic equation
     TVector3 AO = (pos - point);
@@ -646,12 +646,12 @@ double RKTrackRepEnergy::extrapolateToSphere(StateOnPlane& state,
 
     plane->setON(dest, dest-point);
 
-    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, maxStep);
+    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, stateGlobal, flightTime, false, NULL, true, stopAtBoundary, maxStep);
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
-      pos.SetXYZ(state7[0], state7[1], state7[2]);
-      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      pos.SetXYZ(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
+      dir.SetXYZ(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
       plane->setON(pos, pos-point);
       break;
     }
@@ -665,12 +665,12 @@ double RKTrackRepEnergy::extrapolateToSphere(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    getState5(lastEndState_, plane, state7);
+    getStateLocal(lastEndState_, plane, stateGlobal);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
   }
   else {
-    getState5(state, plane, state7);
+    getStateLocal(state, plane, stateGlobal);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -694,8 +694,8 @@ double RKTrackRepEnergy::extrapolateBy(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x7 state7;
-  getState7(state, state7);
+  tVectGlobal stateGlobal;
+  getStateGlobal(state, stateGlobal);
 
   bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
@@ -722,19 +722,19 @@ double RKTrackRepEnergy::extrapolateBy(StateOnPlane& state,
       throw exc;
     }
 
-    pos.SetXYZ(state7[0], state7[1], state7[2]);
-    dir.SetXYZ(state7[3], state7[4], state7[5]);
+    pos.SetXYZ(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
+    dir.SetXYZ(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
 
     dest = pos + 1.5*(step-tracklength) * dir;
 
     plane->setON(dest, dir);
 
-    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, state7, flightTime, false, NULL, true, stopAtBoundary, (step-tracklength));
+    tracklength += this->Extrap(startPlane, *plane, charge, mass, isAtBoundary, stateGlobal, flightTime, false, NULL, true, stopAtBoundary, (step-tracklength));
 
     // check break conditions
     if (stopAtBoundary && isAtBoundary) {
-      pos.SetXYZ(state7[0], state7[1], state7[2]);
-      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      pos.SetXYZ(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
+      dir.SetXYZ(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
       plane->setON(pos, dir);
       break;
     }
@@ -743,8 +743,8 @@ double RKTrackRepEnergy::extrapolateBy(StateOnPlane& state,
       if (debugLvl_ > 0) {
         std::cout << "RKTrackRepEnergy::extrapolateBy(): reached after " << iterations << " iterations. \n";
       }
-      pos.SetXYZ(state7[0], state7[1], state7[2]);
-      dir.SetXYZ(state7[3], state7[4], state7[5]);
+      pos.SetXYZ(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
+      dir.SetXYZ(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
       plane->setON(pos, dir);
       break;
     }
@@ -755,12 +755,12 @@ double RKTrackRepEnergy::extrapolateBy(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    getState5(lastEndState_, plane, state7);
+    getStateLocal(lastEndState_, plane, stateGlobal);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
   }
   else {
-    getState5(state, plane, state7);
+    getStateLocal(state, plane, stateGlobal);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -771,30 +771,30 @@ double RKTrackRepEnergy::extrapolateBy(StateOnPlane& state,
 
 
 TVector3 RKTrackRepEnergy::getPos(const StateOnPlane& state) const {
-  M1x7 state7;
-  getState7(state, state7);
+  tVectGlobal stateGlobal;
+  getStateGlobal(state, stateGlobal);
 
-  return TVector3(state7[0], state7[1], state7[2]);
+  return TVector3(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
 }
 
 
 TVector3 RKTrackRepEnergy::getMom(const StateOnPlane& state) const {
-  M1x7 state7 = {{0, 0, 0, 0, 0, 0, 0}};
-  getState7(state, state7);
+  tVectGlobal stateGlobal;
+  getStateGlobal(state, stateGlobal);
 
-  TVector3 mom(state7[3], state7[4], state7[5]);
-  mom.SetMag(getCharge(state)/state7[6]);
+  TVector3 mom(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
+  mom.SetMag(getCharge(state)/stateGlobal[6]);
   return mom;
 }
 
 
 void RKTrackRepEnergy::getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const {
-  M1x7 state7 = {{0, 0, 0, 0, 0, 0, 0}};
-  getState7(state, state7);
+  tVectGlobal stateGlobal;
+  getStateGlobal(state, stateGlobal);
 
-  pos.SetXYZ(state7[0], state7[1], state7[2]);
-  mom.SetXYZ(state7[3], state7[4], state7[5]);
-  mom.SetMag(getCharge(state)/state7[6]);
+  pos.SetXYZ(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
+  mom.SetXYZ(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
+  mom.SetMag(getCharge(state)/stateGlobal[6]);
 }
 
 
@@ -884,10 +884,10 @@ double RKTrackRepEnergy::getTime(const StateOnPlane& state) const {
 }
 
 
-void RKTrackRepEnergy::projectJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
-					       const M1x7& destState7, const DetPlane& destPlane,
-					       const M7x7& jac, const M7x7& noise,
-					       M5x5& jac5, M5x5& noise5) const
+void RKTrackRepEnergy::projectJacobianAndNoise(const tVectGlobal& startStateGlobal, const DetPlane& startPlane,
+					       const tVectGlobal& destStateGlobal, const DetPlane& destPlane,
+					       const tMatGlobal& jac, const tMatGlobal& noise,
+					       tMatLocal& jac5, tMatLocal& noise5) const
 {
   // FIXME It would probably save a lot more computing time if --
   // during assembly of the Jacobian -- we started from the projection
@@ -898,7 +898,7 @@ void RKTrackRepEnergy::projectJacobianAndNoise(const M1x7& startState7, const De
   // all the time when dealing with noise, unfortunately.
 
   // Project into 5x5 space.
-  M1x3 pTilde = {{startState7[3], startState7[4], startState7[5]}};
+  M1x3 pTilde = {{startStateGlobal[3], startStateGlobal[4], startStateGlobal[5]}};
   const TVector3& normal = startPlane.getNormal();
   double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
   double spu = pTildeW > 0 ? 1 : -1;
@@ -906,9 +906,9 @@ void RKTrackRepEnergy::projectJacobianAndNoise(const M1x7& startState7, const De
   M5x7 J_pM;
   calcJ_pM_5x7(J_pM, startPlane.getU(), startPlane.getV(), pTilde, spu);
   M7x5 J_Mp;
-  calcJ_Mp_7x5(J_Mp, destPlane.getU(), destPlane.getV(), *((M1x3*) &destState7[3]));
+  calcJ_Mp_7x5(J_Mp, destPlane.getU(), destPlane.getV(), *((M1x3*) &destStateGlobal[3]));
   // Because the helper function wants transposed input, we transpose the input ...
-  M7x7 jacT;
+  tMatGlobal jacT;
   for (int iRow = 0; iRow < 7; ++iRow)
     for (int iCol = 0; iCol < 7; ++iCol)
       jacT(iRow,iCol) = jac(iCol,iRow);
@@ -924,14 +924,14 @@ void RKTrackRepEnergy::projectJacobianAndNoise(const M1x7& startState7, const De
 
 void RKTrackRepEnergy::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const {
 
-  jacobian.ResizeTo(5,5);
+  jacobian.ResizeTo(nLocal,nLocal);
   jacobian = fJacobian_;
 
-  noise.ResizeTo(5,5);
+  noise.ResizeTo(nLocal,nLocal);
   noise = fNoise_;
 
   // lastEndState_ = jacobian * lastStartState_  + deltaState
-  deltaState.ResizeTo(5);
+  deltaState.ResizeTo(nLocal);
   // Calculate this without temporaries:
   //deltaState = lastEndState_.getState() - jacobian * lastStartState_.getState()
   deltaState = lastStartState_.getState();
@@ -952,7 +952,7 @@ void RKTrackRepEnergy::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDS
     std::cout << "RKTrackRepEnergy::getBackwardJacobianAndNoise " << std::endl;
   }
 
-  jacobian.ResizeTo(5,5);
+  jacobian.ResizeTo(nLocal,nLocal);
   jacobian = fJacobian_;
   bool status = TDecompLU::InvertLU(jacobian, 0.0);
   if(status == 0){
@@ -961,12 +961,12 @@ void RKTrackRepEnergy::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDS
     throw e;
   }
 
-  noise.ResizeTo(5,5);
+  noise.ResizeTo(nLocal,nLocal);
   noise = fNoise_;
   noise.Similarity(jacobian);
 
   // lastStartState_ = jacobian * lastEndState_  + deltaState
-  deltaState.ResizeTo(5);
+  deltaState.ResizeTo(nLocal);
   deltaState = lastStartState_.getState() - jacobian * lastEndState_.getState();
 }
 
@@ -1031,24 +1031,24 @@ void RKTrackRepEnergy::setPosMom(StateOnPlane& state, const TVector3& pos, const
 
   if (state.getPlane() != NULL && state.getPlane()->distance(pos) < MINSTEP) { // pos is on plane -> do not change plane!
 
-    M1x7 state7;
+    tVectGlobal stateGlobal;
 
-    state7[0] = pos.X();
-    state7[1] = pos.Y();
-    state7[2] = pos.Z();
+    stateGlobal[0] = pos.X();
+    stateGlobal[1] = pos.Y();
+    stateGlobal[2] = pos.Z();
 
-    state7[3] = mom.X();
-    state7[4] = mom.Y();
-    state7[5] = mom.Z();
+    stateGlobal[3] = mom.X();
+    stateGlobal[4] = mom.Y();
+    stateGlobal[5] = mom.Z();
 
     // normalize dir
-    double norm = 1. / sqrt(state7[3]*state7[3] + state7[4]*state7[4] + state7[5]*state7[5]);
+    double norm = 1. / sqrt(stateGlobal[3]*stateGlobal[3] + stateGlobal[4]*stateGlobal[4] + stateGlobal[5]*stateGlobal[5]);
     for (unsigned int i=3; i<6; ++i)
-      state7[i] *= norm;
+      stateGlobal[i] *= norm;
 
-    state7[6] = getCharge(state) * norm;
+    stateGlobal[6] = getCharge(state) * norm;
 
-    getState5(state, state.getPlane(), state7);
+    getStateLocal(state, state.getPlane(), stateGlobal);
 
   }
   else { // pos is not on plane -> create new plane!
@@ -1057,13 +1057,13 @@ void RKTrackRepEnergy::setPosMom(StateOnPlane& state, const TVector3& pos, const
     SharedPlanePtr plane(new DetPlane(pos, mom));
     state.setPlane(plane);
 
-    TVectorD& state5(state.getState());
+    TVectorD& stateLocal(state.getState());
 
-    state5(0) = getCharge(state)/mom.Mag(); // q/p
-    state5(1) = 0.; // u'
-    state5(2) = 0.; // v'
-    state5(3) = 0.; // u
-    state5(4) = 0.; // v
+    stateLocal(0) = getCharge(state)/mom.Mag(); // q/p
+    stateLocal(1) = 0.; // u'
+    stateLocal(2) = 0.; // v'
+    stateLocal(3) = 0.; // u
+    stateLocal(4) = 0.; // v
 
     setSpu(state, 1.);
   }
@@ -1131,12 +1131,12 @@ void RKTrackRepEnergy::setPosMomCov(MeasuredStateOnPlane& state, const TVector3&
 
   setPosMom(state, pos, mom); // charge does not change!
 
-  M1x7 state7;
-  getState7(state, state7);
+  tVectGlobal stateGlobal;
+  getStateGlobal(state, stateGlobal);
 
   const M6x6& cov6x6_( *((M6x6*) cov6x6.GetMatrixArray()) );
 
-  transformM6P(cov6x6_, state7, state);
+  transformM6P(cov6x6_, stateGlobal, state);
 
 }
 
@@ -1156,12 +1156,12 @@ void RKTrackRepEnergy::setPosMomCov(MeasuredStateOnPlane& state, const TVectorD&
   TVector3 mom(state6(3), state6(4), state6(5));
   setPosMom(state, pos, mom); // charge does not change!
 
-  M1x7 state7;
-  getState7(state, state7);
+  tVectGlobal stateGlobal;
+  getStateGlobal(state, stateGlobal);
 
   const M6x6& cov6x6_( *((M6x6*) cov6x6.GetMatrixArray()) );
 
-  transformM6P(cov6x6_, state7, state);
+  transformM6P(cov6x6_, stateGlobal, state);
 
 }
 
@@ -1227,15 +1227,15 @@ void RKTrackRepEnergy::derive(const double lambda, const M1x3& T,
 }
 
 
-double RKTrackRepEnergy::RKintegrate(const M1x7& state7, const double h,
+double RKTrackRepEnergy::RKintegrate(const tVectGlobal& stateGlobal, const double h,
                                      const MaterialProperties& mat,
-                                     M1x7& newState7,
-                                     RKMatrix<7, 7>* pJ = 0) const
+                                     tVectGlobal& newStateGlobal,
+                                     tMatGlobal* pJ = 0) const
 {
   const double m = TDatabasePDG::Instance()->GetParticle(getPDG())->Mass();
   const double pdgCharge( this->getPDGCharge() );
   // return pdgCharge with sign of q/p
-  const double charge = copysign(pdgCharge, state7[6]);
+  const double charge = copysign(pdgCharge, stateGlobal[6]);
 
   RKMatrix<4, 4> *pA1 = 0, *pA2 = 0, *pA3 = 0, *pA4 = 0;
   RKMatrix<4, 4> A1, A2, A3, A4;
@@ -1243,11 +1243,11 @@ double RKTrackRepEnergy::RKintegrate(const M1x7& state7, const double h,
     pA1 = &A1; pA2 = &A2, pA3 = &A3, pA4 = &A4;
   }
 
-  const M1x3 rStart = {{ state7[0], state7[1], state7[2] }};
-  const M1x3 TStart = {{ state7[3], state7[4], state7[5] }};
+  const M1x3 rStart = {{ stateGlobal[0], stateGlobal[1], stateGlobal[2] }};
+  const M1x3 TStart = {{ stateGlobal[3], stateGlobal[4], stateGlobal[5] }};
 
   MaterialEffects::getInstance()->getParticleParameters(getPDG());
-  const double lambdaStart = state7[6];
+  const double lambdaStart = stateGlobal[6];
   const double EStart = hypot(m, charge / lambdaStart);
   const double dEdxStart = MaterialEffects::getInstance()->dEdx(mat, EStart);
   const double d2EdxdEStart = MaterialEffects::getInstance()->d2EdxdE(mat, EStart);
@@ -1315,10 +1315,10 @@ double RKTrackRepEnergy::RKintegrate(const M1x7& state7, const double h,
 
   // ... and put it into the final result
   for (size_t i = 0; i < 3; ++i) {
-    newState7[i] = rFinal[i];
-    newState7[i + 3] = TFinal[i];
+    newStateGlobal[i] = rFinal[i];
+    newStateGlobal[i + 3] = TFinal[i];
   }
-  newState7[6] = lambdaFinal;
+  newStateGlobal[6] = lambdaFinal;
 
   double epsLambda = fabs(dLambda1 - dLambda2 - dLambda3 + dLambda4);
   M1x3 epsT;
@@ -1337,7 +1337,7 @@ double RKTrackRepEnergy::RKintegrate(const M1x7& state7, const double h,
     // states (everything else wouldn't make sense).  We also assume
     // that Lund's C equals 0 (i.e. no field gradients, no material
     // density gradients).
-    RKMatrix<7, 7> J;
+    tMatGlobal J;
     std::fill(J.begin(), J.end(), 0);
     for (int i = 0; i < 3; ++i) {
       J(i, i) = 1;
@@ -1353,7 +1353,7 @@ double RKTrackRepEnergy::RKintegrate(const M1x7& state7, const double h,
 
     // Life is a bit miserable: we have to take into account the
     // normalization of T while putting together the final Jacobian.
-    RKMatrix<7, 7>& Jnew = *pJ;
+    tMatGlobal& Jnew = *pJ;
     Jnew = J;
     for (int iRow = 3; iRow < 6; ++iRow) {
       for (int iCol = 3; iCol < 6; ++iCol) {
@@ -1361,9 +1361,13 @@ double RKTrackRepEnergy::RKintegrate(const M1x7& state7, const double h,
         // add the derivative of the norm ...
         double sum = 0;
         for (int k = 3; k < 6; ++k) {
-          sum += newState7[k] * J(k, iCol);
+          sum += newStateGlobal[k] * J(k, iCol);
         }
-        Jnew(iRow, iCol) -= newState7[iRow] * sum / norm;
+        // We don't divide by norm^3 as it appears if you calculate
+        // this by hand, because newStateGlobal already contains a factor
+        // norm and appears twice.  I.e., this expression contains the
+        // correct power of norm.
+        Jnew(iRow, iCol) -= newStateGlobal[iRow] * sum / norm;
       }
     }
   }
@@ -1373,8 +1377,8 @@ double RKTrackRepEnergy::RKintegrate(const M1x7& state7, const double h,
 
 
 
-double RKTrackRepEnergy::RKPropagate(M1x7& state7,
-                                     M7x7* jacobianT,
+double RKTrackRepEnergy::RKPropagate(tVectGlobal& stateGlobal,
+                                     tMatGlobal* jacobianT,
                                      M1x3& SA,
                                      double S,
                                      const MaterialProperties& mat) const
@@ -1392,11 +1396,11 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
   //   "Tracking And Track Fitting"
   //   http://inspirehep.net/record/160548
 
-  M1x7 oldState7(state7);
-  M1x7 newState7;
-  M7x7 propJac;
-  double est = RKintegrate(state7, S, mat, newState7, jacobianT ? &propJac : 0);
-  M7x7 newJacT;
+  tVectGlobal oldStateGlobal(stateGlobal);
+  tVectGlobal newStateGlobal;
+  tMatGlobal propJac;
+  double est = RKintegrate(stateGlobal, S, mat, newStateGlobal, jacobianT ? &propJac : 0);
+  tMatGlobal newJacT;
   if (jacobianT) {
     if (0) {
       // Numerically evaluate the Jacobian, compare
@@ -1407,7 +1411,7 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
       const double defaultStepX = 1.E-8;
       double stepX;
 
-      M7x7 numJac;
+      tMatGlobal numJac;
 
       // Calculate derivative for all three dimensions successively.
       // The algorithm follows the one in TF1::Derivative() :
@@ -1415,11 +1419,11 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
       // with D(h) = (f(x + h) - f(x - h)) / (2 h).
       //
       // Could perhaps do better by also using f(x) which would be stB.
-      M1x7 rightShort, rightFull;
-      M1x7 leftShort, leftFull;
-      for (size_t i = 0; i < 7; ++i) {
+      tVectGlobal rightShort, rightFull;
+      tVectGlobal leftShort, leftFull;
+      for (size_t i = 0; i < nGlobal; ++i) {
         {
-          M1x7 stateCopy(state7);
+          tVectGlobal stateCopy(stateGlobal);
           double temp = stateCopy[i] + defaultStepX / 2;
           // Find the actual size of the step, which will differ from
           // defaultStepX due to roundoff.  This is the step-size we will
@@ -1439,24 +1443,24 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
           RKintegrate(stateCopy, S, mat, rightShort, 0);
         }
         {
-          M1x7 stateCopy(state7);
+          tVectGlobal stateCopy(stateGlobal);
           stateCopy[i] -= stepX / 2;
           RKintegrate(stateCopy, S, mat, leftShort, 0);
         }
         {
-          M1x7 stateCopy(state7);
+          tVectGlobal stateCopy(stateGlobal);
           stateCopy[i] += stepX;
           RKintegrate(stateCopy, S, mat, rightFull, 0);
         }
         {
-          M1x7 stateCopy(state7);
+          tVectGlobal stateCopy(stateGlobal);
           stateCopy[i] -= stepX;
           RKintegrate(stateCopy, S, mat, leftFull, 0);
         }
 
         // Calculate the derivatives for the individual components of
         // the track parameters.
-        for (size_t j = 0; j < 7; ++j) {
+        for (size_t j = 0; j < nGlobal; ++j) {
           double derivFull = (rightFull[j] - leftFull[j]) / 2 / stepX;
           double derivShort = (rightShort[j] - leftShort[j]) / stepX;
 
@@ -1469,10 +1473,10 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
       //propJac = numJac;
     }
 
-    for (int i = 0; i < 7; ++i) {
-      for (int j = 0; j < 7; ++j) {
+    for (int i = 0; i < nGlobal; ++i) {
+      for (int j = 0; j < nGlobal; ++j) {
         double sum = 0;
-        for (int k = 0; k < 7; ++k) {
+        for (int k = 0; k < nGlobal; ++k) {
           sum += propJac(i, k) * (*jacobianT)(j, k);
         }
         newJacT(j, i) = sum;
@@ -1484,23 +1488,19 @@ double RKTrackRepEnergy::RKPropagate(M1x7& state7,
 
   double EST = est; // FIXME : why over S?
 
-  SA[0] = newState7[3] - oldState7[3];
-  SA[1] = newState7[4] - oldState7[4];
-  SA[2] = newState7[5] - oldState7[5];
+  SA[0] = newStateGlobal[3] - oldStateGlobal[3];
+  SA[1] = newStateGlobal[4] - oldStateGlobal[4];
+  SA[2] = newStateGlobal[5] - oldStateGlobal[5];
 
-  state7 = newState7;
+  stateGlobal = newStateGlobal;
 
   if (jacobianT) {
-    for (int i = 0; i < 7; ++i) {
-      for (int j = 0; j < 7; ++j) {
-        (*jacobianT)(i, j) = newJacT(i, j);
-      }
-    }
+    std::copy(newJacT.begin(), newJacT.end(), jacobianT->begin());
   }
   /*
   std::cout << S << std::endl;
-  oldState7.print();
-  newState7.print();
+  oldStateGlobal.print();
+  newStateGlobal.print();
   */
   if (debugLvl_ > 0) {
     std::cout << "    RKTrackRepEnergy::RKPropagate. Step = "<< S << "; quality EST = " << EST  << " \n";
@@ -1530,10 +1530,10 @@ void RKTrackRepEnergy::initArrays() const {
 }
 
 
-void RKTrackRepEnergy::getState7(const StateOnPlane& state, M1x7& state7) const {
+void RKTrackRepEnergy::getStateGlobal(const StateOnPlane& state, tVectGlobal& stateGlobal) const {
 
   if (dynamic_cast<const MeasurementOnPlane*>(&state) != NULL) {
-    Exception exc("RKTrackRepEnergy::getState7 - cannot get pos or mom from a MeasurementOnPlane",__LINE__,__FILE__);
+    Exception exc("RKTrackRepEnergy::getStateGlobal - cannot get pos or mom from a MeasurementOnPlane",__LINE__,__FILE__);
     exc.setFatal();
     throw exc;
   }
@@ -1543,30 +1543,30 @@ void RKTrackRepEnergy::getState7(const StateOnPlane& state, M1x7& state7) const 
   const TVector3& O(state.getPlane()->getO());
   const TVector3& W(state.getPlane()->getNormal());
 
-  assert(state.getState().GetNrows() == 5);
-  const double* state5 = state.getState().GetMatrixArray();
+  assert(state.getState().GetNrows() == nLocal);
+  const double* stateLocal = state.getState().GetMatrixArray();
 
   double spu = getSpu(state);
 
-  state7[0] = O.X() + state5[3]*U.X() + state5[4]*V.X(); // x
-  state7[1] = O.Y() + state5[3]*U.Y() + state5[4]*V.Y(); // y
-  state7[2] = O.Z() + state5[3]*U.Z() + state5[4]*V.Z(); // z
+  stateGlobal[0] = O.X() + stateLocal[3]*U.X() + stateLocal[4]*V.X(); // x
+  stateGlobal[1] = O.Y() + stateLocal[3]*U.Y() + stateLocal[4]*V.Y(); // y
+  stateGlobal[2] = O.Z() + stateLocal[3]*U.Z() + stateLocal[4]*V.Z(); // z
 
-  state7[3] = spu * (W.X() + state5[1]*U.X() + state5[2]*V.X()); // a_x
-  state7[4] = spu * (W.Y() + state5[1]*U.Y() + state5[2]*V.Y()); // a_y
-  state7[5] = spu * (W.Z() + state5[1]*U.Z() + state5[2]*V.Z()); // a_z
+  stateGlobal[3] = spu * (W.X() + stateLocal[1]*U.X() + stateLocal[2]*V.X()); // a_x
+  stateGlobal[4] = spu * (W.Y() + stateLocal[1]*U.Y() + stateLocal[2]*V.Y()); // a_y
+  stateGlobal[5] = spu * (W.Z() + stateLocal[1]*U.Z() + stateLocal[2]*V.Z()); // a_z
 
   // normalize dir
-  double norm = 1. / sqrt(state7[3]*state7[3] + state7[4]*state7[4] + state7[5]*state7[5]);
-  for (unsigned int i=3; i<6; ++i) state7[i] *= norm;
+  double norm = 1. / sqrt(stateGlobal[3]*stateGlobal[3] + stateGlobal[4]*stateGlobal[4] + stateGlobal[5]*stateGlobal[5]);
+  for (unsigned int i=3; i<6; ++i) stateGlobal[i] *= norm;
 
-  state7[6] = state5[0]; // q/p
+  stateGlobal[6] = stateLocal[0]; // q/p
 }
 
 
-void RKTrackRepEnergy::getState5(StateOnPlane& state, const SharedPlanePtr& plane, const M1x7& state7) const {
+void RKTrackRepEnergy::getStateLocal(StateOnPlane& state, const SharedPlanePtr& plane, const tVectGlobal& stateGlobal) const {
 
-  // state5: (q/p, u', v'. u, v)
+  // stateLocal: (q/p, u', v'. u, v)
 
   double spu(1.);
 
@@ -1577,22 +1577,22 @@ void RKTrackRepEnergy::getState5(StateOnPlane& state, const SharedPlanePtr& plan
   const TVector3& W(plane->getNormal());
 
   // Set spu according to whether we go along the normal or in the opposite direction.
-  double AtW( state7[3]*W.X() + state7[4]*W.Y() + state7[5]*W.Z() );
+  double AtW( stateGlobal[3]*W.X() + stateGlobal[4]*W.Y() + stateGlobal[5]*W.Z() );
   if (AtW < 0.) {
     spu = -1.;
   }
 
-  double* state5 = state.getState().GetMatrixArray();
+  double* stateLocal = state.getState().GetMatrixArray();
 
-  state5[0] = state7[6]; // q/p
-  state5[1] = (state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z()) / AtW; // u' = (A * U) / (A * W)
-  state5[2] = (state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z()) / AtW; // v' = (A * V) / (A * W)
-  state5[3] = ((state7[0]-O.X())*U.X() +
-               (state7[1]-O.Y())*U.Y() +
-               (state7[2]-O.Z())*U.Z()); // u = (pos - O) * U
-  state5[4] = ((state7[0]-O.X())*V.X() +
-               (state7[1]-O.Y())*V.Y() +
-               (state7[2]-O.Z())*V.Z()); // v = (pos - O) * V
+  stateLocal[0] = stateGlobal[6]; // q/p
+  stateLocal[1] = (stateGlobal[3]*U.X() + stateGlobal[4]*U.Y() + stateGlobal[5]*U.Z()) / AtW; // u' = (A * U) / (A * W)
+  stateLocal[2] = (stateGlobal[3]*V.X() + stateGlobal[4]*V.Y() + stateGlobal[5]*V.Z()) / AtW; // v' = (A * V) / (A * W)
+  stateLocal[3] = ((stateGlobal[0]-O.X())*U.X() +
+                   (stateGlobal[1]-O.Y())*U.Y() +
+                   (stateGlobal[2]-O.Z())*U.Z()); // u = (pos - O) * U
+  stateLocal[4] = ((stateGlobal[0]-O.X())*V.X() +
+                   (stateGlobal[1]-O.Y())*V.Y() +
+                   (stateGlobal[2]-O.Z())*V.Z()); // v = (pos - O) * V
 
   setSpu(state, spu);
 
@@ -1601,20 +1601,20 @@ void RKTrackRepEnergy::getState5(StateOnPlane& state, const SharedPlanePtr& plan
 
 
 void RKTrackRepEnergy::transformPM7(const MeasuredStateOnPlane& state,
-                              M7x7& out7x7) const {
+                              tMatGlobal& out7x7) const {
 
   // get vectors and aux variables
   const TVector3& U(state.getPlane()->getU());
   const TVector3& V(state.getPlane()->getV());
   const TVector3& W(state.getPlane()->getNormal());
 
-  const TVectorD& state5(state.getState());
+  const TVectorD& stateLocal(state.getState());
   double spu(getSpu(state));
 
   M1x3 pTilde;
-  pTilde[0] = spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()); // a_x
-  pTilde[1] = spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()); // a_y
-  pTilde[2] = spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()); // a_z
+  pTilde[0] = spu * (W.X() + stateLocal(1)*U.X() + stateLocal(2)*V.X()); // a_x
+  pTilde[1] = spu * (W.Y() + stateLocal(1)*U.Y() + stateLocal(2)*V.Y()); // a_y
+  pTilde[2] = spu * (W.Z() + stateLocal(1)*U.Z() + stateLocal(2)*V.Z()); // a_z
 
   M5x7 J_pM;
   calcJ_pM_5x7(J_pM, U, V, pTilde, spu);
@@ -1622,7 +1622,7 @@ void RKTrackRepEnergy::transformPM7(const MeasuredStateOnPlane& state,
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
   // the multiplication can be done much faster directly on array level
   // out = J_pM^T * in5x5 * J_pM
-  const M5x5& in5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
+  const tMatLocal& in5x5_ = *((tMatLocal*) state.getCov().GetMatrixArray());
   RKTools::J_pMTxcov5xJ_pM(J_pM, in5x5_, out7x7);
 }
 
@@ -1701,13 +1701,13 @@ void RKTrackRepEnergy::transformPM6(const MeasuredStateOnPlane& state,
   const TVector3& V(state.getPlane()->getV());
   const TVector3& W(state.getPlane()->getNormal());
 
-  const TVectorD& state5(state.getState());
+  const TVectorD& stateLocal(state.getState());
   double spu(getSpu(state));
 
   M1x3 pTilde;
-  pTilde[0] = spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()); // a_x
-  pTilde[1] = spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()); // a_y
-  pTilde[2] = spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()); // a_z
+  pTilde[0] = spu * (W.X() + stateLocal(1)*U.X() + stateLocal(2)*V.X()); // a_x
+  pTilde[1] = spu * (W.Y() + stateLocal(1)*U.Y() + stateLocal(2)*V.Y()); // a_y
+  pTilde[2] = spu * (W.Z() + stateLocal(1)*U.Z() + stateLocal(2)*V.Z()); // a_z
 
   const double pTildeMag = sqrt(pTilde[0]*pTilde[0] + pTilde[1]*pTilde[1] + pTilde[2]*pTilde[2]);
   const double pTildeMag2 = pTildeMag*pTildeMag;
@@ -1717,7 +1717,7 @@ void RKTrackRepEnergy::transformPM6(const MeasuredStateOnPlane& state,
 
   //J_pM matrix is d(x,y,z,px,py,pz) / d(q/p,u',v',u,v)       (out is 6x6)
 
-  const double qop = state5(0);
+  const double qop = stateLocal(0);
   const double p = getCharge(state)/qop; // momentum
 
   M5x6 J_pM_5x6;
@@ -1725,45 +1725,45 @@ void RKTrackRepEnergy::transformPM6(const MeasuredStateOnPlane& state,
 
   // d(px,py,pz)/d(q/p)
   double fact = -1. * p / (pTildeMag * qop);
-  J_pM_5x6[3] = fact * pTilde[0]; // [0][3]
-  J_pM_5x6[4] = fact * pTilde[1]; // [0][4]
-  J_pM_5x6[5] = fact * pTilde[2]; // [0][5]
+  J_pM_5x6(0,3) = fact * pTilde[0];
+  J_pM_5x6(0,4) = fact * pTilde[1];
+  J_pM_5x6(0,5) = fact * pTilde[2];
   // d(px,py,pz)/d(u')
   fact = p * spu / pTildeMag;
-  J_pM_5x6[9]  = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 ); // [1][3]
-  J_pM_5x6[10] = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 ); // [1][4]
-  J_pM_5x6[11] = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 ); // [1][5]
+  J_pM_5x6(1,3) = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 );
+  J_pM_5x6(1,4) = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 );
+  J_pM_5x6(1,5) = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 );
   // d(px,py,pz)/d(v')
-  J_pM_5x6[15] = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 ); // [2][3]
-  J_pM_5x6[16] = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
-  J_pM_5x6[17] = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
+  J_pM_5x6(2,3) = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 );
+  J_pM_5x6(2,4) = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 );
+  J_pM_5x6(2,5) = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 );
   // d(x,y,z)/d(u)
-  J_pM_5x6[18] = U.X(); // [3][0]
-  J_pM_5x6[19] = U.Y(); // [3][1]
-  J_pM_5x6[20] = U.Z(); // [3][2]
+  J_pM_5x6(3,0) = U.X();
+  J_pM_5x6(3,1) = U.Y();
+  J_pM_5x6(3,2) = U.Z();
   // d(x,y,z)/d(v)
-  J_pM_5x6[24] = V.X(); // [4][0]
-  J_pM_5x6[25] = V.Y(); // [4][1]
-  J_pM_5x6[26] = V.Z(); // [4][2]
+  J_pM_5x6(4,0) = V.X();
+  J_pM_5x6(4,1) = V.Y();
+  J_pM_5x6(4,2) = V.Z();
 
 
   // do the transformation
   // out = J_pM^T * in5x5 * J_pM
-  const M5x5& in5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
+  const tMatLocal& in5x5_ = *((tMatLocal*) state.getCov().GetMatrixArray());
   RKTools::J_pMTxcov5xJ_pM(J_pM_5x6, in5x5_, out6x6);
 
 }
 
 
-void RKTrackRepEnergy::transformM7P(const M7x7& in7x7,
-                              const M1x7& state7,
+void RKTrackRepEnergy::transformM7P(const tMatGlobal& in7x7,
+                              const tVectGlobal& stateGlobal,
                               MeasuredStateOnPlane& state) const { // plane must already be set!
 
   // get vectors and aux variables
   const TVector3& U(state.getPlane()->getU());
   const TVector3& V(state.getPlane()->getV());
 
-  M1x3& A = *((M1x3*) &state7[3]);
+  M1x3& A = *((M1x3*) &stateGlobal[3]);
 
   M7x5 J_Mp;
   calcJ_Mp_7x5(J_Mp, U, V, A);
@@ -1771,7 +1771,7 @@ void RKTrackRepEnergy::transformM7P(const M7x7& in7x7,
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
   // the multiplication can be done much faster directly on array level
   // out5x5 = J_Mp^T * in * J_Mp
-  M5x5& out5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
+  tMatLocal& out5x5_ = *((tMatLocal*) state.getCov().GetMatrixArray());
   RKTools::J_MpTxcov7xJ_Mp(J_Mp, in7x7, out5x5_);
 
 }
@@ -1823,7 +1823,7 @@ void RKTrackRepEnergy::calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector
 
 
 void RKTrackRepEnergy::transformM6P(const M6x6& in6x6,
-                              const M1x7& state7,
+                              const tVectGlobal& stateGlobal,
                               MeasuredStateOnPlane& state) const { // plane and charge must already be set!
 
   // get vectors and aux variables
@@ -1831,44 +1831,44 @@ void RKTrackRepEnergy::transformM6P(const M6x6& in6x6,
   const TVector3& V(state.getPlane()->getV());
   const TVector3& W(state.getPlane()->getNormal());
 
-  const double AtU = state7[3]*U.X() + state7[4]*U.Y() + state7[5]*U.Z();
-  const double AtV = state7[3]*V.X() + state7[4]*V.Y() + state7[5]*V.Z();
-  const double AtW = state7[3]*W.X() + state7[4]*W.Y() + state7[5]*W.Z();
+  const double AtU = stateGlobal[3]*U.X() + stateGlobal[4]*U.Y() + stateGlobal[5]*U.Z();
+  const double AtV = stateGlobal[3]*V.X() + stateGlobal[4]*V.Y() + stateGlobal[5]*V.Z();
+  const double AtW = stateGlobal[3]*W.X() + stateGlobal[4]*W.Y() + stateGlobal[5]*W.Z();
 
   // J_Mp matrix is d(q/p,u',v',u,v) / d(x,y,z,px,py,pz)       (in is 6x6)
 
-  const double qop = state7[6];
+  const double qop = stateGlobal[6];
   const double p = getCharge(state)/qop; // momentum
 
   M6x5 J_Mp_6x5;
   std::fill(J_Mp_6x5.begin(), J_Mp_6x5.end(), 0);
 
   //d(u)/d(x,y,z)
-  J_Mp_6x5[3]  = U.X(); // [0][3]
-  J_Mp_6x5[8]  = U.Y(); // [1][3]
-  J_Mp_6x5[13] = U.Z(); // [2][3]
+  J_Mp_6x5(0,3) = U.X();
+  J_Mp_6x5(1,3) = U.Y();
+  J_Mp_6x5(2,3) = U.Z();
   //d(v)/d(x,y,z)
-  J_Mp_6x5[4]  = V.X(); // [0][4]
-  J_Mp_6x5[9]  = V.Y(); // [1][4]
-  J_Mp_6x5[14] = V.Z(); // [2][4]
+  J_Mp_6x5(0,4) = V.X();
+  J_Mp_6x5(1,4) = V.Y();
+  J_Mp_6x5(2,4) = V.Z();
   // d(q/p)/d(px,py,pz)
   double fact = (-1.) * qop / p;
-  J_Mp_6x5[15] = fact * state7[3]; // [3][0]
-  J_Mp_6x5[20] = fact * state7[4]; // [4][0]
-  J_Mp_6x5[25] = fact * state7[5]; // [5][0]
+  J_Mp_6x5(3,0) = fact * stateGlobal[3];
+  J_Mp_6x5(4,0) = fact * stateGlobal[4];
+  J_Mp_6x5(5,0) = fact * stateGlobal[5];
   // d(u')/d(px,py,pz)
   fact = 1./(p*AtW*AtW);
-  J_Mp_6x5[16] = fact * (U.X()*AtW - W.X()*AtU); // [3][1]
-  J_Mp_6x5[21] = fact * (U.Y()*AtW - W.Y()*AtU); // [4][1]
-  J_Mp_6x5[26] = fact * (U.Z()*AtW - W.Z()*AtU); // [5][1]
+  J_Mp_6x5(3,1) = fact * (U.X()*AtW - W.X()*AtU);
+  J_Mp_6x5(4,1) = fact * (U.Y()*AtW - W.Y()*AtU);
+  J_Mp_6x5(5,1) = fact * (U.Z()*AtW - W.Z()*AtU);
   // d(v')/d(px,py,pz)
-  J_Mp_6x5[17] = fact * (V.X()*AtW - W.X()*AtV); // [3][2]
-  J_Mp_6x5[22] = fact * (V.Y()*AtW - W.Y()*AtV); // [4][2]
-  J_Mp_6x5[27] = fact * (V.Z()*AtW - W.Z()*AtV); // [5][2]
+  J_Mp_6x5(3,2) = fact * (V.X()*AtW - W.X()*AtV);
+  J_Mp_6x5(4,2) = fact * (V.Y()*AtW - W.Y()*AtV);
+  J_Mp_6x5(5,2) = fact * (V.Z()*AtW - W.Z()*AtV);
 
   // do the transformation
   // out5x5 = J_Mp^T * in * J_Mp
-  M5x5& out5x5_ = *((M5x5*) state.getCov().GetMatrixArray());
+  tMatLocal& out5x5_ = *((tMatLocal*) state.getCov().GetMatrixArray());
   RKTools::J_MpTxcov6xJ_Mp(J_Mp_6x5, in6x6, out5x5_);
 
 }
@@ -1889,12 +1889,12 @@ void RKTrackRepEnergy::transformM6P(const M6x6& in6x6,
 //    SU[2]  -          -------                    Ez; Ex*Ex+Ey*Ey+Ez*Ez=1
 //    SU[3]  - distance to surface from (0,0,0) > 0 cm
 //
-//    state7 - initial parameters (coordinates(cm), direction,
+//    stateGlobal - initial parameters (coordinates(cm), direction,
 //             charge/momentum (Gev-1)
 //    cov      and derivatives this parameters  (7x7)
 //
 //    X         Y         Z         Ax        Ay        Az        q/P
-//    state7[0] state7[1] state7[2] state7[3] state7[4] state7[5] state7[6]
+//    stateGlobal[0] stateGlobal[1] stateGlobal[2] stateGlobal[3] stateGlobal[4] stateGlobal[5] stateGlobal[6]
 //
 //    dX/dp     dY/dp     dZ/dp     dAx/dp    dAy/dp    dAz/dp    d(q/P)/dp
 //    cov[ 0]   cov[ 1]   cov[ 2]   cov[ 3]   cov[ 4]   cov[ 5]   cov[ 6]               d()/dp1
@@ -1908,11 +1908,11 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
                         const DetPlane& plane,
                         double charge,
                         double mass,
-                        M1x7& state7,
-                        M7x7* jacobianT,
+                        tVectGlobal& stateGlobal,
+                        tMatGlobal* jacobianT,
                         double& coveredDistance,
                         double& flightTime,
-                        M7x7& noiseProjection,
+                        tMatGlobal& noiseProjection,
                         StepLimits& limits,
                         bool onlyOneStep) const {
 
@@ -1922,11 +1922,11 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
   static const double Pmin           ( 4.E-3 );           // minimum momentum for propagation [GeV]
   static const unsigned int maxNumIt ( 1000 );    // maximum number of iterations in main loop
   // Aux parameters
-  M1x3&   R          ( *((M1x3*) &state7[0]) );  // Start coordinates  [cm]  (x,  y,  z)
-  M1x3&   A          ( *((M1x3*) &state7[3]) );  // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
+  M1x3&   R          ( *((M1x3*) &stateGlobal[0]) );  // Start coordinates  [cm]  (x,  y,  z)
+  M1x3&   A          ( *((M1x3*) &stateGlobal[3]) );  // Start directions         (ax, ay, az);   ax^2+ay^2+az^2=1
   M1x3    SA         = {{0.,0.,0.}};             // Start directions derivatives dA/S
   double  Way        ( 0. );                     // Sum of absolute values of all extrapolation steps [cm]
-  double  momentum   ( fabs(charge/state7[6]) ); // momentum [GeV]
+  double  momentum   ( fabs(charge/stateGlobal[6]) ); // momentum [GeV]
   double  relMomLoss ( 0 );                      // relative momentum loss in RKutta
   double  deltaAngle ( 0. );                     // total angle by which the momentum has changed during extrapolation
   double  An(0), S(0), Sl(0), CBA(0);
@@ -1952,7 +1952,7 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
 
   // Step estimation (signed)
   MaterialProperties matForStep;
-  S = estimateStep(state7, SU, plane, charge, relMomLoss, limits, matForStep);
+  S = estimateStep(stateGlobal, SU, plane, charge, relMomLoss, limits, matForStep);
 
   //
   // Main loop of Runge-Kutta method
@@ -1967,19 +1967,19 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
 
     if (debugLvl_ > 0) {
       std::cout << "------ RKutta main loop nr. " << counter-1 << " ------\n";
-      std::cout << "starting at X = (" << state7[0] << ", " << state7[1] << ", " << state7[2] << ") R = " << hypot(state7[0], state7[1]) << std::endl;
+      std::cout << "starting at X = (" << stateGlobal[0] << ", " << stateGlobal[1] << ", " << stateGlobal[2] << ") R = " << hypot(stateGlobal[0], stateGlobal[1]) << std::endl;
       std::cout << "matForStep "; matForStep.Print();
       std::cout << "step Length " << S << std::endl;
     }
 
     M1x3 ABefore = {{ A[0], A[1], A[2] }};
-    RKPropagate(state7, jacobianT, SA, S, matForStep); // the actual Runge Kutta propagation
+    RKPropagate(stateGlobal, jacobianT, SA, S, matForStep); // the actual Runge Kutta propagation
 
     // update paths
     coveredDistance += S;       // add stepsize to way (signed)
     Way  += fabs(S);
 
-    double beta = 1/hypot(1, mass*state7[6]/charge);
+    double beta = 1/hypot(1, mass*stateGlobal[6]/charge);
     flightTime += S / beta / 29.9792458; // in ns
 
     // check way limit
@@ -2009,12 +2009,12 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
       if (jacobianT) {
         double An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
         An = (fabs(An) > 1.E-7 ? 1./An : 0); // 1/A_normal
-        double E = hypot(mass, 1/state7[6]);
+        double E = hypot(mass, 1/stateGlobal[6]);
         double dEdx = MaterialEffects::getInstance()->dEdx(matForStep, E);
-        double dlambda = pow(state7[6], 3) * E * dEdx;
+        double dlambda = pow(stateGlobal[6], 3) * E * dEdx;
 
-        M7x7& j = *jacobianT;
-        for(int i = 0; i<7; ++i) {
+        tMatGlobal& j = *jacobianT;
+        for(int i = 0; i<nGlobal; ++i) {
           double normal[3];
           MaterialEffects::getInstance()->getLastNormal(normal);
           double norm = (j(i,0)*normal[0] + j(i,1)*normal[1] + j(i,2)*normal[2]) * An;  // dR_normal / A_normal
@@ -2033,7 +2033,7 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
     limits.removeLimit(stp_momLoss);
     limits.removeLimit(stp_boundary);
     limits.removeLimit(stp_plane);
-    S = estimateStep(state7, SU, plane, charge, relMomLoss, limits, matForStep);
+    S = estimateStep(stateGlobal, SU, plane, charge, relMomLoss, limits, matForStep);
 
     if (fabs(S) < MINSTEP && limits.getLowestLimit().first == stp_plane) {
       if (debugLvl_ > 0) {
@@ -2113,7 +2113,7 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
       coveredDistance += S;
       Way  += fabs(S);
 
-      double beta = 1/hypot(1, mass*state7[6]/charge);
+      double beta = 1/hypot(1, mass*stateGlobal[6]/charge);
       flightTime += S / beta / 29.9792458; // in ns;
     }
     else if (debugLvl_ > 0)  {
@@ -2141,12 +2141,12 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
       }
       An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
       An = (fabs(An) > 1.E-7 ? 1./An : 0); // 1/A_normal
-      double E = hypot(mass, 1/state7[6]);
+      double E = hypot(mass, 1/stateGlobal[6]);
       double dEdx = MaterialEffects::getInstance()->dEdx(matForStep, E);
-      double dlambda = pow(state7[6], 3) * E * dEdx;
+      double dlambda = pow(stateGlobal[6], 3) * E * dEdx;
 
-      M7x7& j = *jacobianT;
-      for(int i = 0; i<7; ++i) {
+      tMatGlobal& j = *jacobianT;
+      for(int i = 0; i<nGlobal; ++i) {
         double norm = (j(i,0)*SU[0] + j(i,1)*SU[1] + j(i,2)*SU[2]) * An;  // dR_normal / A_normal
         j(i,0) -= norm*A [0];   j(i,1) -= norm*A [1];   j(i,2) -= norm*A [2];
         j(i,3) -= norm*SA[0];   j(i,4) -= norm*SA[1];   j(i,5) -= norm*SA[2];
@@ -2182,14 +2182,14 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
 }
 
 
-double RKTrackRepEnergy::estimateStep(const M1x7& state7,
+double RKTrackRepEnergy::estimateStep(const tVectGlobal& stateGlobal,
                                 const M1x4& SU,
                                 const DetPlane& plane,
                                 const double& charge,
                                 double& relMomLoss,
                                       StepLimits& limits,
-                                      MaterialProperties& mat) const {
-
+                                      MaterialProperties& mat) const
+{
   if (useCache_) {
     if (cachePos_ >= RKSteps_.end()) {
       useCache_ = false;
@@ -2218,17 +2218,17 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
 
   if (debugLvl_ > 0) {
     std::cout << " RKTrackRepEnergy::estimateStep \n";
-    std::cout << "  position:  "; TVector3(state7[0], state7[1], state7[2]).Print();
-    std::cout << "  direction: "; TVector3(state7[3], state7[4], state7[5]).Print();
+    std::cout << "  position:  "; TVector3(stateGlobal[0], stateGlobal[1], stateGlobal[2]).Print();
+    std::cout << "  direction: "; TVector3(stateGlobal[3], stateGlobal[4], stateGlobal[5]).Print();
   }
 
   // calculate SL distance to surface
-  double Dist ( SU[3] - (state7[0]*SU[0] +
-                         state7[1]*SU[1] +
-                         state7[2]*SU[2])  );  // Distance between start coordinates and surface
-  double An ( state7[3]*SU[0] +
-              state7[4]*SU[1] +
-              state7[5]*SU[2]   );              // An = dir * N;  component of dir normal to surface
+  double Dist ( SU[3] - (stateGlobal[0]*SU[0] +
+                         stateGlobal[1]*SU[1] +
+                         stateGlobal[2]*SU[2])  );  // Distance between start coordinates and surface
+  double An ( stateGlobal[3]*SU[0] +
+              stateGlobal[4]*SU[1] +
+              stateGlobal[5]*SU[2]   );              // An = dir * N;  component of dir normal to surface
 
   double SLDist; // signed
   if (fabs(An) > 1.E-10)
@@ -2259,12 +2259,12 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
   double remainingDist = 9e99;
   double stepTaken = 9e99;
 
-  MaterialEffects::getInstance()->initTrack(state7[0],
-                                            state7[1],
-                                            state7[2],
-                                            copysign(state7[3], SLDist),
-                                            copysign(state7[4], SLDist),
-                                            copysign(state7[5], SLDist));
+  MaterialEffects::getInstance()->initTrack(stateGlobal[0],
+                                            stateGlobal[1],
+                                            stateGlobal[2],
+                                            copysign(stateGlobal[3], SLDist),
+                                            copysign(stateGlobal[4], SLDist),
+                                            copysign(stateGlobal[5], SLDist));
   MaterialEffects::getInstance()->getMaterialProperties(mat);
   double slDist = MaterialEffects::getInstance()->findNextBoundaryStraightLine(fieldCurvLimit);
 
@@ -2272,7 +2272,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
   // extrapolating long distances even though we are in thin sensors.
   fieldCurvLimit = limits.getStepSign() * std::min(fabs(fieldCurvLimit), 2.*slDist);
 
-  RKTrackRepEnergy::propagator extrap(this, state7, mat);
+  RKTrackRepEnergy::propagator extrap(this, stateGlobal, mat);
 
   static const unsigned int maxNumIt = 10;
   unsigned int counter(0);
@@ -2353,7 +2353,7 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
     }
 
     // if direction is pointing to active part of surface
-    if( plane.isInActive(state7[0], state7[1], state7[2],  state7[3], state7[4], state7[5]) ) {
+    if( plane.isInActive(stateGlobal[0], stateGlobal[1], stateGlobal[2],  stateGlobal[3], stateGlobal[4], stateGlobal[5]) ) {
       if (debugLvl_ > 0) {
         std::cout << "  direction is pointing to active part of surface. \n";
       }
@@ -2380,13 +2380,13 @@ double RKTrackRepEnergy::estimateStep(const M1x7& state7,
 
 
   // call stepper and reduce stepsize if step not too small
-  RKSteps_.push_back( RKStep(&state7[3]) );
+  RKSteps_.push_back( RKStep(&stateGlobal[3]) );
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
   ++RKStepsFXStop_;
 
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
     MaterialEffects::getInstance()->stepper(extrap,
-                                            charge/state7[6], // |p|
+                                            charge/stateGlobal[6], // |p|
                                             relMomLoss,
                                             pdgCode_,
                                             lastStep->materialProperties_,
@@ -2436,7 +2436,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
                           double charge,
                           double mass,
                           bool& isAtBoundary,
-                          M1x7& state7,
+                          tVectGlobal& stateGlobal,
                           double& flightTime,
                           bool fillExtrapSteps,
                           TMatrixDSym* cov, // 5D
@@ -2449,7 +2449,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
   double coveredDistance(0.);
 
-  const TVector3 W(destPlane.getNormal());
+  const TVector3& W(destPlane.getNormal());
   M1x4 SU = {{W.X(), W.Y(), W.Z(), destPlane.distance(0., 0., 0.)}};
 
   // make SU vector point away from origin
@@ -2459,12 +2459,12 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     SU[2] *= -1;
   }
 
-  TMatrixD cumulativeJ(7,7);
-  for (int i = 0; i < 7; ++i)
+  TMatrixD cumulativeJ(nGlobal,nGlobal);
+  for (int i = 0; i < nGlobal; ++i)
     cumulativeJ(i,i) = 1;
-  TMatrixDSym cumulativeNoise(7);
+  TMatrixDSym cumulativeNoise(nGlobal);
 
-  M1x7 startState7 = state7;
+  tVectGlobal startStateGlobal = stateGlobal;
   while(true){
 
     if (debugLvl_ > 0) {
@@ -2480,11 +2480,11 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     }
 
     // initialize jacobianT with unit matrix
-    M7x7 J_MMT;
-    for(int i = 0; i < 7*7; ++i) J_MMT[i] = 0;
-    for(int i=0; i<7; ++i) J_MMT[8*i] = 1.;
+    tMatGlobal J_MMT;
+    for(int i = 0; i < nGlobal*nGlobal; ++i) J_MMT[i] = 0;
+    for(int i=0; i<nGlobal; ++i) J_MMT(i,i) = 1.;
 
-    M7x7 noiseProjection(J_MMT); // initialize to unit matrix.
+    tMatGlobal noiseProjection(J_MMT); // initialize to unit matrix.
 
     isAtBoundary = false;
 
@@ -2492,8 +2492,8 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     StepLimits limits;
     limits.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
-    double pStart = fabs(charge / state7[6]);
-    RKutta(SU, destPlane, charge, mass, state7, fillExtrapSteps ? &J_MMT : 0,
+    double pStart = fabs(charge / stateGlobal[6]);
+    RKutta(SU, destPlane, charge, mass, stateGlobal, fillExtrapSteps ? &J_MMT : 0,
            coveredDistance, flightTime, noiseProjection,
            limits, onlyOneStep);
 
@@ -2512,8 +2512,8 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     }
 
     // call MatFX
-    M7x7* pNoise = NULL;
-    M7x7 noise;
+    tMatGlobal* pNoise = NULL;
+    tMatGlobal noise;
     if(fillExtrapSteps) {
       pNoise = &noise;
       for(int i = 0; i < 7*7; ++i) noise[i] = 0; // set noiseArray_ to 0
@@ -2530,9 +2530,9 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
       RKStepsFXStart_ = RKStepsFXStop_;
 
       if (debugLvl_ > 0) {
-        std::cout << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/state7[6])
+        std::cout << "momLoss: " << momLoss << " GeV; relative: " << momLoss/fabs(charge/stateGlobal[6])
             << "; coveredDistance = " << coveredDistance << "\n";
-        if (debugLvl_ > 1 && pNoise != NULL) {
+        if (debugLvl_ > 1 && pNoise) {
           std::cout << "7D noise: \n";
           noise.print();
         }
@@ -2577,14 +2577,14 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     //break if we arrived at destPlane
     if(atPlane) {
       if (debugLvl_ > 0) {
-        std::cout << "arrived at destPlane with a distance of  " << destPlane.distance(state7[0], state7[1], state7[2]) << " cm left. ";
-        if (destPlane.isInActive(state7[0], state7[1], state7[2],  state7[3], state7[4], state7[5]))
+        std::cout << "arrived at destPlane with a distance of  " << destPlane.distance(stateGlobal[0], stateGlobal[1], stateGlobal[2]) << " cm left. ";
+        if (destPlane.isInActive(stateGlobal[0], stateGlobal[1], stateGlobal[2],  stateGlobal[3], stateGlobal[4], stateGlobal[5]))
           std::cout << "In active area of destPlane. \n";
         else
           std::cout << "NOT in active area of plane. \n";
 
-        std::cout << "  position:  "; TVector3(state7[0], state7[1], state7[2]).Print();
-        std::cout << "  direction: "; TVector3(state7[3], state7[4], state7[5]).Print();
+        std::cout << "  position:  "; TVector3(stateGlobal[0], stateGlobal[1], stateGlobal[2]).Print();
+        std::cout << "  direction: "; TVector3(stateGlobal[3], stateGlobal[4], stateGlobal[5]).Print();
       }
       break;
     }
@@ -2595,16 +2595,16 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
     // propagate cov and add noise
 
     // FIXME transpose until I clean up all interfaces
-    M7x7 jacT;
+    tMatGlobal jacT;
     for (int iRow = 0; iRow < 7; ++iRow)
       for (int iCol = 0; iCol < 7; ++iCol)
 	jacT(iRow,iCol) = cumulativeJ(iCol,iRow);
 
-    projectJacobianAndNoise(startState7, startPlane, state7, destPlane,
+    projectJacobianAndNoise(startStateGlobal, startPlane, stateGlobal, destPlane,
 			    jacT,
-			    *(M7x7*)cumulativeNoise.GetMatrixArray(),
-			    *(M5x5*)fJacobian_.GetMatrixArray(),
-			    *(M5x5*)fNoise_.GetMatrixArray());
+			    *(tMatGlobal*)cumulativeNoise.GetMatrixArray(),
+			    *(tMatLocal*)fJacobian_.GetMatrixArray(),
+			    *(tMatLocal*)fNoise_.GetMatrixArray());
 
     if (cov != NULL) {
       cov->Similarity(fJacobian_);
@@ -2698,9 +2698,9 @@ void RKTrackRepEnergy::checkCache(const StateOnPlane& state, const SharedPlanePt
 }
 
 
-double RKTrackRepEnergy::momMag(const M1x7& state7) const {
+double RKTrackRepEnergy::momMag(const tVectGlobal& stateGlobal) const {
   // FIXME given this interface this function cannot work for charge =/= +-1
-  return fabs(1/state7[6]);
+  return fabs(1/stateGlobal[6]);
 }
 
 

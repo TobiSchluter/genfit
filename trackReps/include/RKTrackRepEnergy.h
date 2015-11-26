@@ -109,10 +109,15 @@ class RKTrackRepEnergy : public AbsTrackRep {
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const;
 
-
-  unsigned int getDim() const {return 5;}
+  static const unsigned int nLocal = 5;
+  static const unsigned int nGlobal = 7;
+  typedef RKMatrix<1, nLocal> tVectLocal;
+  typedef RKMatrix<1, nGlobal> tVectGlobal;
+  typedef RKMatrix<nLocal, nLocal> tMatLocal;
+  typedef RKMatrix<nGlobal, nGlobal> tMatGlobal;
+  unsigned int getDim() const {return nLocal;}
   const char *getNameForLocalCoord(size_t i) {
-    assert(0 <= i && i < getDim());
+    assert(i < getDim());
     switch (i) {
     case 0: return "qop";
     case 1: return "u'";
@@ -168,8 +173,8 @@ class RKTrackRepEnergy : public AbsTrackRep {
   /**
    * The RK integration step
    */
-  double RKintegrate(const M1x7& state7, const double h, const MaterialProperties& mat,
-                     M1x7& newState7, RKMatrix<7, 7>* pJ) const;
+  double RKintegrate(const tVectGlobal& stateGlobal, const double h, const MaterialProperties& mat,
+                     tVectGlobal& newStateGlobal, RKMatrix<7, 7>* pJ) const;
 
   //! The actual Runge Kutta propagation
   /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).
@@ -180,8 +185,8 @@ class RKTrackRepEnergy : public AbsTrackRep {
    *  The return value is an estimation on how good the extrapolation is, and it is usually fine if it is > 1.
    *  It gives a suggestion how you must scale S so that the quality will be sufficient.
    */
-  double RKPropagate(M1x7& state7,
-                     M7x7* jacobian,
+  double RKPropagate(tVectGlobal& stateGlobal,
+                     tMatGlobal* jacobian,
                      M1x3& SA,
                      double S,
                      const MaterialProperties& mat) const;
@@ -193,41 +198,42 @@ class RKTrackRepEnergy : public AbsTrackRep {
 
   void initArrays() const;
 
-  virtual double extrapToPoint(StateOnPlane& state,
+  virtual double extrapToPoint(StateOnPlane& stateLocal,
       const TVector3& point,
       const TMatrixDSym* G = NULL, // weight matrix (metric)
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const;
 
-  void getState7(const StateOnPlane& state, M1x7& state7) const;
-  void getState5(StateOnPlane& state, const SharedPlanePtr& plane, const M1x7& state7) const; // state7 must be on plane.
+  void getStateGlobal(const StateOnPlane& stateLocal, tVectGlobal& state7) const;
+  void getStateLocal(StateOnPlane& stateLocal, const SharedPlanePtr& plane, const tVectGlobal& stateGlobal) const; // stateGlobal must be on plane.
 
-  void transformPM7(const MeasuredStateOnPlane& state,
-                    M7x7& out7x7) const;
+  void transformPM7(const MeasuredStateOnPlane& stateLocal,
+                    tMatGlobal& out7x7) const;
 
   void calcJ_pM_5x7(M5x7& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
 
-  void transformPM6(const MeasuredStateOnPlane& state,
+  void transformPM6(const MeasuredStateOnPlane& stateLocal,
                     M6x6& out6x6) const;
 
-  void transformM7P(const M7x7& in7x7,
-                    const M1x7& state7,
+  void transformM7P(const tMatGlobal& in7x7,
+                    const tVectGlobal& stateGlobal,
                     MeasuredStateOnPlane& state) const; // plane must already be set!
 
   void calcJ_Mp_7x5(M7x5& J_Mp, const TVector3& U, const TVector3& V, const M1x3& A) const;
 
   /**
-   * Takes the 7x7 jacobian and noise for the transport of the global state startState7 
-   * to the final global state destState7 and gives the 5x5 jacobian and noise, where 
-   * the local coordinates are defined by startPlane and destPlane.
+   * Takes the 7x7 jacobian and noise for the transport of the global
+   * state startStateGlobal to the final global state destStateGlobal
+   * and gives the 5x5 jacobian and noise, where the local coordinates
+   * are defined by startPlane and destPlane.
    */
-  void projectJacobianAndNoise(const M1x7& startState7, const DetPlane& startPlane,
-			       const M1x7& destState7, const DetPlane& destPlane,
-			       const M7x7& jac, const M7x7& noise,
+  void projectJacobianAndNoise(const tVectGlobal& startStateGlobal, const DetPlane& startPlane,
+			       const tVectGlobal& destStateGlobal, const DetPlane& destPlane,
+			       const tMatGlobal& jac, const tMatGlobal& noise,
 			       M5x5& jac5, M5x5& noise5) const;
 
   void transformM6P(const M6x6& in6x6,
-                    const M1x7& state7,
+                    const tVectGlobal& stateGlobal,
                     MeasuredStateOnPlane& state) const; // plane and charge must already be set!
 
   //! Propagates the particle through the magnetic field.
@@ -244,15 +250,15 @@ class RKTrackRepEnergy : public AbsTrackRep {
               const DetPlane& plane,
               double charge,
               double mass,
-              M1x7& state7,
-              M7x7* jacobianT,
+              tVectGlobal& stateGlobal,
+              tMatGlobal* jacobianT,
               double& coveredDistance, // signed
               double& flightTime,
-              M7x7& noiseProjection,
+              tMatGlobal& noiseProjection,
               StepLimits& limits,
               bool onlyOneStep = false) const;
 
-  double estimateStep(const M1x7& state7,
+  double estimateStep(const tVectGlobal& stateGlobal,
                       const M1x4& SU,
                       const DetPlane& plane,
                       const double& charge,
@@ -278,7 +284,7 @@ class RKTrackRepEnergy : public AbsTrackRep {
                 double charge,
                 double mass,
                 bool& isAtBoundary,
-                M1x7& state7,
+                tVectGlobal& stateGlobal,
                 double& flightTime,
                 bool fillExtrapSteps,
                 TMatrixDSym* cov = nullptr,
@@ -286,7 +292,7 @@ class RKTrackRepEnergy : public AbsTrackRep {
                 bool stopAtBoundary = false,
                 double maxStep = 1.E99) const;
 
-  double momMag(const M1x7& state7) const;
+  double momMag(const tVectGlobal& stateGlobal) const;
 
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
@@ -307,17 +313,17 @@ class RKTrackRepEnergy : public AbsTrackRep {
 public:
   class propagator : public RKTrackRepEnergy::internalExtrapolator {
   public:
-    propagator(const RKTrackRepEnergy* rep, const M1x7& state7, MaterialProperties& mat)
-      : rep_(rep), state7_(state7), mat_(mat) { }
+    propagator(const RKTrackRepEnergy* rep, const tVectGlobal& stateGlobal, MaterialProperties& mat)
+      : rep_(rep), stateGlobal_(stateGlobal), mat_(mat) { }
     void getInitialState(double posInitial[3], double dirInitial[3]) const {
       for(size_t i = 0; i < 3; ++i) {
-        posInitial[i] = state7_[i];
-        dirInitial[i] = state7_[i + 3];
+        posInitial[i] = stateGlobal_[i];
+        dirInitial[i] = stateGlobal_[i + 3];
       }
     }
     double extrapolateBy(double S, double posFinal[3], double dirFinal[3]) const {
       M1x3 SA;
-      M1x7 state(state7_);
+      tVectGlobal state(stateGlobal_);
       double result = rep_->RKPropagate(state, 0, SA, S, mat_);
       for(size_t i = 0; i < 3; ++i) {
         posFinal[i] = state[i];
@@ -326,14 +332,14 @@ public:
       return result;
     }
     void moveStart(double posNew[3]) {
-      std::copy(posNew, posNew + 3, state7_.vals);
+      std::copy(posNew, posNew + 3, stateGlobal_.vals);
     }
     void setMat(const MaterialProperties& mat) {
       mat_ = mat;
     }
   private:
     const RKTrackRepEnergy* rep_;
-    M1x7 state7_;
+    tVectGlobal stateGlobal_;
     MaterialProperties mat_;
   };
 

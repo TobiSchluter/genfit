@@ -18,9 +18,6 @@
 */
 
 #include "RKTrackRepTime.h"
-namespace genfit {
-typedef struct TExtrapStep<8> ExtrapStep;
-}
 
 #include <Exception.h>
 #include <FieldManager.h>
@@ -47,8 +44,7 @@ RKTrackRepTime::RKTrackRepTime() :
   lastEndState_(this),
   fJacobian_(6,6),
   fNoise_(6),
-  useCache_(false),
-  cachePos_(0)
+  useCache_(false)
 {
   initArrays();
 }
@@ -60,8 +56,7 @@ RKTrackRepTime::RKTrackRepTime(int pdgCode, char propDir) :
   lastEndState_(this),
   fJacobian_(6,6),
   fNoise_(6),
-  useCache_(false),
-  cachePos_(0)
+  useCache_(false)
 {
   initArrays();
 }
@@ -89,36 +84,35 @@ double RKTrackRepTime::extrapolateToPlane(StateOnPlane& state,
     return 0;
   }
 
-  checkCache(state, &plane);
+  checkCache(state, plane);
 
   // to 8D
-  M1x8 stateGlobal = {{0, 0, 0, 0, 0, 0, 0, 0}};
+  tVectGlobal stateGlobal;
   getStateGlobal(state, stateGlobal);
 
   TMatrixDSym* covPtr(NULL);
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     covPtr = &(static_cast<MeasuredStateOnPlane*>(&state)->getCov());
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   // actual extrapolation
   bool isAtBoundary(false);
   double flightTime( 0. );
   double coveredDistance( Extrap(*(state.getPlane()), *plane, getCharge(state), getMass(state), isAtBoundary, stateGlobal, flightTime, fillExtrapSteps, covPtr, false, stopAtBoundary) );
 
+  SharedPlanePtr finalPlane = plane;
   if (stopAtBoundary && isAtBoundary) {
-    state.setPlane(SharedPlanePtr(new DetPlane(TVector3(stateGlobal[0], stateGlobal[1], stateGlobal[2]),
-                                               TVector3(stateGlobal[3], stateGlobal[4], stateGlobal[5]))));
+    finalPlane = SharedPlanePtr(new DetPlane(TVector3(stateGlobal[0], stateGlobal[1], stateGlobal[2]),
+					     TVector3(stateGlobal[3], stateGlobal[4], stateGlobal[5])));
   }
   else {
     state.setPlane(plane);
   }
 
   // back to 6D
-  getStateLocal(state, stateGlobal);
+  getStateLocal(state, finalPlane, stateGlobal);
   //std::cout << getTime(state) << " " << stateGlobal[7] << std::endl;
   lastEndState_ = state;
 
@@ -139,20 +133,18 @@ double RKTrackRepTime::extrapolateToLine(StateOnPlane& state,
     std::cout << "RKTrackRepTime::extrapolateToLine()\n";
   }
 
-  checkCache(state, NULL);
+  resetCache(state);
 
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x8 stateGlobal;
+  tVectGlobal stateGlobal;
   getStateGlobal(state, stateGlobal);
 
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
   double charge = getCharge(state);
@@ -207,15 +199,12 @@ double RKTrackRepTime::extrapolateToLine(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    lastEndState_.setPlane(plane);
-    getStateLocal(lastEndState_, stateGlobal);
+    getStateLocal(lastEndState_, plane, stateGlobal);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
-    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
-    state.setPlane(plane);
-    getStateLocal(state, stateGlobal);
+    getStateLocal(state, plane, stateGlobal);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -244,15 +233,13 @@ double RKTrackRepTime::extrapToPoint(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x8 stateGlobal;
+  tVectGlobal stateGlobal;
   getStateGlobal(state, stateGlobal);
 
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   double step(0.), lastStep(0.), maxStep(1.E99), angle(0), distToPoca(0), tracklength(0);
   TVector3 dir(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
@@ -322,15 +309,12 @@ double RKTrackRepTime::extrapToPoint(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    lastEndState_.setPlane(plane);
-    getStateLocal(lastEndState_, stateGlobal);
+    getStateLocal(lastEndState_, plane, stateGlobal);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
-    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
-    state.setPlane(plane);
-    getStateLocal(state, stateGlobal);
+    getStateLocal(state, plane, stateGlobal);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -356,20 +340,18 @@ double RKTrackRepTime::extrapolateToCylinder(StateOnPlane& state,
     std::cout << "RKTrackRepTime::extrapolateToCylinder()\n";
   }
 
-  checkCache(state, NULL);
+  resetCache(state);
 
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x8 stateGlobal;
+  tVectGlobal stateGlobal;
   getStateGlobal(state, stateGlobal);
 
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   double tracklength(0.), maxStep(1.E99);
 
@@ -452,15 +434,12 @@ double RKTrackRepTime::extrapolateToCylinder(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    lastEndState_.setPlane(plane);
-    getStateLocal(lastEndState_, stateGlobal);
+    getStateLocal(lastEndState_, plane, stateGlobal);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
-    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
-    state.setPlane(plane);
-    getStateLocal(state, stateGlobal);
+    getStateLocal(state, plane, stateGlobal);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -482,20 +461,18 @@ double RKTrackRepTime::extrapolateToCone(StateOnPlane& state,
     std::cout << "RKTrackRepTime::extrapolateToCone()\n";
   }
 
-  checkCache(state, NULL);
+  resetCache(state);
 
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x8 stateGlobal;
+  tVectGlobal stateGlobal;
   getStateGlobal(state, stateGlobal);
 
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   double tracklength(0.), maxStep(1.E99);
 
@@ -587,15 +564,12 @@ double RKTrackRepTime::extrapolateToCone(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    lastEndState_.setPlane(plane);
-    getStateLocal(lastEndState_, stateGlobal);
+    getStateLocal(lastEndState_, plane, stateGlobal);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
-    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
-    state.setPlane(plane);
-    getStateLocal(state, stateGlobal);
+    getStateLocal(state, plane, stateGlobal);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -620,15 +594,13 @@ double RKTrackRepTime::extrapolateToSphere(StateOnPlane& state,
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x8 stateGlobal;
+  tVectGlobal stateGlobal;
   getStateGlobal(state, stateGlobal);
 
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   double tracklength(0.), maxStep(1.E99);
 
@@ -692,21 +664,19 @@ double RKTrackRepTime::extrapolateToSphere(StateOnPlane& state,
 
     if(fabs(k)<MINSTEP) break;
 
+
     startPlane = *plane;
 
   }
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    lastEndState_.setPlane(plane);
-    getStateLocal(lastEndState_, stateGlobal);
+    getStateLocal(lastEndState_, plane, stateGlobal);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
-    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
-    state.setPlane(plane);
-    getStateLocal(state, stateGlobal);
+    getStateLocal(state, plane, stateGlobal);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -725,20 +695,18 @@ double RKTrackRepTime::extrapolateBy(StateOnPlane& state,
     std::cout << "RKTrackRepTime::extrapolateBy()\n";
   }
 
-  checkCache(state, NULL);
+  resetCache(state);
 
   static const unsigned int maxIt(1000);
 
   // to 7D
-  M1x8 stateGlobal;
+  tVectGlobal stateGlobal;
   getStateGlobal(state, stateGlobal);
 
-  bool fillExtrapSteps(false);
+  bool fillExtrapSteps(calcJacobianNoise);
   if (dynamic_cast<MeasuredStateOnPlane*>(&state) != NULL) {
     fillExtrapSteps = true;
   }
-  else if (calcJacobianNoise)
-    fillExtrapSteps = true;
 
   double tracklength(0.);
 
@@ -793,15 +761,12 @@ double RKTrackRepTime::extrapolateBy(StateOnPlane& state,
 
   if (fillExtrapSteps) { // now do the full extrapolation with covariance matrix
     // make use of the cache
-    lastEndState_.setPlane(plane);
-    getStateLocal(lastEndState_, stateGlobal);
+    getStateLocal(lastEndState_, plane, stateGlobal);
 
     tracklength = extrapolateToPlane(state, plane, false, true);
-    lastEndState_.getAuxInfo()(1) = state.getAuxInfo()(1); // Flight time
   }
   else {
-    state.setPlane(plane);
-    getStateLocal(state, stateGlobal);
+    getStateLocal(state, plane, stateGlobal);
     state.getAuxInfo()(1) += flightTime;
   }
 
@@ -812,7 +777,7 @@ double RKTrackRepTime::extrapolateBy(StateOnPlane& state,
 
 
 TVector3 RKTrackRepTime::getPos(const StateOnPlane& state) const {
-  M1x8 stateGlobal;
+  tVectGlobal stateGlobal;
   getStateGlobal(state, stateGlobal);
 
   return TVector3(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
@@ -820,7 +785,7 @@ TVector3 RKTrackRepTime::getPos(const StateOnPlane& state) const {
 
 
 TVector3 RKTrackRepTime::getMom(const StateOnPlane& state) const {
-  M1x8 stateGlobal;
+  tVectGlobal stateGlobal;
   getStateGlobal(state, stateGlobal);
 
   TVector3 mom(stateGlobal[3], stateGlobal[4], stateGlobal[5]);
@@ -830,7 +795,7 @@ TVector3 RKTrackRepTime::getMom(const StateOnPlane& state) const {
 
 
 void RKTrackRepTime::getPosMom(const StateOnPlane& state, TVector3& pos, TVector3& mom) const {
-  M1x8 stateGlobal;
+  tVectGlobal stateGlobal;
   getStateGlobal(state, stateGlobal);
 
   pos.SetXYZ(stateGlobal[0], stateGlobal[1], stateGlobal[2]);
@@ -925,66 +890,54 @@ double RKTrackRepTime::getTime(const StateOnPlane& state) const {
 }
 
 
-void RKTrackRepTime::calcForwardJacobianAndNoise(const M1x8& startStateGlobal, const DetPlane& startPlane,
-					     const M1x8& destStateGlobal, const DetPlane& destPlane) const {
-
-  if (debugLvl_ > 0) {
-    std::cout << "RKTrackRepTime::calcForwardJacobianAndNoise " << std::endl;
-  }
-
-  if (ExtrapSteps_.size() == 0) {
-    Exception exc("RKTrackRepTime::calcForwardJacobianAndNoise ==> cache is empty. Extrapolation must run with a MeasuredStateOnPlane.",__LINE__,__FILE__);
-    throw exc;
-  }
-
-  // The Jacobians returned from RKutta are transposed.
-  TMatrixD jac(TMatrixD::kTransposed, TMatrixD(8, 8, ExtrapSteps_.back().jac_.begin()));
-  // FIXME noise matrix resizing is awkward
-  TMatrixDSym noise(7, ExtrapSteps_.back().noise_.begin());
-  noise.ResizeTo(8, 8);
-  for (int i = ExtrapSteps_.size() - 2; i >= 0; --i) {
-    TMatrixDSym stepNoise(7, ExtrapSteps_[i].noise_.begin());
-    stepNoise.ResizeTo(8, 8);
-    noise += stepNoise.Similarity(jac);
-    jac *= TMatrixD(TMatrixD::kTransposed, TMatrixD(8, 8, ExtrapSteps_[i].jac_.begin()));
-  }
+void RKTrackRepTime::projectJacobianAndNoise(const tVectGlobal& startStateGlobal, const DetPlane& startPlane,
+					       const tVectGlobal& destStateGlobal, const DetPlane& destPlane,
+					       const tMatGlobal& jac, const tMatGlobal& noise,
+					       tMatLocal& jac6, tMatLocal& noise6) const
+{
+  // FIXME It would probably save a lot more computing time if --
+  // during assembly of the Jacobian -- we started from the projection
+  // to the start plane, which is (8x6), and then only did (8x8)x(8x6)
+  // multiplications instead of doing (8x8)x(8x8) multiplications
+  // throughout, followed by some smart multiplications when reducting
+  // to (6x6) in the end.  There seems to be no way around doing 8x8
+  // all the time when dealing with noise, unfortunately.
 
   // Project into 6x6 space.
   M1x3 pTilde = {{startStateGlobal[3], startStateGlobal[4], startStateGlobal[5]}};
   const TVector3& normal = startPlane.getNormal();
   double pTildeW = pTilde[0] * normal.X() + pTilde[1] * normal.Y() + pTilde[2] * normal.Z();
   double spu = pTildeW > 0 ? 1 : -1;
-  for (unsigned int i=0; i<3; ++i) {
-    pTilde[i] *= spu/pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
-  }
+  pTilde *= spu/pTildeW; // | pTilde * W | has to be 1 (definition of pTilde)
   M6x8 J_pM;
   calcJ_pM_6x8(J_pM, startPlane.getU(), startPlane.getV(), pTilde, spu);
   M8x6 J_Mp;
   calcJ_Mp_8x6(J_Mp, destPlane.getU(), destPlane.getV(), *((M1x3*) &destStateGlobal[3]));
-  jac.Transpose(jac); // Because the helper function wants transposed input.
-  RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, *(M8x8 *)jac.GetMatrixArray(),
-				J_pM, *(M6x6 *)fJacobian_.GetMatrixArray());
-  RKTools::J_MpTxnoise7xJ_Mp(J_Mp, *(M7x7 *)noise.GetMatrixArray(),
-			   *(M6x6 *)fNoise_.GetMatrixArray());
+  // Because the helper function wants transposed input, we transpose the input ...
+  tMatGlobal jacT;
+  for (int iRow = 0; iRow < 8; ++iRow)
+    for (int iCol = 0; iCol < 8; ++iCol)
+      jacT(iRow,iCol) = jac(iCol,iRow);
+  RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, jacT, J_pM, jac6);
+  RKTools::J_MpTxcov8xJ_Mp(J_Mp, noise, noise6);
 
   if (debugLvl_ > 0) {
     std::cout << "total jacobian : "; fJacobian_.Print();
     std::cout << "total noise : "; fNoise_.Print();
   }
-
 }
 
 
 void RKTrackRepTime::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const {
 
-  jacobian.ResizeTo(6,6);
+  jacobian.ResizeTo(nLocal,nLocal);
   jacobian = fJacobian_;
 
-  noise.ResizeTo(6,6);
+  noise.ResizeTo(nLocal,nLocal);
   noise = fNoise_;
 
   // lastEndState_ = jacobian * lastStartState_  + deltaState
-  deltaState.ResizeTo(6);
+  deltaState.ResizeTo(nLocal);
   // Calculate this without temporaries:
   //deltaState = lastEndState_.getState() - jacobian * lastStartState_.getState()
   deltaState = lastStartState_.getState();
@@ -992,10 +945,12 @@ void RKTrackRepTime::getForwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym&
   deltaState -= lastEndState_.getState();
   deltaState *= -1;
 
+
   if (debugLvl_ > 0) {
     std::cout << "delta state : "; deltaState.Print();
   }
 }
+
 
 
 void RKTrackRepTime::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym& noise, TVectorD& deltaState) const {
@@ -1004,12 +959,7 @@ void RKTrackRepTime::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym
     std::cout << "RKTrackRepTime::getBackwardJacobianAndNoise " << std::endl;
   }
 
-  if (ExtrapSteps_.size() == 0) {
-    Exception exc("RKTrackRepTime::getBackwardJacobianAndNoise ==> cache is empty. Extrapolation must run with a MeasuredStateOnPlane.",__LINE__,__FILE__);
-    throw exc;
-  }
-
-  jacobian.ResizeTo(6,6);
+  jacobian.ResizeTo(nLocal,nLocal);
   jacobian = fJacobian_;
   bool status = TDecompLU::InvertLU(jacobian, 0.0);
   if(status == 0){
@@ -1018,33 +968,23 @@ void RKTrackRepTime::getBackwardJacobianAndNoise(TMatrixD& jacobian, TMatrixDSym
     throw e;
   }
 
-  noise.ResizeTo(6,6);
+  noise.ResizeTo(nLocal,nLocal);
   noise = fNoise_;
   noise.Similarity(jacobian);
 
   // lastStartState_ = jacobian * lastEndState_  + deltaState
-  deltaState.ResizeTo(6);
+  deltaState.ResizeTo(nLocal);
   deltaState = lastStartState_.getState() - jacobian * lastEndState_.getState();
 }
 
 
 std::vector<genfit::MatStep> RKTrackRepTime::getSteps() const {
-
-  // Todo: test
-
   if (RKSteps_.size() == 0) {
     Exception exc("RKTrackRepTime::getSteps ==> cache is empty.",__LINE__,__FILE__);
     throw exc;
   }
 
-  std::vector<MatStep> retVal;
-  retVal.reserve(RKSteps_.size());
-
-  for (unsigned int i = 0; i<RKSteps_.size(); ++i) {
-    retVal.push_back(RKSteps_[i]);
-  }
-
-  return retVal;
+  return std::vector<MatStep>(RKSteps_.begin(), RKSteps_.end());
 }
 
 
@@ -1098,7 +1038,7 @@ void RKTrackRepTime::setPosMom(StateOnPlane& state, const TVector3& pos, const T
 
   if (state.getPlane() != NULL && state.getPlane()->distance(pos) < MINSTEP) { // pos is on plane -> do not change plane!
 
-    M1x8 stateGlobal;
+    tVectGlobal stateGlobal;
 
     stateGlobal[0] = pos.X();
     stateGlobal[1] = pos.Y();
@@ -1116,7 +1056,7 @@ void RKTrackRepTime::setPosMom(StateOnPlane& state, const TVector3& pos, const T
     stateGlobal[6] = getCharge(state) * norm;
     stateGlobal[7] = 0;
 
-    getStateLocal(state, stateGlobal);
+    getStateLocal(state, state.getPlane(), stateGlobal);
 
   }
   else { // pos is not on plane -> create new plane!
@@ -1125,14 +1065,14 @@ void RKTrackRepTime::setPosMom(StateOnPlane& state, const TVector3& pos, const T
     SharedPlanePtr plane(new DetPlane(pos, mom));
     state.setPlane(plane);
 
-    TVectorD& state6(state.getState());
+    TVectorD& stateLocal(state.getState());
 
-    state6(0) = getCharge(state)/mom.Mag(); // q/p
-    state6(1) = 0.; // u'
-    state6(2) = 0.; // v'
-    state6(3) = 0.; // u
-    state6(4) = 0.; // v
-    state6(5) = 0.; // time
+    stateLocal(0) = getCharge(state)/mom.Mag(); // q/p
+    stateLocal(1) = 0.; // u'
+    stateLocal(2) = 0.; // v'
+    stateLocal(3) = 0.; // u
+    stateLocal(4) = 0.; // v
+    stateLocal(5) = 0.; // time
 
     setSpu(state, 1.);
   }
@@ -1200,7 +1140,7 @@ void RKTrackRepTime::setPosMomCov(MeasuredStateOnPlane& state, const TVector3& p
 
   setPosMom(state, pos, mom); // charge does not change!
 
-  M1x8 stateGlobal;
+  tVectGlobal stateGlobal;
   getStateGlobal(state, stateGlobal);
 
   const M6x6& cov6x6_( *((M6x6*) cov6x6.GetMatrixArray()) );
@@ -1226,7 +1166,7 @@ void RKTrackRepTime::setPosMomCov(MeasuredStateOnPlane& state, const TVectorD& s
   TVector3 mom(state6(3), state6(4), state6(5));
   setPosMom(state, pos, mom); // charge does not change!
 
-  M1x8 stateGlobal;
+  tVectGlobal stateGlobal;
   getStateGlobal(state, stateGlobal);
 
   const M6x6& cov6x6_( *((M6x6*) cov6x6.GetMatrixArray()) );
@@ -1306,10 +1246,10 @@ void RKTrackRepTime::derive(const double lambda, const M1x3& T,
 }
 
 
-double RKTrackRepTime::RKstep(const M1x8& stateGlobal, const double h,
+double RKTrackRepTime::RKstep(const tVectGlobal& stateGlobal, const double h,
                                 const MaterialProperties& mat,
-                                M1x8& newStateGlobal,
-                                M8x8* pJ = 0) const
+                                tVectGlobal& newStateGlobal,
+                                tMatGlobal* pJ = 0) const
 {
   const double m = TDatabasePDG::Instance()->GetParticle(getPDG())->Mass();
   const double pdgCharge( this->getPDGCharge() );
@@ -1424,7 +1364,7 @@ double RKTrackRepTime::RKstep(const M1x8& stateGlobal, const double h,
     // states (everything else wouldn't make sense).  We also assume
     // that Lund's C equals 0 (i.e. no field gradients, no material
     // density gradients).
-    M8x8 J;
+    tMatGlobal J;
     std::fill(J.begin(), J.end(), 0);
     for (int i = 0; i < 3; ++i) {
       J(i, i) = 1;
@@ -1437,11 +1377,11 @@ double RKTrackRepTime::RKstep(const M1x8& stateGlobal, const double h,
         J(i + 3, j + 3) = (i == j) + h/6 * (A1(i, j) + 2*A2(i, j) + 2*A3(i, j) + A4(i, j));
       }
     }
-    M8x8& Jnew = *pJ;
-    Jnew = J;
 
     // Life is a bit miserable: we have to take into account the
     // normalization of T while putting together the final Jacobian.
+    tMatGlobal& Jnew = *pJ;
+    Jnew = J;
     for (int iRow = 3; iRow < 6; ++iRow) {
       for (int iCol = 3; iCol < 6; ++iCol) {
         Jnew(iRow, iCol) = J(iRow, iCol) / norm;
@@ -1464,8 +1404,8 @@ double RKTrackRepTime::RKstep(const M1x8& stateGlobal, const double h,
 
 
 
-double RKTrackRepTime::RKPropagate(M1x8& stateGlobal,
-                                   M8x8* jacobianT,
+double RKTrackRepTime::RKPropagate(tVectGlobal& stateGlobal,
+                                   tMatGlobal* jacobianT,
                                    M1x3& SA,
                                    double S,
                                    const MaterialProperties& mat) const
@@ -1483,11 +1423,11 @@ double RKTrackRepTime::RKPropagate(M1x8& stateGlobal,
   //   "Tracking And Track Fitting"
   //   http://inspirehep.net/record/160548
 
-  M1x8 oldStateGlobal(stateGlobal);
-  M1x8 newStateGlobal;
-  M8x8 propJac;
+  tVectGlobal oldStateGlobal(stateGlobal);
+  tVectGlobal newStateGlobal;
+  tMatGlobal propJac;
   double est = RKstep(stateGlobal, S, mat, newStateGlobal, jacobianT ? &propJac : 0);
-  M8x8 newJacT;
+  tMatGlobal newJacT;
   if (jacobianT) {
     if (1) {
       // Numerically evaluate the Jacobian, compare
@@ -1498,7 +1438,7 @@ double RKTrackRepTime::RKPropagate(M1x8& stateGlobal,
       const double defaultStepX = 1.E-8;
       double stepX;
 
-      M8x8 numJac;
+      tMatGlobal numJac;
 
       // Calculate derivative for all three dimensions successively.
       // The algorithm follows the one in TF1::Derivative() :
@@ -1506,11 +1446,11 @@ double RKTrackRepTime::RKPropagate(M1x8& stateGlobal,
       // with D(h) = (f(x + h) - f(x - h)) / (2 h).
       //
       // Could perhaps do better by also using f(x) which would be stB.
-      M1x8 rightShort, rightFull;
-      M1x8 leftShort, leftFull;
-      for (size_t i = 0; i < 8; ++i) {
+      tVectGlobal rightShort, rightFull;
+      tVectGlobal leftShort, leftFull;
+      for (size_t i = 0; i < nGlobal; ++i) {
         {
-          M1x8 stateCopy(stateGlobal);
+          tVectGlobal stateCopy(stateGlobal);
           double temp = stateCopy[i] + defaultStepX / 2;
           // Find the actual size of the step, which will differ from
           // defaultStepX due to roundoff.  This is the step-size we will
@@ -1530,24 +1470,24 @@ double RKTrackRepTime::RKPropagate(M1x8& stateGlobal,
           RKstep(stateCopy, S, mat, rightShort, 0);
         }
         {
-          M1x8 stateCopy(stateGlobal);
+          tVectGlobal stateCopy(stateGlobal);
           stateCopy[i] -= stepX / 2;
           RKstep(stateCopy, S, mat, leftShort, 0);
         }
         {
-          M1x8 stateCopy(stateGlobal);
+          tVectGlobal stateCopy(stateGlobal);
           stateCopy[i] += stepX;
           RKstep(stateCopy, S, mat, rightFull, 0);
         }
         {
-          M1x8 stateCopy(stateGlobal);
+          tVectGlobal stateCopy(stateGlobal);
           stateCopy[i] -= stepX;
           RKstep(stateCopy, S, mat, leftFull, 0);
         }
 
         // Calculate the derivatives for the individual components of
         // the track parameters.
-        for (size_t j = 0; j < 8; ++j) {
+        for (size_t j = 0; j < nGlobal; ++j) {
           double derivFull = (rightFull[j] - leftFull[j]) / 2 / stepX;
           double derivShort = (rightShort[j] - leftShort[j]) / stepX;
 
@@ -1561,10 +1501,10 @@ double RKTrackRepTime::RKPropagate(M1x8& stateGlobal,
       //propJac = numJac;
     }
 
-    for (int i = 0; i < 8; ++i) {
-      for (int j = 0; j < 8; ++j) {
+    for (unsigned int i = 0; i < nGlobal; ++i) {
+      for (unsigned int j = 0; j < nGlobal; ++j) {
         double sum = 0;
-        for (int k = 0; k < 8; ++k) {
+        for (unsigned int k = 0; k < nGlobal; ++k) {
           sum += propJac(i, k) * (*jacobianT)(j, k);
         }
         newJacT(j, i) = sum;
@@ -1580,7 +1520,7 @@ double RKTrackRepTime::RKPropagate(M1x8& stateGlobal,
   SA[1] = newStateGlobal[4] - oldStateGlobal[4];
   SA[2] = newStateGlobal[5] - oldStateGlobal[5];
 
-  std::copy(newStateGlobal.begin(), newStateGlobal.end(), stateGlobal.begin());
+  stateGlobal = newStateGlobal;
 
   if (jacobianT) {
     std::copy(newJacT.begin(), newJacT.end(), jacobianT->begin());
@@ -1607,24 +1547,18 @@ double RKTrackRepTime::RKPropagate(M1x8& stateGlobal,
 
 
 void RKTrackRepTime::initArrays() const {
-  std::fill(noiseProjection_.begin(), noiseProjection_.end(), 0);
-  for (unsigned int i=0; i<7; ++i) // initialize as diagonal matrix
-    noiseProjection_[i*8] = 1;
-
   fJacobian_.UnitMatrix();
   fNoise_.Zero();
-  limits_.reset();
 
   RKSteps_.reserve(100);
-  RKStepsFXStart_ = RKStepsFXStop_ = RKSteps_.begin();
-  ExtrapSteps_.reserve(100);
+  RKStepsFXStart_ = RKStepsFXStop_ = cachePos_ = RKSteps_.begin();
 
   lastStartState_.getAuxInfo().ResizeTo(2);
   lastEndState_.getAuxInfo().ResizeTo(2);
 }
 
 
-void RKTrackRepTime::getStateGlobal(const StateOnPlane& state, M1x8& stateGlobal) const {
+void RKTrackRepTime::getStateGlobal(const StateOnPlane& state, tVectGlobal& stateGlobal) const {
 
   if (dynamic_cast<const MeasurementOnPlane*>(&state) != NULL) {
     Exception exc("RKTrackRepTime::getState7 - cannot get pos or mom from a MeasurementOnPlane",__LINE__,__FILE__);
@@ -1637,59 +1571,58 @@ void RKTrackRepTime::getStateGlobal(const StateOnPlane& state, M1x8& stateGlobal
   const TVector3& O(state.getPlane()->getO());
   const TVector3& W(state.getPlane()->getNormal());
 
-  assert(state.getState().GetNrows() == 6);
-  const double* state6 = state.getState().GetMatrixArray();
+  assert(state.getState().GetNrows() == nLocal);
+  const double* stateLocal = state.getState().GetMatrixArray();
 
   double spu = getSpu(state);
 
-  stateGlobal[0] = O.X() + state6[3]*U.X() + state6[4]*V.X(); // x
-  stateGlobal[1] = O.Y() + state6[3]*U.Y() + state6[4]*V.Y(); // y
-  stateGlobal[2] = O.Z() + state6[3]*U.Z() + state6[4]*V.Z(); // z
+  stateGlobal[0] = O.X() + stateLocal[3]*U.X() + stateLocal[4]*V.X(); // x
+  stateGlobal[1] = O.Y() + stateLocal[3]*U.Y() + stateLocal[4]*V.Y(); // y
+  stateGlobal[2] = O.Z() + stateLocal[3]*U.Z() + stateLocal[4]*V.Z(); // z
 
-  stateGlobal[3] = spu * (W.X() + state6[1]*U.X() + state6[2]*V.X()); // a_x
-  stateGlobal[4] = spu * (W.Y() + state6[1]*U.Y() + state6[2]*V.Y()); // a_y
-  stateGlobal[5] = spu * (W.Z() + state6[1]*U.Z() + state6[2]*V.Z()); // a_z
+  stateGlobal[3] = spu * (W.X() + stateLocal[1]*U.X() + stateLocal[2]*V.X()); // a_x
+  stateGlobal[4] = spu * (W.Y() + stateLocal[1]*U.Y() + stateLocal[2]*V.Y()); // a_y
+  stateGlobal[5] = spu * (W.Z() + stateLocal[1]*U.Z() + stateLocal[2]*V.Z()); // a_z
 
   // normalize dir
   double norm = 1. / sqrt(stateGlobal[3]*stateGlobal[3] + stateGlobal[4]*stateGlobal[4] + stateGlobal[5]*stateGlobal[5]);
   for (unsigned int i=3; i<6; ++i) stateGlobal[i] *= norm;
 
-  stateGlobal[6] = state6[0]; // q/p
-  stateGlobal[7] = state6[5]; // time
+  stateGlobal[6] = stateLocal[0]; // q/p
+  stateGlobal[7] = stateLocal[5]; // time
 }
 
 
-void RKTrackRepTime::getStateLocal(StateOnPlane& state, const M1x8& stateGlobal) const {
+void RKTrackRepTime::getStateLocal(StateOnPlane& state, const SharedPlanePtr& plane, const tVectGlobal& stateGlobal) const {
 
-  // state5: (q/p, u', v'. u, v, time)
+  // stateLocal: (q/p, u', v'. u, v, time)
 
   double spu(1.);
 
-  const TVector3& O(state.getPlane()->getO());
-  const TVector3& U(state.getPlane()->getU());
-  const TVector3& V(state.getPlane()->getV());
-  const TVector3& W(state.getPlane()->getNormal());
+  state.setPlane(plane);
+  const TVector3& O(plane->getO());
+  const TVector3& U(plane->getU());
+  const TVector3& V(plane->getV());
+  const TVector3& W(plane->getNormal());
 
-  // force A to be in normal direction and set spu accordingly
+  // Set spu according to whether we go along the normal or in the opposite direction.
   double AtW( stateGlobal[3]*W.X() + stateGlobal[4]*W.Y() + stateGlobal[5]*W.Z() );
   if (AtW < 0.) {
-    //fDir *= -1.;
-    //AtW *= -1.;
     spu = -1.;
   }
 
-  double* state6 = state.getState().GetMatrixArray();
+  double* stateLocal = state.getState().GetMatrixArray();
 
-  state6[0] = stateGlobal[6]; // q/p
-  state6[1] = (stateGlobal[3]*U.X() + stateGlobal[4]*U.Y() + stateGlobal[5]*U.Z()) / AtW; // u' = (A * U) / (A * W)
-  state6[2] = (stateGlobal[3]*V.X() + stateGlobal[4]*V.Y() + stateGlobal[5]*V.Z()) / AtW; // v' = (A * V) / (A * W)
-  state6[3] = ((stateGlobal[0]-O.X())*U.X() +
-               (stateGlobal[1]-O.Y())*U.Y() +
-               (stateGlobal[2]-O.Z())*U.Z()); // u = (pos - O) * U
-  state6[4] = ((stateGlobal[0]-O.X())*V.X() +
-               (stateGlobal[1]-O.Y())*V.Y() +
-               (stateGlobal[2]-O.Z())*V.Z()); // v = (pos - O) * V
-  state6[5] = stateGlobal[7]; // time
+  stateLocal[0] = stateGlobal[6]; // q/p
+  stateLocal[1] = (stateGlobal[3]*U.X() + stateGlobal[4]*U.Y() + stateGlobal[5]*U.Z()) / AtW; // u' = (A * U) / (A * W)
+  stateLocal[2] = (stateGlobal[3]*V.X() + stateGlobal[4]*V.Y() + stateGlobal[5]*V.Z()) / AtW; // v' = (A * V) / (A * W)
+  stateLocal[3] = ((stateGlobal[0]-O.X())*U.X() +
+                   (stateGlobal[1]-O.Y())*U.Y() +
+                   (stateGlobal[2]-O.Z())*U.Z()); // u = (pos - O) * U
+  stateLocal[4] = ((stateGlobal[0]-O.X())*V.X() +
+                   (stateGlobal[1]-O.Y())*V.Y() +
+                   (stateGlobal[2]-O.Z())*V.Z()); // v = (pos - O) * V
+  stateLocal[5] = stateGlobal[7]; // time
 
   setSpu(state, spu);
 
@@ -1698,20 +1631,20 @@ void RKTrackRepTime::getStateLocal(StateOnPlane& state, const M1x8& stateGlobal)
 
 
 void RKTrackRepTime::transformPM8(const MeasuredStateOnPlane& state,
-                                  M8x8& out8x8) const {
+                                  tMatGlobal& out8x8) const {
 
   // get vectors and aux variables
   const TVector3& U(state.getPlane()->getU());
   const TVector3& V(state.getPlane()->getV());
   const TVector3& W(state.getPlane()->getNormal());
 
-  const TVectorD& state5(state.getState());
+  const TVectorD& stateLocal(state.getState());
   double spu(getSpu(state));
 
   M1x3 pTilde;
-  pTilde[0] = spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()); // a_x
-  pTilde[1] = spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()); // a_y
-  pTilde[2] = spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()); // a_z
+  pTilde[0] = spu * (W.X() + stateLocal(1)*U.X() + stateLocal(2)*V.X()); // a_x
+  pTilde[1] = spu * (W.Y() + stateLocal(1)*U.Y() + stateLocal(2)*V.Y()); // a_y
+  pTilde[2] = spu * (W.Z() + stateLocal(1)*U.Z() + stateLocal(2)*V.Z()); // a_z
 
   M6x8 J_pM;
   calcJ_pM_6x8(J_pM, U, V, pTilde, spu);
@@ -1719,7 +1652,7 @@ void RKTrackRepTime::transformPM8(const MeasuredStateOnPlane& state,
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
   // the multiplication can be done much faster directly on array level
   // out = J_pM^T * in5x5 * J_pM
-  const M6x6& in6x6_ = *((M6x6*) state.getCov().GetMatrixArray());
+  const tMatLocal& in6x6_ = *((tMatLocal*) state.getCov().GetMatrixArray());
   RKTools::J_pMTxcov6xJ_pM(J_pM, in6x6_, out8x8);
 }
 
@@ -1752,16 +1685,16 @@ void RKTrackRepTime::calcJ_pM_6x8(M6x8& J_pM, const TVector3& U, const TVector3&
   J_pM(4,1) = V.Y();
   J_pM(4,2) = V.Z();
   // d(q/p)/d(q/p)
-  J_pM(0, 6) = 1.;
+  J_pM(0,6) = 1.;
   // d(ax,ay,az)/d(u')
   double fact = spu / pTildeMag;
-  J_pM(1,3) = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 ); // [1][3]
-  J_pM(1,4) = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 ); // [1][4]
-  J_pM(1,5) = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 ); // [1][5]
+  J_pM(1,3) = fact * ( U.X() - pTilde[0]*utpTildeOverpTildeMag2 );
+  J_pM(1,4) = fact * ( U.Y() - pTilde[1]*utpTildeOverpTildeMag2 );
+  J_pM(1,5) = fact * ( U.Z() - pTilde[2]*utpTildeOverpTildeMag2 );
   // d(ax,ay,az)/d(v')
-  J_pM(2,3) = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 ); // [2][3]
-  J_pM(2,4) = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 ); // [2][4]
-  J_pM(2,5) = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 ); // [2][5]
+  J_pM(2,3) = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 );
+  J_pM(2,4) = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 );
+  J_pM(2,5) = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 );
   // d(time)/d(u,v)
   /*
   J_pM(3,7) = 1 * utpTildeOverpTildeMag2 * pTildeMag;
@@ -1784,13 +1717,13 @@ void RKTrackRepTime::transformPM6(const MeasuredStateOnPlane& state,
   const TVector3& V(state.getPlane()->getV());
   const TVector3& W(state.getPlane()->getNormal());
 
-  const TVectorD& state5(state.getState());
+  const TVectorD& stateLocal(state.getState());
   double spu(getSpu(state));
 
   M1x3 pTilde;
-  pTilde[0] = spu * (W.X() + state5(1)*U.X() + state5(2)*V.X()); // a_x
-  pTilde[1] = spu * (W.Y() + state5(1)*U.Y() + state5(2)*V.Y()); // a_y
-  pTilde[2] = spu * (W.Z() + state5(1)*U.Z() + state5(2)*V.Z()); // a_z
+  pTilde[0] = spu * (W.X() + stateLocal(1)*U.X() + stateLocal(2)*V.X()); // a_x
+  pTilde[1] = spu * (W.Y() + stateLocal(1)*U.Y() + stateLocal(2)*V.Y()); // a_y
+  pTilde[2] = spu * (W.Z() + stateLocal(1)*U.Z() + stateLocal(2)*V.Z()); // a_z
 
   const double pTildeMag = sqrt(pTilde[0]*pTilde[0] + pTilde[1]*pTilde[1] + pTilde[2]*pTilde[2]);
   const double pTildeMag2 = pTildeMag*pTildeMag;
@@ -1800,7 +1733,7 @@ void RKTrackRepTime::transformPM6(const MeasuredStateOnPlane& state,
 
   //J_pM matrix is d(x,y,z,px,py,pz) / d(q/p,u',v',u,v)       (out is 6x6)
 
-  const double qop = state5(0);
+  const double qop = stateLocal(0);
   const double p = getCharge(state)/qop; // momentum
 
   M6x6 J_pM_6x6;
@@ -1837,8 +1770,8 @@ void RKTrackRepTime::transformPM6(const MeasuredStateOnPlane& state,
 }
 
 
-void RKTrackRepTime::transformM8P(const M8x8& in8x8,
-                              const M1x8& stateGlobal,
+void RKTrackRepTime::transformM8P(const tMatGlobal& in8x8,
+                              const tVectGlobal& stateGlobal,
                               MeasuredStateOnPlane& state) const { // plane must already be set!
 
   // get vectors and aux variables
@@ -1853,7 +1786,7 @@ void RKTrackRepTime::transformM8P(const M8x8& in8x8,
   // since the Jacobian contains a lot of zeros, and the resulting cov has to be symmetric,
   // the multiplication can be done much faster directly on array level
   // out6x6 = J_Mp^T * in * J_Mp
-  M6x6& out6x6_ = *((M6x6*) state.getCov().GetMatrixArray());
+  tMatLocal& out6x6_ = *((tMatLocal*) state.getCov().GetMatrixArray());
   RKTools::J_MpTxcov8xJ_Mp(J_Mp, in8x8, out6x6_);
 
 }
@@ -1907,7 +1840,7 @@ void RKTrackRepTime::calcJ_Mp_8x6(M8x6& J_Mp, const TVector3& U, const TVector3&
 
 
 void RKTrackRepTime::transformM6P(const M6x6& in6x6,
-                                  const M1x8& stateGlobal,
+                                  const tVectGlobal& stateGlobal,
                                   MeasuredStateOnPlane& state) const { // plane and charge must already be set!
 
   // get vectors and aux variables
@@ -1974,12 +1907,12 @@ void RKTrackRepTime::transformM6P(const M6x6& in6x6,
 //    SU[2]  -          -------                    Ez; Ex*Ex+Ey*Ey+Ez*Ez=1
 //    SU[3]  - distance to surface from (0,0,0) > 0 cm
 //
-//    state7 - initial parameters (coordinates(cm), direction,
+//    stateGlobal - initial parameters (coordinates(cm), direction,
 //             charge/momentum (Gev-1)
 //    cov      and derivatives this parameters  (7x7)
 //
 //    X         Y         Z         Ax        Ay        Az        q/P
-//    state7[0] state7[1] state7[2] state7[3] state7[4] state7[5] state7[6]
+//    stateGlobal[0] stateGlobal[1] stateGlobal[2] stateGlobal[3] stateGlobal[4] stateGlobal[5] stateGlobal[6]
 //
 //    dX/dp     dY/dp     dZ/dp     dAx/dp    dAy/dp    dAz/dp    d(q/P)/dp
 //    cov[ 0]   cov[ 1]   cov[ 2]   cov[ 3]   cov[ 4]   cov[ 5]   cov[ 6]               d()/dp1
@@ -1989,15 +1922,14 @@ void RKTrackRepTime::transformM6P(const M6x6& in6x6,
 //
 // Authors: R.Brun, M.Hansroul, V.Perevoztchikov (Geant3)
 //
-bool RKTrackRepTime::RKutta(const M1x4& SU,
+void RKTrackRepTime::RKutta(const M1x4& SU,
                         const DetPlane& plane,
                         double charge,
                         double mass,
-                        M1x8& stateGlobal,
-                        M8x8* jacobianT,
+                        tVectGlobal& stateGlobal,
+                        tMatGlobal* jacobianT,
                         double& coveredDistance,
                         double& flightTime,
-                        bool& checkJacProj,
                         M7x7& noiseProjection,
                         StepLimits& limits,
                         bool onlyOneStep) const {
@@ -2025,8 +1957,6 @@ bool RKTrackRepTime::RKutta(const M1x4& SU,
     std::cout << "destination: "; plane.Print();
   }
 
-  checkJacProj = false;
-
   // check momentum
   if(momentum < Pmin){
     std::ostringstream sstream;
@@ -2045,7 +1975,7 @@ bool RKTrackRepTime::RKutta(const M1x4& SU,
   //
   // Main loop of Runge-Kutta method
   //
-  while (fabs(S) >= MINSTEP || counter == 0) {
+  do {
 
     if(++counter > maxNumIt){
       Exception exc("RKTrackRepTime::RKutta ==> maximum number of iterations exceeded",__LINE__,__FILE__);
@@ -2077,14 +2007,14 @@ bool RKTrackRepTime::RKutta(const M1x4& SU,
       throw exc;
     }
 
-    if (onlyOneStep) return(true);
+    if (onlyOneStep) return;
 
     // if stepsize has been limited by material, break the loop and return. No linear extrapolation!
     if (limits.getLowestLimit().first == stp_momLoss) {
       if (debugLvl_ > 0) {
         std::cout<<" momLossExceeded -> return(true); \n";
       }
-      return(true);
+      return;
     }
 
     // if stepsize has been limited by material boundary, break the loop and return. No linear extrapolation!
@@ -2092,7 +2022,24 @@ bool RKTrackRepTime::RKutta(const M1x4& SU,
       if (debugLvl_ > 0) {
         std::cout<<" at boundary -> return(true); \n";
       }
-      return(true);
+      if (jacobianT) {
+        double An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
+        An = (fabs(An) > 1.E-7 ? 1./An : 0); // 1/A_normal
+        double E = hypot(mass, 1/stateGlobal[6]);
+        double dEdx = MaterialEffects::getInstance()->dEdx(matForStep, E);
+        double dlambda = pow(stateGlobal[6], 3) * E * dEdx;
+
+        tMatGlobal& j = *jacobianT;
+        for(unsigned int i = 0; i < nGlobal; ++i) {
+          double normal[3];
+          MaterialEffects::getInstance()->getLastNormal(normal);
+          double norm = (j(i,0)*normal[0] + j(i,1)*normal[1] + j(i,2)*normal[2]) * An;  // dR_normal / A_normal
+          j(i,0) -= norm*A [0];   j(i,1) -= norm*A [1];   j(i,2) -= norm*A [2];
+          j(i,3) -= norm*SA[0];   j(i,4) -= norm*SA[1];   j(i,5) -= norm*SA[2];
+          j(i,6) -= norm*dlambda;
+        }
+      }
+      return;
     }
 
 
@@ -2104,27 +2051,24 @@ bool RKTrackRepTime::RKutta(const M1x4& SU,
     limits.removeLimit(stp_plane);
     S = estimateStep(stateGlobal, SU, plane, charge, relMomLoss, limits, matForStep);
 
-    if (limits.getLowestLimit().first == stp_plane &&
-        fabs(S) < MINSTEP) {
+    if (fabs(S) < MINSTEP && limits.getLowestLimit().first == stp_plane) {
       if (debugLvl_ > 0) {
         std::cout<<" (at Plane && fabs(S) < MINSTEP) -> break and do linear extrapolation \n";
       }
       break;
     }
-    if (limits.getLowestLimit().first == stp_momLoss &&
-        fabs(S) < MINSTEP) {
+    if (fabs(S) < MINSTEP && limits.getLowestLimit().first == stp_momLoss) {
       if (debugLvl_ > 0) {
         std::cout<<" (momLossExceeded && fabs(S) < MINSTEP) -> return(true), no linear extrapolation; \n";
       }
-      RKSteps_.erase(RKSteps_.end()-1);
+      RKSteps_.pop_back();
       --RKStepsFXStop_;
-      return(true); // no linear extrapolation!
+      return; // no linear extrapolation!
     }
 
     // check if total angle is bigger than AngleMax. Can happen if a curler should be fitted and it does not hit the active area of the next plane.
     double arg = ABefore[0]*A[0] + ABefore[1]*A[1] + ABefore[2]*A[2];
-    arg = arg > 1 ? 1 : arg;
-    arg = arg < -1 ? -1 : arg;
+    arg = std::min(1., std::max(-1., arg));
     deltaAngle += acos(arg);
     if (fabs(deltaAngle) > AngleMax){
       std::ostringstream sstream;
@@ -2136,16 +2080,22 @@ bool RKTrackRepTime::RKutta(const M1x4& SU,
 
     // check if we went back and forth multiple times -> we don't come closer to the plane!
     if (counter > 3){
-      if (S                            *RKSteps_.at(counter-1).stepSize_ < 0 &&
-          RKSteps_.at(counter-1).stepSize_*RKSteps_.at(counter-2).stepSize_ < 0 &&
-          RKSteps_.at(counter-2).stepSize_*RKSteps_.at(counter-3).stepSize_ < 0){
-        Exception exc("RKTrackRepTime::RKutta ==> Do not get closer to plane!",__LINE__,__FILE__);
+      double stepSize1 = RKSteps_.at(counter-1).stepSize_;
+      double stepSize2 = RKSteps_.at(counter-2).stepSize_;
+      double stepSize3 = RKSteps_.at(counter-3).stepSize_;
+
+      int sign1 = std::signbit(S * stepSize1);
+      int sign2 = std::signbit(stepSize1 * stepSize2);
+      int sign3 = std::signbit(stepSize2 * stepSize3);
+
+      if (sign1 && sign2 && sign3) {
+        Exception exc("RKTrackRepEnergy::RKutta ==> Do not get closer to plane!",__LINE__,__FILE__);
         exc.setFatal();
         throw exc;
       }
     }
 
-  } //end of main loop
+  } while (fabs(S) >= MINSTEP); //end of main loop
 
 
   //
@@ -2189,7 +2139,7 @@ bool RKTrackRepTime::RKutta(const M1x4& SU,
     //
     // Project Jacobian of extrapolation onto destination plane
     //
-    if (jacobianT != NULL) {
+    if (jacobianT) {
 
       // projected jacobianT
       // x x x x x x 0
@@ -2200,11 +2150,6 @@ bool RKTrackRepTime::RKutta(const M1x4& SU,
       // x x x x x x 0
       // x x x x x x 1
 
-      if (checkJacProj && RKSteps_.size()>0){
-        Exception exc("RKTrackRepTime::Extrap ==> covariance is projected onto destination plane again",__LINE__,__FILE__);
-        throw exc;
-      }
-
       if (debugLvl_ > 0) {
         //std::cout << "  Jacobian^T of extrapolation before Projection:\n";
         //RKTools::printDim(*jacobianT, 7,7);
@@ -2212,15 +2157,18 @@ bool RKTrackRepTime::RKutta(const M1x4& SU,
       }
       An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
       An = (fabs(An) > 1.E-7 ? 1./An : 0); // 1/A_normal
-      double norm;
+      double E = hypot(mass, 1/stateGlobal[6]);
+      double dEdx = MaterialEffects::getInstance()->dEdx(matForStep, E);
+      double dlambda = pow(stateGlobal[6], 3) * E * dEdx;
 
-      M8x8& jacPtr = *jacobianT;
-      for(int i = 0; i<8; ++i) {
-        norm = (jacPtr(i,0)*SU[0] + jacPtr(i,1)*SU[1] + jacPtr(i,2)*SU[2]) * An;  // dR_normal / A_normal
-        jacPtr(i,0) -= norm*A [0];   jacPtr(i,1) -= norm*A [1];   jacPtr(i,2) -= norm*A [2];
-        jacPtr(i,3) -= norm*SA[0];   jacPtr(i,4) -= norm*SA[1];   jacPtr(i,5) -= norm*SA[2];
+      tMatGlobal& j = *jacobianT;
+      for(unsigned int i = 0; i < nGlobal; ++i) {
+        double norm = (j(i,0)*SU[0] + j(i,1)*SU[1] + j(i,2)*SU[2]) * An;  // dR_normal / A_normal
+        j(i,0) -= norm*A [0];   j(i,1) -= norm*A [1];   j(i,2) -= norm*A [2];
+        j(i,3) -= norm*SA[0];   j(i,4) -= norm*SA[1];   j(i,5) -= norm*SA[2];
+        j(i,6) -= norm*dlambda;
+        // FIXME: time?
       }
-      checkJacProj = true;
 
       if (debugLvl_ > 0) {
         //std::cout << "  Jacobian^T of extrapolation after Projection:\n";
@@ -2246,12 +2194,12 @@ bool RKTrackRepTime::RKutta(const M1x4& SU,
 
   } // end of linear extrapolation to surface
 
-  return(true);
+  return;
 
 }
 
 
-double RKTrackRepTime::estimateStep(const M1x8& stateGlobal,
+double RKTrackRepTime::estimateStep(const tVectGlobal& stateGlobal,
                                     const M1x4& SU,
                                     const DetPlane& plane,
                                     const double& charge,
@@ -2260,24 +2208,25 @@ double RKTrackRepTime::estimateStep(const M1x8& stateGlobal,
                                     MaterialProperties& mat) const
 {
   if (useCache_) {
-    if (cachePos_ >= RKSteps_.size()) {
+    if (cachePos_ >= RKSteps_.end()) {
       useCache_ = false;
     }
     else {
-      if (RKSteps_.at(cachePos_).limits_.getLowestLimit().first == stp_plane) {
+      if (cachePos_->limits_.getLowestLimit().first == stp_plane) {
         // we need to step exactly to the plane, so don't use the cache!
         useCache_ = false;
-        RKSteps_.erase(RKSteps_.begin() + cachePos_, RKSteps_.end());
+        RKSteps_.erase(cachePos_, RKSteps_.end());
       }
       else {
+	const std::vector<RKStep>::const_iterator useThis = cachePos_;
         if (debugLvl_ > 0) {
-          std::cout << " RKTrackRepTime::estimateStep: use stepSize " << cachePos_ << " from cache: " << RKSteps_.at(cachePos_).stepSize_ << "\n";
+          std::cout << " RKTrackRepEnergy::estimateStep: use stepSize from cache: " << useThis->stepSize_ << "\n";
         }
-        //for(int n = 0; n < 1*7; ++n) RKSteps_[cachePos_].state7_[n] = state7[n];
-        ++RKStepsFXStop_;
-        limits = RKSteps_.at(cachePos_).limits_;
-        mat = RKSteps_.at(cachePos_).materialProperties_;
-        return RKSteps_.at(cachePos_++).stepSize_;
+	++cachePos_;
+        ++RKStepsFXStop_;   // FIXME does this make sense?  If not, RKStepsFXStop_ can be replaced by RKSTeps_.end().
+        limits = useThis->limits_;
+        mat = useThis->materialProperties_;
+        return useThis->stepSize_;
       }
     }
   }
@@ -2327,9 +2276,9 @@ double RKTrackRepTime::estimateStep(const M1x8& stateGlobal,
   double remainingDist = 9e99;
   double stepTaken = 9e99;
 
-  MaterialEffects::getInstance()->initTrack(stateGlobal[0] + 0.1*MINSTEP*copysign(stateGlobal[3], SLDist),
-                                            stateGlobal[1] + 0.1*MINSTEP*copysign(stateGlobal[4], SLDist),
-                                            stateGlobal[2] + 0.1*MINSTEP*copysign(stateGlobal[5], SLDist),
+  MaterialEffects::getInstance()->initTrack(stateGlobal[0],
+                                            stateGlobal[1],
+                                            stateGlobal[2],
                                             copysign(stateGlobal[3], SLDist),
                                             copysign(stateGlobal[4], SLDist),
                                             copysign(stateGlobal[5], SLDist));
@@ -2338,7 +2287,7 @@ double RKTrackRepTime::estimateStep(const M1x8& stateGlobal,
 
   // Limit step to not look ahead too far.  Mainly prevents us from
   // extrapolating long distances even though we are in thin sensors.
-  fieldCurvLimit = std::min(fieldCurvLimit, 2*slDist);
+  fieldCurvLimit = limits.getStepSign() * std::min(fabs(fieldCurvLimit), 2.*slDist);
 
   RKTrackRepTime::propagator extrap(this, stateGlobal, mat);
 
@@ -2448,10 +2397,8 @@ double RKTrackRepTime::estimateStep(const M1x8& stateGlobal,
 
 
   // call stepper and reduce stepsize if step not too small
-  static const RKStep defaultRKStep;
-  RKSteps_.push_back( defaultRKStep );
+  RKSteps_.push_back( RKStep(&stateGlobal[3]) );
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
-  lastStep->setDir(&stateGlobal[3]);
   ++RKStepsFXStop_;
 
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
@@ -2506,7 +2453,7 @@ double RKTrackRepTime::Extrap(const DetPlane& startPlane,
                           double charge,
                           double mass,
                           bool& isAtBoundary,
-                          M1x8& stateGlobal,
+                          tVectGlobal& stateGlobal,
                           double& flightTime,
                           bool fillExtrapSteps,
                           TMatrixDSym* cov, // 5D
@@ -2514,7 +2461,6 @@ double RKTrackRepTime::Extrap(const DetPlane& startPlane,
                           bool stopAtBoundary,
                           double maxStep) const
 {
-
   static const unsigned int maxNumIt(500);
   unsigned int numIt(0);
 
@@ -2530,8 +2476,12 @@ double RKTrackRepTime::Extrap(const DetPlane& startPlane,
     SU[2] *= -1;
   }
 
+  TMatrixD cumulativeJ(nGlobal,nGlobal);
+  for (unsigned int i = 0; i < nGlobal; ++i)
+    cumulativeJ(i,i) = 1;
+  TMatrixDSym cumulativeNoise(nGlobal);
 
-  M1x8 startStateGlobal = stateGlobal;
+  tVectGlobal startStateGlobal = stateGlobal;
   while(true){
 
     if (debugLvl_ > 0) {
@@ -2547,28 +2497,27 @@ double RKTrackRepTime::Extrap(const DetPlane& startPlane,
     }
 
     // initialize jacobianT with unit matrix
-    M8x8 J_MMT;
-    for(int i = 0; i < 8*8; ++i) J_MMT[i] = 0;
-    for(int i=0; i<8; ++i) J_MMT(i,i) = 1.;
+    tMatGlobal J_MMT;
+    for(unsigned int i = 0; i < nGlobal*nGlobal; ++i) J_MMT[i] = 0;
+    for(unsigned int i = 0; i < nGlobal; ++i) J_MMT(i,i) = 1.;
+
+    M7x7 noiseProjection;
+    for(int i = 0; i < 7*7; ++i) noiseProjection[i] = 0;
+    for(int i=0; i < 7; ++i) noiseProjection(i,i) = 1.;
 
     isAtBoundary = false;
 
     // propagation
-    bool checkJacProj = false;
-    limits_.reset();
-    limits_.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
+    StepLimits limits;
+    limits.setLimit(stp_sMaxArg, maxStep-fabs(coveredDistance));
 
     double pStart = fabs(charge / stateGlobal[6]);
-    if( ! RKutta(SU, destPlane, charge, mass, stateGlobal, fillExtrapSteps ? &J_MMT : 0,
-		 coveredDistance, flightTime, checkJacProj, noiseProjection_,
-		 limits_, onlyOneStep) ) {
-      Exception exc("RKTrackRepTime::Extrap ==> Runge Kutta propagation failed",__LINE__,__FILE__);
-      exc.setFatal();
-      throw exc;
-    }
+    RKutta(SU, destPlane, charge, mass, stateGlobal, fillExtrapSteps ? &J_MMT : 0,
+           coveredDistance, flightTime, noiseProjection,
+           limits, onlyOneStep);
 
-    bool atPlane(limits_.getLowestLimit().first == stp_plane);
-    if (limits_.getLowestLimit().first == stp_boundary)
+    bool atPlane(limits.getLowestLimit().first == stp_plane);
+    if (limits.getLowestLimit().first == stp_boundary)
       isAtBoundary = true;
 
 
@@ -2581,8 +2530,6 @@ double RKTrackRepTime::Extrap(const DetPlane& startPlane,
       std::cout<<"\n";
     }
 
-
-
     // call MatFX
     M7x7* pNoise = NULL;
     M7x7 noise;
@@ -2591,15 +2538,13 @@ double RKTrackRepTime::Extrap(const DetPlane& startPlane,
       for(int i = 0; i < 7*7; ++i) noise[i] = 0; // set noiseArray_ to 0
     }
 
-    double momLoss = 0;
-    unsigned int nPoints(RKStepsFXStop_ - RKStepsFXStart_);
-    if (nPoints>0){
+    if (RKStepsFXStop_ > RKStepsFXStart_){
       // momLoss has a sign - negative loss means momentum gain
-      momLoss += MaterialEffects::getInstance()->effects(RKStepsFXStart_,
-                                                         RKStepsFXStop_,
-                                                         pStart, // momentum
-                                                         pdgCode_,
-                                                         pNoise);
+      double momLoss = MaterialEffects::getInstance()->effects(RKStepsFXStart_,
+                                                               RKStepsFXStop_,
+                                                               pStart, // momentum
+                                                               pdgCode_,
+                                                               pNoise);
 
       RKStepsFXStart_ = RKStepsFXStop_;
 
@@ -2613,37 +2558,25 @@ double RKTrackRepTime::Extrap(const DetPlane& startPlane,
       }
     } // finished MatFX
 
-
-    // fill ExtrapSteps_
     if (fillExtrapSteps) {
-      static const ExtrapStep defaultExtrapStep;
-      ExtrapSteps_.push_back(defaultExtrapStep);
-      std::vector<ExtrapStep>::iterator lastStep = ExtrapSteps_.end() - 1;
-
-      // Store Jacobian of this step for final calculation.
-      lastStep->jac_ = J_MMT;
-
-      if( checkJacProj == true ){
-        //project the noise onto the destPlane
-        RKTools::Np_N_NpT(noiseProjection_, noise);
+      //project the noise onto the destPlane
+      RKTools::Np_N_NpT(noiseProjection, noise);
 
         if (debugLvl_ > 1) {
           std::cout << "7D noise projected onto plane: \n";
           noise.print();
         }
-      }
 
-      // Store this step's noise for final calculation.
-      lastStep->noise_ = noise;
-
-      if (debugLvl_ > 2) {
-        std::cout<<"ExtrapSteps \n";
-        for (std::vector<ExtrapStep>::iterator it = ExtrapSteps_.begin(); it != ExtrapSteps_.end(); ++it){
-          std::cout << "8D Jacobian: "; it->jac_.print();
-          std::cout << "7D noise:    "; it->noise_.print();
-        }
-        std::cout<<"\n";
-      }
+      // Propagate noise and Jacobian
+      // TODO check noise
+      // FIXME don't use intermediate matrix
+      TMatrixD Jstep(7, 7);
+      for (int i = 0; i < 7; ++i)
+        for (int j = 0; j < 7; ++j)
+          Jstep(i, j) = J_MMT(i, j);
+      cumulativeNoise.SimilarityT(Jstep);
+      cumulativeNoise += TMatrixDSym(7, noise.begin());
+      cumulativeJ *= TMatrixD(8, 8, J_MMT.begin());
     }
 
 
@@ -2682,7 +2615,18 @@ double RKTrackRepTime::Extrap(const DetPlane& startPlane,
 
   if (fillExtrapSteps) {
     // propagate cov and add noise
-    calcForwardJacobianAndNoise(startStateGlobal, startPlane, stateGlobal, destPlane);
+
+    // FIXME transpose until I clean up all interfaces
+    tMatGlobal jacT;
+    for (int iRow = 0; iRow < 7; ++iRow)
+      for (int iCol = 0; iCol < 7; ++iCol)
+	jacT(iRow,iCol) = cumulativeJ(iCol,iRow);
+
+    projectJacobianAndNoise(startStateGlobal, startPlane, stateGlobal, destPlane,
+			    jacT,
+			    *(tMatGlobal*)cumulativeNoise.GetMatrixArray(),
+			    *(tMatLocal*)fJacobian_.GetMatrixArray(),
+			    *(tMatLocal*)fNoise_.GetMatrixArray());
 
     if (cov != NULL) {
       cov->Similarity(fJacobian_);
@@ -2699,8 +2643,18 @@ double RKTrackRepTime::Extrap(const DetPlane& startPlane,
   return coveredDistance;
 }
 
+void RKTrackRepTime::resetCache(const StateOnPlane& state) const
+{
+  RKSteps_.clear();
+  RKStepsFXStart_ = RKStepsFXStop_ = cachePos_ = RKSteps_.begin();
+  initArrays();
 
-void RKTrackRepTime::checkCache(const StateOnPlane& state, const SharedPlanePtr* plane) const {
+  lastStartState_.setStatePlane(state.getState(), state.getPlane());
+}
+
+
+void RKTrackRepTime::checkCache(const StateOnPlane& state, const SharedPlanePtr& plane) const
+{
 
   if (state.getRep() != this){
     Exception exc("RKTrackRepTime::checkCache ==> state is defined wrt. another TrackRep",__LINE__,__FILE__);
@@ -2714,68 +2668,59 @@ void RKTrackRepTime::checkCache(const StateOnPlane& state, const SharedPlanePtr*
     throw exc;
   }
 
-  cachePos_ = 0;
-  RKStepsFXStart_ = RKStepsFXStop_ = RKSteps_.begin();
-  ExtrapSteps_.clear();
-  initArrays();
+  useCache_ = (lastStartState_.getPlane()
+	       && lastEndState_.getPlane()
+	       && state.getPlane() == lastStartState_.getPlane()
+	       && state.getState() == lastStartState_.getState()
+	       && plane->distance(getPos(lastEndState_)) <= MINSTEP);
 
+  if (useCache_) {
+    RKStepsFXStart_ = RKStepsFXStop_ = cachePos_ = RKSteps_.begin();
+    initArrays();
 
-  if (plane &&
-      lastStartState_.getPlane() &&
-      lastEndState_.getPlane() &&
-      state.getPlane() == lastStartState_.getPlane() &&
-      state.getState() == lastStartState_.getState() &&
-      (*plane)->distance(getPos(lastEndState_)) <= MINSTEP) {
-    useCache_ = true;
-
-    // clean up cache. Only use steps with same sign.
-    double firstStep(0);
-    for (unsigned int i=0; i<RKSteps_.size(); ++i) {
-      if (i == 0) {
-        firstStep = RKSteps_.at(0).stepSize_;
-        continue;
-      }
-      if (RKSteps_.at(i).stepSize_ * firstStep < 0) {
-        if (RKSteps_.at(i-1).materialProperties_ == RKSteps_.at(i).materialProperties_) {
-          RKSteps_.at(i-1).stepSize_ += RKSteps_.at(i).stepSize_;
-        }
-        RKSteps_.erase(RKSteps_.begin()+i, RKSteps_.end());
+    // Clean up cache. Only use steps with same sign.
+    if (RKSteps_.size() > 0) {
+      double firstStepSize = RKSteps_[0].stepSize_;
+      for (std::vector<RKStep>::iterator it = RKSteps_.begin(); it != RKSteps_.end(); ++it) {
+	if (it->stepSize_ * firstStepSize < 0) {
+          // Will never come here for the first step.
+	  if ((it - 1)->materialProperties_ == it->materialProperties_) {
+            // Shorten the penultimate step.
+	    (it - 1)->stepSize_ += it->stepSize_;
+	  }
+	  RKSteps_.erase(it, RKSteps_.end());
+	  break;
+	}
       }
     }
 
     if (debugLvl_ > 0) {
         std::cout << "RKTrackRepTime::checkCache: use cached material and step values.\n";
     }
-  }
-  else {
 
+    return;
+  }
+
+  // Cannot use cache.
     if (debugLvl_ > 0) {
       std::cout << "RKTrackRepTime::checkCache: can NOT use cached material and step values.\n";
 
-      if (plane != NULL) {
-        if (state.getPlane() != lastStartState_.getPlane()) {
-          std::cout << "state.getPlane() != lastStartState_.getPlane()\n";
-        }
-        else {
-          if (! (state.getState() == lastStartState_.getState())) {
-            std::cout << "state.getState() != lastStartState_.getState()\n";
-          }
-          else if (lastEndState_.getPlane().get() != NULL) {
-            std::cout << "distance " << (*plane)->distance(getPos(lastEndState_)) << "\n";
-          }
-        }
+    if (state.getPlane() != lastStartState_.getPlane()) {
+      std::cout << "state.getPlane() != lastStartState_.getPlane()\n";
+    } else {
+      if (! (state.getState() == lastStartState_.getState())) {
+	std::cout << "state.getState() != lastStartState_.getState()\n";
+      } else if (lastEndState_.getPlane()) {
+	std::cout << "distance " << plane->distance(getPos(lastEndState_)) << "\n";
       }
     }
-
-    useCache_ = false;
-    RKSteps_.clear();
-
-    lastStartState_.setStatePlane(state.getState(), state.getPlane());
   }
+
+  resetCache(state);
 }
 
 
-double RKTrackRepTime::momMag(const M1x8& stateGlobal) const {
+double RKTrackRepTime::momMag(const tVectGlobal& stateGlobal) const {
   // FIXME given this interface this function cannot work for charge =/= +-1
   return fabs(1/stateGlobal[6]);
 }

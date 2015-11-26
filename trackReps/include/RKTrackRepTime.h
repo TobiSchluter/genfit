@@ -29,7 +29,7 @@
 #include "StateOnPlane.h"
 #include "RKTools.h"
 #include "StepLimits.h"
-#include "RKTrackRep.h" //RKStep, ExtrapStep
+#include "RKTrackRep.h" //RKStep
 
 #include <algorithm>
 
@@ -110,9 +110,15 @@ class RKTrackRepTime : public AbsTrackRep {
       bool calcJacobianNoise = false) const;
 
 
-  unsigned int getDim() const {return 6;}
+  static const unsigned int nLocal = 6;
+  static const unsigned int nGlobal = 8;
+  typedef RKMatrix<1, nLocal> tVectLocal;
+  typedef RKMatrix<1, nGlobal> tVectGlobal;
+  typedef RKMatrix<nLocal, nLocal> tMatLocal;
+  typedef RKMatrix<nGlobal, nGlobal> tMatGlobal;
+  unsigned int getDim() const {return nLocal;}
   const char *getNameForLocalCoord(size_t i) {
-    assert(0 <= i && i < getDim());
+    assert(i < getDim());
     switch (i) {
     case 0: return "qop";
     case 1: return "u'";
@@ -160,13 +166,15 @@ class RKTrackRepTime : public AbsTrackRep {
   void setSpu(StateOnPlane& state, double spu) const;
   void setTime(StateOnPlane& state, double time) const;
 
-
+  /**
+   * Derivative of the equations of motion, to be used for the RK integration
+   */
   void derive(const double lambda, const M1x3& T,
               const double E, const double dEdx, const double d2EdxdE, const double B[3],
               double& dlambda, M1x3& dT, double& dTime, M5x5* pA) const;
 
-  double RKstep(const M1x8& stateGlobal, const double h, const MaterialProperties& mat,
-                M1x8& newStateGlobal, M8x8* pJ) const;
+  double RKstep(const tVectGlobal& stateGlobal, const double h, const MaterialProperties& mat,
+                tVectGlobal& newStateGlobal, tMatGlobal* pJ) const;
 
   //! The actual Runge Kutta propagation
   /** propagate state7 with step S. Fills SA (Start directions derivatives dA/S).
@@ -177,8 +185,8 @@ class RKTrackRepTime : public AbsTrackRep {
    *  The return value is an estimation on how good the extrapolation is, and it is usually fine if it is > 1.
    *  It gives a suggestion how you must scale S so that the quality will be sufficient.
    */
-  double RKPropagate(M1x8& stateGlobal,
-                     M8x8* jacobian,
+  double RKPropagate(tVectGlobal& stateGlobal,
+                     tMatGlobal* jacobian,
                      M1x3& SA,
                      double S,
                      const MaterialProperties& mat) const;
@@ -196,28 +204,36 @@ class RKTrackRepTime : public AbsTrackRep {
       bool stopAtBoundary = false,
       bool calcJacobianNoise = false) const;
 
-  void getStateGlobal(const StateOnPlane& stateLocal, M1x8& stateGlobal) const;
-  void getStateLocal(StateOnPlane& stateLocal, const M1x8& stateGlobal) const; // state8 must already lie on plane of state!
+  void getStateGlobal(const StateOnPlane& stateLocal, tVectGlobal& stateGlobal) const;
+  void getStateLocal(StateOnPlane& stateLocal, const SharedPlanePtr& plane, const tVectGlobal& stateGlobal) const; // stateGlobal must be on plane.
 
   void transformPM8(const MeasuredStateOnPlane& state,
-                    M8x8& out8x8) const;
+                    tMatGlobal& out8x8) const;
 
   void calcJ_pM_6x8(M6x8& J_pM, const TVector3& U, const TVector3& V, const M1x3& pTilde, double spu) const;
 
   void transformPM6(const MeasuredStateOnPlane& state,
                     M6x6& out6x6) const;
 
-  void transformM8P(const M8x8& in8x8,
-                    const M1x8& state8,
+  void transformM8P(const tMatGlobal& in8x8,
+                    const tVectGlobal& state8,
                     MeasuredStateOnPlane& state) const; // plane must already be set!
 
   void calcJ_Mp_8x6(M8x6& J_Mp, const TVector3& U, const TVector3& V, const M1x3& A) const;
 
-  void calcForwardJacobianAndNoise(const M1x8& startState8, const DetPlane& startPlane,
-				   const M1x8& destState8, const DetPlane& destPlane) const;
+  /**
+   * Takes the 8x8 jacobian and 7x7 noise for the transport of the global
+   * state startStateGlobal to the final global state destStateGlobal
+   * and gives the 5x5 jacobian and noise, where the local coordinates
+   * are defined by startPlane and destPlane.
+   */
+  void projectJacobianAndNoise(const tVectGlobal& startStateGlobal, const DetPlane& startPlane,
+			       const tVectGlobal& destStateGlobal, const DetPlane& destPlane,
+			       const tMatGlobal& jac, const tMatGlobal& noise,
+			       M6x6& jac6, M6x6& noise6) const;
 
   void transformM6P(const M6x6& in6x6,
-                    const M1x8& stateGlobal,
+                    const tVectGlobal& stateGlobal,
                     MeasuredStateOnPlane& state) const; // plane and charge must already be set!
 
   //! Propagates the particle through the magnetic field.
@@ -230,20 +246,19 @@ class RKTrackRepTime : public AbsTrackRep {
     * If this is the case, RKutta() will only propagate the reduced distance and then return. This is to ensure that
     * material effects, which are calculated after the propagation, are taken into account properly.
     */
-  bool RKutta(const M1x4& SU,
+  void RKutta(const M1x4& SU,
               const DetPlane& plane,
               double charge,
               double mass,
-              M1x8& stateGlobal,
-              M8x8* jacobianT,
+              tVectGlobal& stateGlobal,
+              tMatGlobal* jacobianT,
               double& coveredDistance, // signed
               double& flightTime,
-              bool& checkJacProj,
               M7x7& noiseProjection,
               StepLimits& limits,
               bool onlyOneStep = false) const;
 
-  double estimateStep(const M1x8& stateGlobal,
+  double estimateStep(const tVectGlobal& stateGlobal,
                       const M1x4& SU,
                       const DetPlane& plane,
                       const double& charge,
@@ -269,7 +284,7 @@ class RKTrackRepTime : public AbsTrackRep {
                 double charge,
                 double mass,
                 bool& isAtBoundary,
-                M1x8& state8,
+                tVectGlobal& stateGlobal,
                 double& flightTime,
                 bool fillExtrapSteps,
                 TMatrixDSym* cov = nullptr,
@@ -277,32 +292,28 @@ class RKTrackRepTime : public AbsTrackRep {
                 bool stopAtBoundary = false,
                 double maxStep = 1.E99) const;
 
-  void checkCache(const StateOnPlane& state, const SharedPlanePtr* plane) const;
-
-  double momMag(const M1x8& stateGlobal) const;
+  double momMag(const tVectGlobal& stateGlobal) const;
 
 
   mutable StateOnPlane lastStartState_; //! state where the last extrapolation has started
   mutable StateOnPlane lastEndState_; //! state where the last extrapolation has ended
-  mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
-  mutable std::vector<RKStep>::const_iterator RKStepsFXStart_; //!
-  mutable std::vector<RKStep>::const_iterator RKStepsFXStop_; //!
-  mutable std::vector<TExtrapStep<8> > ExtrapSteps_; //! steps made in Extrap during last extrapolation
 
   mutable TMatrixD fJacobian_; //!
   mutable TMatrixDSym fNoise_; //!
 
+  void resetCache(const StateOnPlane& state) const;
+  void checkCache(const StateOnPlane& state, const SharedPlanePtr& plane) const;
   mutable bool useCache_; //! use cached RKSteps_ for extrapolation
-  mutable unsigned int cachePos_; //!
+  mutable std::vector<RKStep> RKSteps_; //! RungeKutta steps made in the last extrapolation
+  mutable std::vector<RKStep>::const_iterator RKStepsFXStart_; //!
+  mutable std::vector<RKStep>::const_iterator RKStepsFXStop_; //!
+  // FIXME: gcc doesn't want a const_iterator here (error in estimateStep()), clang allows it.
+  mutable std::vector<RKStep>::iterator cachePos_; //!
 
-  // auxiliary variables and arrays
-  // needed in Extrap()
-  mutable StepLimits limits_; //!
-  mutable M7x7 noiseProjection_; //!
 public:
   class propagator : public RKTrackRepTime::internalExtrapolator {
   public:
-    propagator(const RKTrackRepTime* rep, const M1x8& stateGlobal, MaterialProperties& mat)
+    propagator(const RKTrackRepTime* rep, const tVectGlobal& stateGlobal, MaterialProperties& mat)
       : rep_(rep), stateGlobal_(stateGlobal), mat_(mat) {}
     void getInitialState(double posInitial[3], double dirInitial[3]) const {
       for(size_t i = 0; i < 3; ++i) {
@@ -312,8 +323,7 @@ public:
     }
     double extrapolateBy(double S, double posFinal[3], double dirFinal[3]) const {
       M1x3 SA;
-      M1x8 state;
-      state = stateGlobal_;
+      tVectGlobal state(stateGlobal_);
       double result = rep_->RKPropagate(state, 0, SA, S, mat_);
       for(size_t i = 0; i < 3; ++i) {
         posFinal[i] = state[i];
@@ -329,7 +339,7 @@ public:
     }
   private:
     const RKTrackRepTime* rep_;
-    M1x8 stateGlobal_;
+    tVectGlobal stateGlobal_;
     MaterialProperties mat_;
   };
 
