@@ -598,10 +598,10 @@ void MaterialEffects::noiseCoulomb(M7x7& noise, const MaterialProperties& materi
   noiseAfter(4, 4) =  sigma2 * (1 - a[1]*a[1]);
   noiseAfter(5, 4) = -sigma2 * a[1]*a[2];
   noiseAfter(5, 5) = sigma2 * (1 - a[2]*a[2]);
-#if 0  // Commented out, because unrelated to my current problem.
+#if 1  // Commented out, because unrelated to my current problem.
+  // FIXME: verify formula, there may be a factor 1/sqrt(2) or similar missing ...
   // Formula from : http://cds.cern.ch/record/1114577/files/soft-pub-2008-003.pdf
   noiseAfter(6, 6) = sigma2 * step2 * 3.0 * pow(momSquare, -2) / betaSquare * dEdx(material, sqrt(momSquare / betaSquare));
-  std::cout << noiseAfter(6,6) << std::endl;
 #endif
 
   // Symmetric part
