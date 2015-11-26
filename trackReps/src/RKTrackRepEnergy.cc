@@ -2015,7 +2015,6 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
 
         M7x7& j = *jacobianT;
         for(int i = 0; i<7; ++i) {
-          // FIXME USE NORMAL FROM MATERIAL
           double normal[3];
           MaterialEffects::getInstance()->getLastNormal(normal);
           double norm = (j(i,0)*normal[0] + j(i,1)*normal[1] + j(i,2)*normal[2]) * An;  // dR_normal / A_normal
