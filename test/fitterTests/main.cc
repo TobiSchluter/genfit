@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
   const int pdg = 13;//-321;//211;//212;//13;               // particle pdg code
 
   const bool twoReps = false; // test if everything works with more than one rep in the tracks
-  boost::scoped_ptr<genfit::AbsTrackRep> repToUse(new genfit::RKTrackRepEnergy(pdg));  // The rep that will be used as default, has to be cloned into the tracks
+  boost::scoped_ptr<genfit::AbsTrackRep> repToUse(new genfit::RKTrackRepTime(pdg));  // The rep that will be used as default, has to be cloned into the tracks
 
   const bool smearPosMom = false; //true;     // init the Reps with smeared pos and mom
   const double chargeSwitchProb = -0.1; // probability to seed with wrong charge sign
@@ -231,8 +231,8 @@ int main(int argc, char **argv) {
   measurementTypes.push_back(genfit::Pixel);
   measurementTypes.push_back(genfit::Pixel);
   measurementTypes.push_back(genfit::Pixel);
-#if 0
-  //  measurementTypes.push_back(genfit::StripUT);
+#if 1
+  measurementTypes.push_back(genfit::StripUT);
 #  if 0
   measurementTypes.push_back(genfit::StripUT);
   measurementTypes.push_back(genfit::StripUT);
