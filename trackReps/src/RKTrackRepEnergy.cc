@@ -1473,10 +1473,10 @@ double RKTrackRepEnergy::RKPropagate(tVectGlobal& stateGlobal,
       //propJac = numJac;
     }
 
-    for (int i = 0; i < nGlobal; ++i) {
-      for (int j = 0; j < nGlobal; ++j) {
+    for (unsigned int i = 0; i < nGlobal; ++i) {
+      for (unsigned int j = 0; j < nGlobal; ++j) {
         double sum = 0;
-        for (int k = 0; k < nGlobal; ++k) {
+        for (unsigned int k = 0; k < nGlobal; ++k) {
           sum += propJac(i, k) * (*jacobianT)(j, k);
         }
         newJacT(j, i) = sum;
@@ -1929,7 +1929,7 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
   double  momentum   ( fabs(charge/stateGlobal[6]) ); // momentum [GeV]
   double  relMomLoss ( 0 );                      // relative momentum loss in RKutta
   double  deltaAngle ( 0. );                     // total angle by which the momentum has changed during extrapolation
-  double  An(0), S(0), Sl(0), CBA(0);
+  double  S(0), Sl(0), CBA(0);
 
   if (debugLvl_ > 0) {
     std::cout << "RKTrackRepEnergy::RKutta \n";
@@ -2014,7 +2014,7 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
         double dlambda = pow(stateGlobal[6], 3) * E * dEdx;
 
         tMatGlobal& j = *jacobianT;
-        for(int i = 0; i<nGlobal; ++i) {
+        for(unsigned int i = 0; i < nGlobal; ++i) {
           double normal[3];
           MaterialEffects::getInstance()->getLastNormal(normal);
           double norm = (j(i,0)*normal[0] + j(i,1)*normal[1] + j(i,2)*normal[2]) * An;  // dR_normal / A_normal
@@ -2139,14 +2139,14 @@ void RKTrackRepEnergy::RKutta(const M1x4& SU,
         //RKTools::printDim(*jacobianT, 7,7);
         std::cout << "  Project Jacobian of extrapolation onto destination plane\n";
       }
-      An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
+      double An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
       An = (fabs(An) > 1.E-7 ? 1./An : 0); // 1/A_normal
       double E = hypot(mass, 1/stateGlobal[6]);
       double dEdx = MaterialEffects::getInstance()->dEdx(matForStep, E);
       double dlambda = pow(stateGlobal[6], 3) * E * dEdx;
 
       tMatGlobal& j = *jacobianT;
-      for(int i = 0; i<nGlobal; ++i) {
+      for(unsigned int i = 0; i < nGlobal; ++i) {
         double norm = (j(i,0)*SU[0] + j(i,1)*SU[1] + j(i,2)*SU[2]) * An;  // dR_normal / A_normal
         j(i,0) -= norm*A [0];   j(i,1) -= norm*A [1];   j(i,2) -= norm*A [2];
         j(i,3) -= norm*SA[0];   j(i,4) -= norm*SA[1];   j(i,5) -= norm*SA[2];
@@ -2460,7 +2460,7 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
   }
 
   TMatrixD cumulativeJ(nGlobal,nGlobal);
-  for (int i = 0; i < nGlobal; ++i)
+  for (unsigned int i = 0; i < nGlobal; ++i)
     cumulativeJ(i,i) = 1;
   TMatrixDSym cumulativeNoise(nGlobal);
 
@@ -2481,8 +2481,8 @@ double RKTrackRepEnergy::Extrap(const DetPlane& startPlane,
 
     // initialize jacobianT with unit matrix
     tMatGlobal J_MMT;
-    for(int i = 0; i < nGlobal*nGlobal; ++i) J_MMT[i] = 0;
-    for(int i=0; i<nGlobal; ++i) J_MMT(i,i) = 1.;
+    for(unsigned int i = 0; i < nGlobal*nGlobal; ++i) J_MMT[i] = 0;
+    for(unsigned int i=0; i < nGlobal; ++i) J_MMT(i,i) = 1.;
 
     tMatGlobal noiseProjection(J_MMT); // initialize to unit matrix.
 

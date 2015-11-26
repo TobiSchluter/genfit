@@ -228,7 +228,7 @@ double RKTrackRepTime::extrapToPoint(StateOnPlane& state,
     std::cout << "RKTrackRepTime::extrapolateToPoint()\n";
   }
 
-  checkCache(state, NULL);
+  resetCache(state);
 
   static const unsigned int maxIt(1000);
 
@@ -589,7 +589,7 @@ double RKTrackRepTime::extrapolateToSphere(StateOnPlane& state,
     std::cout << "RKTrackRepTime::extrapolateToSphere()\n";
   }
 
-  checkCache(state, NULL);
+  resetCache(state);
 
   static const unsigned int maxIt(1000);
 
@@ -1494,10 +1494,10 @@ double RKTrackRepTime::RKPropagate(tVectGlobal& stateGlobal,
           numJac(j, i) = 1./3.*(4*derivShort - derivFull);
         }
       }
-      std::cout << "S = " << S << " semianalytical ";
-      propJac.print();
-      std::cout << "numerical ";
-      numJac.print();
+      //std::cout << "S = " << S << " semianalytical ";
+      //propJac.print();
+      //std::cout << "numerical ";
+      //numJac.print();
       //propJac = numJac;
     }
 
@@ -1947,7 +1947,7 @@ void RKTrackRepTime::RKutta(const M1x4& SU,
   double  momentum   ( fabs(charge/stateGlobal[6]) ); // momentum [GeV]
   double  relMomLoss ( 0 );                      // relative momentum loss in RKutta
   double  deltaAngle ( 0. );                     // total angle by which the momentum has changed during extrapolation
-  double  An(0), S(0), Sl(0), CBA(0);
+  double  S(0), Sl(0), CBA(0);
 
   if (debugLvl_ > 0) {
     std::cout << "RKTrackRepTime::RKutta \n";
@@ -2155,7 +2155,7 @@ void RKTrackRepTime::RKutta(const M1x4& SU,
         //RKTools::printDim(*jacobianT, 7,7);
         std::cout << "  Project Jacobian of extrapolation onto destination plane\n";
       }
-      An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
+      double An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
       An = (fabs(An) > 1.E-7 ? 1./An : 0); // 1/A_normal
       double E = hypot(mass, 1/stateGlobal[6]);
       double dEdx = MaterialEffects::getInstance()->dEdx(matForStep, E);
@@ -2570,12 +2570,10 @@ double RKTrackRepTime::Extrap(const DetPlane& startPlane,
       // Propagate noise and Jacobian
       // TODO check noise
       // FIXME don't use intermediate matrix
-      TMatrixD Jstep(7, 7);
+      cumulativeNoise.SimilarityT(TMatrixD(8, 8, J_MMT.begin()));
       for (int i = 0; i < 7; ++i)
         for (int j = 0; j < 7; ++j)
-          Jstep(i, j) = J_MMT(i, j);
-      cumulativeNoise.SimilarityT(Jstep);
-      cumulativeNoise += TMatrixDSym(7, noise.begin());
+          cumulativeNoise(i,j) += noise(i,j);
       cumulativeJ *= TMatrixD(8, 8, J_MMT.begin());
     }
 
