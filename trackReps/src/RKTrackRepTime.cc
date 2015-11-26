@@ -1246,10 +1246,10 @@ void RKTrackRepTime::derive(const double lambda, const M1x3& T,
 }
 
 
-double RKTrackRepTime::RKstep(const tVectGlobal& stateGlobal, const double h,
-                                const MaterialProperties& mat,
-                                tVectGlobal& newStateGlobal,
-                                tMatGlobal* pJ = 0) const
+double RKTrackRepTime::RKintegrate(const tVectGlobal& stateGlobal, const double h,
+                                   const MaterialProperties& mat,
+                                   tVectGlobal& newStateGlobal,
+                                   tMatGlobal* pJ = 0) const
 {
   const double m = TDatabasePDG::Instance()->GetParticle(getPDG())->Mass();
   const double pdgCharge( this->getPDGCharge() );
@@ -1426,7 +1426,7 @@ double RKTrackRepTime::RKPropagate(tVectGlobal& stateGlobal,
   tVectGlobal oldStateGlobal(stateGlobal);
   tVectGlobal newStateGlobal;
   tMatGlobal propJac;
-  double est = RKstep(stateGlobal, S, mat, newStateGlobal, jacobianT ? &propJac : 0);
+  double est = RKintegrate(stateGlobal, S, mat, newStateGlobal, jacobianT ? &propJac : 0);
   tMatGlobal newJacT;
   if (jacobianT) {
     if (1) {
@@ -1467,22 +1467,22 @@ double RKTrackRepTime::RKPropagate(tVectGlobal& stateGlobal,
           // is exactly representable, the full step will also be.
           stepX = 2 * (temp - stateCopy[i]);
           stateCopy[i] = temp;
-          RKstep(stateCopy, S, mat, rightShort, 0);
+          RKintegrate(stateCopy, S, mat, rightShort, 0);
         }
         {
           tVectGlobal stateCopy(stateGlobal);
           stateCopy[i] -= stepX / 2;
-          RKstep(stateCopy, S, mat, leftShort, 0);
+          RKintegrate(stateCopy, S, mat, leftShort, 0);
         }
         {
           tVectGlobal stateCopy(stateGlobal);
           stateCopy[i] += stepX;
-          RKstep(stateCopy, S, mat, rightFull, 0);
+          RKintegrate(stateCopy, S, mat, rightFull, 0);
         }
         {
           tVectGlobal stateCopy(stateGlobal);
           stateCopy[i] -= stepX;
-          RKstep(stateCopy, S, mat, leftFull, 0);
+          RKintegrate(stateCopy, S, mat, leftFull, 0);
         }
 
         // Calculate the derivatives for the individual components of
