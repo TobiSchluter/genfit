@@ -30,6 +30,7 @@
 #include <TDatabasePDG.h>
 #include <TGeoManager.h>
 
+#include <boost/smart_ptr.hpp>
 #include <iomanip>
 #include <algorithm>
 
@@ -89,6 +90,7 @@ double RKTrackRepTime::extrapolateToPlane(StateOnPlane& state,
   // to 8D
   tVectGlobal stateGlobal;
   getStateGlobal(state, stateGlobal);
+  tVectGlobal oldStateGlobal(stateGlobal);
 
   TMatrixDSym* covPtr(NULL);
   bool fillExtrapSteps(calcJacobianNoise);
@@ -101,6 +103,84 @@ double RKTrackRepTime::extrapolateToPlane(StateOnPlane& state,
   bool isAtBoundary(false);
   double flightTime( 0. );
   double coveredDistance( Extrap(*(state.getPlane()), *plane, getCharge(state), getMass(state), isAtBoundary, stateGlobal, flightTime, fillExtrapSteps, covPtr, false, stopAtBoundary) );
+
+  // Numerical evaluation of 8x8 Jacobian
+  if (0 && covPtr) {
+    // Numerically evaluate the Jacobian, compare
+    // no science behind these values, I verified that forward and
+    // backward propagation yield inverse matrices to good
+    // approximation.  In order to avoid bad roundoff errors, the actual
+    // step taken is determined below, separately for each direction.
+    const double defaultStepX = 1.E-8;
+    double stepX;
+
+    tMatGlobal numJac;
+
+    // Calculate derivative for all dimensions successively.
+    // The algorithm follows the one in TF1::Derivative() :
+    //   df(x) = (4 D(h/2) - D(h)) / 3
+    // with D(h) = (f(x + h) - f(x - h)) / (2 h).
+    //
+    // Could perhaps do better by also using f(x) which would be stB.
+    tVectGlobal rightShort, rightFull;
+    tVectGlobal leftShort, leftFull;
+    for (size_t i = 0; i < nGlobal; ++i) {
+      {
+        rightShort = oldStateGlobal;
+        double temp = rightShort[i] + defaultStepX / 2;
+        // Find the actual size of the step, which will differ from
+        // defaultStepX due to roundoff.  This is the step-size we will
+        // use for this direction.  Idea taken from Numerical Recipes,
+        // 3rd ed., section 5.7.
+        //
+        // Note that if a number is exactly representable, it's double
+        // will also be exact.  Outside denormals, this also holds for
+        // halving.  Unless the exponent changes (which it only will in
+        // the vicinity of zero) adding or subtracing doesn't make a
+        // difference.
+        //
+        // We determine the roundoff error for the half-step.  If this
+        // is exactly representable, the full step will also be.
+        stepX = 2 * (temp - rightShort[i]);
+        rightShort[i] = temp;
+        boost::shared_ptr<RKTrackRepTime> r(this->clone());
+        r->Extrap(*(state.getPlane()), *plane, getCharge(state), getMass(state), isAtBoundary,
+                  rightShort, flightTime, false, 0, false, stopAtBoundary);
+      }
+      {
+        leftShort = oldStateGlobal;
+        leftShort[i] -= stepX / 2;
+        boost::shared_ptr<RKTrackRepTime> r(this->clone());
+        r->Extrap(*(state.getPlane()), *plane, getCharge(state), getMass(state), isAtBoundary,
+               leftShort, flightTime, false, 0, false, stopAtBoundary);
+      }
+      {
+        leftFull = oldStateGlobal;
+        leftFull[i] -= stepX;
+        boost::shared_ptr<RKTrackRepTime> r(this->clone());
+        r->Extrap(*(state.getPlane()), *plane, getCharge(state), getMass(state), isAtBoundary,
+               leftFull, flightTime, false, 0, false, stopAtBoundary);
+      }
+      {
+        rightFull = oldStateGlobal;
+        rightFull[i] += stepX;
+        boost::shared_ptr<RKTrackRepTime> r(this->clone());
+        r->Extrap(*(state.getPlane()), *plane, getCharge(state), getMass(state), isAtBoundary,
+               rightFull, flightTime, false, 0, false, stopAtBoundary);
+      }
+
+      // Calculate the derivatives for the individual components of
+      // the track parameters.
+      for (size_t j = 0; j < nGlobal; ++j) {
+        double derivFull = (rightFull[j] - leftFull[j]) / 2 / stepX;
+        double derivShort = (rightShort[j] - leftShort[j]) / stepX;
+        
+        numJac(j, i) = 1./3.*(4*derivShort - derivFull);
+      }
+    }
+    std::cout << "numerical accumulated d row / d col";
+    numJac.print();
+  }
 
   SharedPlanePtr finalPlane = plane;
   if (stopAtBoundary && isAtBoundary) {
@@ -914,17 +994,13 @@ void RKTrackRepTime::projectJacobianAndNoise(const tVectGlobal& startStateGlobal
   M8x6 J_Mp;
   calcJ_Mp_8x6(J_Mp, destPlane.getU(), destPlane.getV(), *((M1x3*) &destStateGlobal[3]));
   // Because the helper function wants transposed input, we transpose the input ...
-  tMatGlobal jacT;
-  for (int iRow = 0; iRow < 8; ++iRow)
-    for (int iCol = 0; iCol < 8; ++iCol)
-      jacT(iRow,iCol) = jac(iCol,iRow);
-  RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, jacT, J_pM, jac6);
+  RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, jac, J_pM, jac6);
   RKTools::J_MpTxcov8xJ_Mp(J_Mp, noise, noise6);
 
-  if (debugLvl_ > 0) {
-    std::cout << "total jacobian : "; fJacobian_.Print();
-    std::cout << "total noise : "; fNoise_.Print();
-  }
+  J_pM.print();
+  J_Mp.print();
+  jac.print();
+  jac6.print();
 }
 
 
@@ -1233,11 +1309,8 @@ void RKTrackRepTime::derive(const double lambda, const M1x3& T,
     A(1,0) = -lambda*H[2]; A(1,1) = 0; A(1,2) =  lambda*H[0]; A(1,3) = T[2]*H[0] - T[0]*H[2];
     A(2,0) =  lambda*H[1]; A(2,1) = -lambda*H[0]; A(2,2) = 0; A(2,3) = T[0]*H[1] - T[1]*H[0];
 
-    // (3.12) in Bugge et al., the derivative of (3.11).  The
-    // different choice in units doesn't matter (our lambda doesn't
-    // contain kappa).  That, or their units are confused, but I don't
-    // want to redo the math with their choice.  Simplified, also
-    // avoids dividing by zero if dEdx = 0.
+    // (3.12) in Bugge et al., the derivative of (3.11).  Simplified,
+    // also avoids dividing by zero if dEdx = 0.
     A(3,3) = dlambda/lambda*(3 - pow(lambda*E, -2)) + d2EdxdE;
 
     // The derivative of dTime by dlambda.
@@ -1429,7 +1502,7 @@ double RKTrackRepTime::RKPropagate(tVectGlobal& stateGlobal,
   double est = RKintegrate(stateGlobal, S, mat, newStateGlobal, jacobianT ? &propJac : 0);
   tMatGlobal newJacT;
   if (jacobianT) {
-    if (1) {
+    if (0) {
       // Numerically evaluate the Jacobian, compare
       // no science behind these values, I verified that forward and
       // backward propagation yield inverse matrices to good
@@ -1494,10 +1567,10 @@ double RKTrackRepTime::RKPropagate(tVectGlobal& stateGlobal,
           numJac(j, i) = 1./3.*(4*derivShort - derivFull);
         }
       }
-      //std::cout << "S = " << S << " semianalytical ";
-      //propJac.print();
-      //std::cout << "numerical ";
-      //numJac.print();
+      std::cout << "S = " << S << " semianalytical ";
+      propJac.print();
+      std::cout << "numerical ";
+      numJac.print();
       //propJac = numJac;
     }
 
@@ -1695,11 +1768,6 @@ void RKTrackRepTime::calcJ_pM_6x8(M6x8& J_pM, const TVector3& U, const TVector3&
   J_pM(2,3) = fact * ( V.X() - pTilde[0]*vtpTildeOverpTildeMag2 );
   J_pM(2,4) = fact * ( V.Y() - pTilde[1]*vtpTildeOverpTildeMag2 );
   J_pM(2,5) = fact * ( V.Z() - pTilde[2]*vtpTildeOverpTildeMag2 );
-  // d(time)/d(u,v)
-  /*
-  J_pM(3,7) = 1 * utpTildeOverpTildeMag2 * pTildeMag;
-  J_pM(4,7) = 1 * vtpTildeOverpTildeMag2 * pTildeMag;
-  */
   // d(time)/d(time)
   J_pM(5,7) = 1.;
 
@@ -2029,14 +2097,18 @@ void RKTrackRepTime::RKutta(const M1x4& SU,
         double dEdx = MaterialEffects::getInstance()->dEdx(matForStep, E);
         double dlambda = pow(stateGlobal[6], 3) * E * dEdx;
 
+        const double c = 29.9792458; // speed of light in cm/ns
+        double velocity = c / fabs(stateGlobal[6]) / E;
+
         tMatGlobal& j = *jacobianT;
         for(unsigned int i = 0; i < nGlobal; ++i) {
           double normal[3];
           MaterialEffects::getInstance()->getLastNormal(normal);
           double norm = (j(i,0)*normal[0] + j(i,1)*normal[1] + j(i,2)*normal[2]) * An;  // dR_normal / A_normal
-          j(i,0) -= norm*A [0];   j(i,1) -= norm*A [1];   j(i,2) -= norm*A [2];
-          j(i,3) -= norm*SA[0];   j(i,4) -= norm*SA[1];   j(i,5) -= norm*SA[2];
-          j(i,6) -= norm*dlambda;
+          //j(i,0) -= norm*A [0];   j(i,1) -= norm*A [1];   j(i,2) -= norm*A [2];
+          //j(i,3) -= norm*SA[0];   j(i,4) -= norm*SA[1];   j(i,5) -= norm*SA[2];
+          //j(i,6) -= norm*dlambda;
+          //j(i,7) -= norm/velocity;
         }
       }
       return;
@@ -2161,13 +2233,16 @@ void RKTrackRepTime::RKutta(const M1x4& SU,
       double dEdx = MaterialEffects::getInstance()->dEdx(matForStep, E);
       double dlambda = pow(stateGlobal[6], 3) * E * dEdx;
 
+      const double c = 29.9792458; // speed of light in cm/ns
+      double velocity = c / fabs(stateGlobal[6]) / E;
+
       tMatGlobal& j = *jacobianT;
       for(unsigned int i = 0; i < nGlobal; ++i) {
         double norm = (j(i,0)*SU[0] + j(i,1)*SU[1] + j(i,2)*SU[2]) * An;  // dR_normal / A_normal
         j(i,0) -= norm*A [0];   j(i,1) -= norm*A [1];   j(i,2) -= norm*A [2];
         j(i,3) -= norm*SA[0];   j(i,4) -= norm*SA[1];   j(i,5) -= norm*SA[2];
         j(i,6) -= norm*dlambda;
-        // FIXME: time?
+        j(i,7) -= norm/velocity;
       }
 
       if (debugLvl_ > 0) {
@@ -2614,14 +2689,8 @@ double RKTrackRepTime::Extrap(const DetPlane& startPlane,
   if (fillExtrapSteps) {
     // propagate cov and add noise
 
-    // FIXME transpose until I clean up all interfaces
-    tMatGlobal jacT;
-    for (int iRow = 0; iRow < 7; ++iRow)
-      for (int iCol = 0; iCol < 7; ++iCol)
-	jacT(iRow,iCol) = cumulativeJ(iCol,iRow);
-
     projectJacobianAndNoise(startStateGlobal, startPlane, stateGlobal, destPlane,
-			    jacT,
+                            *(tMatGlobal*)cumulativeJ.GetMatrixArray(),
 			    *(tMatGlobal*)cumulativeNoise.GetMatrixArray(),
 			    *(tMatLocal*)fJacobian_.GetMatrixArray(),
 			    *(tMatLocal*)fNoise_.GetMatrixArray());

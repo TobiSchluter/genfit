@@ -191,9 +191,9 @@ int main(int argc, char **argv) {
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToReference;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToPrediction;
+  const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToPrediction;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReferenceWire;
-  const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPredictionWire;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPredictionWire;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToReferenceWire;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToPredictionWire;
   const int nIter = 20; // max number of iterations
@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
   const bool twoReps = false; // test if everything works with more than one rep in the tracks
   boost::scoped_ptr<genfit::AbsTrackRep> repToUse(new genfit::RKTrackRepTime(pdg));  // The rep that will be used as default, has to be cloned into the tracks
 
-  const bool smearPosMom = false; //true;     // init the Reps with smeared pos and mom
+  const bool smearPosMom = true;     // init the Reps with smeared pos and mom
   const double chargeSwitchProb = -0.1; // probability to seed with wrong charge sign
   const double posSmear = 10*resolution;     // cm
   const double momSmear = 5. /180.*TMath::Pi();     // rad
@@ -232,7 +232,7 @@ int main(int argc, char **argv) {
   measurementTypes.push_back(genfit::Pixel);
   measurementTypes.push_back(genfit::Pixel);
 #if 1
-  measurementTypes.push_back(genfit::StripUT);
+  //measurementTypes.push_back(genfit::StripUT);
 #  if 0
   measurementTypes.push_back(genfit::StripUT);
   measurementTypes.push_back(genfit::StripUT);

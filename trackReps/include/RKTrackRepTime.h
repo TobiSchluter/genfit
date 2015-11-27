@@ -53,7 +53,7 @@ class RKTrackRepTime : public AbsTrackRep {
 
   virtual ~RKTrackRepTime();
 
-  virtual AbsTrackRep* clone() const {return new RKTrackRepTime(*this);}
+  virtual RKTrackRepTime* clone() const {return new RKTrackRepTime(*this);}
 
   virtual double extrapolateToPlane(StateOnPlane& state,
       const SharedPlanePtr& plane,

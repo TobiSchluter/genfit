@@ -90,7 +90,8 @@ int main()
 {
   setup();
 
-  AbsTrackRep* rk1 = new RKTrackRepEnergy(-211);
+  AbsTrackRep* rk1 = new RKTrackRepTime(-211);
+  //AbsTrackRep* rk1 = new RKTrackRepEnergy(-211);
 
   MeasuredStateOnPlane mop1(rk1);
 
@@ -104,7 +105,7 @@ int main()
 
   MeasuredStateOnPlane mop3(mop1);
 
-  SharedPlanePtr target(new DetPlane(TVector3(0, 1, 0), TVector3(0, 1, .2)));
+  SharedPlanePtr target(new DetPlane(TVector3(0, 1, 0), TVector3(0, 1, 0)));
   SharedPlanePtr middle(new DetPlane(TVector3(0, .02, 0), TVector3(0, 1, 0)));
 
   std::cout << "forth ->->->->->->->->->->->->->->->->->" << std::endl;
