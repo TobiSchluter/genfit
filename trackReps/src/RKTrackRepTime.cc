@@ -996,11 +996,12 @@ void RKTrackRepTime::projectJacobianAndNoise(const tVectGlobal& startStateGlobal
   // Because the helper function wants transposed input, we transpose the input ...
   RKTools::J_pMTTxJ_MMTTxJ_MpTT(J_Mp, jac, J_pM, jac6);
   RKTools::J_MpTxcov8xJ_Mp(J_Mp, noise, noise6);
-
+  /*
   J_pM.print();
   J_Mp.print();
   jac.print();
   jac6.print();
+  */
 }
 
 
