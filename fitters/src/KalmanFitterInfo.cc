@@ -144,22 +144,23 @@ MeasurementOnPlane* KalmanFitterInfo::getClosestMeasurementOnPlane(const StateOn
 
   double normMin(9.99E99);
   unsigned int iMin(0);
-  const AbsHMatrix* H = measurementsOnPlane_[0]->getHMatrix();
   for (unsigned int i=0; i<getNumMeasurements(); ++i) {
-    if (*(measurementsOnPlane_[i]->getHMatrix()) != *H){
+    const AbsHMatrix* H = measurementsOnPlane_[i]->getHMatrix();
+    if (0 && *(measurementsOnPlane_[i]->getHMatrix()) != *H){
       Exception e("KalmanFitterInfo::getClosestMeasurementOnPlane: Cannot compare measurements with different H-Matrices. Maybe you have to select a different multipleMeasurementHandling.", __LINE__,__FILE__);
       e.setFatal();
       throw e;
     }
 
     TVectorD res = measurementsOnPlane_[i]->getState() - H->Hv(sop->getState());
-    double norm = sqrt(res.Norm2Sqr());
+    double norm = res.Norm2Sqr();
     if (norm < normMin) {
       normMin = norm;
       iMin = i;
     }
   }
 
+  //std::cout << "returning measurement " << iMin << " w/ residual " << sqrt(normMin) << std::endl;
   return getMeasurementOnPlane(iMin);
 }
 
