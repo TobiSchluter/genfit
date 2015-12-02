@@ -2224,8 +2224,8 @@ void RKTrackRepTime::RKutta(const M1x4& SU,
       // x x x x x x 1
 
       if (debugLvl_ > 0) {
-        //std::cout << "  Jacobian^T of extrapolation before Projection:\n";
-        //RKTools::printDim(*jacobianT, 7,7);
+        std::cout << "  Jacobian^T of extrapolation before Projection:\n";
+        jacobianT->print();
         std::cout << "  Project Jacobian of extrapolation onto destination plane\n";
       }
       double An = A[0]*SU[0] + A[1]*SU[1] + A[2]*SU[2];
@@ -2235,7 +2235,7 @@ void RKTrackRepTime::RKutta(const M1x4& SU,
       double dlambda = pow(stateGlobal[6], 3) * E * dEdx;
 
       const double c = 29.9792458; // speed of light in cm/ns
-      double velocity = c / fabs(stateGlobal[6]) / E;
+      double velocity = 1 / fabs(stateGlobal[6]) / E;
 
       tMatGlobal& j = *jacobianT;
       for(unsigned int i = 0; i < nGlobal; ++i) {
@@ -2247,8 +2247,8 @@ void RKTrackRepTime::RKutta(const M1x4& SU,
       }
 
       if (debugLvl_ > 0) {
-        //std::cout << "  Jacobian^T of extrapolation after Projection:\n";
-        //RKTools::printDim(*jacobianT, 7,7);
+        std::cout << "  Jacobian^T of extrapolation after Projection:\n";
+        jacobianT->print();
       }
 
       for (int iRow = 0; iRow < 3; ++iRow) {

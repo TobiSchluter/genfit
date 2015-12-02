@@ -158,19 +158,19 @@ int main(int argc, char **argv) {
 
 
   const unsigned int nMeasurements = 10;
-  const double BField = 20.;       // kGauss
+  const double BField = 10.;       // kGauss
   const double momentum = .1;     // GeV
   const double theta = 110;         // degree
-  const double thetaDetPlane = 90;         // degree
+  const double thetaDetPlane = 70;         // degree
   const double phiDetPlane = 0;         // degree
-  const double pointDist = 3.;      // cm; approx. distance between measurements
+  const double pointDist = 2.;      // cm; approx. distance between measurements
   const double resolution = 0.05;   // cm; resolution of generated measurements
 
   const double resolutionWire = 5*resolution;   // cm; resolution of generated measurements
   const TVector3 wireDir(0,0,1);
-  const double skewAngle(5);
+  const double skewAngle(15);
   const bool useSkew = true;
-  const int nSuperLayer = 10;
+  const int nSuperLayer = 5;
   const double minDrift = 0.;
   const double maxDrift = 2;
   const bool idealLRResolution = true; //false; // resolve the l/r ambiguities of the wire measurements
@@ -189,9 +189,9 @@ int main(int argc, char **argv) {
   //const genfit::eFitterType fitterId = genfit::DafSimple;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedAverage;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReference;
-  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
+  const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPrediction;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToReference;
-  const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToPrediction;
+  //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToPrediction;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToReferenceWire;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::unweightedClosestToPredictionWire;
   //const genfit::eMultipleMeasurementHandling mmHandling = genfit::weightedClosestToReferenceWire;
@@ -210,11 +210,11 @@ int main(int argc, char **argv) {
   const bool twoReps = false; // test if everything works with more than one rep in the tracks
   boost::scoped_ptr<genfit::AbsTrackRep> repToUse(new genfit::RKTrackRepTime(pdg));  // The rep that will be used as default, has to be cloned into the tracks
 
-  const bool smearPosMom = true;     // init the Reps with smeared pos and mom
+  const bool smearPosMom = false;     // init the Reps with smeared pos and mom
   const double chargeSwitchProb = -0.1; // probability to seed with wrong charge sign
   const double posSmear = 10*resolution;     // cm
   const double momSmear = 5. /180.*TMath::Pi();     // rad
-  const double momMagSmear = 0.2;   // relative
+  const double momMagSmear = 0.05;   // relative
   const double zSmearFac = 2;
 
 
@@ -248,7 +248,7 @@ int main(int argc, char **argv) {
     //measurementTypes.push_back(genfit::StripUT);
   }
 #  endif
-  //  measurementTypes.push_back(genfit::StripUT);
+  //measurementTypes.push_back(genfit::StripUT);
 #else
   measurementTypes.push_back(genfit::StripU);
   measurementTypes.push_back(genfit::StripU);
@@ -478,7 +478,7 @@ int main(int argc, char **argv) {
 
       genfit::MeasuredStateOnPlane stateRef(rep);
       rep->setPosMomCov(stateRef, pos, mom, covM);
-      rep->setTime(stateRef, 0);
+      rep->setTime(stateRef, gRandom->Gaus(0, .1));
 
       // smeared start state
       genfit::MeasuredStateOnPlane stateSmeared(rep);

@@ -99,22 +99,17 @@ SharedPlanePtr WireTimeMeasurement::constructPlane(const StateOnPlane& state) co
 
 std::vector<MeasurementOnPlane*> WireTimeMeasurement::constructMeasurementsOnPlane(const StateOnPlane& state) const
 {
-  double driftDistanceR = (TMeasured_ - state.getTime());
-  double driftDistanceL = -driftDistanceR;
+  double driftDistanceR = TMeasured_ - state.getTime();
+  double driftDistanceL = driftDistanceR;
 
   double sigma2 = sigmaT_ * sigmaT_;
-
-  if (driftDistanceR < 0)
-    std::swap(driftDistanceR, driftDistanceL);
-
-  //std::cout << "driftDistance " << driftDistanceR << " " << TMeasured_ << " " << state.getTime() << std::endl;
 
   MeasurementOnPlane* mopR = new MeasurementOnPlane(TVectorD(1, &driftDistanceR),
                                                     TMatrixDSym(1, &sigma2),
                                                     state.getPlane(), state.getRep(), new HMatrix(vDrift_, vSignal_));
   MeasurementOnPlane* mopL = new MeasurementOnPlane(TVectorD(1, &driftDistanceL),
                                                     TMatrixDSym(1, &sigma2),
-                                                    state.getPlane(), state.getRep(), new HMatrix(vDrift_, vSignal_));
+                                                    state.getPlane(), state.getRep(), new HMatrix(-vDrift_, vSignal_));
 
   // set left/right weights
   if (leftRight_ < 0) {
@@ -159,9 +154,14 @@ void WireTimeMeasurement::setLeftRightResolution(int lr){
 WireTimeMeasurement::HMatrix::HMatrix(double vDrift, double vSignal)
   : H_(1, 6)
 {
-  H_(0,3) = 1 / vDrift;
+  H_(0,3) = 1/vDrift;
   H_(0,4) = 0; //vDrift/vSignal;
   H_(0,5) = 1;
+}
+
+void WireTimeMeasurement::HMatrix::HMHt(TMatrixDSym& M) const
+{
+  M.Similarity(H_);
 }
 
 bool WireTimeMeasurement::HMatrix::isEqual(const AbsHMatrix& other) const
@@ -169,13 +169,13 @@ bool WireTimeMeasurement::HMatrix::isEqual(const AbsHMatrix& other) const
   const WireTimeMeasurement::HMatrix* o = dynamic_cast<const WireTimeMeasurement::HMatrix*>(&other);
   if (!o)
     return false;
-  return o->H_ == this->H_;
+  return true; //o->H_ == this->H_;
 }
 
 
 void WireTimeMeasurement::drawMeasurement(TEveElementList* list, const MeasuredStateOnPlane& fittedState) const
 {
-  double radius = std::max(0., (TMeasured_ - fittedState.getTime())) * vDrift_;
+  double radius = fabs((TMeasured_ - fittedState.getTime()) * vDrift_);
   TEveGeoShape* det_shapeR = new TEveGeoShape("hitR");
   det_shapeR->SetShape(new TGeoTube(std::max(0., radius-0.0105/2.), radius+0.0105/2., 4));
 
@@ -196,6 +196,10 @@ void WireTimeMeasurement::drawMeasurement(TEveElementList* list, const MeasuredS
                            &det_rot);
   det_shapeR->SetTransMatrix(det_trans);
   det_shapeR->SetMainColor(kCyan);
+  if (leftRight_ == 1)
+    det_shapeR->SetMainColor(kGreen);
+  else if (leftRight_ == -1)
+    det_shapeR->SetMainColor(kBlue);
   det_shapeR->SetMainTransparency(25);
   list->AddElement(det_shapeR);
 }

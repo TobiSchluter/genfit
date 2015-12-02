@@ -126,7 +126,7 @@ class WireTimeMeasurement : public AbsMeasurement, public display::IDrawableMeas
     virtual TVectorD Hv(const TVectorD& v) const {return getMatrix()*v;}
     virtual TMatrixD MHt(const TMatrixDSym& M) const {return TMatrixD(M, TMatrixD::kMultTranspose, getMatrix());}
   virtual TMatrixD MHt(const TMatrixD& M) const {return TMatrixD(M, TMatrixD::kMultTranspose, getMatrix());}
-    virtual void HMHt(TMatrixDSym& M) const {M.Similarity(getMatrix());}
+    virtual void HMHt(TMatrixDSym& M) const;
 
     virtual AbsHMatrix* clone() const { return new HMatrix(*this); }
 

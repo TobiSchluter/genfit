@@ -86,8 +86,10 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
       type == WirePoint ||
       type == WireTime){
 
+    bool skewedLayer = useSkew_ && (wireCounter_/nSuperLayer_)%2 == 1;
+    bool leftright = 1 || gRandom->Uniform(-1,1) >= 0;
     // skew layers
-    if (useSkew_ && (int)((double)wireCounter_/(double)nSuperLayer_)%2 == 1) {
+    if (skewedLayer) {
       TVector3 perp(wireDir_.Cross(dir));
       if ((int)((double)wireCounter_/(double)nSuperLayer_)%4 == 1){
         currentWireDir.Rotate(skewAngle_*TMath::Pi()/180, wireDir_.Cross(perp));
@@ -99,11 +101,13 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
     // left/right
     lr = 1;
     wirePerp = dir.Cross(currentWireDir);
-    if (gRandom->Uniform(-1,1) >= 0) {
+    if (leftright) {
       wirePerp *= -1.;
       lr = -1;
     }
     wirePerp.SetMag(gRandom->Uniform(minDrift_, maxDrift_));
+
+    ++wireCounter_;
   }
 
   if (outlierProb_ > gRandom->Uniform(1.)) {
@@ -113,108 +117,108 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
 
 
   switch(type){
-    case Pixel: {
-      if (debug_) std::cerr << "create PixHit" << std::endl;
+  case Pixel: {
+    if (debug_) std::cerr << "create PixHit" << std::endl;
 
-      genfit::SharedPlanePtr plane(new genfit::DetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)));
+    genfit::SharedPlanePtr plane(new genfit::DetPlane(point, planeNorm.Cross(z), (planeNorm.Cross(z)).Cross(planeNorm)));
 
-      TVectorD hitCoords(2);
-      if (outlier) {
-        hitCoords(0) = gRandom->Uniform(-outlierRange_, outlierRange_);
-        hitCoords(1) = gRandom->Uniform(-outlierRange_, outlierRange_);
-      }
-      else {
-        hitCoords(0) = gRandom->Gaus(0,resolution_);
-        hitCoords(1) = gRandom->Gaus(0,resolution_);
-      }
-
-      TMatrixDSym hitCov(2);
-      hitCov(0,0) = resolution_*resolution_;
-      hitCov(1,1) = resolution_*resolution_;
-
-      measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
-      static_cast<genfit::PlanarMeasurement*>(measurement)->setPlane(plane, measurementCounter_);
-      retVal.push_back(measurement);
+    TVectorD hitCoords(2);
+    if (outlier) {
+      hitCoords(0) = gRandom->Uniform(-outlierRange_, outlierRange_);
+      hitCoords(1) = gRandom->Uniform(-outlierRange_, outlierRange_);
     }
+    else {
+      hitCoords(0) = gRandom->Gaus(0,resolution_);
+      hitCoords(1) = gRandom->Gaus(0,resolution_);
+    }
+
+    TMatrixDSym hitCov(2);
+    hitCov(0,0) = resolution_*resolution_;
+    hitCov(1,1) = resolution_*resolution_;
+
+    measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
+    static_cast<genfit::PlanarMeasurement*>(measurement)->setPlane(plane, measurementCounter_);
+    retVal.push_back(measurement);
+  }
     break;
 
-    case Spacepoint: {
-      if (debug_) std::cerr << "create SpacepointHit" << std::endl;
+  case Spacepoint: {
+    if (debug_) std::cerr << "create SpacepointHit" << std::endl;
 
-      TVectorD hitCoords(3);
-      if (outlier) {
-        hitCoords(0) = gRandom->Uniform(point.X()-outlierRange_, point.X()+outlierRange_);
-        hitCoords(1) = gRandom->Uniform(point.Y()-outlierRange_, point.Y()+outlierRange_);
-        hitCoords(2) = gRandom->Uniform(point.Z()-outlierRange_, point.Z()+outlierRange_);
-      }
-      else {
-        hitCoords(0) = gRandom->Gaus(point.X(),resolution_);
-        hitCoords(1) = gRandom->Gaus(point.Y(),resolution_);
-        hitCoords(2) = gRandom->Gaus(point.Z(),resolution_);
-      }
-
-      TMatrixDSym hitCov(3);
-      hitCov(0,0) = resolution_*resolution_;
-      hitCov(1,1) = resolution_*resolution_;
-      hitCov(2,2) = resolution_*resolution_;
-
-      measurement = new genfit::SpacepointMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
-      retVal.push_back(measurement);
+    TVectorD hitCoords(3);
+    if (outlier) {
+      hitCoords(0) = gRandom->Uniform(point.X()-outlierRange_, point.X()+outlierRange_);
+      hitCoords(1) = gRandom->Uniform(point.Y()-outlierRange_, point.Y()+outlierRange_);
+      hitCoords(2) = gRandom->Uniform(point.Z()-outlierRange_, point.Z()+outlierRange_);
     }
+    else {
+      hitCoords(0) = gRandom->Gaus(point.X(),resolution_);
+      hitCoords(1) = gRandom->Gaus(point.Y(),resolution_);
+      hitCoords(2) = gRandom->Gaus(point.Z(),resolution_);
+    }
+
+    TMatrixDSym hitCov(3);
+    hitCov(0,0) = resolution_*resolution_;
+    hitCov(1,1) = resolution_*resolution_;
+    hitCov(2,2) = resolution_*resolution_;
+
+    measurement = new genfit::SpacepointMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
+    retVal.push_back(measurement);
+  }
     break;
 
-    case ProlateSpacepoint: {
-      if (debug_) std::cerr << "create ProlateSpacepointHit" << std::endl;
+  case ProlateSpacepoint: {
+    if (debug_) std::cerr << "create ProlateSpacepointHit" << std::endl;
 
-      TVectorD hitCoords(3);
-      if (outlier) {
-        hitCoords(0) = gRandom->Uniform(point.X()-outlierRange_, point.X()+outlierRange_);
-        hitCoords(1) = gRandom->Uniform(point.Y()-outlierRange_, point.Y()+outlierRange_);
-        hitCoords(2) = gRandom->Uniform(point.Z()-outlierRange_, point.Z()+outlierRange_);
-      }
-      else {
-        hitCoords(0) = point.X();
-        hitCoords(1) = point.Y();
-        hitCoords(2) = point.Z();
-      }
-
-      TMatrixDSym hitCov(3);
-      hitCov(0,0) = resolution_*resolution_;
-      hitCov(1,1) = resolution_*resolution_;
-      hitCov(2,2) = resolutionWire_*resolutionWire_;
-
-      // rotation matrix
-      TVector3 xp = currentWireDir.Orthogonal();
-      xp.SetMag(1);
-      TVector3 yp = currentWireDir.Cross(xp);
-      yp.SetMag(1);
-
-      TMatrixD rot(3,3);
-
-      rot(0,0) = xp.X();  rot(0,1) = yp.X();  rot(0,2) = currentWireDir.X();
-      rot(1,0) = xp.Y();  rot(1,1) = yp.Y();  rot(1,2) = currentWireDir.Y();
-      rot(2,0) = xp.Z();  rot(2,1) = yp.Z();  rot(2,2) = currentWireDir.Z();
-
-      // smear
-      TVectorD smearVec(3);
-      smearVec(0) = resolution_;
-      smearVec(1) = resolution_;
-      smearVec(2) = resolutionWire_;
-      smearVec *= rot;
-      if (!outlier) {
-        hitCoords(0) += gRandom->Gaus(0, smearVec(0));
-        hitCoords(1) += gRandom->Gaus(0, smearVec(1));
-        hitCoords(2) += gRandom->Gaus(0, smearVec(2));
-      }
-
-
-      // rotate cov
-      hitCov.Similarity(rot);
-
-      measurement = new genfit::ProlateSpacepointMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
-      static_cast<genfit::ProlateSpacepointMeasurement*>(measurement)->setLargestErrorDirection(currentWireDir);
-      retVal.push_back(measurement);
+    TVectorD hitCoords(3);
+    if (outlier) {
+      hitCoords(0) = gRandom->Uniform(point.X()-outlierRange_, point.X()+outlierRange_);
+      hitCoords(1) = gRandom->Uniform(point.Y()-outlierRange_, point.Y()+outlierRange_);
+      hitCoords(2) = gRandom->Uniform(point.Z()-outlierRange_, point.Z()+outlierRange_);
     }
+    else {
+      hitCoords(0) = point.X();
+      hitCoords(1) = point.Y();
+      hitCoords(2) = point.Z();
+    }
+
+    TMatrixDSym hitCov(3);
+    hitCov(0,0) = resolution_*resolution_;
+    hitCov(1,1) = resolution_*resolution_;
+    hitCov(2,2) = resolutionWire_*resolutionWire_;
+
+    // rotation matrix
+    TVector3 xp = currentWireDir.Orthogonal();
+    xp.SetMag(1);
+    TVector3 yp = currentWireDir.Cross(xp);
+    yp.SetMag(1);
+
+    TMatrixD rot(3,3);
+
+    rot(0,0) = xp.X();  rot(0,1) = yp.X();  rot(0,2) = currentWireDir.X();
+    rot(1,0) = xp.Y();  rot(1,1) = yp.Y();  rot(1,2) = currentWireDir.Y();
+    rot(2,0) = xp.Z();  rot(2,1) = yp.Z();  rot(2,2) = currentWireDir.Z();
+
+    // smear
+    TVectorD smearVec(3);
+    smearVec(0) = resolution_;
+    smearVec(1) = resolution_;
+    smearVec(2) = resolutionWire_;
+    smearVec *= rot;
+    if (!outlier) {
+      hitCoords(0) += gRandom->Gaus(0, smearVec(0));
+      hitCoords(1) += gRandom->Gaus(0, smearVec(1));
+      hitCoords(2) += gRandom->Gaus(0, smearVec(2));
+    }
+
+
+    // rotate cov
+    hitCov.Similarity(rot);
+
+    measurement = new genfit::ProlateSpacepointMeasurement(hitCoords, hitCov, int(type), measurementCounter_, nullptr);
+    static_cast<genfit::ProlateSpacepointMeasurement*>(measurement)->setLargestErrorDirection(currentWireDir);
+    retVal.push_back(measurement);
+  }
     break;
 
   case StripU: case StripV: case StripUV: case StripUT: {
@@ -243,9 +247,11 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
       retVal.push_back(measurement);
     } else if (type == StripUT) {
       const double resolutionT = .1;
+      // Expand the measurement vector.
       hitCoords.ResizeTo(2);
       hitCoords(1) = gRandom->Gaus(time, resolutionT);
 
+      // Expand the covariance matrix.
       hitCov.ResizeTo(2,2);
       hitCov(1,1) = resolutionT * resolutionT;
 
@@ -271,17 +277,17 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
   case WireTime:
     {
       double vDrift = 4e-3; // Realistic for Belle 2
-      double vSignal = 1e8;  // ignored so far, speed to readout along wire
-      double resolutionT = 1;
+      double vSignal = 1e8;  // ignored so far, speed of signal readout along wire
+      double resolutionT = .1;
 
       double T0 = time + wirePerp.Mag() / vDrift;
       double TMeasured = gRandom->Gaus(T0, resolutionT);
-      //std::cout << time << " " << wirePerp.Mag() << " " << T0 << " " << TMeasured << std::endl;
       measurement = new WireTimeMeasurement(TMeasured, resolutionT,
                                             (point-wirePerp-currentWireDir),
                                             (point-wirePerp+currentWireDir),
                                             vDrift, vSignal,
                                             int(type), measurementCounter_, nullptr);
+      //std::cout << "time = " << time << " T0 = " << T0 << " Tmeas = " << TMeasured << std::endl;
       if (idealLRResolution_){
         measurement->setLeftRightResolution(lr);
       }
@@ -289,7 +295,8 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
     }
     break;
 
-    case Wire: {
+  case Wire:
+    {
       if (debug_) std::cerr << "create WireHit" << std::endl;
 
       if (outlier) {
@@ -323,7 +330,8 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
     }
     break;
 
-    case WirePoint: {
+  case WirePoint: 
+    {
       if (debug_) std::cerr << "create WirePointHit" << std::endl;
 
       if (outlier) {
@@ -357,14 +365,13 @@ std::vector<genfit::AbsMeasurement*> MeasurementCreator::create(eMeasurementType
       if (idealLRResolution_){
         static_cast<genfit::WirePointMeasurement*>(measurement)->setLeftRightResolution(lr);
       }
-      ++wireCounter_;
       retVal.push_back(measurement);
     }
     break;
 
-    default:
-      std::cerr << "measurement type not defined!" << std::endl;
-      exit(0);
+  default:
+    std::cerr << "measurement type not defined!" << std::endl;
+    exit(0);
   }
 
   return retVal;
