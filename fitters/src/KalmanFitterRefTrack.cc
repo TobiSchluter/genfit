@@ -33,7 +33,6 @@
 #include <TDecompChol.h>
 #include <Math/ProbFunc.h>
 
-
 using namespace genfit;
 
 
@@ -1034,7 +1033,7 @@ KalmanFitterRefTrack::processTrackPoint(KalmanFitterInfo* fi, const KalmanFitter
     if (debugLvl_ > 1) {
       std::cout << "\033[34m";
       std::cout << "m (measurement) "; m.getState().Print();
-      std::cout << "V ((weighted) measurement covariance) "; (1/m.getWeight() * m.getCov()).Print();
+      std::cout << "V ((weighted) measurement covariance)"; V.Print();
       std::cout << "residual        "; res_.Print();
       std::cout << "\033[0m";
     }
