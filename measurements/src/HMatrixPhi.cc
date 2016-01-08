@@ -18,10 +18,12 @@
 */
 
 #include "HMatrixPhi.h"
+
+#include "IO.h"
+
 #include <cassert>
 #include <alloca.h>
 #include <math.h>
-#include <iostream>
 
 
 namespace genfit {
@@ -105,7 +107,7 @@ bool HMatrixPhi::isEqual(const AbsHMatrix& other) const {
 
 void HMatrixPhi::Print(const Option_t*) const
 {
-  std::cout << "phi = " << phi_ << std::endl;
+  printOut << "phi = " << phi_ << std::endl;
 }
 
 void HMatrixPhi::Streamer(TBuffer &R__b) {
