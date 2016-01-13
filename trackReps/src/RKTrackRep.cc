@@ -2308,6 +2308,7 @@ double RKTrackRep::estimateStep(const M1x7& state7,
   std::vector<RKStep>::iterator lastStep = RKSteps_.end() - 1;
   lastStep->state7_ = state7;
   ++RKStepsFXStop_;
+
   if(limits.getLowestLimitVal() > MINSTEP){ // only call stepper if step estimation big enough
     M1x7 state7_temp = {{ state7[0], state7[1], state7[2], state7[3], state7[4], state7[5], state7[6] }};
 
